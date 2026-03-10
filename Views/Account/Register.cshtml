@@ -1,0 +1,256 @@
+﻿@model SCM_System.Models.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Create a New Account</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Register" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <!-- Account Information -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Account Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="FullName" class="form-label"></label>
+                                        <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
+                                        <span asp-validation-for="FullName" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Email" class="form-label"></label>
+                                        <input asp-for="Email" class="form-control" type="email" placeholder="Enter your email" />
+                                        <span asp-validation-for="Email" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Password" class="form-label"></label>
+                                        <input asp-for="Password" class="form-control" type="password" placeholder="Enter password" />
+                                        <span asp-validation-for="Password" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                                        <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="Confirm password" />
+                                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="PhoneNumber" class="form-label"></label>
+                                        <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number" />
+                                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Role" class="form-label"></label>
+                                        <select asp-for="Role" class="form-select" id="RoleSelect" required>
+                                            <option value="">-- Select Role --</option>
+                                            <option value="Supplier">Supplier (I want to sell products)</option>
+                                            <option value="Retailer">Retailer (I want to buy products)</option>
+                                        </select>
+                                        <span asp-validation-for="Role" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Supplier Fields -->
+                        <div id="SupplierFields" class="card mb-4" style="display:none;">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Supplier Business Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="CompanyName" class="form-label"></label>
+                                        <input asp-for="CompanyName" class="form-control" placeholder="Enter company name" />
+                                        <span asp-validation-for="CompanyName" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="BusinessType" class="form-label"></label>
+                                        <select asp-for="BusinessType" class="form-select">
+                                            <option value="">-- Select Business Type --</option>
+                                            <option value="Manufacturer">Manufacturer</option>
+                                            <option value="Distributor">Distributor</option>
+                                            <option value="Wholesaler">Wholesaler</option>
+                                            <option value="Importer">Importer</option>
+                                        </select>
+                                        <span asp-validation-for="BusinessType" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="LicenseNumber" class="form-label"></label>
+                                        <input asp-for="LicenseNumber" class="form-control" placeholder="Enter business license number" />
+                                        <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="TaxIdentificationNumber" class="form-label"></label>
+                                        <input asp-for="TaxIdentificationNumber" class="form-control" placeholder="Enter TIN" />
+                                        <span asp-validation-for="TaxIdentificationNumber" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label asp-for="LicenseFile" class="form-label"></label>
+                                        <input asp-for="LicenseFile" class="form-control" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                                        <small class="form-text text-muted">Upload your business license (PDF, JPG, PNG. Max 5MB)</small>
+                                        <span asp-validation-for="LicenseFile" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label asp-for="CompanyAddress" class="form-label"></label>
+                                        <textarea asp-for="CompanyAddress" class="form-control" rows="2" placeholder="Enter full company address"></textarea>
+                                        <span asp-validation-for="CompanyAddress" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="City" class="form-label"></label>
+                                        <input asp-for="City" class="form-control" placeholder="City" />
+                                        <span asp-validation-for="City" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="Country" class="form-label"></label>
+                                        <input asp-for="Country" class="form-control" value="Ethiopia" />
+                                        <span asp-validation-for="Country" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="Website" class="form-label"></label>
+                                        <input asp-for="Website" class="form-control" placeholder="https://example.com" />
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label asp-for="CompanyDescription" class="form-label"></label>
+                                        <textarea asp-for="CompanyDescription" class="form-control" rows="3" placeholder="Describe your company"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Retailer Fields -->
+                        <div id="RetailerFields" class="card mb-4" style="display:none;">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0">Retailer Business Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="BusinessName" class="form-label"></label>
+                                        <input asp-for="BusinessName" class="form-control" placeholder="Enter business name" />
+                                        <span asp-validation-for="BusinessName" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="RetailerBusinessType" class="form-label"></label>
+                                        <select asp-for="RetailerBusinessType" class="form-select">
+                                            <option value="">-- Select Business Type --</option>
+                                            <option value="Retail Shop">Retail Shop</option>
+                                            <option value="Supermarket">Supermarket</option>
+                                            <option value="Distributor">Distributor</option>
+                                            <option value="Online Store">Online Store</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="RetailerLicenseNumber" class="form-label"></label>
+                                        <input asp-for="RetailerLicenseNumber" class="form-control" placeholder="Enter business license number" />
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="TaxIdentificationNumber" class="form-label"></label>
+                                        <input asp-for="TaxIdentificationNumber" class="form-control" placeholder="Enter TIN" />
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label asp-for="BusinessAddress" class="form-label"></label>
+                                        <textarea asp-for="BusinessAddress" class="form-control" rows="2" placeholder="Enter full business address"></textarea>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="City" class="form-label"></label>
+                                        <input asp-for="City" class="form-control" placeholder="City" />
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="Country" class="form-label"></label>
+                                        <input asp-for="Country" class="form-control" value="Ethiopia" />
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="StoreSize" class="form-label"></label>
+                                        <select asp-for="StoreSize" class="form-select">
+                                            <option value="">-- Select Store Size --</option>
+                                            <option value="Small">Small</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="Large">Large</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label asp-for="BusinessDescription" class="form-label"></label>
+                                        <textarea asp-for="BusinessDescription" class="form-control" rows="3" placeholder="Describe your business"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Register</button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a asp-action="Login">Already have an account? Login here</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            $('#RoleSelect').change(function() {
+                var role = $(this).val();
+                $('#SupplierFields').hide();
+                $('#RetailerFields').hide();
+
+                // Remove required attributes
+                $('#CompanyName, #LicenseNumber, #LicenseFile, #CompanyAddress, #City, #BusinessName, #BusinessAddress').prop('required', false);
+
+                if (role === 'Supplier') {
+                    $('#SupplierFields').show();
+                    // Make supplier fields required
+                    $('#CompanyName').prop('required', true);
+                    $('#BusinessType').prop('required', true);
+                    $('#LicenseNumber').prop('required', true);
+                    $('#LicenseFile').prop('required', true);
+                    $('#TaxIdentificationNumber').prop('required', true);
+                    $('#CompanyAddress').prop('required', true);
+                    $('#City').prop('required', true);
+                } else if (role === 'Retailer') {
+                    $('#RetailerFields').show();
+                    // Make retailer fields required
+                    $('#BusinessName').prop('required', true);
+                    $('#BusinessAddress').prop('required', true);
+                    $('#City').prop('required', true);
+                }
+            });
+        });
+    </script>
+}
