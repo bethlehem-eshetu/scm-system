@@ -1,0 +1,38 @@
+﻿## Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.slnx
+*.user
+*.tmp
+.vsconfig/
+*.ide/
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+## dotnet
+**/wwwroot/lib/
+*.log
+*.db
+*.db-wal
+
+## Visual Studio Code
+.vscode/
+
+## Sensitive files
+appsettings.Production.json
+secrets.json
