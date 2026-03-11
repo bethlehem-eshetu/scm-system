@@ -74,13 +74,6 @@ namespace SCM_System.Data
                 .HasForeignKey<Retailer>(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // User - SupplierEmployee (one-to-one)
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.SupplierEmployee)
-                .WithOne(se => se.User)
-                .HasForeignKey<SupplierEmployee>(se => se.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // Supplier - SupplierEmployee (one-to-many)
             modelBuilder.Entity<SupplierEmployee>()
                 .HasOne(se => se.Supplier)

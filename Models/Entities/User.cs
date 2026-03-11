@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -47,7 +47,6 @@ namespace SCM_System.Models.Entities
         // Navigation properties
         public Supplier Supplier { get; set; }
         public Retailer Retailer { get; set; }
-        public SupplierEmployee SupplierEmployee { get; set; }
         public ICollection<Notification> Notifications { get; set; }
         public ICollection<Message> SentMessages { get; set; }
         public ICollection<Penalty> Penalties { get; set; }
