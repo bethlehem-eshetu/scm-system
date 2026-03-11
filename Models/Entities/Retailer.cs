@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -17,15 +17,15 @@ namespace SCM_System.Models.Entities
 
         [StringLength(50)]
         [Display(Name = "Business Type")]
-        public string BusinessType { get; set; } // Retail Shop, Supermarket, Distributor
+        public string? BusinessType { get; set; } // Retail Shop, Supermarket, Distributor
 
         [StringLength(50)]
         [Display(Name = "Tax Identification Number")]
-        public string TaxIdentificationNumber { get; set; }
+        public string? TaxIdentificationNumber { get; set; }
 
         [StringLength(100)]
         [Display(Name = "Business License Number")]
-        public string BusinessLicenseNumber { get; set; }
+        public string? BusinessLicenseNumber { get; set; }
 
         [Required]
         [StringLength(200)]
@@ -42,14 +42,14 @@ namespace SCM_System.Models.Entities
 
         [StringLength(20)]
         [Display(Name = "Store Size")]
-        public string StoreSize { get; set; } // Small, Medium, Large
+        public string? StoreSize { get; set; } // Small, Medium, Large
 
         [StringLength(255)]
         [Display(Name = "Business Logo")]
-        public string BusinessLogo { get; set; }
+        public string? BusinessLogo { get; set; }
 
         [Display(Name = "Business Description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public bool IsVerified { get; set; } = false;
 

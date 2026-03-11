@@ -1,0 +1,260 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-80 py-5">
+            <div class="col-lg-6" data-aos="fade-right">
+                <h1 class="display-4 fw-bold mb-4">
+                    Streamline Your
+                    <span class="text-primary">Supply Chain</span>
+                    in Ethiopia
+                </h1>
+                <p class="lead text-muted mb-4">
+                    Connect with trusted suppliers, manage procurement, track deliveries,
+                    and grow your business with Ethiopia's premier SCM platform.
+                </p>
+
+                @if (Context.Session.GetInt32("UserId") != null)
+                {
+                    <div class="mt-4">
+                        <p class="mb-3">Welcome back, <strong>@Context.Session.GetString("UserName")</strong>!</p>
+                        <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-primary btn-lg">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-4">
+                        <a href="/Account/Register" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-user-plus me-2"></i>Get Started
+                        </a>
+                        <a href="/Account/Login" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </a>
+                    </div>
+                }
+            </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <img src="https://cdn-icons-png.flaticon.com/512/3063/3063825.png"
+                     alt="Supply Chain" class="img-fluid hero-image">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section py-5 bg-white">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card text-center p-4">
+                    <h2 class="display-5 fw-bold text-primary">500+</h2>
+                    <p class="text-muted mb-0">Verified Suppliers</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card text-center p-4">
+                    <h2 class="display-5 fw-bold text-primary">1000+</h2>
+                    <p class="text-muted mb-0">Active Retailers</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card text-center p-4">
+                    <h2 class="display-5 fw-bold text-primary">10K+</h2>
+                    <p class="text-muted mb-0">Products Listed</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card text-center p-4">
+                    <h2 class="display-5 fw-bold text-primary">5K+</h2>
+                    <p class="text-muted mb-0">Deliveries</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold">Why Choose Our Platform?</h2>
+            <p class="text-muted">Everything you need for efficient supply chain management</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-gavel fa-2x text-primary"></i>
+                    </div>
+                    <h4>Tender System</h4>
+                    <p class="text-muted">Post tenders and receive competitive bids from suppliers.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-boxes fa-2x text-primary"></i>
+                    </div>
+                    <h4>Product Catalog</h4>
+                    <p class="text-muted">Browse thousands of products from verified suppliers.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-truck fa-2x text-primary"></i>
+                    </div>
+                    <h4>Real-time Tracking</h4>
+                    <p class="text-muted">Track your deliveries in real-time with GPS.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-file-contract fa-2x text-primary"></i>
+                    </div>
+                    <h4>Smart Contracts</h4>
+                    <p class="text-muted">Secure purchase orders with digital agreements.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-credit-card fa-2x text-primary"></i>
+                    </div>
+                    <h4>Secure Payments</h4>
+                    <p class="text-muted">Integrated with Chapa for seamless transactions.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-star fa-2x text-primary"></i>
+                    </div>
+                    <h4>Rating System</h4>
+                    <p class="text-muted">Rate suppliers based on performance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h2 class="display-6 fw-bold mb-3">Ready to Transform Your Business?</h2>
+        <p class="lead mb-4">Join thousands of businesses already using our platform</p>
+        @if (Context.Session.GetInt32("UserId") == null)
+        {
+            <a href="/Account/Register" class="btn btn-light btn-lg">
+                <i class="fas fa-user-plus me-2"></i>Get Started Today
+            </a>
+        }
+        else
+        {
+            <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-light btn-lg">
+                <i class="fas fa-arrow-right me-2"></i>Go to Dashboard
+            </a>
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        .hero-image {
+            max-width: 80%;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @@keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(37,99,235,0.1);
+            }
+
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            height: 100%;
+        }
+
+            .feature-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(37,99,235,0.1);
+            }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(37,99,235,0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cta-section {
+            margin-top: 2rem;
+        }
+
+        .min-vh-80 {
+            min-height: 80vh;
+        }
+
+        @@media (max-width: 768px) {
+            .hero-section {
+                text-align: center;
+                padding: 3rem 0;
+            }
+
+            .hero-image {
+                margin-top: 3rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 1000,
+            once: true
+        });
+    </script>
+}

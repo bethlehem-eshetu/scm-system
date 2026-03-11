@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -17,7 +17,7 @@ namespace SCM_System.Models.Entities
 
         [StringLength(50)]
         [Display(Name = "Business Type")]
-        public string BusinessType { get; set; } // Manufacturer, Distributor, Wholesaler
+        public string? BusinessType { get; set; } // Manufacturer, Distributor, Wholesaler
 
         [Required]
         [StringLength(100)]
@@ -26,11 +26,11 @@ namespace SCM_System.Models.Entities
 
         [StringLength(255)]
         [Display(Name = "License Document")]
-        public string LicenseFilePath { get; set; }
+        public string? LicenseFilePath { get; set; }
 
         [StringLength(50)]
         [Display(Name = "Tax Identification Number")]
-        public string TaxIdentificationNumber { get; set; }
+        public string? TaxIdentificationNumber { get; set; }
 
         [Required]
         [StringLength(200)]
@@ -47,10 +47,10 @@ namespace SCM_System.Models.Entities
 
         [StringLength(255)]
         [Display(Name = "Website")]
-        public string Website { get; set; }
+        public string? Website { get; set; }
 
         [Display(Name = "Company Description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [StringLength(20)]
         [Display(Name = "Verification Status")]

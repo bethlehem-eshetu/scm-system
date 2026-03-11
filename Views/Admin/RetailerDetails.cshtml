@@ -1,0 +1,547 @@
+﻿@model SCM_System.Models.Entities.Retailer
+
+@{
+    ViewData["Title"] = "Retailer Details";
+}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-6">
+                <i class="fas fa-store me-2 text-primary"></i>Retailer Details
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="AllRetailers">All Retailers</a></li>
+                    <li class="breadcrumb-item active">@Model.BusinessName</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="AllRetailers" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Status Banner - FIXED: Using User properties only -->
+    @if (Model.User != null)
+    {
+        string statusClass = "";
+        string statusIcon = "";
+        string statusText = "";
+        string statusBadgeClass = "";
+
+        // Determine status based on User properties only (since Retailer doesn't have VerificationStatus)
+        if (Model.User.IsApproved && Model.User.AccountStatus == "Active")
+        {
+            statusClass = "alert-success";
+            statusIcon = "fa-check-circle";
+            statusText = "Approved";
+            statusBadgeClass = "bg-success";
+        }
+        else if (Model.User.AccountStatus == "Rejected")
+        {
+            statusClass = "alert-danger";
+            statusIcon = "fa-times-circle";
+            statusText = "Rejected";
+            statusBadgeClass = "bg-danger";
+        }
+        else if (Model.User.AccountStatus == "Pending" || !Model.User.IsApproved)
+        {
+            statusClass = "alert-warning";
+            statusIcon = "fa-clock";
+            statusText = "Pending Approval";
+            statusBadgeClass = "bg-warning text-dark";
+        }
+        else
+        {
+            statusClass = "alert-secondary";
+            statusIcon = "fa-question-circle";
+            statusText = Model.User.AccountStatus ?? "Unknown";
+            statusBadgeClass = "bg-secondary";
+        }
+
+        <div class="alert @statusClass mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas @statusIcon me-2"></i>
+                    <strong>Status:</strong>
+                    <span class="badge @statusBadgeClass">@statusText</span>
+
+                    @if (!string.IsNullOrEmpty(Model.User.AccountStatus))
+                    {
+                        <span class="ms-2 text-muted">
+                            (Account Status: @Model.User.AccountStatus)
+                        </span>
+                    }
+                </div>
+                <div>
+                    @if (!Model.User.IsApproved && Model.User.AccountStatus != "Rejected")
+                    {
+                        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#approveModal">
+                            <i class="fas fa-check"></i> Approve Retailer
+                        </button>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="fas fa-times"></i> Reject Retailer
+                        </button>
+                    }
+                    else if (Model.User.AccountStatus == "Rejected")
+                    {
+                        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#approveModal">
+                            <i class="fas fa-check"></i> Approve Retailer
+                        </button>
+                        <span class="badge bg-danger p-2">Account Rejected</span>
+                    }
+                    else if (Model.User.IsApproved)
+                    {
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="fas fa-times"></i> Reject Retailer
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Business Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-building me-2"></i>Business Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 150px;">Business Name:</th>
+                            <td><strong>@Model.BusinessName</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Business Type:</th>
+                            <td><span class="badge bg-info">@Model.BusinessType</span></td>
+                        </tr>
+                        <tr>
+                            <th>Business Address:</th>
+                            <td>@Model.BusinessAddress</td>
+                        </tr>
+                        <tr>
+                            <th>City:</th>
+                            <td>@Model.City</td>
+                        </tr>
+                        <tr>
+                            <th>Country:</th>
+                            <td>@Model.Country</td>
+                        </tr>
+                        <tr>
+                            <th>Store Size:</th>
+                            <td>
+                                @if (Model.StoreSize == "Small")
+                                {
+                                    <span class="badge bg-info">Small</span>
+                                }
+                                else if (Model.StoreSize == "Medium")
+                                {
+                                    <span class="badge bg-warning text-dark">Medium</span>
+                                }
+                                else if (Model.StoreSize == "Large")
+                                {
+                                    <span class="badge bg-success">Large</span>
+                                }
+                                else
+                                {
+                                    <span>@Model.StoreSize</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Description:</th>
+                            <td>@(string.IsNullOrEmpty(Model.Description) ? "No description provided" : Model.Description)</td>
+                        </tr>
+                        <tr>
+                            <th>Registered:</th>
+                            <td>@Model.CreatedAt.ToString("MMMM dd, yyyy")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.User != null)
+                    {
+                        <table class="table table-borderless">
+                            <tr>
+                                <th style="width: 150px;">Full Name:</th>
+                                <td>@Model.User.FullName</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>
+                                    <a href="mailto:@Model.User.Email">@Model.User.Email</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Phone:</th>
+                                <td>@Model.User.PhoneNumber</td>
+                            </tr>
+                            <tr>
+                                <th>Account Status:</th>
+                                <td>
+                                    @if (Model.User.IsApproved)
+                                    {
+                                        <span class="badge bg-success">Approved</span>
+                                    }
+                                    else if (Model.User.AccountStatus == "Rejected")
+                                    {
+                                        <span class="badge bg-danger">Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>User Role:</th>
+                                <td><span class="badge bg-info">@Model.User.Role</span></td>
+                            </tr>
+                            <tr>
+                                <th>Last Login:</th>
+                                <td>@(Model.User.LastLoginAt?.ToString("MMM dd, yyyy HH:mm") ?? "Never")</td>
+                            </tr>
+                            <tr>
+                                <th>Login Attempts:</th>
+                                <td>@(Model.User.LoginAttempts ?? 0)</td>
+                            </tr>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> User account information not found.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- License Information -->
+        @if (!string.IsNullOrEmpty(Model.BusinessLicenseNumber) || !string.IsNullOrEmpty(Model.TaxIdentificationNumber))
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>License Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            @if (!string.IsNullOrEmpty(Model.BusinessLicenseNumber))
+                            {
+                                <tr>
+                                    <th style="width: 150px;">License Number:</th>
+                                    <td>@Model.BusinessLicenseNumber</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.TaxIdentificationNumber))
+                            {
+                                <tr>
+                                    <th>TIN:</th>
+                                    <td>@Model.TaxIdentificationNumber</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Statistics -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h3>@(Model.PurchaseOrders?.Count ?? 0)</h3>
+                            <p class="text-muted">Purchase Orders</p>
+                        </div>
+                        <div class="col-6">
+                            <h3>@(Model.Orders?.Count ?? 0)</h3>
+                            <p class="text-muted">Orders</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Orders Section -->
+    @if (Model.PurchaseOrders != null && Model.PurchaseOrders.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Purchase Orders</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>PO Number</th>
+                                        <th>Supplier</th>
+                                        <th>Order Date</th>
+                                        <th>Total Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var po in Model.PurchaseOrders.OrderByDescending(p => p.OrderDate))
+                                    {
+                                        <tr>
+                                            <td><strong>@po.PONumber</strong></td>
+                                            <td>@(po.Supplier?.CompanyName ?? "N/A")</td>
+                                            <td>@po.OrderDate.ToString("MMM dd, yyyy")</td>
+                                            <td>$@po.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                @if (po.Status == "Completed")
+                                                {
+                                                    <span class="badge bg-success">Completed</span>
+                                                }
+                                                else if (po.Status == "Pending")
+                                                {
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                }
+                                                else if (po.Status == "Processing")
+                                                {
+                                                    <span class="badge bg-info">Processing</span>
+                                                }
+                                                else if (po.Status == "Accepted")
+                                                {
+                                                    <span class="badge bg-primary">Accepted</span>
+                                                }
+                                                else if (po.Status == "Rejected")
+                                                {
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@po.Status</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-info" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (Model.PurchaseOrders.Count > 5)
+                        {
+                            <div class="text-center mt-3">
+                                <a href="#" class="btn btn-outline-primary btn-sm">View All Purchase Orders</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Orders Section -->
+    @if (Model.Orders != null && Model.Orders.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Orders</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Items</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.Orders.OrderByDescending(o => o.CreatedAt).Take(5))
+                                    {
+                                        <tr>
+                                            <td>#@order.Id</td>
+                                            <td>@order.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                @if (order.OrderStatus == "Delivered")
+                                                {
+                                                    <span class="badge bg-success">Delivered</span>
+                                                }
+                                                else if (order.OrderStatus == "Shipped")
+                                                {
+                                                    <span class="badge bg-info">Shipped</span>
+                                                }
+                                                else if (order.OrderStatus == "Processing")
+                                                {
+                                                    <span class="badge bg-warning text-dark">Processing</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@order.OrderStatus</span>
+                                                }
+                                            </td>
+                                            <td>@(order.OrderItems?.Count ?? 0) items</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="approveModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Approve Retailer
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="ApproveRetailer" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-body">
+                    <p>Are you sure you want to approve <strong>@Model.BusinessName</strong>?</p>
+                    <p class="text-muted small">The retailer will be notified and will be able to access the system.</p>
+
+                    @if (Model.User != null && Model.User.AccountStatus == "Rejected")
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> This account was previously rejected. Approving will reactivate it.
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Approve Retailer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="rejectModalLabel">
+                    <i class="fas fa-times-circle me-2"></i>Reject Retailer
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="RejectRetailer" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label fw-bold">Rejection Reason:</label>
+                        <textarea class="form-control" id="rejectionReason" name="rejectionReason"
+                                  rows="4" required placeholder="Please provide a detailed reason for rejection..."></textarea>
+                        <div class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>This reason will be sent to the retailer.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>Reject Retailer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+
+        // Validate rejection reason
+        $('#rejectModal form').on('submit', function(e) {
+            var reason = $('#rejectionReason').val().trim();
+            if (!reason) {
+                e.preventDefault();
+                alert('Please provide a rejection reason.');
+                return false;
+            }
+            if (reason.length < 10) {
+                e.preventDefault();
+                alert('Rejection reason must be at least 10 characters long.');
+                return false;
+            }
+        });
+
+        // Show confirmation for approve if previously rejected
+        $('#approveModal').on('show.bs.modal', function() {
+            var wasRejected = '@(Model.User?.AccountStatus == "Rejected")';
+            if (wasRejected === 'True') {
+                if (!confirm('This account was previously rejected. Are you sure you want to approve it?')) {
+                    $('#approveModal').modal('hide');
+                }
+            }
+        });
+
+        // Focus on textarea when reject modal opens
+        $('#rejectModal').on('shown.bs.modal', function() {
+            $('#rejectionReason').trigger('focus');
+        });
+    </script>
+}

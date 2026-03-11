@@ -1,0 +1,214 @@
+﻿@model SCM_System.Models.Entities.Retailer
+
+@{
+    ViewData["Title"] = "Retailer Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Welcome, @Model.User?.FullName!</h1>
+        <span class="badge bg-@(Model.User?.IsApproved == true ? "success" : "warning") fs-6">
+            @(Model.User?.IsApproved == true ? "Approved" : "Pending Approval")
+        </span>
+    </div>
+
+    @if (Model.User?.IsApproved != true)
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-clock me-2"></i> Your account is pending approval. You'll be able to place orders once approved.
+        </div>
+    }
+
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Orders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalOrders</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pending Orders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.PendingOrders</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Tenders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalTenders</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gavel fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Tenders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.ActiveTenders</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="#" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i> Browse Products
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="#" class="btn btn-success w-100">
+                                <i class="fas fa-file-invoice me-2"></i> Create Tender
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="#" class="btn btn-info w-100">
+                                <i class="fas fa-gavel me-2"></i> View Tenders
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="#" class="btn btn-warning w-100">
+                                <i class="fas fa-history me-2"></i> Order History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Information -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Business Information</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Business Name:</th>
+                            <td>@Model.BusinessName</td>
+                        </tr>
+                        <tr>
+                            <th>Business Type:</th>
+                            <td>@Model.BusinessType</td>
+                        </tr>
+                        <tr>
+                            <th>License Number:</th>
+                            <td>@Model.BusinessLicenseNumber</td>
+                        </tr>
+                        <tr>
+                            <th>TIN:</th>
+                            <td>@Model.TaxIdentificationNumber</td>
+                        </tr>
+                        <tr>
+                            <th>Store Size:</th>
+                            <td>@Model.StoreSize</td>
+                        </tr>
+                        <tr>
+                            <th>Address:</th>
+                            <td>@Model.BusinessAddress</td>
+                        </tr>
+                        <tr>
+                            <th>City:</th>
+                            <td>@Model.City, @Model.Country</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Contact Information</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Contact Person:</th>
+                            <td>@Model.User?.FullName</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>@Model.User?.Email</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>@Model.User?.PhoneNumber</td>
+                        </tr>
+                        <tr>
+                            <th>Member Since:</th>
+                            <td>@Model.CreatedAt.ToString("MMMM dd, yyyy")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Business Description</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.Description</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,329 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<!-- Page Header -->
+<div class="container-fluid py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="text-white mb-2">
+                    <i class="fas fa-user-shield me-2"></i>Admin Dashboard
+                </h1>
+                <p class="text-white-50 mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>@DateTime.Now.ToString("dddd, MMMM dd, yyyy")
+                </p>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-3 px-4 py-2">
+                <span class="text-white">
+                    <i class="fas fa-user-circle me-2"></i>Welcome, @(Context.Session.GetString("UserName") ?? "Admin")
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Total Suppliers Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-building fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Suppliers</h6>
+                            <h3 class="mb-0 fw-bold">@ViewBag.TotalSuppliers</h3>
+                            <small class="text-success">
+                                <i class="fas fa-check-circle me-1"></i>@ViewBag.VerifiedSuppliers Verified
+                            </small>
+                            <small class="text-danger ms-2">
+                                <i class="fas fa-times-circle me-1"></i>@ViewBag.RejectedSuppliers Rejected
+                            </small>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a asp-action="AllSuppliers" class="stretched-link"></a>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-primary" style="width: @(ViewBag.TotalSuppliers > 0 ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers) : 0)%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">Pending: @ViewBag.PendingSuppliers</small>
+                            <small class="text-muted">@(ViewBag.TotalSuppliers > 0 ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers) : 0)% Verified</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Retailers Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-store fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Retailers</h6>
+                            <h3 class="mb-0 fw-bold">@ViewBag.TotalRetailers</h3>
+                            <small class="text-success">
+                                <i class="fas fa-check-circle me-1"></i>@ViewBag.ApprovedRetailers Approved
+                            </small>
+                            <small class="text-danger ms-2">
+                                <i class="fas fa-times-circle me-1"></i>@ViewBag.RejectedRetailers Rejected
+                            </small>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a asp-action="AllRetailers" class="stretched-link"></a>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-success" style="width: @(ViewBag.TotalRetailers > 0 ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers) : 0)%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">Pending: @ViewBag.PendingRetailers</small>
+                            <small class="text-muted">@(ViewBag.TotalRetailers > 0 ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers) : 0)% Approved</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Approvals Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Pending Approvals</h6>
+                            <h3 class="mb-0 fw-bold">@(ViewBag.PendingSuppliers + ViewBag.PendingRetailers)</h3>
+                            <small class="text-warning">
+                                <i class="fas fa-building me-1"></i>@ViewBag.PendingSuppliers Suppliers |
+                                <i class="fas fa-store me-1"></i>@ViewBag.PendingRetailers Retailers
+                            </small>
+                        </div>
+                    </div>
+                    <a asp-action="PendingSuppliers" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Products Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-box fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Products</h6>
+                            <h3 class="mb-0 fw-bold">@ViewBag.TotalProducts</h3>
+                            <small class="text-info">
+                                <i class="fas fa-shopping-cart me-1"></i>@ViewBag.TotalOrders Orders
+                            </small>
+                        </div>
+                    </div>
+                    <a href="#" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a asp-action="PendingSuppliers" class="btn btn-outline-primary w-100 py-3">
+                                <i class="fas fa-clock me-2"></i>Review Approvals
+                                @if (ViewBag.PendingSuppliers > 0 || ViewBag.PendingRetailers > 0)
+                                {
+                                    <span class="badge bg-danger ms-2">@(ViewBag.PendingSuppliers + ViewBag.PendingRetailers)</span>
+                                }
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-action="AllSuppliers" class="btn btn-outline-success w-100 py-3">
+                                <i class="fas fa-building me-2"></i>All Suppliers
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-action="AllRetailers" class="btn btn-outline-info w-100 py-3">
+                                <i class="fas fa-store me-2"></i>All Retailers
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-action="VerifiedSuppliers" class="btn btn-outline-secondary w-100 py-3">
+                                <i class="fas fa-check-circle me-2"></i>Verified Suppliers
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <!-- Recent Suppliers -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-building me-2 text-primary"></i>Recent Suppliers</h5>
+                    <a asp-action="AllSuppliers" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.RecentSuppliers != null && ((IEnumerable<dynamic>)ViewBag.RecentSuppliers).Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var supplier in ViewBag.RecentSuppliers)
+                            {
+                                <div class="list-group-item border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@supplier.CompanyName</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user me-1"></i>@(supplier.User?.FullName ?? "N/A") |
+                                                <i class="fas fa-calendar me-1"></i>@supplier.CreatedAt.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-@(supplier.VerificationStatus == "Verified" ? "success" : supplier.VerificationStatus == "Pending" ? "warning" : "danger") me-2">
+                                                @supplier.VerificationStatus
+                                            </span>
+                                            <a asp-action="SupplierDetails" asp-route-id="@supplier.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No suppliers found</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Retailers -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-store me-2 text-success"></i>Recent Retailers</h5>
+                    <a asp-action="AllRetailers" class="btn btn-sm btn-success">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.RecentRetailers != null && ((IEnumerable<dynamic>)ViewBag.RecentRetailers).Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var retailer in ViewBag.RecentRetailers)
+                            {
+                                <div class="list-group-item border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@retailer.BusinessName</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user me-1"></i>@(retailer.User?.FullName ?? "N/A") |
+                                                <i class="fas fa-calendar me-1"></i>@retailer.CreatedAt.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                        <div>
+                                            @if (retailer.User != null)
+                                            {
+                                                if (retailer.User.IsApproved)
+                                                {
+                                                    <span class="badge bg-success me-2">Approved</span>
+                                                }
+                                                else if (retailer.User.AccountStatus == "Rejected")
+                                                {
+                                                    <span class="badge bg-danger me-2">Rejected</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark me-2">Pending</span>
+                                                }
+                                            }
+                                            <a asp-action="RetailerDetails" asp-route-id="@retailer.Id" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-store fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No retailers found</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Info (Remove in production) -->
+    @if (ViewBag.PendingRetailers != null)
+    {
+        <div class="row mt-2">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body py-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Stats: Pending Suppliers: @ViewBag.PendingSuppliers |
+                            Pending Retailers: @ViewBag.PendingRetailers |
+                            Rejected Retailers: @ViewBag.RejectedRetailers
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

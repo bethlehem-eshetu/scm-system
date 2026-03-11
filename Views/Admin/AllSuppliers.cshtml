@@ -1,0 +1,232 @@
+﻿@model IEnumerable<SCM_System.Models.Entities.Supplier>
+
+@{
+    ViewData["Title"] = "All Suppliers";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-building me-2 text-primary"></i>All Suppliers
+        </h1>
+        <div>
+            <a asp-action="VerifiedSuppliers" class="btn btn-success me-2">
+                <i class="fas fa-check-circle"></i> Verified Suppliers
+            </a>
+            <a asp-action="PendingSuppliers" class="btn btn-warning me-2">
+                <i class="fas fa-clock"></i> Pending Suppliers
+            </a>
+            <a asp-action="RejectedSuppliers" class="btn btn-danger me-2">
+                <i class="fas fa-times-circle"></i> Rejected Suppliers
+            </a>
+            <a asp-action="Dashboard" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Suppliers</h5>
+                    <h2>@Model.Count()</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Pending</h5>
+                    <h2>@Model.Count(s => s.VerificationStatus == "Pending")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Verified</h5>
+                    <h2>@Model.Count(s => s.VerificationStatus == "Verified")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Rejected</h5>
+                    <h2>@Model.Count(s => s.VerificationStatus == "Rejected")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suppliers Table -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped" id="suppliersTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Company Name</th>
+                                <th>Business Type</th>
+                                <th>Contact Person</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>City</th>
+                                <th>Country</th>
+                                <th>Status</th>
+                                <th>Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var supplier in Model)
+                            {
+                                <tr>
+                                    <td>@supplier.Id</td>
+                                    <td>
+                                        <strong>@supplier.CompanyName</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@supplier.BusinessType</span>
+                                    </td>
+                                    <td>@(supplier.User?.FullName ?? "N/A")</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(supplier.User?.Email))
+                                        {
+                                            <a href="mailto:@supplier.User.Email">@supplier.User.Email</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>@(supplier.User?.PhoneNumber ?? "N/A")</td>
+                                    <td>@supplier.City</td>
+                                    <td>@supplier.Country</td>
+                                    <td>
+                                        @if (supplier.VerificationStatus == "Verified")
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Verified
+                                            </span>
+                                        }
+                                        else if (supplier.VerificationStatus == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-clock me-1"></i>Pending
+                                            </span>
+                                        }
+                                        else if (supplier.VerificationStatus == "Rejected")
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>Rejected
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>@supplier.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="SupplierDetails" asp-route-id="@supplier.Id"
+                                               class="btn btn-sm btn-info" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if (supplier.VerificationStatus == "Pending")
+                                            {
+                                                <button type="button" class="btn btn-sm btn-success"
+                                                        onclick="approveSupplier(@supplier.Id)" title="Approve">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-danger"
+                                                        onclick="rejectSupplier(@supplier.Id)" title="Reject">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            }
+                                            @if (!string.IsNullOrEmpty(supplier.LicenseFilePath))
+                                            {
+                                                <a asp-action="ViewLicense" asp-route-id="@supplier.Id"
+                                                   class="btn btn-sm btn-warning" title="View License" target="_blank">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-building fa-4x mb-3 text-muted"></i>
+            <h4>No Suppliers Found</h4>
+            <p class="text-muted">There are no suppliers to display.</p>
+        </div>
+    }
+</div>
+
+<!-- Approve Form -->
+<form id="approveForm" asp-action="ApproveSupplier" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="approveId" />
+</form>
+
+<!-- Reject Form -->
+<form id="rejectForm" asp-action="RejectSupplier" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="rejectId" />
+    <input type="hidden" name="rejectionReason" id="rejectionReason" />
+</form>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
+
+    <script>
+        $(document).ready(function() {
+            $('#suppliersTable').DataTable({
+                "pageLength": 25,
+                "ordering": true,
+                "language": {
+                    "search": "Search suppliers:",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": 10 }
+                ]
+            });
+        });
+
+        function approveSupplier(id) {
+            if (confirm('Are you sure you want to approve this supplier?')) {
+                $('#approveId').val(id);
+                $('#approveForm').submit();
+            }
+        }
+
+        function rejectSupplier(id) {
+            var reason = prompt('Please enter rejection reason:');
+            if (reason && reason.trim() !== '') {
+                $('#rejectId').val(id);
+                $('#rejectionReason').val(reason);
+                $('#rejectForm').submit();
+            } else if (reason !== null) {
+                alert('Rejection reason is required.');
+            }
+        }
+    </script>
+}

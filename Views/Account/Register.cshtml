@@ -4,215 +4,270 @@
     ViewData["Title"] = "Register";
 }
 
-<div class="container mt-5">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Create a New Account</h3>
-                </div>
-                <div class="card-body">
-                    <form asp-action="Register" method="post" enctype="multipart/form-data">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5">
+                    <!-- Header -->
+                    <div class="text-center mb-5">
+                        <div class="mb-3">
+                            <div class="icon-circle bg-primary bg-opacity-10 mx-auto">
+                                <i class="fas fa-user-plus fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                        <h2 class="fw-bold">Create Your Account</h2>
+                        <p class="text-muted">Join Ethiopia's premier supply chain platform</p>
+                    </div>
+
+                    <!-- Alert Messages -->
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Please fix the following errors:</strong>
+                            <ul class="mb-0 mt-2">
+                                @foreach (var modelStateKey in ViewData.ModelState.Keys)
+                                {
+                                    foreach (var error in ViewData.ModelState[modelStateKey].Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Registration Form -->
+                    <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Hidden role field -->
+                        <input type="hidden" asp-for="Role" id="RoleHidden" />
 
                         <!-- Account Information -->
-                        <div class="card mb-4">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Account Information</h5>
-                            </div>
+                        <div class="card bg-light border-0 mb-4">
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="FullName" class="form-label"></label>
+                                <h5 class="mb-3">
+                                    <i class="fas fa-user-circle text-primary me-2"></i>
+                                    Account Information
+                                </h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="FullName" class="form-label">Full Name <span class="text-danger">*</span></label>
                                         <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
-                                        <span asp-validation-for="FullName" class="text-danger"></span>
+                                        <span asp-validation-for="FullName" class="text-danger small"></span>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Email" class="form-label"></label>
-                                        <input asp-for="Email" class="form-control" type="email" placeholder="Enter your email" />
-                                        <span asp-validation-for="Email" class="text-danger"></span>
+                                    <div class="col-md-6">
+                                        <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                                        <input asp-for="Email" class="form-control" type="email" placeholder="you@example.com" />
+                                        <span asp-validation-for="Email" class="text-danger small"></span>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Password" class="form-label"></label>
-                                        <input asp-for="Password" class="form-control" type="password" placeholder="Enter password" />
-                                        <span asp-validation-for="Password" class="text-danger"></span>
+                                    <div class="col-md-6">
+                                        <label asp-for="Password" class="form-label">Password <span class="text-danger">*</span></label>
+                                        <input asp-for="Password" class="form-control" type="password" placeholder="••••••••" />
+                                        <span asp-validation-for="Password" class="text-danger small"></span>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="ConfirmPassword" class="form-label"></label>
-                                        <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="Confirm password" />
-                                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                    <div class="col-md-6">
+                                        <label asp-for="ConfirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                        <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="••••••••" />
+                                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="PhoneNumber" class="form-label"></label>
-                                        <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number" />
-                                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                    <div class="col-md-6">
+                                        <label asp-for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                        <input asp-for="PhoneNumber" class="form-control" placeholder="09xxxxxxxx" />
+                                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Role" class="form-label"></label>
-                                        <select asp-for="Role" class="form-select" id="RoleSelect" required>
+                                    <div class="col-md-6">
+                                        <label asp-for="Role" class="form-label">Register As <span class="text-danger">*</span></label>
+                                        <select id="RoleSelect" class="form-select" required>
                                             <option value="">-- Select Role --</option>
                                             <option value="Supplier">Supplier (I want to sell products)</option>
                                             <option value="Retailer">Retailer (I want to buy products)</option>
                                         </select>
-                                        <span asp-validation-for="Role" class="text-danger"></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Supplier Fields -->
-                        <div id="SupplierFields" class="card mb-4" style="display:none;">
-                            <div class="card-header bg-success text-white">
-                                <h5 class="mb-0">Supplier Business Information</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="CompanyName" class="form-label"></label>
-                                        <input asp-for="CompanyName" class="form-control" placeholder="Enter company name" />
-                                        <span asp-validation-for="CompanyName" class="text-danger"></span>
-                                    </div>
+                        <div id="SupplierFields" style="display: none;">
+                            <div class="card bg-light border-0 mb-4">
+                                <div class="card-body">
+                                    <h5 class="mb-3 text-success">
+                                        <i class="fas fa-building text-success me-2"></i>
+                                        Supplier Business Information
+                                    </h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label asp-for="CompanyName" class="form-label">Company Name <span class="text-danger">*</span></label>
+                                            <input asp-for="CompanyName" class="form-control" id="CompanyName" placeholder="Your company name" />
+                                            <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="BusinessType" class="form-label"></label>
-                                        <select asp-for="BusinessType" class="form-select">
-                                            <option value="">-- Select Business Type --</option>
-                                            <option value="Manufacturer">Manufacturer</option>
-                                            <option value="Distributor">Distributor</option>
-                                            <option value="Wholesaler">Wholesaler</option>
-                                            <option value="Importer">Importer</option>
-                                        </select>
-                                        <span asp-validation-for="BusinessType" class="text-danger"></span>
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="BusinessType" class="form-label">Business Type <span class="text-danger">*</span></label>
+                                            <select asp-for="BusinessType" class="form-control" id="BusinessType">
+                                                <option value="">-- Select Business Type --</option>
+                                                <option value="Manufacturer">Manufacturer</option>
+                                                <option value="Distributor">Distributor</option>
+                                                <option value="Wholesaler">Wholesaler</option>
+                                                <option value="Importer">Importer</option>
+                                            </select>
+                                            <span asp-validation-for="BusinessType" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="LicenseNumber" class="form-label"></label>
-                                        <input asp-for="LicenseNumber" class="form-control" placeholder="Enter business license number" />
-                                        <span asp-validation-for="LicenseNumber" class="text-danger"></span>
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="LicenseNumber" class="form-label">License Number <span class="text-danger">*</span></label>
+                                            <input asp-for="LicenseNumber" class="form-control" id="LicenseNumber" placeholder="Business license number" />
+                                            <span asp-validation-for="LicenseNumber" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="TaxIdentificationNumber" class="form-label"></label>
-                                        <input asp-for="TaxIdentificationNumber" class="form-control" placeholder="Enter TIN" />
-                                        <span asp-validation-for="TaxIdentificationNumber" class="text-danger"></span>
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="TaxIdentificationNumber" class="form-label">TIN <span class="text-danger">*</span></label>
+                                            <input asp-for="TaxIdentificationNumber" class="form-control" id="TaxIdentificationNumber" placeholder="Tax identification number" />
+                                            <span asp-validation-for="TaxIdentificationNumber" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-12 mb-3">
-                                        <label asp-for="LicenseFile" class="form-label"></label>
-                                        <input asp-for="LicenseFile" class="form-control" type="file" accept=".pdf,.jpg,.jpeg,.png" />
-                                        <small class="form-text text-muted">Upload your business license (PDF, JPG, PNG. Max 5MB)</small>
-                                        <span asp-validation-for="LicenseFile" class="text-danger"></span>
-                                    </div>
+                                        <div class="col-12">
+                                            <label asp-for="LicenseFile" class="form-label">License Document <span class="text-danger">*</span></label>
+                                            <input asp-for="LicenseFile" class="form-control" id="LicenseFile" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                                            <small class="text-muted">Upload your business license (PDF, JPG, PNG. Max 5MB)</small>
+                                            <span asp-validation-for="LicenseFile" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-12 mb-3">
-                                        <label asp-for="CompanyAddress" class="form-label"></label>
-                                        <textarea asp-for="CompanyAddress" class="form-control" rows="2" placeholder="Enter full company address"></textarea>
-                                        <span asp-validation-for="CompanyAddress" class="text-danger"></span>
-                                    </div>
+                                        <div class="col-12">
+                                            <label asp-for="CompanyAddress" class="form-label">Company Address <span class="text-danger">*</span></label>
+                                            <textarea asp-for="CompanyAddress" class="form-control" id="CompanyAddress" rows="2" placeholder="Full company address"></textarea>
+                                            <span asp-validation-for="CompanyAddress" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="City" class="form-label"></label>
-                                        <input asp-for="City" class="form-control" placeholder="City" />
-                                        <span asp-validation-for="City" class="text-danger"></span>
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="Website" class="form-label">Website</label>
+                                            <input asp-for="Website" class="form-control" placeholder="https://example.com" />
+                                        </div>
 
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="Country" class="form-label"></label>
-                                        <input asp-for="Country" class="form-control" value="Ethiopia" />
-                                        <span asp-validation-for="Country" class="text-danger"></span>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="Website" class="form-label"></label>
-                                        <input asp-for="Website" class="form-control" placeholder="https://example.com" />
-                                    </div>
-
-                                    <div class="col-12 mb-3">
-                                        <label asp-for="CompanyDescription" class="form-label"></label>
-                                        <textarea asp-for="CompanyDescription" class="form-control" rows="3" placeholder="Describe your company"></textarea>
+                                        <div class="col-12">
+                                            <label asp-for="CompanyDescription" class="form-label">Company Description</label>
+                                            <textarea asp-for="CompanyDescription" class="form-control" rows="3" placeholder="Tell us about your company"></textarea>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Retailer Fields -->
-                        <div id="RetailerFields" class="card mb-4" style="display:none;">
-                            <div class="card-header bg-warning text-dark">
-                                <h5 class="mb-0">Retailer Business Information</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="BusinessName" class="form-label"></label>
-                                        <input asp-for="BusinessName" class="form-control" placeholder="Enter business name" />
-                                        <span asp-validation-for="BusinessName" class="text-danger"></span>
-                                    </div>
+                        <div id="RetailerFields" style="display: none;">
+                            <div class="card bg-light border-0 mb-4">
+                                <div class="card-body">
+                                    <h5 class="mb-3 text-warning">
+                                        <i class="fas fa-store text-warning me-2"></i>
+                                        Retailer Business Information
+                                    </h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label asp-for="BusinessName" class="form-label">Business Name <span class="text-danger">*</span></label>
+                                            <input asp-for="BusinessName" class="form-control" id="BusinessName" placeholder="Your business name" />
+                                            <span asp-validation-for="BusinessName" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="RetailerBusinessType" class="form-label"></label>
-                                        <select asp-for="RetailerBusinessType" class="form-select">
-                                            <option value="">-- Select Business Type --</option>
-                                            <option value="Retail Shop">Retail Shop</option>
-                                            <option value="Supermarket">Supermarket</option>
-                                            <option value="Distributor">Distributor</option>
-                                            <option value="Online Store">Online Store</option>
-                                        </select>
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="RetailerBusinessType" class="form-label">Business Type <span class="text-danger">*</span></label>
+                                            <select asp-for="RetailerBusinessType" class="form-control" id="RetailerBusinessType">
+                                                <option value="">-- Select Business Type --</option>
+                                                <option value="Retail Shop">Retail Shop</option>
+                                                <option value="Supermarket">Supermarket</option>
+                                                <option value="Distributor">Distributor</option>
+                                                <option value="Online Store">Online Store</option>
+                                            </select>
+                                            <span asp-validation-for="RetailerBusinessType" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="RetailerLicenseNumber" class="form-label"></label>
-                                        <input asp-for="RetailerLicenseNumber" class="form-control" placeholder="Enter business license number" />
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="RetailerLicenseNumber" class="form-label">License Number <span class="text-danger">*</span></label>
+                                            <input asp-for="RetailerLicenseNumber" class="form-control" id="RetailerLicenseNumber" placeholder="Business license number" />
+                                            <span asp-validation-for="RetailerLicenseNumber" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="TaxIdentificationNumber" class="form-label"></label>
-                                        <input asp-for="TaxIdentificationNumber" class="form-control" placeholder="Enter TIN" />
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="TaxIdentificationNumber" class="form-label">TIN (Optional)</label>
+                                            <input asp-for="TaxIdentificationNumber" class="form-control" placeholder="Tax identification number" />
+                                        </div>
 
-                                    <div class="col-12 mb-3">
-                                        <label asp-for="BusinessAddress" class="form-label"></label>
-                                        <textarea asp-for="BusinessAddress" class="form-control" rows="2" placeholder="Enter full business address"></textarea>
-                                    </div>
+                                        <div class="col-12">
+                                            <label asp-for="BusinessAddress" class="form-label">Business Address <span class="text-danger">*</span></label>
+                                            <textarea asp-for="BusinessAddress" class="form-control" id="BusinessAddress" rows="2" placeholder="Full business address"></textarea>
+                                            <span asp-validation-for="BusinessAddress" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="City" class="form-label"></label>
-                                        <input asp-for="City" class="form-control" placeholder="City" />
-                                    </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="StoreSize" class="form-label">Store Size <span class="text-danger">*</span></label>
+                                            <select asp-for="StoreSize" class="form-control" id="StoreSize">
+                                                <option value="">-- Select Store Size --</option>
+                                                <option value="Small">Small</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="Large">Large</option>
+                                            </select>
+                                            <span asp-validation-for="StoreSize" class="text-danger small"></span>
+                                        </div>
 
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="Country" class="form-label"></label>
-                                        <input asp-for="Country" class="form-control" value="Ethiopia" />
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="StoreSize" class="form-label"></label>
-                                        <select asp-for="StoreSize" class="form-select">
-                                            <option value="">-- Select Store Size --</option>
-                                            <option value="Small">Small</option>
-                                            <option value="Medium">Medium</option>
-                                            <option value="Large">Large</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-12 mb-3">
-                                        <label asp-for="BusinessDescription" class="form-label"></label>
-                                        <textarea asp-for="BusinessDescription" class="form-control" rows="3" placeholder="Describe your business"></textarea>
+                                        <div class="col-12">
+                                            <label asp-for="BusinessDescription" class="form-label">Business Description</label>
+                                            <textarea asp-for="BusinessDescription" class="form-control" rows="3" placeholder="Tell us about your business"></textarea>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">Register</button>
+                        <!-- Location Information -->
+                        <div class="card bg-light border-0 mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-3 text-secondary">
+                                    <i class="fas fa-map-marker-alt text-secondary me-2"></i>
+                                    Location Information
+                                </h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="City" class="form-label">City <span class="text-danger">*</span></label>
+                                        <input asp-for="City" class="form-control" id="CityField" placeholder="Your city" />
+                                        <span asp-validation-for="City" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="Country" class="form-label">Country</label>
+                                        <input asp-for="Country" class="form-control" value="Ethiopia" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="text-center mt-3">
-                            <a asp-action="Login">Already have an account? Login here</a>
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+
+                        <!-- Login Link -->
+                        <div class="text-center">
+                            <p class="mb-0">
+                                Already have an account?
+                                <a asp-action="Login" class="text-primary fw-bold text-decoration-none">
+                                    Sign In <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </p>
                         </div>
                     </form>
                 </div>
@@ -221,35 +276,216 @@
     </div>
 </div>
 
+@section Styles {
+    <style>
+        .icon-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            border-radius: 16px;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #2563eb;
+                box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            }
+
+        .btn-primary {
+            background: #2563eb;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+            .btn-primary:hover {
+                background: #1d4ed8;
+            }
+
+        .bg-light {
+            background-color: #f8fafc !important;
+        }
+
+        .text-primary {
+            color: #2563eb !important;
+        }
+    </style>
+}
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
         $(document).ready(function() {
+            // Handle role selection change
             $('#RoleSelect').change(function() {
                 var role = $(this).val();
                 $('#SupplierFields').hide();
                 $('#RetailerFields').hide();
+                $('#RoleHidden').val(role);
 
-                // Remove required attributes
-                $('#CompanyName, #LicenseNumber, #LicenseFile, #CompanyAddress, #City, #BusinessName, #BusinessAddress').prop('required', false);
+                // Remove required from ALL fields first
+                $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress, #BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', false);
+
+                // City is ALWAYS required
+                $('#CityField').prop('required', true);
 
                 if (role === 'Supplier') {
                     $('#SupplierFields').show();
                     // Make supplier fields required
-                    $('#CompanyName').prop('required', true);
-                    $('#BusinessType').prop('required', true);
-                    $('#LicenseNumber').prop('required', true);
-                    $('#LicenseFile').prop('required', true);
-                    $('#TaxIdentificationNumber').prop('required', true);
-                    $('#CompanyAddress').prop('required', true);
-                    $('#City').prop('required', true);
+                    $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress').prop('required', true);
                 } else if (role === 'Retailer') {
                     $('#RetailerFields').show();
                     // Make retailer fields required
-                    $('#BusinessName').prop('required', true);
-                    $('#BusinessAddress').prop('required', true);
-                    $('#City').prop('required', true);
+                    $('#BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', true);
                 }
+            });
+
+            // If role is already selected (e.g., after validation error)
+            var selectedRole = $('#RoleHidden').val();
+            if (selectedRole) {
+                $('#RoleSelect').val(selectedRole).trigger('change');
+            }
+
+            // Form submission validation
+            $('#registerForm').on('submit', function(e) {
+                var role = $('#RoleSelect').val();
+
+                // Check if role is selected
+                if (!role || role === '') {
+                    e.preventDefault();
+                    alert('Please select a role (Supplier or Retailer)');
+                    $('#RoleSelect').focus();
+                    return false;
+                }
+
+                // Check common required fields
+                if (!$('#FullName').val()) {
+                    e.preventDefault();
+                    alert('Full name is required');
+                    $('#FullName').focus();
+                    return false;
+                }
+
+                if (!$('#Email').val()) {
+                    e.preventDefault();
+                    alert('Email is required');
+                    $('#Email').focus();
+                    return false;
+                }
+
+                if (!$('#Password').val()) {
+                    e.preventDefault();
+                    alert('Password is required');
+                    $('#Password').focus();
+                    return false;
+                }
+
+                if ($('#Password').val() !== $('#ConfirmPassword').val()) {
+                    e.preventDefault();
+                    alert('Passwords do not match');
+                    $('#ConfirmPassword').focus();
+                    return false;
+                }
+
+                if (!$('#PhoneNumber').val()) {
+                    e.preventDefault();
+                    alert('Phone number is required');
+                    $('#PhoneNumber').focus();
+                    return false;
+                }
+
+                // Check city
+                if (!$('#CityField').val()) {
+                    e.preventDefault();
+                    alert('City is required');
+                    $('#CityField').focus();
+                    return false;
+                }
+
+                // Role-specific validation
+                if (role === 'Supplier') {
+                    if (!$('#CompanyName').val()) {
+                        e.preventDefault();
+                        alert('Company name is required');
+                        $('#CompanyName').focus();
+                        return false;
+                    }
+                    if (!$('#BusinessType').val()) {
+                        e.preventDefault();
+                        alert('Business type is required');
+                        $('#BusinessType').focus();
+                        return false;
+                    }
+                    if (!$('#LicenseNumber').val()) {
+                        e.preventDefault();
+                        alert('License number is required');
+                        $('#LicenseNumber').focus();
+                        return false;
+                    }
+                    if (!$('#LicenseFile').val()) {
+                        e.preventDefault();
+                        alert('License document is required');
+                        $('#LicenseFile').focus();
+                        return false;
+                    }
+                    if (!$('#TaxIdentificationNumber').val()) {
+                        e.preventDefault();
+                        alert('Tax identification number is required');
+                        $('#TaxIdentificationNumber').focus();
+                        return false;
+                    }
+                    if (!$('#CompanyAddress').val()) {
+                        e.preventDefault();
+                        alert('Company address is required');
+                        $('#CompanyAddress').focus();
+                        return false;
+                    }
+                } else if (role === 'Retailer') {
+                    if (!$('#BusinessName').val()) {
+                        e.preventDefault();
+                        alert('Business name is required');
+                        $('#BusinessName').focus();
+                        return false;
+                    }
+                    if (!$('#RetailerBusinessType').val()) {
+                        e.preventDefault();
+                        alert('Business type is required');
+                        $('#RetailerBusinessType').focus();
+                        return false;
+                    }
+                    if (!$('#RetailerLicenseNumber').val()) {
+                        e.preventDefault();
+                        alert('Business license number is required');
+                        $('#RetailerLicenseNumber').focus();
+                        return false;
+                    }
+                    if (!$('#BusinessAddress').val()) {
+                        e.preventDefault();
+                        alert('Business address is required');
+                        $('#BusinessAddress').focus();
+                        return false;
+                    }
+                    if (!$('#StoreSize').val()) {
+                        e.preventDefault();
+                        alert('Store size is required');
+                        $('#StoreSize').focus();
+                        return false;
+                    }
+                }
+
+                return true;
             });
         });
     </script>

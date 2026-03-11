@@ -1,0 +1,254 @@
+﻿@model IEnumerable<SCM_System.Models.ViewModels.PendingSupplierViewModel>
+
+@{
+    ViewData["Title"] = "Pending Approvals";
+    var pendingRetailers = ViewBag.PendingRetailers as IEnumerable<SCM_System.Models.ViewModels.PendingRetailerViewModel>;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Pending Approvals</h1>
+        <a asp-action="Dashboard" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs mb-4" id="pendingTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#suppliers" type="button" role="tab">
+                <i class="fas fa-building me-2"></i>Pending Suppliers
+                <span class="badge bg-warning ms-2">@Model.Count()</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="retailers-tab" data-bs-toggle="tab" data-bs-target="#retailers" type="button" role="tab">
+                <i class="fas fa-store me-2"></i>Pending Retailers
+                <span class="badge bg-warning ms-2">@(pendingRetailers?.Count() ?? 0)</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab content -->
+    <div class="tab-content" id="pendingTabsContent">
+        <!-- Suppliers Tab -->
+        <div class="tab-pane fade show active" id="suppliers" role="tabpanel">
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No pending suppliers to review.
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var supplier in Model)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card shadow h-100">
+                                <div class="card-header bg-warning text-white">
+                                    <h5 class="mb-0">@supplier.CompanyName</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Contact Person:</strong><br>
+                                        @supplier.FullName<br>
+                                        <small class="text-muted">@supplier.Email | @supplier.PhoneNumber</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Business Type:</strong> @supplier.BusinessType<br>
+                                        <strong>License #:</strong> @supplier.LicenseNumber<br>
+                                        <strong>TIN:</strong> @supplier.TaxIdentificationNumber
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Address:</strong><br>
+                                        @supplier.CompanyAddress<br>
+                                        @supplier.City, @supplier.Country
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(supplier.Website))
+                                    {
+                                        <div class="mb-3">
+                                            <strong>Website:</strong> <a href="@supplier.Website" target="_blank">@supplier.Website</a>
+                                        </div>
+                                    }
+
+                                    <div class="mb-3">
+                                        <strong>Registered:</strong> @supplier.CreatedAt.ToString("MMM dd, yyyy")
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <a asp-action="ViewLicense" asp-route-id="@supplier.Id" class="btn btn-info btn-sm" target="_blank">
+                                            <i class="fas fa-file-pdf"></i> View License
+                                        </a>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(supplier.Description))
+                                    {
+                                        <div class="mb-3">
+                                            <strong>Description:</strong><br>
+                                            <p class="small">@supplier.Description</p>
+                                        </div>
+                                    }
+
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <form asp-action="ApproveSupplier" asp-route-id="@supplier.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success" onclick="return confirm('Approve this supplier? They will be able to login immediately.')">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+
+                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal-@supplier.Id">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reject Modal for Supplier -->
+                        <div class="modal fade" id="rejectModal-@supplier.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Reject Supplier: @supplier.CompanyName</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form asp-action="RejectSupplier" asp-route-id="@supplier.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="rejectionReason" class="form-label">Rejection Reason</label>
+                                                <textarea class="form-control" id="rejectionReason" name="rejectionReason" rows="3" required></textarea>
+                                                <div class="form-text">This reason will be sent to the supplier.</div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">Reject Supplier</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Retailers Tab -->
+        <div class="tab-pane fade" id="retailers" role="tabpanel">
+            @if (pendingRetailers == null || !pendingRetailers.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No pending retailers to review.
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var retailer in pendingRetailers)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card shadow h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">@retailer.BusinessName</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Contact Person:</strong><br>
+                                        @retailer.FullName<br>
+                                        <small class="text-muted">@retailer.Email | @retailer.PhoneNumber</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Business Type:</strong> @retailer.BusinessType<br>
+                                        <strong>License #:</strong> @retailer.BusinessLicenseNumber<br>
+                                        <strong>TIN:</strong> @retailer.TaxIdentificationNumber
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Address:</strong><br>
+                                        @retailer.BusinessAddress<br>
+                                        @retailer.City, @retailer.Country
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Store Size:</strong> @retailer.StoreSize<br>
+                                        <strong>Registered:</strong> @retailer.CreatedAt.ToString("MMM dd, yyyy")
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(retailer.Description))
+                                    {
+                                        <div class="mb-3">
+                                            <strong>Description:</strong><br>
+                                            <p class="small">@retailer.Description</p>
+                                        </div>
+                                    }
+
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <form asp-action="ApproveRetailer" asp-route-id="@retailer.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success" onclick="return confirm('Approve this retailer?')">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+
+                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectRetailerModal-@retailer.Id">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reject Modal for Retailer -->
+                        <div class="modal fade" id="rejectRetailerModal-@retailer.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Reject Retailer: @retailer.BusinessName</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form asp-action="RejectRetailer" asp-route-id="@retailer.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="rejectionReason" class="form-label">Rejection Reason</label>
+                                                <textarea class="form-control" id="rejectionReason" name="rejectionReason" rows="3" required></textarea>
+                                                <div class="form-text">This reason will be sent to the retailer.</div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">Reject Retailer</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
