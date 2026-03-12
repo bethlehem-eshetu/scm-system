@@ -1,0 +1,93 @@
+@model SCM_System.Models.ViewModels.EmployeeViewModel
+
+@{
+    ViewData["Title"] = "Edit Employee";
+    Layout = "_SupplierLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-lg">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-bottom-0">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-edit me-2"></i> Edit Employee</h6>
+                    <a asp-action="Employees" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="EditEmployee" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 text-center mb-4 mb-md-0 d-flex flex-column justify-content-center align-items-center bg-light rounded p-4">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <h5 class="text-muted">Update Details</h5>
+                                <p class="small text-muted text-center">Update the employee's personal and account details. Leave passwords blank to keep them unchanged.</p>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="FullName" class="form-label font-weight-bold small text-muted">Full Name <span class="text-danger">*</span></label>
+                                    <input asp-for="FullName" class="form-control" />
+                                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label font-weight-bold small text-muted">Email Address <span class="text-danger">*</span></label>
+                                    <input asp-for="Email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label font-weight-bold small text-muted">Phone Number</label>
+                                    <input asp-for="PhoneNumber" class="form-control" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Role" class="form-label font-weight-bold small text-muted">Assign Role <span class="text-danger">*</span></label>
+                                <select asp-for="Role" class="form-select">
+                                    <option value="">-- Select Role --</option>
+                                    <option value="Warehouse">Warehouse Manager</option>
+                                    <option value="Delivery">Delivery Personnel</option>
+                                </select>
+                                <span asp-validation-for="Role" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Password" class="form-label font-weight-bold small text-muted">New Password (Optional)</label>
+                                <input asp-for="Password" class="form-control" placeholder="Leave blank to keep unchanged" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label font-weight-bold small text-muted">Confirm New Password</label>
+                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Leave blank to keep unchanged" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-block py-2">
+                                <i class="fas fa-save me-2"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

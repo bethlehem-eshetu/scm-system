@@ -1,0 +1,91 @@
+@model SCM_System.Models.Entities.SupplierEmployee
+
+@{
+    ViewData["Title"] = "Delivery Dashboard";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h3 mb-0 text-gray-800">Delivery Dashboard</h2>
+                <p class="text-muted mb-0">Welcome, @Model.User.FullName</p>
+            </div>
+            
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle shadow-sm" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user-circle me-1"></i> @Model.User.FullName
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenuButton">
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-key fa-sm fa-fw text-gray-400 mr-2"></i> Change Password</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt fa-sm fa-fw text-gray-400 mr-2"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Employee Profile Area -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header py-3 bg-white border-bottom-0">
+                    <h6 class="m-0 font-weight-bold text-success">EMPLOYEE PROFILE</h6>
+                </div>
+                <div class="card-body text-center pt-0">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px; font-size: 3rem;">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h5 class="font-weight-bold">@Model.User.FullName</h5>
+                    <p class="text-muted mb-4">@Model.EmployeeRole.Replace("_", " ").ToUpper()</p>
+                    
+                    <ul class="list-group list-group-flush text-start">
+                        <li class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted"><i class="fas fa-building me-2"></i>Employer:</span>
+                                <strong>@Model.Supplier?.CompanyName</strong>
+                            </div>
+                        </li>
+                        <li class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted"><i class="fas fa-envelope me-2"></i>Email:</span>
+                                <strong>@Model.User.Email</strong>
+                            </div>
+                        </li>
+                        <li class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted"><i class="fas fa-phone me-2"></i>Phone:</span>
+                                <strong>@Model.User.PhoneNumber</strong>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="mt-4 text-center">
+                        <button class="btn btn-outline-success btn-sm"><i class="fas fa-key me-1"></i> Change Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Placeholder for Module 3 & 4 content -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow border-0 h-100 bg-light">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-5">
+                    <div class="text-success mb-4" style="font-size: 4rem;">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h4 class="font-weight-bold text-gray-800">COMING SOON - To be added by Module 3 & 4</h4>
+                    <p class="text-muted">The following features will populate this area:</p>
+                    <ul class="list-unstyled text-muted mt-3 text-start">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Today's Assigned Deliveries <span class="badge bg-secondary ms-2 text-white">Module 3</span></li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Delivery Route <span class="badge bg-secondary ms-2 text-white">Module 3</span></li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Mark as Delivered <span class="badge bg-secondary ms-2 text-white">Module 3</span></li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Proof of Delivery Upload <span class="badge bg-secondary ms-2 text-white">Module 4</span></li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Report Issues <span class="badge bg-secondary ms-2 text-white">Module 4</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

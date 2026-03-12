@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SCM Dashboard</title>
+    
+    <!-- Bootstrap and Fonts -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --primary-color: #4f46e5;      /* Indigo */
+            --primary-dark: #4338ca;
+            --sidebar-bg: #1e1b4b;         /* Deep Indigo */
+            --sidebar-hover: rgba(255, 255, 255, 0.1);
+            --sidebar-color: #c7d2fe;
+            --sidebar-active: #ffffff;
+            --bg-color: #f3f4f6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+            min-height: 100vh;
+        }
+
+        #sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: var(--sidebar-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar.active {
+            margin-left: calc(-1 * var(--sidebar-width));
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-header .brand {
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .sidebar-header .brand i {
+            color: #818cf8;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+            list-style: none;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        .menu-label {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.4);
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .sidebar-menu li a {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            color: var(--sidebar-color);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu li a i {
+            width: 24px;
+            font-size: 1.1rem;
+            margin-right: 10px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li.active > a {
+            background: var(--sidebar-hover);
+            color: var(--sidebar-active);
+            border-left-color: #818cf8;
+        }
+
+        .sidebar-menu li a:hover i {
+            transform: translateX(3px);
+            color: #818cf8;
+        }
+
+        /* User Profile in Sidebar */
+        .sidebar-user {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .sidebar-user .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-user .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #818cf8;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 12px;
+        }
+
+        /* Content Area */
+        #content {
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #content.active {
+            width: 100%;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            padding: 1rem 2rem;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar-toggler {
+            background: transparent;
+            border: none;
+            color: #4b5563;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-toggler:hover {
+            background: #f3f4f6;
+            color: var(--primary-color);
+        }
+
+        /* Main Content Padding */
+        .main-container {
+            padding: 2rem;
+            flex-grow: 1;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            #sidebar {
+                margin-left: calc(-1 * var(--sidebar-width));
+            }
+            #sidebar.active {
+                margin-left: 0;
+            }
+            #content {
+                width: 100%;
+            }
+            #content.active {
+                /* When sidebar is active on mobile, push content slightly or overlay */
+                transform: translateX(var(--sidebar-width));
+            }
+            .main-container {
+                padding: 1rem;
+            }
+        }
+        
+        /* Dashboard Cards & Aesthetic Utilities */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="brand">
+                    <i class="fas fa-cubes"></i>
+                    <span>SCM System</span>
+                </a>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-label">Menu</li>
+                
+                @{
+                    var role = Context.Session.GetString("UserRole");
+                }
+
+                @if (role == "Admin")
+                {
+                    <li>
+                        <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="PendingSuppliers"><i class="fas fa-user-check"></i> Verifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users"></i> All Users</a>
+                    </li>
+                }
+                else if (role == "Supplier")
+                {
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-box"></i> Products</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-gavel"></i> Tenders</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
+                    </li>
+                    <li class="menu-label">Management</li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Employees"><i class="fas fa-users-cog"></i> Employees</a>
+                    </li>
+                }
+                else if (role == "Retailer")
+                {
+                    <li>
+                        <a asp-controller="Retailer" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-search"></i> Browse Catalog</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-clipboard-list"></i> My Orders</a>
+                    </li>
+                }
+                else if (role == "Warehouse")
+                {
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-clipboard-check"></i> Picking List</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-boxes"></i> Inventory</a>
+                    </li>
+                }
+                else if (role == "Delivery")
+                {
+                    <li>
+                        <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-route"></i> Deliveries</a>
+                    </li>
+                }
+                
+                <li class="menu-label">Settings</li>
+                <li>
+                    <a href="#"><i class="fas fa-cog"></i> Account Settings</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-user">
+                <div class="user-info">
+                    <div class="avatar">
+                        @{
+                            var name = Context.Session.GetString("UserName") ?? "U";
+                            @name.Substring(0, 1).ToUpper()
+                        }
+                    </div>
+                    <div>
+                        <div class="text-white fw-bold" style="font-size: 0.9rem;">@name</div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">@role</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <nav class="top-navbar">
+                <button type="button" id="sidebarCollapse" class="sidebar-toggler">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="d-flex align-items-center">
+                    <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </div>
+            </nav>
+
+            <main class="main-container">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+                $('#content').toggleClass('active');
+            });
+            
+            // Highlight active menu item based on current URL path
+            var path = window.location.pathname;
+            $('.sidebar-menu li a').each(function() {
+                if ($(this).attr('href') === path || $(this).attr('href') === path + "/") {
+                    $(this).parent().addClass('active');
+                }
+            });
+        });
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -478,6 +478,14 @@ namespace SCM_System.Controllers
                     {
                         return RedirectToAction("Dashboard", "Retailer");
                     }
+                    else if (user.Role == "Warehouse")
+                    {
+                        return RedirectToAction("Dashboard", "Warehouse");
+                    }
+                    else if (user.Role == "Delivery")
+                    {
+                        return RedirectToAction("Dashboard", "Delivery");
+                    }
 
                     return RedirectToAction("Index", "Home");
                 }
