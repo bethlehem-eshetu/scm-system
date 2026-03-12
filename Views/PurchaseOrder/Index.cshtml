@@ -1,0 +1,148 @@
+@model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Purchase Orders";
+    var userRole = Context.Session.GetString("UserRole");
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">
+            <i class="fas fa-file-contract text-primary me-2"></i>
+            @(userRole == "Retailer" ? "My Sent Purchase Orders" : "Received Purchase Orders")
+        </h2>
+        
+        @if (userRole == "Retailer")
+        {
+            <a asp-controller="Marketplace" asp-action="Index" class="btn btn-primary shadow-sm rounded-pill px-4 fw-bold">
+                <i class="fas fa-shopping-cart me-2"></i> Browse Marketplace
+            </a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 bg-white rounded-4 shadow-sm border-0 d-flex flex-column align-items-center justify-content-center" style="min-height: 40vh;">
+            <div class="bg-light rounded-circle p-4 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                <i class="fas fa-folder-open fa-3x text-primary opacity-50"></i>
+            </div>
+            <h4 class="fw-bold text-dark">No Purchase Orders Found</h4>
+            @if (userRole == "Retailer") {
+                <p class="text-muted w-50">You can create Purchase Orders directly from the marketplace catalog, or by awarding submitted tender bids.</p>
+                <a asp-controller="Marketplace" asp-action="Index" class="btn btn-outline-primary mt-3 rounded-pill px-4">Go to Marketplace</a>
+            } else {
+                <p class="text-muted w-50">You have not received any direct purchase orders or awarded tenders from retailers yet.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 custom-table">
+                        <thead class="bg-light border-bottom">
+                            <tr>
+                                <th class="py-3 px-4 text-uppercase text-muted fs-7 fw-bold tracking-wide">PO Number</th>
+                                <th class="py-3 px-4 text-uppercase text-muted fs-7 fw-bold tracking-wide">@(userRole == "Retailer" ? "Supplier Insight" : "Retailer Detail")</th>
+                                <th class="py-3 px-4 text-uppercase text-muted fs-7 fw-bold tracking-wide">Order Details</th>
+                                <th class="py-3 px-4 text-uppercase text-muted fs-7 fw-bold tracking-wide">Total Amount</th>
+                                <th class="py-3 px-4 text-uppercase text-muted fs-7 fw-bold tracking-wide">Date Issued</th>
+                                <th class="py-3 px-4 text-uppercase text-muted fs-7 fw-bold tracking-wide">Status</th>
+                                <th class="py-3 px-4 text-end text-uppercase text-muted fs-7 fw-bold tracking-wide">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="border-bottom transition-all" style="cursor: pointer;" onclick="window.location.href='@Url.Action("Details", new { id = item.Id })'">
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </div>
+                                            <span class="fw-bold font-monospace text-dark">@item.PONumber</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="fw-bold text-dark fs-6">
+                                            @(userRole == "Retailer" ? item.Supplier?.CompanyName : item.Retailer?.BusinessName)
+                                        </div>
+                                        <div class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i>@(userRole == "Retailer" ? item.Supplier?.City : item.Retailer?.City)</div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="fw-semibold text-dark text-truncate" style="max-width:220px;" title="@item.ProductName">
+                                            @item.ProductName
+                                        </div>
+                                        <div class="small text-muted d-flex align-items-center mt-1">
+                                            <span class="badge bg-light text-dark border me-2">Qty: @item.Quantity</span> 
+                                            <span class="opacity-75">@@ @item.UnitPrice.ToString("C")</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="fw-bold fs-5 text-success">@item.TotalAmount.ToString("C")</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-muted">
+                                        <div class="fw-medium text-dark">@item.OrderDate.ToString("MMM dd, yyyy")</div>
+                                        <div class="small">@item.OrderDate.ToString("hh:mm tt")</div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if (item.Status == "Pending")
+                                        {
+                                            <span class="badge rounded-pill bg-warning bg-opacity-25 text-warning border-warning border px-3 py-2"><i class="fas fa-hourglass-half me-1"></i> Pending</span>
+                                        }
+                                        else if (item.Status == "Accepted")
+                                        {
+                                            <span class="badge rounded-pill bg-success bg-opacity-25 text-success border-success border px-3 py-2"><i class="fas fa-check-circle me-1"></i> Accepted</span>
+                                        }
+                                        else if (item.Status == "Rejected")
+                                        {
+                                            <span class="badge rounded-pill bg-danger bg-opacity-25 text-danger border-danger border px-3 py-2"><i class="fas fa-times-circle me-1"></i> Rejected</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-pill bg-secondary bg-opacity-25 text-secondary border-secondary border px-3 py-2"><i class="fas fa-ban me-1"></i> Cancelled</span>
+                                        }
+                                        
+                                        @if (item.TenderBidId != null)
+                                        {
+                                            <div class="mt-2">
+                                                <span class="badge bg-primary text-white bg-opacity-75 rounded-pill"><small><i class="fas fa-gavel me-1"></i> Tender Award</small></span>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="px-4 py-3 text-end">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-light border shadow-sm rounded-circle p-2 action-btn" onclick="event.stopPropagation();">
+                                            <i class="fas fa-chevron-right text-primary"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .fs-7 { font-size: 0.75rem; }
+    .tracking-wide { letter-spacing: 0.05em; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    
+    .custom-table tbody tr:hover {
+        background-color: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        position: relative;
+        z-index: 10;
+    }
+
+    .action-btn { transition: all 0.2s ease; }
+    .custom-table tbody tr:hover .action-btn {
+        background-color: #e0e7ff !important;
+        border-color: #c7d2fe !important;
+    }
+</style>

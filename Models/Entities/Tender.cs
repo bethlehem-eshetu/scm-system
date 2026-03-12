@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -20,11 +20,14 @@ namespace SCM_System.Models.Entities
 
         public string Description { get; set; }
 
+        [Required]
+        public int Quantity { get; set; }
+
         public DateTime ClosingDate { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } // Open, Closed, Awarded, Cancelled
+        public string Status { get; set; } = "Open"; // Open, Closed, Awarded, Cancelled
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -17,7 +17,7 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(20)]
         [Display(Name = "Order Status")]
-        public string OrderStatus { get; set; } = "Processing"; // Processing, Packed, Shipped, Delivered
+        public string OrderStatus { get; set; } = "Processing"; // Processing, Packed, Shipped, Delivered, Cancelled
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

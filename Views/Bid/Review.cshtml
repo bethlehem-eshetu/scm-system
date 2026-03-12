@@ -1,0 +1,133 @@
+@model SCM_System.Models.Entities.Tender
+
+@{
+    ViewData["Title"] = "Review Bids";
+}
+
+<div class="container mt-4">
+    <div class="mb-4 d-flex justify-content-between align-items-center border-bottom pb-3">
+        <div>
+            <h2><i class="fas fa-balance-scale text-primary me-2"></i>Review Submitted Bids</h2>
+            <p class="text-muted mb-0">Tender: <strong>@Model.Title</strong> | Quantity: <strong>@Model.Quantity</strong></p>
+        </div>
+        <a asp-controller="Tender" asp-action="MyTenders" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back to My Tenders</a>
+    </div>
+
+    @if (Model.Bids == null || !Model.Bids.Any())
+    {
+        <div class="alert alert-info shadow-sm p-4 text-center">
+            <i class="fas fa-info-circle fa-3x text-info mb-3 d-block"></i>
+            <h5>Nobody has placed a bid on this tender yet.</h5>
+            <p class="mb-0 text-muted">You will be notified when a supplier submits a competitive offer.</p>
+        </div>
+    }
+    else
+    {
+        var acceptedBid = Model.Bids.FirstOrDefault(b => b.Status == "Accepted");
+
+        if (acceptedBid != null)
+        {
+            <div class="alert alert-success shadow-sm p-4 d-flex align-items-center mb-4 border-2 border-success">
+                <i class="fas fa-handshake fa-3x text-success me-4"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Tender Successfully Awarded!</h5>
+                    <p class="mb-0">You accepted the bid from <strong>@acceptedBid.Supplier.CompanyName</strong>. A Purchase Order has already been automatically created.</p>
+                    <a asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-sm btn-success mt-2 fw-bold"><i class="fas fa-file-invoice me-1"></i> View Purchase Orders</a>
+                </div>
+            </div>
+        }
+
+        <div class="row row-cols-1 row-cols-lg-3 g-4">
+            @foreach (var bid in Model.Bids.OrderBy(b => b.BidAmount))
+            {
+                var isAccepted = bid.Status == "Accepted";
+                var isRejected = bid.Status == "Rejected";
+                var borderColor = isAccepted ? "border-success border-3 shadow" : isRejected ? "border-danger opacity-75" : "border-primary-subtle shadow-sm hover-shadow";
+                var bgColor = isAccepted ? "bg-success-subtle" : isRejected ? "bg-danger-subtle" : "bg-white";
+
+                <div class="col">
+                    <div class="card h-100 @borderColor @bgColor transition-all position-relative">
+                        @if (isAccepted)
+                        {
+                            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-success px-4 py-2 fs-6 shadow">
+                                <i class="fas fa-trophy me-1 text-warning"></i> AWARDED WINNER
+                            </span>
+                        }
+                        else if (isRejected)
+                        {
+                            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-danger px-3 py-1 shadow-sm">
+                                REJECTED
+                            </span>
+                        }
+
+                        <div class="card-header bg-transparent border-bottom-0 pt-4 pb-0 text-center">
+                            <h5 class="fw-bold text-dark mb-0">@bid.Supplier.CompanyName</h5>
+                            <div class="text-muted small mt-1"><i class="fas fa-envelope me-1"></i>@bid.Supplier.User?.Email</div>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <div class="text-muted text-uppercase fw-bold fs-7 mb-1">Unit Price</div>
+                                <div class="fs-3 fw-bold text-primary">@bid.BidAmount.ToString("C")</div>
+                            </div>
+                            
+                            <hr class="text-muted opacity-25" />
+
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="text-muted"><i class="fas fa-box text-secondary me-2"></i>Quantity:</span>
+                                <span class="fw-bold">@Model.Quantity</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between p-2 rounded bg-light border border-secondary border-opacity-25 mb-3 shadow-sm">
+                                <span class="fw-bold text-dark text-uppercase fs-7 align-self-center"><i class="fas fa-calculator text-primary me-2"></i>Total P.O. Value</span>
+                                <span class="fs-5 fw-bold text-success">@((bid.BidAmount * Model.Quantity).ToString("C"))</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                                <span class="text-muted"><i class="fas fa-truck text-secondary me-2"></i>Timeline:</span>
+                                <span class="fw-bold text-dark text-end">@bid.DeliveryTimeline</span>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(bid.BidNotes))
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase fw-bold d-block mb-1 fs-7">Supplier Notes</small>
+                                    <div class="p-3 bg-white border rounded text-dark fs-7 lh-sm" style="font-style: italic;">"@bid.BidNotes"</div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (Model.Status == "Open" || Model.Status == "Closed") // Before anything is awarded
+                        {
+                            <div class="card-footer bg-transparent border-top-0 p-4 pt-0 d-flex gap-2">
+                                <form asp-action="Reject" asp-route-id="@bid.Id" class="w-50">
+                                    <button type="submit" class="btn btn-outline-danger w-100 fw-bold shadow-sm" onclick="return confirm('Silently reject this bid?');">
+                                        <i class="fas fa-times me-1"></i> Reject
+                                    </button>
+                                </form>
+                                <form asp-action="Accept" asp-route-id="@bid.Id" class="w-50">
+                                    <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" onclick="return confirm('Are you sure you want to ACCEPT this bid for @((bid.BidAmount * Model.Quantity).ToString("C"))? This will automatically generate a binding Purchase Order and reject all other bidders.');">
+                                        <i class="fas fa-check me-1"></i> Accept
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+    .transition-all {
+        transition: all .3s ease-in-out;
+    }
+    .fs-7 {
+        font-size: 0.8rem;
+    }
+</style>

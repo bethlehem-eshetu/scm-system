@@ -1,0 +1,135 @@
+@model SCM_System.Models.Entities.PurchaseOrder
+
+@{
+    ViewData["Title"] = "Create Purchase Order";
+    var product = ViewBag.Product as SCM_System.Models.Entities.Product;
+}
+
+<div class="container mt-4">
+    <div class="row align-items-center mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-file-invoice-dollar text-primary me-2"></i>Generate Purchase Order</h2>
+            <p class="text-muted">You are buying directly from <strong>@product?.Supplier.CompanyName</strong></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5 mb-4 mb-md-0">
+            <div class="card shadow-sm border-0 h-100 bg-light">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">Product Summary Snapshot</h5>
+                    
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="bg-primary text-white rounded p-3 me-3">
+                            <i class="fas fa-box-open fa-2x"></i>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary mb-1">@product?.Category?.CategoryName</span>
+                            <h5 class="fw-bold mb-0">@product?.ProductName</h5>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <small class="text-uppercase text-muted fw-bold d-block mb-1 fs-7">Supplier Price</small>
+                            <span class="fs-4 text-success fw-bold">@product?.BasePrice.ToString("C")</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-uppercase text-muted fw-bold d-block mb-1 fs-7">Current Stock</small>
+                            <span class="fs-5 fw-bold">@(product?.Inventory?.QuantityAvailable ?? 0) Units</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-uppercase text-muted fw-bold d-block mb-1 fs-7">Product Details</small>
+                        <p class="text-dark small mb-0 lh-sm">@product?.Description</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow-sm border-primary border-top border-3">
+                <div class="card-body p-4 py-5">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <!-- Essential Hidden Fields -->
+                        <input type="hidden" asp-for="SupplierId" />
+                        <input type="hidden" asp-for="ProductId" />
+                        
+                        <div class="alert alert-info py-2 small fw-bold">
+                            <i class="fas fa-info-circle me-2"></i> Values below are snapshotted for historical record.
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProductName" class="form-label fw-bold text-muted">Snapshot: Product Name <span class="text-danger">*</span></label>
+                            <input asp-for="ProductName" class="form-control bg-light" readonly />
+                            <span asp-validation-for="ProductName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="UnitPrice" class="form-label fw-bold text-muted">Snapshot: Contract Unit Price (ETB) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted fw-bold">ETB</span>
+                                <input asp-for="UnitPrice" id="unitPriceSnapshot" class="form-control bg-light" type="number" step="0.01" readonly />
+                            </div>
+                            <span asp-validation-for="UnitPrice" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4 p-3 border border-2 border-primary-subtle rounded bg-white shadow-sm">
+                            <label asp-for="Quantity" class="form-label fw-bold text-primary fs-5 mb-3">How many units do you want to order? <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg mb-2">
+                                <input asp-for="Quantity" id="orderQuantity" class="form-control fw-bold border-primary" type="number" min="1" max="@(product?.Inventory?.QuantityAvailable ?? 0)" required />
+                                <span class="input-group-text bg-white bg-opacity-75 text-muted border-primary">Max: @(product?.Inventory?.QuantityAvailable ?? 0)</span>
+                            </div>
+                            <span asp-validation-for="Quantity" class="text-danger small fw-bold mt-1"></span>
+                        </div>
+
+                        <!-- Dynamic UI Calculator -->
+                        <div class="p-3 bg-light rounded text-end mb-4 border shadow-sm">
+                            <small class="text-muted fw-bold text-uppercase fs-7 align-self-center me-3">Estimated Total Amount</small>
+                            <span class="fs-2 fw-bold text-success" id="totalContractValue">0.00 ETB</span>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Purchase Order Request
+                            </button>
+                            <a asp-action="Index" asp-controller="Marketplace" class="btn btn-light text-muted">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const unitPriceStr = document.getElementById('unitPriceSnapshot').value;
+        const unitPrice = parseFloat(unitPriceStr) || 0;
+        const quantityInput = document.getElementById('orderQuantity');
+        const totalValueDisplay = document.getElementById('totalContractValue');
+
+        function updateTotal() {
+            let qty = parseInt(quantityInput.value) || 0;
+            const maxQty = parseInt(quantityInput.getAttribute('max')) || 0;
+            
+            // Basic UI protection against ordering more than stock
+            if (qty > maxQty) {
+                quantityInput.value = maxQty;
+                qty = maxQty;
+            }
+
+            const total = unitPrice * qty;
+            totalValueDisplay.textContent = new Intl.NumberFormat('en-ET', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total) + ' ETB';
+        }
+
+        quantityInput.addEventListener('input', updateTotal);
+        
+        // Initial Calculation on Load
+        window.addEventListener('load', updateTotal);
+    </script>
+}

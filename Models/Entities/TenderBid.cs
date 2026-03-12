@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
@@ -30,6 +30,6 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } // Submitted, Accepted, Rejected
+        public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected
     }
 }

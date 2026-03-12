@@ -1,0 +1,91 @@
+@model IEnumerable<SCM_System.Models.Entities.Tender>
+
+@{
+    ViewData["Title"] = "Available Tenders";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2><i class="fas fa-search-dollar text-primary me-2"></i>Open Tenders</h2>
+            <p class="text-muted">Browse and bid on open requests from verified Retailers.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <form asp-action="AvailableTenders" method="get" class="d-inline-block">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-filter text-muted"></i></span>
+                    <select name="categoryId" class="form-select border-start-0" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in ViewBag.Categories)
+                        {
+                            <option value="@cat.Id" selected="@(Context.Request.Query["categoryId"] == cat.Id.ToString())">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info shadow-sm">
+            <i class="fas fa-info-circle me-2"></i> <strong>No open tenders</strong> match your search criteria right now. Check back later!
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var tender in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
+                        <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
+                                    <i class="fas fa-tag me-1"></i> @tender.Category?.CategoryName
+                                </span>
+                                <small class="text-danger fw-bold bg-danger-subtle px-2 py-1 rounded">
+                                    <i class="far fa-clock me-1"></i> Ends @tender.ClosingDate.ToString("MMM dd")
+                                </small>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title text-dark fw-bold mb-3">@tender.Title</h5>
+                            <p class="card-text text-muted mb-4" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                @tender.Description
+                            </p>
+                            
+                            <div class="bg-light rounded p-3 mb-3">
+                                <div class="row text-center">
+                                    <div class="col-6 border-end">
+                                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Quantity</small>
+                                        <span class="fs-5 fw-bold text-dark">@tender.Quantity</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Retailer</small>
+                                        <span class="fs-6 fw-bold text-dark text-truncate d-block" title="@tender.Retailer?.BusinessName">@tender.Retailer?.BusinessName</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 pb-3">
+                            <a asp-controller="Tender" asp-action="Details" asp-route-id="@tender.Id" class="btn btn-primary w-100 fw-bold">
+                                View Details & Bid <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-all {
+        transition: all .3s ease-in-out;
+    }
+</style>

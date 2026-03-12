@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
@@ -23,6 +23,21 @@ namespace SCM_System.Models.Entities
         public int? TenderBidId { get; set; }
         public TenderBid TenderBid { get; set; }
 
+        public int ProductId { get; set; }
+        public Product Product { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string ProductName { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        [Display(Name = "Unit Price")]
+        public decimal UnitPrice { get; set; }
+
+        [Required]
+        public int Quantity { get; set; }
+
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         [Display(Name = "Total Amount")]
@@ -30,7 +45,7 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } // Pending, Accepted, Rejected, Completed
+        public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Cancelled
 
         public DateTime OrderDate { get; set; } = DateTime.Now;
 

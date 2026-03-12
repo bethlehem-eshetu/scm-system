@@ -11,6 +11,14 @@ builder.Logging.AddDebug();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
+    });
+
 // Add DbContext with detailed error logging
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -34,6 +42,8 @@ builder.Services.AddSession(options =>
 
 // Add HttpContextAccessor for session helpers
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<SCM_System.Services.INotificationService, SCM_System.Services.NotificationService>();
 
 var app = builder.Build();
 

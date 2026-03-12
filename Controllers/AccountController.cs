@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
 using System.Security.Cryptography;
 using System.Text;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace SCM_System.Controllers
 {
@@ -452,6 +455,29 @@ namespace SCM_System.Controllers
                     HttpContext.Session.SetString("UserRole", user.Role);
                     HttpContext.Session.SetString("UserName", user.FullName);
 
+                    // Add proper identity claims authentication
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                        new Claim(ClaimTypes.Name, user.FullName),
+                        new Claim(ClaimTypes.Email, user.Email),
+                        new Claim(ClaimTypes.Role, user.Role)
+                    };
+
+                    var claimsIdentity = new ClaimsIdentity(
+                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    var authProperties = new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
+                    };
+
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme, 
+                        new ClaimsPrincipal(claimsIdentity), 
+                        authProperties);
+
                     // Set success message
                     TempData["SuccessMessage"] = $"👋 Welcome back, {user.FullName}!";
 
@@ -483,10 +509,13 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Account/Logout
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             string userName = HttpContext.Session.GetString("UserName") ?? "User";
             HttpContext.Session.Clear();
+            
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
             TempData["SuccessMessage"] = $"👋 Goodbye, {userName}! You have been logged out successfully.";
             return RedirectToAction("Login");
         }

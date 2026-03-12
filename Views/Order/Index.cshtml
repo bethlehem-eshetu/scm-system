@@ -1,0 +1,94 @@
+@model IEnumerable<SCM_System.Models.Entities.Order>
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Fulfillment Orders";
+    var userRole = Context.Session.GetString("UserRole");
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-truck text-primary me-2"></i>
+            @(userRole == "Retailer" ? "My Incoming Orders" : "My Fulfillment Orders")
+        </h2>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 bg-white border rounded shadow-sm">
+            <i class="fas fa-boxes fa-4x text-muted mb-3 opacity-50"></i>
+            <h4 class="text-muted">No active orders yet.</h4>
+            <p class="text-muted">Orders appear here once a Purchase Order is accepted by the Supplier.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Ref. PO Number</th>
+                                <th>@(userRole == "Retailer" ? "Supplier" : "Retailer")</th>
+                                <th>Product</th>
+                                <th>Date Created</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-dark">#ORD-@item.Id.ToString("D5")</td>
+                                    <td class="font-monospace text-primary">@item.PurchaseOrder.PONumber</td>
+                                    <td>
+                                        <div class="fw-bold">
+                                            @(userRole == "Retailer" ? item.Supplier?.CompanyName : item.PurchaseOrder?.Retailer?.BusinessName)
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width:200px;" title="@item.PurchaseOrder.ProductName"
+                                             data-bs-title="Purchased by @item.PurchaseOrder.Retailer?.BusinessName">
+                                            @item.PurchaseOrder.ProductName
+                                        </div>
+                                        <div class="small text-muted">Qty: @item.PurchaseOrder.Quantity</div>
+                                    </td>
+                                    <td>@item.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        @if (item.OrderStatus == "Processing")
+                                        {
+                                            <span class="badge bg-secondary text-white"><i class="fas fa-cog fa-spin me-1"></i>Processing</span>
+                                        }
+                                        else if (item.OrderStatus == "Packed")
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-box me-1"></i>Packed</span>
+                                        }
+                                        else if (item.OrderStatus == "Shipped")
+                                        {
+                                            <span class="badge bg-info"><i class="fas fa-shipping-fast me-1"></i>Shipped</span>
+                                        }
+                                        else if (item.OrderStatus == "Delivered")
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-check-double me-1"></i>Delivered</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Cancelled</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Track Order</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

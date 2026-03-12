@@ -1,0 +1,150 @@
+@using SCM_System.Models.Entities
+@model Tender
+
+@{
+    ViewData["Title"] = "Create Tender";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="mb-4">
+        <a asp-action="MyTenders" class="btn btn-light shadow-sm text-dark px-4 rounded-pill border fw-medium">
+            <i class="fas fa-arrow-left me-2 text-primary"></i> Back to Tenders
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden position-relative" style="background: linear-gradient(to bottom, #ffffff, #f8fafc);">
+                <!-- Decorative Header Background -->
+                <div class="position-absolute top-0 start-0 w-100" style="height: 120px; background: linear-gradient(135deg, var(--bs-primary) 0%, #3b82f6 100%); z-index: 0;"></div>
+                
+                <div class="position-absolute end-0 top-0 opacity-10 p-4" style="z-index: 0; transform: translate(10%, -20%) scale(2);">
+                    <i class="fas fa-file-contract text-white" style="font-size: 8rem;"></i>
+                </div>
+
+                <div class="card-body p-4 p-md-5 position-relative pt-5" style="z-index: 1;">
+                    <div class="text-center mb-5 mt-2">
+                        <div class="bg-white rounded-circle shadow-sm d-inline-flex justify-content-center align-items-center mb-3 border border-primary border-opacity-25" style="width: 80px; height: 80px;">
+                            <i class="fas fa-file-signature fa-2x text-primary"></i>
+                        </div>
+                        <h2 class="fw-bold text-dark mb-1">Publish New Tender</h2>
+                        <p class="text-muted">Broadcast your procurement requirements to our supplier network</p>
+                    </div>
+
+                    <form asp-action="Create" class="needs-validation" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3" role="alert"></div>
+
+                        <div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+                            <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="fas fa-info-circle text-primary me-2"></i> General Information</h5>
+                            
+                            <div class="mb-4">
+                                <label asp-for="Title" class="form-label fw-bold text-dark">Tender Title <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg shadow-sm">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-heading"></i></span>
+                                    <input asp-for="Title" class="form-control border-start-0 ps-0 bg-light focus-white" placeholder="e.g. 100 Laptops for Main Office" required />
+                                </div>
+                                <span asp-validation-for="Title" class="text-danger small mt-1 d-block"></span>
+                            </div>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label asp-for="CategoryId" class="form-label fw-bold text-dark">Product Category <span class="text-danger">*</span></label>
+                                    <div class="input-group shadow-sm">
+                                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-tags"></i></span>
+                                        <select asp-for="CategoryId" class="form-select border-start-0 bg-light focus-white" asp-items="@(new SelectList(ViewBag.Categories, "Id", "CategoryName"))" required>
+                                            <option value="">-- Select Category --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="CategoryId" class="text-danger small mt-1 d-block"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label asp-for="Quantity" class="form-label fw-bold text-dark">Quantity Needed <span class="text-danger">*</span></label>
+                                    <div class="input-group shadow-sm">
+                                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-sort-numeric-up"></i></span>
+                                        <input asp-for="Quantity" class="form-control border-start-0 ps-0 bg-light focus-white" type="number" min="1" placeholder="Units required" required />
+                                    </div>
+                                    <span asp-validation-for="Quantity" class="text-danger small mt-1 d-block"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+                            <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="fas fa-list-alt text-primary me-2"></i> Detailed Requirements</h5>
+                            
+                            <div class="mb-2">
+                                <label asp-for="Description" class="form-label fw-bold text-dark">Specifications & Conditions <span class="text-danger">*</span></label>
+                                <textarea asp-for="Description" class="form-control shadow-sm bg-light focus-white" rows="5" placeholder="Describe specifications, quality standards, delivery expectations, or specific brand preferences..." required></textarea>
+                                <span asp-validation-for="Description" class="text-danger small mt-1 d-block"></span>
+                                <div class="form-text mt-2"><i class="fas fa-lightbulb text-warning me-1"></i> Be as detailed as possible to attract the most accurate bids.</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-4 shadow-sm border p-4 mb-5 border-start border-primary border-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded text-primary me-3">
+                                    <i class="fas fa-calendar-clock fa-lg"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-0">Timeline Rules</h5>
+                            </div>
+                            
+                            <div class="row align-items-center px-2">
+                                <div class="col-md-7">
+                                    <label asp-for="ClosingDate" class="form-label fw-bold text-dark mb-1">Submission Deadline <span class="text-danger">*</span></label>
+                                    <p class="text-muted small mb-0">After this date, the tender will automatically close and no more bids will be accepted from suppliers.</p>
+                                </div>
+                                <div class="col-md-5 mt-3 mt-md-0">
+                                    <div class="input-group input-group-lg shadow-sm">
+                                        <span class="input-group-text bg-primary text-white border-primary"><i class="fas fa-calendar-alt"></i></span>
+                                        <input asp-for="ClosingDate" type="date" class="form-control border-primary fw-bold text-center" required />
+                                    </div>
+                                    <span asp-validation-for="ClosingDate" class="text-danger small mt-1 d-block text-center"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 bg-light rounded-4 p-4 border">
+                            <a asp-action="MyTenders" class="btn btn-outline-secondary rounded-pill px-5 fw-bold w-100 w-sm-auto">Cancel Draft</a>
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow hover-lift w-100 w-sm-auto d-flex align-items-center justify-content-center">
+                                <i class="fas fa-bullhorn me-2"></i> Publish Tender Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .focus-white:focus {
+        background-color: white !important;
+        box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+        border-color: #8b5cf6;
+    }
+    
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.4) !important;
+    }
+    
+    @@media (min-width: 576px) {
+        .w-sm-auto {
+            width: auto !important;
+        }
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Restrict closing date to tomorrow or later
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        var dateString = tomorrow.toISOString().split('T')[0];
+        document.getElementById("ClosingDate").setAttribute("min", dateString);
+    </script>
+}

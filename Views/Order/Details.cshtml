@@ -1,0 +1,196 @@
+@model SCM_System.Models.Entities.Order
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Order Tracking";
+    var userRole = Context.Session.GetString("UserRole");
+    var isSupplier = userRole == "Supplier";
+    
+    // Calculate progress percentage
+    int progress = 10;
+    string barColor = "bg-secondary";
+    if (Model.OrderStatus == "Packed") { progress = 40; barColor = "bg-warning text-dark"; }
+    if (Model.OrderStatus == "Shipped") { progress = 75; barColor = "bg-info"; }
+    if (Model.OrderStatus == "Delivered") { progress = 100; barColor = "bg-success"; }
+    if (Model.OrderStatus == "Cancelled") { progress = 100; barColor = "bg-danger"; }
+
+    var allowedNext = ViewBag.AvailableStatuses as List<string> ?? new List<string>();
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Orders</a>
+    </div>
+
+    <!-- Order Tracking Header -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                <div>
+                    <h2 class="mb-1 fw-bold text-dark">Order <span class="text-primary">#ORD-@Model.Id.ToString("D5")</span></h2>
+                    <p class="text-muted mb-0">Created on @Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
+                </div>
+                <div class="mt-3 mt-md-0 text-md-end">
+                    <h6 class="text-muted text-uppercase fw-bold fs-7 mb-1">Current Status</h6>
+                    <span class="badge fs-5 shadow-sm px-4 py-2 @barColor">@Model.OrderStatus.ToUpper()</span>
+                </div>
+            </div>
+
+            @if (Model.OrderStatus != "Cancelled")
+            {
+                <!-- Progress Tracker -->
+                <div class="position-relative mt-5 mb-4">
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar @barColor progress-bar-striped @(Model.OrderStatus != "Delivered" ? "progress-bar-animated" : "")" role="progressbar" style="width: @progress%" aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between position-absolute top-50 start-0 w-100 translate-middle-y px-1">
+                        <!-- Step 1: Processing -->
+                        <div class="text-center" style="width: 40px;">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm @(progress >= 10 ? "bg-primary text-white" : "bg-light text-muted border")" style="width: 40px; height: 40px; margin: 0 auto;">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="mt-2 small fw-bold @(progress >= 10 ? "text-primary" : "text-muted")" style="position: absolute; transform: translateX(-25%);">Processing</div>
+                        </div>
+                        
+                        <!-- Step 2: Packed -->
+                        <div class="text-center" style="width: 40px;">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm @(progress >= 40 ? "bg-warning text-dark" : "bg-light text-muted border")" style="width: 40px; height: 40px; margin: 0 auto;">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="mt-2 small fw-bold @(progress >= 40 ? "text-dark" : "text-muted")" style="position: absolute; transform: translateX(-20%);">Packed</div>
+                        </div>
+                        
+                        <!-- Step 3: Shipped -->
+                        <div class="text-center" style="width: 40px;">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm @(progress >= 75 ? "bg-info text-white" : "bg-light text-muted border")" style="width: 40px; height: 40px; margin: 0 auto;">
+                                <i class="fas fa-shipping-fast"></i>
+                            </div>
+                            <div class="mt-2 small fw-bold @(progress >= 75 ? "text-info" : "text-muted")" style="position: absolute; transform: translateX(-20%);">Shipped</div>
+                        </div>
+                        
+                        <!-- Step 4: Delivered -->
+                        <div class="text-center" style="width: 40px;">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm @(progress == 100 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 40px; height: 40px; margin: 0 auto;">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="mt-2 small fw-bold @(progress == 100 ? "text-success" : "text-muted")" style="position: absolute; transform: translateX(-30%);">Delivered</div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-danger shadow-sm mt-4 p-4 border-danger border-2 border-start">
+                    <h5 class="alert-heading fw-bold mb-1"><i class="fas fa-exclamation-triangle me-2"></i> Order Cancelled</h5>
+                    <p class="mb-0">This fulfillment order has been permanently cancelled and will not be delivered.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Details Card -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4 bg-white">
+                <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-list rounded px-2 py-1 bg-light text-primary me-2"></i> Order Summary</h5>
+                    <a asp-controller="PurchaseOrder" asp-action="Details" asp-route-id="@Model.PurchaseOrderId" class="btn btn-sm btn-outline-primary">View Original PO</a>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-muted text-uppercase fw-bold fs-7 mb-1">Purchaser</h6>
+                            <p class="fs-6 mb-0 fw-bold">@Model.PurchaseOrder.Retailer?.BusinessName</p>
+                            <p class="text-muted small mb-0">@Model.PurchaseOrder.Retailer?.City</p>
+                        </div>
+                        <div class="col-md-6 mb-3 text-md-end">
+                            <h6 class="text-muted text-uppercase fw-bold fs-7 mb-1">Supplier</h6>
+                            <p class="fs-6 mb-0 fw-bold">@Model.Supplier.CompanyName</p>
+                            <p class="text-muted small mb-0">@Model.Supplier?.City</p>
+                        </div>
+                    </div>
+
+                    <div class="border rounded bg-light p-3">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                            <span class="fw-bold">@Model.PurchaseOrder.ProductName</span>
+                            <span class="fs-5 text-dark">@Model.PurchaseOrder.Quantity x @Model.PurchaseOrder.UnitPrice.ToString("C")</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="text-muted text-uppercase fw-bold">Total Amount Paid</span>
+                            <span class="fs-4 fw-bold text-success">@Model.PurchaseOrder.TotalAmount.ToString("C")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action / Admin Card -->
+        <div class="col-lg-4">
+            @if (isSupplier)
+            {
+                <div class="card shadow-sm border-0 bg-white border-top border-4 border-primary">
+                    <div class="card-header bg-transparent py-3 border-bottom">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-edit me-2 text-primary"></i> Update Status</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (Model.OrderStatus == "Delivered" || Model.OrderStatus == "Cancelled")
+                        {
+                            <div class="alert alert-light border shadow-sm text-center mb-0">
+                                <i class="fas fa-lock text-muted mb-2 fa-2x"></i>
+                                <p class="mb-0 small fw-bold">Order finalized. Status cannot be changed.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-3">Update the tracking status to notify the retailer of the progress.</p>
+                            
+                            <form asp-action="UpdateStatus" asp-route-id="@Model.Id" class="mb-3">
+                                <div class="btn-group-vertical w-100 shadow-sm" role="group">
+                                    @foreach(var status in allowedNext)
+                                    {
+                                        var btnClass = status switch {
+                                            "Packed" => "btn-outline-warning text-dark fw-bold border-bottom",
+                                            "Shipped" => "btn-outline-info text-dark fw-bold border-bottom",
+                                            "Delivered" => "btn-outline-success fw-bold border-bottom",
+                                            "Cancelled" => "btn-outline-danger fw-bold",
+                                            _ => "btn-outline-secondary"
+                                        };
+                                        var icon = status switch {
+                                            "Packed" => "fa-box",
+                                            "Shipped" => "fa-shipping-fast",
+                                            "Delivered" => "fa-check-double",
+                                            "Cancelled" => "fa-times-circle",
+                                            _ => "fa-cog"
+                                        };
+
+                                        <button type="submit" name="status" value="@status" class="btn @btnClass py-3 text-start px-4">
+                                            <i class="fas @icon me-3"></i> Mark as @status
+                                        </button>
+                                    }
+                                </div>
+                            </form>
+                            
+                            <small class="text-muted d-block text-center mt-2"><i class="fas fa-info-circle me-1"></i> Progression is strictly enforced.</small>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm border-0 bg-light p-4 text-center">
+                    <i class="fas fa-info-circle fa-3x text-primary mb-3 opacity-50"></i>
+                    <h6 class="fw-bold">Status Updates</h6>
+                    <p class="text-muted small mb-0">Only the supplier can update the delivery status of this order. You will be notified automatically of changes.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .fs-7 { font-size: 0.8rem; }
+    /* Improve visual step indicator line spacing */
+    .progress { overflow: visible; }
+    .progress-bar { border-radius: .25rem; }
+</style>

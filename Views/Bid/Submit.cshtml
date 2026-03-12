@@ -1,0 +1,114 @@
+@model SCM_System.Models.Entities.TenderBid
+
+@{
+    ViewData["Title"] = "Submit Bid";
+    var tender = ViewBag.Tender as SCM_System.Models.Entities.Tender;
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-file-signature text-primary me-2"></i>Submit Your Bid</h2>
+            <p class="text-muted">You are bidding on: <strong>@tender?.Title</strong></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tender Summary Panel -->
+        <div class="col-md-5 mb-4 mb-md-0">
+            <div class="card shadow-sm border-0 h-100 bg-light">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">Order Requirements</h5>
+                    
+                    <div class="mb-3">
+                        <small class="text-uppercase text-muted fw-bold d-block mb-1 fs-7">Requested Category</small>
+                        <span class="fs-6"><i class="fas fa-tag me-2 text-primary"></i>@tender?.Category?.CategoryName</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-uppercase text-muted fw-bold d-block mb-1 fs-7">Requested Quantity</small>
+                        <span class="fs-5 fw-bold">@tender?.Quantity</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <small class="text-uppercase text-muted fw-bold d-block mb-1 fs-7">Detailed Description</small>
+                        <p class="text-dark small mb-0">@tender?.Description</p>
+                    </div>
+
+                    <div class="p-3 bg-white rounded border border-warning shadow-sm">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle text-warning fa-2x me-3"></i>
+                            <div>
+                                <small class="text-muted fw-bold d-block mb-0">Deadline</small>
+                                <span class="text-danger fw-bold">Ends @tender?.ClosingDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bidding Form Panel -->
+        <div class="col-md-7">
+            <div class="card shadow-sm border-primary border-top border-3">
+                <div class="card-body p-4 py-5">
+                    <form asp-action="Submit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="TenderId" />
+
+                        <div class="mb-4">
+                            <label asp-for="BidAmount" class="form-label fw-bold">Unit Price Bid (ETB) <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-white border-end-0 fw-bold text-muted">ETB</span>
+                                <input asp-for="BidAmount" id="bidUnitPrice" class="form-control border-start-0 ps-0" type="number" step="0.01" min="0.01" required />
+                            </div>
+                            <span asp-validation-for="BidAmount" class="text-danger small"></span>
+                            
+                            <!-- Dynamic UI Calculator requested in Task -->
+                            <div class="mt-2 text-end">
+                                <small class="text-muted">Total Contract Value: </small>
+                                <strong class="fs-5 text-success" id="totalContractValue">0.00 ETB</strong>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="DeliveryTimeline" class="form-label fw-bold">Delivery Timeline <span class="text-danger">*</span></label>
+                            <input asp-for="DeliveryTimeline" class="form-control" placeholder="e.g., 5 business days, 2 weeks, etc." required />
+                            <small class="text-muted">Be specific. Faster delivery may increase your chances of winning.</small>
+                            <span asp-validation-for="DeliveryTimeline" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-5">
+                            <label asp-for="BidNotes" class="form-label fw-bold">Additional Notes (Optional)</label>
+                            <textarea asp-for="BidNotes" class="form-control" rows="3" placeholder="Explain your product quality, warranty, or any conditions..."></textarea>
+                            <span asp-validation-for="BidNotes" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Official Bid
+                            </button>
+                            <a asp-action="AvailableTenders" asp-controller="Tender" class="btn btn-light text-muted">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // UI Request: Total Price Calculator (Unit Price * Quantity)
+        const quantity = @(tender?.Quantity ?? 0);
+        const unitPriceInput = document.getElementById('bidUnitPrice');
+        const totalValueDisplay = document.getElementById('totalContractValue');
+
+        unitPriceInput.addEventListener('input', function() {
+            const price = parseFloat(this.value) || 0;
+            const total = price * quantity;
+            totalValueDisplay.textContent = new Intl.NumberFormat('en-ET', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total) + ' ETB';
+        });
+    </script>
+}
