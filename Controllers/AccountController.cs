@@ -187,8 +187,14 @@ namespace SCM_System.Controllers
                         // Create unique filename
                         string fileName = $"supplier_{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
 
+                        string webRootPath = _webHostEnvironment.WebRootPath;
+                        if (string.IsNullOrEmpty(webRootPath))
+                        {
+                            webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        }
+                        
                         // Ensure upload directory exists
-                        string uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "licenses");
+                        string uploadPath = Path.Combine(webRootPath, "uploads", "licenses");
                         if (!Directory.Exists(uploadPath))
                         {
                             Directory.CreateDirectory(uploadPath);
@@ -293,7 +299,7 @@ namespace SCM_System.Controllers
                                 Type = "Info",
                                 CreatedAt = DateTime.Now,
                                 IsRead = false,
-                                ActionUrl = "/Admin/PendingSuppliers"  // ✅ FIXED: Added ActionUrl
+                                ActionUrl = "/Admin/PendingRetailers"  // ✅ FIXED: Added ActionUrl
                             };
                             _context.Notifications.Add(notification);
                             Console.WriteLine("Admin notification added");
@@ -339,12 +345,16 @@ namespace SCM_System.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ REGISTRATION ERROR: {ex.Message}");
+                string errorMsg = $"[{DateTime.Now}] ❌ REGISTRATION ERROR: {ex.Message}\nStack: {ex.StackTrace}\n";
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner: {ex.InnerException.Message}");
+                    errorMsg += $"   Inner: {ex.InnerException.Message}\nInner Stack: {ex.InnerException.StackTrace}\n";
                 }
+                
+                try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", errorMsg); } catch {}
 
-                TempData["ErrorMessage"] = "An error occurred during registration. Please try again.";
+                TempData["ErrorMessage"] = "An error occurred during registration. Please try again. " + ex.Message;
                 return View(model);
             }
         }
@@ -493,6 +503,14 @@ namespace SCM_System.Controllers
                     else if (user.Role == "Retailer")
                     {
                         return RedirectToAction("Dashboard", "Retailer");
+                    }
+                    else if (user.Role == "Warehouse")
+                    {
+                        return RedirectToAction("Dashboard", "Warehouse");
+                    }
+                    else if (user.Role == "Delivery")
+                    {
+                        return RedirectToAction("Dashboard", "Delivery");
                     }
 
                     return RedirectToAction("Index", "Home");

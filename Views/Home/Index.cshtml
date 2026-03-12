@@ -1,149 +1,186 @@
-﻿@{
+@{
     ViewData["Title"] = "Home";
+    // We use the default _Layout for the home page, not the dashboard
 }
 
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="container">
-        <div class="row align-items-center min-vh-80 py-5">
-            <div class="col-lg-6" data-aos="fade-right">
-                <h1 class="display-4 fw-bold mb-4">
-                    Streamline Your
-                    <span class="text-primary">Supply Chain</span>
-                    in Ethiopia
-                </h1>
-                <p class="lead text-muted mb-4">
-                    Connect with trusted suppliers, manage procurement, track deliveries,
-                    and grow your business with Ethiopia's premier SCM platform.
-                </p>
+<!-- Hero Section with Animated Gradient & Glassmorphism -->
+<section class="hero-section position-relative overflow-hidden">
+    <div class="animated-bg"></div>
+    <div class="container position-relative z-index-1">
+        <div class="row align-items-center min-vh-100 py-5">
+            <div class="col-lg-6" data-aos="fade-right" data-aos-duration="1200">
+                <div class="glass-card p-5 rounded-4">
+                    <div class="badge bg-primary bg-opacity-20 text-primary mb-3 px-3 py-2 rounded-pill fw-semibold border border-primary border-opacity-25">
+                        <i class="fas fa-rocket me-2"></i> Next-Gen Supply Chain
+                    </div>
+                    <h1 class="display-4 fw-bolder mb-4 text-dark hero-title">
+                        Streamline Your <br />
+                        <span class="text-gradient">Supply Chain</span> <br />
+                        in Ethiopia
+                    </h1>
+                    <p class="lead text-muted mb-5 hero-subtitle">
+                        Connect with trusted suppliers, manage procurement, track deliveries,
+                        and grow your business with Ethiopia's premier, AI-ready SCM platform.
+                    </p>
 
-                @if (Context.Session.GetInt32("UserId") != null)
-                {
-                    <div class="mt-4">
-                        <p class="mb-3">Welcome back, <strong>@Context.Session.GetString("UserName")</strong>!</p>
-                        <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-primary btn-lg">
-                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
-                        </a>
+                    <div class="d-flex flex-wrap gap-3">
+                        @if (Context.Session.GetInt32("UserId") != null)
+                        {
+                            <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg btn-hover-elevate">
+                                <i class="fas fa-tachometer-alt me-2"></i> Go to Dashboard
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Account/Register" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg btn-hover-elevate">
+                                <i class="fas fa-user-plus me-2"></i> Get Started
+                            </a>
+                            <a href="/Account/Login" class="btn btn-outline-dark btn-lg px-5 py-3 rounded-pill btn-hover-elevate bg-white bg-opacity-50">
+                                <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                            </a>
+                        }
                     </div>
-                }
-                else
-                {
-                    <div class="mt-4">
-                        <a href="/Account/Register" class="btn btn-primary btn-lg me-3">
-                            <i class="fas fa-user-plus me-2"></i>Get Started
-                        </a>
-                        <a href="/Account/Login" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
-                        </a>
-                    </div>
-                }
+                </div>
             </div>
-            <div class="col-lg-6" data-aos="fade-left">
-                <img src="https://cdn-icons-png.flaticon.com/512/3063/3063825.png"
-                     alt="Supply Chain" class="img-fluid hero-image">
+            
+            <div class="col-lg-6 d-none d-lg-block" data-aos="fade-left" data-aos-delay="200" data-aos-duration="1200">
+                <div class="hero-image-container position-relative">
+                    <div class="floating-shape shape-1"></div>
+                    <div class="floating-shape shape-2"></div>
+                    <div class="floating-shape shape-3"></div>
+                    <img src="https://cdni.iconscout.com/illustration/premium/thumb/supply-chain-management-illustration-download-in-svg-png-gif-file-formats--business-global-logistics-pack-illustrations-5217435.png?f=webp"
+                         alt="Supply Chain 3D Illustration" class="img-fluid hero-image drop-shadow-2xl hero-float">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wave separator -->
+    <div class="custom-shape-divider-bottom-1682431234">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,120.4,192.27,112.55,236.4,106.92,279.16,84.15,321.39,56.44Z" class="shape-fill"></path>
+        </svg>
+    </div>
+</section>
+
+<!-- Stats Section with Counter Animation -->
+<section class="stats-section py-5 bg-white position-relative mt-n5 z-index-2">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="100">
+                <div class="stat-card glass-card text-center p-4 rounded-4 border-top border-primary border-3">
+                    <div class="stat-icon mb-3 text-primary"><i class="fas fa-building fa-2x"></i></div>
+                    <h2 class="display-5 fw-bold text-dark counter">500</h2>
+                    <h2 class="d-inline text-primary fw-bold">+</h2>
+                    <p class="text-muted mb-0 fw-medium">Verified Suppliers</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="200">
+                <div class="stat-card glass-card text-center p-4 rounded-4 border-top border-success border-3">
+                    <div class="stat-icon mb-3 text-success"><i class="fas fa-store fa-2x"></i></div>
+                    <h2 class="display-5 fw-bold text-dark counter">1000</h2>
+                    <h2 class="d-inline text-success fw-bold">+</h2>
+                    <p class="text-muted mb-0 fw-medium">Active Retailers</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="300">
+                <div class="stat-card glass-card text-center p-4 rounded-4 border-top border-info border-3">
+                    <div class="stat-icon mb-3 text-info"><i class="fas fa-boxes fa-2x"></i></div>
+                    <h2 class="display-5 fw-bold text-dark counter">10</h2>
+                    <h2 class="d-inline text-info fw-bold">K+</h2>
+                    <p class="text-muted mb-0 fw-medium">Products Listed</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6" data-aos="zoom-in" data-aos-delay="400">
+                <div class="stat-card glass-card text-center p-4 rounded-4 border-top border-warning border-3">
+                    <div class="stat-icon mb-3 text-warning"><i class="fas fa-truck-fast fa-2x"></i></div>
+                    <h2 class="display-5 fw-bold text-dark counter">5</h2>
+                    <h2 class="d-inline text-warning fw-bold">K+</h2>
+                    <p class="text-muted mb-0 fw-medium">Deliveries</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Stats Section -->
-<section class="stats-section py-5 bg-white">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-md-3 col-6">
-                <div class="stat-card text-center p-4">
-                    <h2 class="display-5 fw-bold text-primary">500+</h2>
-                    <p class="text-muted mb-0">Verified Suppliers</p>
-                </div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-card text-center p-4">
-                    <h2 class="display-5 fw-bold text-primary">1000+</h2>
-                    <p class="text-muted mb-0">Active Retailers</p>
-                </div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-card text-center p-4">
-                    <h2 class="display-5 fw-bold text-primary">10K+</h2>
-                    <p class="text-muted mb-0">Products Listed</p>
-                </div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-card text-center p-4">
-                    <h2 class="display-5 fw-bold text-primary">5K+</h2>
-                    <p class="text-muted mb-0">Deliveries</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Features Section -->
-<section class="features-section py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold">Why Choose Our Platform?</h2>
-            <p class="text-muted">Everything you need for efficient supply chain management</p>
+<!-- Features Section (Modern Grid) -->
+<section class="features-section py-6 bg-light">
+    <div class="container py-5">
+        <div class="text-center mb-5 pb-3" data-aos="fade-up">
+            <h2 class="display-5 fw-bold text-dark mb-3">Why Choose Our Platform?</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 600px;">Experience a seamlessly integrated supply chain ecosystem designed for modern Ethiopian businesses.</p>
         </div>
 
         <div class="row g-4">
-            <div class="col-md-4">
-                <div class="feature-card p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="fas fa-gavel fa-2x text-primary"></i>
+            <!-- Feature 1 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card-modern p-5 rounded-4 bg-white h-100 position-relative overflow-hidden">
+                    <div class="feature-blob bg-primary opacity-10"></div>
+                    <div class="feature-icon-wrapper bg-primary text-white shadow-primary mb-4">
+                        <i class="fas fa-gavel fa-xl"></i>
                     </div>
-                    <h4>Tender System</h4>
-                    <p class="text-muted">Post tenders and receive competitive bids from suppliers.</p>
+                    <h4 class="fw-bold mb-3 text-dark">Smart Tender System</h4>
+                    <p class="text-muted mb-0">Post tenders and receive highly competitive bids from verified, top-tier suppliers instantly.</p>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="feature-card p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="fas fa-boxes fa-2x text-primary"></i>
+            <!-- Feature 2 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card-modern p-5 rounded-4 bg-white h-100 position-relative overflow-hidden">
+                    <div class="feature-blob bg-success opacity-10"></div>
+                    <div class="feature-icon-wrapper bg-success text-white shadow-success mb-4">
+                        <i class="fas fa-boxes fa-xl"></i>
                     </div>
-                    <h4>Product Catalog</h4>
-                    <p class="text-muted">Browse thousands of products from verified suppliers.</p>
+                    <h4 class="fw-bold mb-3 text-dark">Vast Product Catalog</h4>
+                    <p class="text-muted mb-0">Browse through thousands of high-quality products categorized perfectly for wholesale buyers.</p>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="feature-card p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="fas fa-truck fa-2x text-primary"></i>
+            <!-- Feature 3 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card-modern p-5 rounded-4 bg-white h-100 position-relative overflow-hidden">
+                    <div class="feature-blob bg-info opacity-10"></div>
+                    <div class="feature-icon-wrapper bg-info text-white shadow-info mb-4">
+                        <i class="fas fa-map-marked-alt fa-xl"></i>
                     </div>
-                    <h4>Real-time Tracking</h4>
-                    <p class="text-muted">Track your deliveries in real-time with GPS.</p>
+                    <h4 class="fw-bold mb-3 text-dark">Real-time Tracking</h4>
+                    <p class="text-muted mb-0">Track your fleet and deliveries in real-time with integrated GPS coordination and alerts.</p>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="feature-card p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="fas fa-file-contract fa-2x text-primary"></i>
+            <!-- Feature 4 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-card-modern p-5 rounded-4 bg-white h-100 position-relative overflow-hidden">
+                    <div class="feature-blob bg-warning opacity-10"></div>
+                    <div class="feature-icon-wrapper bg-warning text-white shadow-warning mb-4">
+                        <i class="fas fa-file-contract fa-xl"></i>
                     </div>
-                    <h4>Smart Contracts</h4>
-                    <p class="text-muted">Secure purchase orders with digital agreements.</p>
+                    <h4 class="fw-bold mb-3 text-dark">Digital Smart Contracts</h4>
+                    <p class="text-muted mb-0">Secure purchase orders and agreements with tamper-proof digital verification mechanisms.</p>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="feature-card p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="fas fa-credit-card fa-2x text-primary"></i>
+            <!-- Feature 5 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-card-modern p-5 rounded-4 bg-white h-100 position-relative overflow-hidden">
+                    <div class="feature-blob bg-danger opacity-10"></div>
+                    <div class="feature-icon-wrapper bg-danger text-white shadow-danger mb-4">
+                        <i class="fas fa-credit-card fa-xl"></i>
                     </div>
-                    <h4>Secure Payments</h4>
-                    <p class="text-muted">Integrated with Chapa for seamless transactions.</p>
+                    <h4 class="fw-bold mb-3 text-dark">Seamless Payments</h4>
+                    <p class="text-muted mb-0">Integrated deeply with Chapa for secure, instant, and reliable corporate transactions.</p>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="feature-card p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="fas fa-star fa-2x text-primary"></i>
+            <!-- Feature 6 -->
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="600">
+                <div class="feature-card-modern p-5 rounded-4 bg-white h-100 position-relative overflow-hidden">
+                    <div class="feature-blob bg-secondary opacity-10"></div>
+                    <div class="feature-icon-wrapper bg-dark text-white shadow-dark mb-4">
+                        <i class="fas fa-star fa-xl"></i>
                     </div>
-                    <h4>Rating System</h4>
-                    <p class="text-muted">Rate suppliers based on performance.</p>
+                    <h4 class="fw-bold mb-3 text-dark">Trust & Rating System</h4>
+                    <p class="text-muted mb-0">Make informed decisions based on algorithmic trust scores and transparent peer ratings.</p>
                 </div>
             </div>
         </div>
@@ -151,110 +188,294 @@
 </section>
 
 <!-- CTA Section -->
-<section class="cta-section py-5 bg-primary text-white">
-    <div class="container text-center">
-        <h2 class="display-6 fw-bold mb-3">Ready to Transform Your Business?</h2>
-        <p class="lead mb-4">Join thousands of businesses already using our platform</p>
-        @if (Context.Session.GetInt32("UserId") == null)
-        {
-            <a href="/Account/Register" class="btn btn-light btn-lg">
-                <i class="fas fa-user-plus me-2"></i>Get Started Today
-            </a>
-        }
-        else
-        {
-            <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-light btn-lg">
-                <i class="fas fa-arrow-right me-2"></i>Go to Dashboard
-            </a>
-        }
+<section class="cta-section py-6 position-relative overflow-hidden">
+    <div class="cta-bg-gradient"></div>
+    <div class="container position-relative z-index-1 text-center py-5">
+        <h2 class="display-5 fw-bolder mb-3 text-white" data-aos="fade-down">Ready to Transform Your Business?</h2>
+        <p class="lead mb-5 text-white-50 mx-auto" style="max-width: 600px;" data-aos="fade-up" data-aos-delay="100">
+            Join thousands of Ethiopian enterprises already streamlining their operations and doubling their throughput using our platform.
+        </p>
+        <div data-aos="zoom-in" data-aos-delay="200">
+            @if (Context.Session.GetInt32("UserId") == null)
+            {
+                <a href="/Account/Register" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow-lg text-primary fw-bold btn-hover-elevate">
+                    <i class="fas fa-rocket me-2"></i> Launch Your Account Today
+                </a>
+            }
+            else
+            {
+                <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow-lg text-primary fw-bold btn-hover-elevate">
+                    <i class="fas fa-arrow-right me-2"></i> Continue to Dashboard
+                </a>
+            }
+        </div>
     </div>
 </section>
 
 @section Styles {
+    <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
     <style>
-        .hero-section {
-            padding: 4rem 0;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        /* Modern Utilities */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --hero-bg: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.4);
         }
 
-        .hero-image {
-            max-width: 80%;
-            animation: float 3s ease-in-out infinite;
+        body {
+            background-color: #f8fafc;
+        }
+
+        .py-6 {
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+        }
+
+        .z-index-1 { z-index: 1; }
+        .z-index-2 { z-index: 2; }
+
+        /* Typography */
+        .text-gradient {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .animated-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100%;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        @@keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        /* Hero Image Animations */
+        .hero-float {
+            animation: float 6s ease-in-out infinite;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15));
         }
 
         @@keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
         }
 
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: all 0.3s;
+        /* Floating Shapes behind Hero Image */
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: -1;
+            animation: pulseShape 8s ease-in-out infinite alternate;
+        }
+        .shape-1 {
+            width: 300px; height: 300px;
+            background: rgba(79, 70, 229, 0.3);
+            top: -50px; right: -50px;
+        }
+        .shape-2 {
+            width: 200px; height: 200px;
+            background: rgba(236, 72, 153, 0.3);
+            bottom: 50px; left: -20px;
+            animation-delay: 2s;
+        }
+        .shape-3 {
+            width: 150px; height: 150px;
+            background: rgba(56, 189, 248, 0.3);
+            top: 50%; right: 20%;
+            animation-delay: 4s;
+        }
+        @@keyframes pulseShape {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+            100% { transform: scale(1.2) translate(20px, -20px); opacity: 0.8; }
         }
 
-            .stat-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 30px rgba(37,99,235,0.1);
-            }
-
-        .feature-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            height: 100%;
+        /* Wave shape divider */
+        .custom-shape-divider-bottom-1682431234 {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+            transform: rotate(180deg);
+        }
+        .custom-shape-divider-bottom-1682431234 svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 90px;
+        }
+        .custom-shape-divider-bottom-1682431234 .shape-fill {
+            fill: #FFFFFF;
         }
 
-            .feature-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 30px rgba(37,99,235,0.1);
-            }
+        /* Buttons */
+        .btn-hover-elevate {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .btn-hover-elevate:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 14px 28px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.05) !important;
+        }
 
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: rgba(37,99,235,0.1);
-            border-radius: 12px;
+        /* Feature Cards */
+        .feature-card-modern {
+            transition: all 0.4s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.03);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+        
+        .feature-card-modern:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            border-color: rgba(79, 70, 229, 0.1);
+        }
+
+        .feature-icon-wrapper {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: transform 0.4s ease;
         }
 
-        .cta-section {
-            margin-top: 2rem;
+        .feature-card-modern:hover .feature-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
         }
 
-        .min-vh-80 {
-            min-height: 80vh;
+        .feature-blob {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            transition: transform 0.6s ease;
+            z-index: 0;
         }
 
-        @@media (max-width: 768px) {
-            .hero-section {
-                text-align: center;
-                padding: 3rem 0;
-            }
+        .feature-card-modern:hover .feature-blob {
+            transform: scale(2);
+        }
 
-            .hero-image {
-                margin-top: 3rem;
-            }
+        .feature-card-modern > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Shadows for specific icon wrappers */
+        .shadow-primary { box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
+        .shadow-success { box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
+        .shadow-info { box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.3); }
+        .shadow-warning { box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3); }
+        .shadow-danger { box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3); }
+        .shadow-dark { box-shadow: 0 10px 15px -3px rgba(31, 41, 55, 0.3); }
+
+        /* Custom Colors config matching existing theme */
+        .bg-primary { background-color: #4f46e5 !important; }
+        .text-primary { color: #4f46e5 !important; }
+        .border-primary { border-color: #4f46e5 !important; }
+
+        /* CTA Section */
+        .cta-bg-gradient {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--primary-gradient);
+            background-size: 200% 200%;
+            animation: moveGradient 5s ease infinite alternate;
+            z-index: 0;
+        }
+        @@keyframes moveGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
         }
     </style>
 }
 
 @section Scripts {
+    <!-- AOS Animation Library JS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- CountUp JS loosely implemented -->
     <script>
-        AOS.init({
-            duration: 1000,
-            once: true
+        $(document).ready(function() {
+            // Initialize Animation On Scroll
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out-cubic',
+                once: true,
+                offset: 50
+            });
+
+            // Simple counter animation
+            const counters = document.querySelectorAll('.counter');
+            const speed = 200; // The lower the slower
+
+            counters.forEach(counter => {
+                const updateCount = () => {
+                    const target = +counter.getAttribute('data-target') || parseInt(counter.innerText);
+                    // Ensure the initial value is stored and zeroed for animation effect
+                    if(!counter.hasAttribute('data-target')) {
+                        counter.setAttribute('data-target', target);
+                        counter.innerText = '0';
+                    }
+                    
+                    const count = +counter.innerText;
+                    const inc = target / speed;
+
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + inc);
+                        setTimeout(updateCount, 15);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                
+                // Intersection Observer to trigger counter when visible
+                const observer = new IntersectionObserver((entries) => {
+                    if(entries[0].isIntersecting) {
+                        updateCount();
+                        observer.disconnect();
+                    }
+                }, { threshold: 0.5 });
+                
+                observer.observe(counter);
+            });
         });
     </script>
 }
