@@ -1,4 +1,4 @@
-﻿@model SCM_System.Models.ViewModels.RegisterViewModel
+@model SCM_System.Models.ViewModels.RegisterViewModel
 
 @{
     ViewData["Title"] = "Register";
@@ -204,7 +204,7 @@
 
                                         <div class="col-md-6">
                                             <label asp-for="TaxIdentificationNumber" class="form-label">TIN (Optional)</label>
-                                            <input asp-for="TaxIdentificationNumber" class="form-control" placeholder="Tax identification number" />
+                                            <input asp-for="TaxIdentificationNumber" class="form-control" id="RetailerTaxIdentificationNumber" placeholder="Tax identification number" />
                                         </div>
 
                                         <div class="col-12">
@@ -331,9 +331,11 @@
             // Handle role selection change
             $('#RoleSelect').change(function() {
                 var role = $(this).val();
-                $('#SupplierFields').hide();
-                $('#RetailerFields').hide();
                 $('#RoleHidden').val(role);
+
+                // Disable all role-specific fields and hide them
+                $('#SupplierFields').hide().find('input, select, textarea').prop('disabled', true);
+                $('#RetailerFields').hide().find('input, select, textarea').prop('disabled', true);
 
                 // Remove required from ALL fields first
                 $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress, #BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', false);
@@ -342,11 +344,11 @@
                 $('#CityField').prop('required', true);
 
                 if (role === 'Supplier') {
-                    $('#SupplierFields').show();
+                    $('#SupplierFields').show().find('input, select, textarea').prop('disabled', false);
                     // Make supplier fields required
                     $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress').prop('required', true);
                 } else if (role === 'Retailer') {
-                    $('#RetailerFields').show();
+                    $('#RetailerFields').show().find('input, select, textarea').prop('disabled', false);
                     // Make retailer fields required
                     $('#BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', true);
                 }
