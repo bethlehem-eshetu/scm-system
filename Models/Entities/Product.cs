@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
@@ -33,6 +33,16 @@ namespace SCM_System.Models.Entities
         [StringLength(255)]
         [Display(Name = "Image URL")]
         public string ImageUrl { get; set; }
+
+        [Required]
+        [Range(0, int.MaxValue)]
+        public int Quantity { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string Unit { get; set; }
+
+        public bool IsAvailable { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

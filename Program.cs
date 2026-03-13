@@ -10,6 +10,7 @@ builder.Logging.AddDebug();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<SCM_System.Services.IProductService, SCM_System.Services.ProductService>();
 
 // Add DbContext with detailed error logging
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
