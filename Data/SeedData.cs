@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SCM_System.Models.Entities;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,39 +12,56 @@ namespace SCM_System.Data
             using (var context = new ApplicationDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                // Look for any admin user
-                if (context.Users.Any(u => u.Role == "Admin"))
+                // Seed Product Categories
+                if (!context.ProductCategories.Any())
                 {
-                    return; // DB has been seeded
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Electronics & Gadgets", Description = "Electronic devices and accessories" },
+                        new ProductCategory { CategoryName = "Clothing & Apparel", Description = "Apparel and garments" },
+                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods" },
+                        new ProductCategory { CategoryName = "Home & Garden", Description = "Furniture and home accessories" },
+                        new ProductCategory { CategoryName = "Health & Beauty", Description = "Personal care products" },
+                        new ProductCategory { CategoryName = "Industrial Tools", Description = "Industrial and manufacturing equipment" },
+                        new ProductCategory { CategoryName = "Agriculture", Description = "Farming and agricultural supplies" },
+                        new ProductCategory { CategoryName = "Raw Materials", Description = "Basic materials for manufacturing" }
+                    );
+                    context.SaveChanges();
+                    Console.WriteLine("=================================");
+                    Console.WriteLine("Product Categories seeded!");
+                    Console.WriteLine("=================================");
                 }
 
-                // Hash password (Admin@123)
-                string adminPasswordHash = HashPassword("Admin@123");
-
-                // Create admin user with gmail
-                var adminUser = new User
+                // Look for any admin user
+                if (!context.Users.Any(u => u.Role == "Admin"))
                 {
-                    FullName = "System Administrator",
-                    Email = "admin@gmail.com",  // Changed to gmail
-                    PasswordHash = adminPasswordHash,
-                    PhoneNumber = "0912345678",
-                    Role = "Admin",
-                    AccountStatus = "Active",
-                    IsApproved = true,
-                    EmailVerified = true,
-                    PhoneVerified = true,
-                    CreatedAt = DateTime.Now,
-                    LoginAttempts = 0
-                };
+                    // Hash password (Admin@123)
+                    string adminPasswordHash = HashPassword("Admin@123");
 
-                context.Users.Add(adminUser);
-                context.SaveChanges();
+                    // Create admin user with gmail
+                    var adminUser = new User
+                    {
+                        FullName = "System Administrator",
+                        Email = "admin@gmail.com",  // Changed to gmail
+                        PasswordHash = adminPasswordHash,
+                        PhoneNumber = "0912345678",
+                        Role = "Admin",
+                        AccountStatus = "Active",
+                        IsApproved = true,
+                        EmailVerified = true,
+                        PhoneVerified = true,
+                        CreatedAt = DateTime.Now,
+                        LoginAttempts = 0
+                    };
 
-                Console.WriteLine("=================================");
-                Console.WriteLine("Admin user created successfully!");
-                Console.WriteLine("Email: admin@gmail.com");
-                Console.WriteLine("Password: Admin@123");
-                Console.WriteLine("=================================");
+                    context.Users.Add(adminUser);
+                    context.SaveChanges();
+
+                    Console.WriteLine("=================================");
+                    Console.WriteLine("Admin user created successfully!");
+                    Console.WriteLine("Email: admin@gmail.com");
+                    Console.WriteLine("Password: Admin@123");
+                    Console.WriteLine("=================================");
+                }
             }
         }
 
