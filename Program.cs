@@ -69,10 +69,10 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         var logger = services.GetRequiredService<ILogger<Program>>();
 
-        // Ensure database is created (synchronous version to avoid async issues)
-        logger.LogInformation("Ensuring database is created...");
-        context.Database.EnsureCreated();
-        logger.LogInformation("Database check completed.");
+        // Apply all entity framework migrations
+        logger.LogInformation("Applying migrations...");
+        context.Database.Migrate();
+        logger.LogInformation("Database migration completed.");
 
         // Seed the database
         logger.LogInformation("Starting database seeding...");
