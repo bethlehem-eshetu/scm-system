@@ -1,0 +1,133 @@
+@model SCM_System.Models.Entities.Product
+
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-primary text-white p-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-box-seam me-2"></i> Add New Product
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" enctype="multipart/form-data" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <div class="row g-4">
+                            <!-- Basic Information -->
+                            <div class="col-md-7">
+                                <h5 class="text-primary border-bottom pb-2 mb-3">Basic Information</h5>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="ProductName" class="form-label fw-bold">Product Name <span class="text-danger">*</span></label>
+                                    <input asp-for="ProductName" class="form-control" placeholder="e.g., Organic Coffee Beans" required />
+                                    <span asp-validation-for="ProductName" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="CategoryId" class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                                        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories" required>
+                                            <option value="">-- Select Category --</option>
+                                        </select>
+                                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="SKU" class="form-label fw-bold">SKU (Optional)</label>
+                                        <input asp-for="SKU" class="form-control" placeholder="Stock Keeping Unit" />
+                                        <span asp-validation-for="SKU" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Description" class="form-label fw-bold">Full Description</label>
+                                    <textarea asp-for="Description" class="form-control" rows="5" placeholder="Detailed product description..."></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Pricing & Inventory -->
+                            <div class="col-md-5">
+                                <h5 class="text-primary border-bottom pb-2 mb-3">Pricing & Inventory</h5>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="BasePrice" class="form-label fw-bold">Base Price <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">ETB</span>
+                                        <input asp-for="BasePrice" class="form-control" type="number" step="0.01" min="0" required />
+                                    </div>
+                                    <span asp-validation-for="BasePrice" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="Quantity" class="form-label fw-bold">Initial Stock <span class="text-danger">*</span></label>
+                                        <input asp-for="Quantity" class="form-control" type="number" min="0" required value="0" />
+                                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Unit" class="form-label fw-bold">Unit <span class="text-danger">*</span></label>
+                                        <input asp-for="Unit" class="form-control" placeholder="e.g., Kg, Pcs, Box" required />
+                                        <span asp-validation-for="Unit" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <h5 class="text-primary border-bottom pb-2 mt-4 mb-3">Product Image</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="imageFile" class="form-label fw-bold">Upload Image</label>
+                                    <input type="file" name="imageFile" id="imageFile" class="form-control" accept="image/*" onchange="previewImage(this)" />
+                                    <small class="text-muted d-block mt-1">Recommended size: 800x800px (JPG, PNG)</small>
+                                </div>
+                                
+                                <div class="text-center mt-3 d-none" id="imagePreviewContainer">
+                                    <img id="imagePreview" src="#" alt="Image Preview" class="img-thumbnail" style="max-height: 200px; max-width: 100%; object-fit: contain;" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="mt-4 mb-4" />
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-action="MyProducts" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary px-5 py-2 fw-bold">
+                                <i class="bi bi-save me-1"></i> Save Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        function previewImage(input) {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImage = document.getElementById('imagePreview');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.remove('d-none');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                previewContainer.classList.add('d-none');
+                previewImage.src = '#';
+            }
+        }
+    </script>
+}
