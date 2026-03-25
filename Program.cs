@@ -45,6 +45,11 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<SCM_System.Services.INotificationService, SCM_System.Services.NotificationService>();
+builder.Services.AddScoped<SCM_System.Services.ITenderService, SCM_System.Services.TenderService>();
+builder.Services.AddScoped<SCM_System.Services.IBidService, SCM_System.Services.BidService>();
+builder.Services.AddScoped<SCM_System.Services.IPurchaseOrderService, SCM_System.Services.PurchaseOrderService>();
+builder.Services.AddScoped<SCM_System.Services.IOrderService, SCM_System.Services.OrderService>();
+builder.Services.AddScoped<SCM_System.Services.ICartService, SCM_System.Services.CartService>();
 
 var app = builder.Build();
 

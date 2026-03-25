@@ -25,17 +25,17 @@ namespace SCM_System.Data
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
 
-        // Procurement Tables
+        // Procurement & Order Management Tables
         public DbSet<Tender> Tenders { get; set; }
         public DbSet<TenderItem> TenderItems { get; set; }
         public DbSet<TenderBid> TenderBids { get; set; }
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
-
-        // Order Management Tables
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
 
         // Delivery Tables
         public DbSet<Delivery> Deliveries { get; set; }
@@ -154,122 +154,32 @@ namespace SCM_System.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ========== PROCUREMENT CONFIGURATIONS ==========
-
-            // Tender - Retailer (many-to-one)
-            modelBuilder.Entity<Tender>()
-                .HasOne(t => t.Retailer)
-                .WithMany(r => r.Tenders)
-                .HasForeignKey(t => t.RetailerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Tender - Category (many-to-one)
-            modelBuilder.Entity<Tender>()
-                .HasOne(t => t.Category)
-                .WithMany(c => c.Tenders)
-                .HasForeignKey(t => t.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // TenderItem - Tender (many-to-one)
-            modelBuilder.Entity<TenderItem>()
-                .HasOne(ti => ti.Tender)
-                .WithMany(t => t.TenderItems)
-                .HasForeignKey(ti => ti.TenderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // TenderBid - Tender (many-to-one)
-            modelBuilder.Entity<TenderBid>()
-                .HasOne(tb => tb.Tender)
-                .WithMany(t => t.Bids)
-                .HasForeignKey(tb => tb.TenderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // TenderBid - Supplier (many-to-one)
-            modelBuilder.Entity<TenderBid>()
-                .HasOne(tb => tb.Supplier)
-                .WithMany(s => s.TenderBids)
-                .HasForeignKey(tb => tb.SupplierId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // PurchaseOrder - Retailer (many-to-one)
-            modelBuilder.Entity<PurchaseOrder>()
-                .HasOne(po => po.Retailer)
-                .WithMany(r => r.PurchaseOrders)
-                .HasForeignKey(po => po.RetailerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // PurchaseOrder - Supplier (many-to-one)
-            modelBuilder.Entity<PurchaseOrder>()
-                .HasOne(po => po.Supplier)
-                .WithMany(s => s.PurchaseOrders)
-                .HasForeignKey(po => po.SupplierId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // PurchaseOrder - TenderBid (one-to-one, nullable)
-            modelBuilder.Entity<PurchaseOrder>()
-                .HasOne(po => po.TenderBid)
-                .WithOne()
-                .HasForeignKey<PurchaseOrder>(po => po.TenderBidId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // PurchaseOrderItem - PurchaseOrder (many-to-one)
-            modelBuilder.Entity<PurchaseOrderItem>()
-                .HasOne(poi => poi.PurchaseOrder)
-                .WithMany(po => po.PurchaseOrderItems)
-                .HasForeignKey(poi => poi.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // PurchaseOrderItem - Product (many-to-one)
-            modelBuilder.Entity<PurchaseOrderItem>()
-                .HasOne(poi => poi.Product)
-                .WithMany(p => p.PurchaseOrderItems)
-                .HasForeignKey(poi => poi.ProductId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            // Removed for reimplementation
+            
             // ========== ORDER MANAGEMENT CONFIGURATIONS ==========
-
-            // Order - PurchaseOrder (one-to-one)
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.PurchaseOrder)
-                .WithOne(po => po.Order)
-                .HasForeignKey<Order>(o => o.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Order - Supplier (many-to-one)
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.Supplier)
-                .WithMany(s => s.Orders)
-                .HasForeignKey(o => o.SupplierId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // OrderItem - Order (many-to-one)
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.Order)
-                .WithMany(o => o.OrderItems)
-                .HasForeignKey(oi => oi.OrderId)
+            // Removed for reimplementation
+            
+            // Cart - Retailer (one-to-one)
+            modelBuilder.Entity<Cart>()
+                .HasOne(c => c.Retailer)
+                .WithOne(r => r.Cart)
+                .HasForeignKey<Cart>(c => c.RetailerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // OrderItem - Product (many-to-one)
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.Product)
-                .WithMany(p => p.OrderItems)
-                .HasForeignKey(oi => oi.ProductId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // OrderStatusHistory - Order (many-to-one)
-            modelBuilder.Entity<OrderStatusHistory>()
-                .HasOne(osh => osh.Order)
-                .WithMany(o => o.StatusHistory)
-                .HasForeignKey(osh => osh.OrderId)
+            // CartItem - Cart (many-to-one with cascade delete)
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Cart)
+                .WithMany(c => c.CartItems)
+                .HasForeignKey(ci => ci.CartId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // CartItem - Product (many-to-one)
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Product)
+                .WithMany()
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
             // ========== DELIVERY CONFIGURATIONS ==========
-
-            // Delivery - Order (one-to-one)
-            modelBuilder.Entity<Delivery>()
-                .HasOne(d => d.Order)
-                .WithOne(o => o.Delivery)
-                .HasForeignKey<Delivery>(d => d.OrderId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             // Delivery - SupplierEmployee (many-to-one)
             modelBuilder.Entity<Delivery>()
@@ -293,13 +203,6 @@ namespace SCM_System.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ========== PAYMENT CONFIGURATIONS ==========
-
-            // Commission - PurchaseOrder (one-to-one)
-            modelBuilder.Entity<Commission>()
-                .HasOne(c => c.PurchaseOrder)
-                .WithOne(po => po.Commission)
-                .HasForeignKey<Commission>(c => c.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             // Commission - Supplier (many-to-one)
             modelBuilder.Entity<Commission>()
@@ -354,12 +257,7 @@ namespace SCM_System.Data
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Rating - PurchaseOrder (one-to-one)
-            modelBuilder.Entity<Rating>()
-                .HasOne(r => r.PurchaseOrder)
-                .WithOne(po => po.Rating)
-                .HasForeignKey<Rating>(r => r.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Restrict);
+            // Rating removed for now
 
             // Rating - Retailer (many-to-one)
             modelBuilder.Entity<Rating>()
@@ -373,6 +271,67 @@ namespace SCM_System.Data
                 .HasOne(r => r.Supplier)
                 .WithMany(s => s.ReceivedRatings)
                 .HasForeignKey(r => r.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Module 3 Relationships (No Cascade)
+            modelBuilder.Entity<PurchaseOrder>()
+                .HasOne(po => po.Retailer)
+                .WithMany(r => r.PurchaseOrders)
+                .HasForeignKey(po => po.RetailerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PurchaseOrder>()
+                .HasOne(po => po.Supplier)
+                .WithMany(s => s.PurchaseOrders)
+                .HasForeignKey(po => po.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Retailer)
+                .WithMany(r => r.Orders)
+                .HasForeignKey(o => o.RetailerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Supplier)
+                .WithMany(s => s.Orders)
+                .HasForeignKey(o => o.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PurchaseOrder>()
+                .HasOne(po => po.TenderBid)
+                .WithMany()
+                .HasForeignKey(po => po.TenderBidId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.PurchaseOrder)
+                .WithMany()
+                .HasForeignKey(o => o.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<OrderStatusHistory>()
+                .HasOne(h => h.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(h => h.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PurchaseOrderItem>()
+                .HasOne(poi => poi.Product)
+                .WithMany()
+                .HasForeignKey(poi => poi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Product)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TenderBid>()
+                .HasOne(tb => tb.Supplier)
+                .WithMany(s => s.TenderBids)
+                .HasForeignKey(tb => tb.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ========== INDEXES AND UNIQUE CONSTRAINTS ==========
@@ -400,11 +359,7 @@ namespace SCM_System.Data
                 .HasIndex(p => p.SKU)
                 .IsUnique();
 
-            // PurchaseOrder unique constraint
-            modelBuilder.Entity<PurchaseOrder>()
-                .HasIndex(po => po.PONumber)
-                .IsUnique();
-
+            // PurchaseOrder unique constraint removed
             // Conversation unique constraint (prevent duplicate conversations between same supplier-retailer)
             modelBuilder.Entity<Conversation>()
                 .HasIndex(c => new { c.SupplierId, c.RetailerId })
@@ -439,15 +394,7 @@ namespace SCM_System.Data
                 .Property(p => p.CreatedAt)
                 .HasDefaultValueSql("GETDATE()");
 
-            // Order defaults
-            modelBuilder.Entity<Order>()
-                .Property(o => o.OrderStatus)
-                .HasDefaultValue("Processing");
-
-            modelBuilder.Entity<Order>()
-                .Property(o => o.CreatedAt)
-                .HasDefaultValueSql("GETDATE()");
-
+            // Order defaults removed
             // Commission defaults
             modelBuilder.Entity<Commission>()
                 .Property(c => c.Status)

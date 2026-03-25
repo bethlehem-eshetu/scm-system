@@ -294,13 +294,19 @@
                         <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-box"></i> Products</a>
+                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> Available Tenders</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-gavel"></i> Tenders</a>
+                        <a asp-controller="Bid" asp-action="Index"><i class="fas fa-file-contract"></i> My Bids</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
+                        <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice-dollar"></i> Purchase Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-cart"></i> Orders</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-box"></i> Catalog</a>
                     </li>
                     <li class="menu-label">Management</li>
                     <li>
@@ -313,10 +319,16 @@
                         <a asp-controller="Retailer" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-search"></i> Browse Catalog</a>
+                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> My Tenders</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-clipboard-list"></i> My Orders</a>
+                        <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice"></i> Purchase Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-clipboard-list"></i> My Orders</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-search"></i> Browse Catalog</a>
                     </li>
                 }
                 else if (role == "Warehouse")

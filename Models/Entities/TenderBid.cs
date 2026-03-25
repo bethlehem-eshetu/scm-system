@@ -17,19 +17,20 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        [Display(Name = "Bid Amount")]
-        public decimal BidAmount { get; set; }
+        public decimal ProposedTotalAmount { get; set; }
 
-        [StringLength(100)]
-        [Display(Name = "Delivery Timeline")]
-        public string DeliveryTimeline { get; set; }
+        [Required]
+        public int DeliveryLeadTimeDays { get; set; }
 
-        public string BidNotes { get; set; }
+        [Required]
+        public int ValidityPeriodDays { get; set; }
 
-        public DateTime SubmittedDate { get; set; } = DateTime.Now;
+        public string Notes { get; set; }
 
         [Required]
         [StringLength(20)]
         public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected
+
+        public DateTime SubmittedAt { get; set; } = DateTime.Now;
     }
 }

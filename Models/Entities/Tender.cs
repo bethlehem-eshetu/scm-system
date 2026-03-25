@@ -7,6 +7,16 @@ namespace SCM_System.Models.Entities
         public int Id { get; set; }
 
         [Required]
+        [StringLength(50)]
+        public string ReferenceNumber { get; set; }
+
+        [Required]
+        [StringLength(150)]
+        public string Title { get; set; }
+
+        public string Description { get; set; }
+
+        [Required]
         public int RetailerId { get; set; }
         public Retailer Retailer { get; set; }
 
@@ -15,15 +25,10 @@ namespace SCM_System.Models.Entities
         public ProductCategory Category { get; set; }
 
         [Required]
-        [StringLength(200)]
-        public string Title { get; set; }
-
-        public string Description { get; set; }
+        public DateTime SubmissionDeadline { get; set; }
 
         [Required]
-        public int Quantity { get; set; }
-
-        public DateTime ClosingDate { get; set; }
+        public DateTime ExpectedDeliveryDate { get; set; }
 
         [Required]
         [StringLength(20)]
@@ -31,7 +36,7 @@ namespace SCM_System.Models.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Navigation properties
+        // Navigation
         public ICollection<TenderItem> TenderItems { get; set; }
         public ICollection<TenderBid> Bids { get; set; }
     }

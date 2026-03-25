@@ -9,7 +9,6 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(50)]
-        [Display(Name = "PO Number")]
         public string PONumber { get; set; }
 
         [Required]
@@ -23,35 +22,25 @@ namespace SCM_System.Models.Entities
         public int? TenderBidId { get; set; }
         public TenderBid TenderBid { get; set; }
 
-        public int ProductId { get; set; }
-        public Product Product { get; set; }
-
-        [Required]
-        [StringLength(100)]
-        public string ProductName { get; set; }
-
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        [Display(Name = "Unit Price")]
-        public decimal UnitPrice { get; set; }
-
-        [Required]
-        public int Quantity { get; set; }
-
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 
         [Required]
         [StringLength(20)]
         public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Cancelled
 
+        [Required]
+        [StringLength(255)]
+        public string DeliveryAddress { get; set; }
+
+        [Required]
+        public DateTime ExpectedDeliveryDate { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
-        public DateTime? ExpectedDeliveryDate { get; set; }
-
-        // Navigation properties
+        // Navigation
         public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; }
         public Order Order { get; set; }
         public Commission Commission { get; set; }

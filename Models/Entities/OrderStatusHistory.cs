@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -14,10 +14,11 @@ namespace SCM_System.Models.Entities
         [StringLength(20)]
         public string Status { get; set; }
 
-        public string Notes { get; set; }
+        public string Comments { get; set; }
 
         [Required]
-        public int ChangedBy { get; set; }
+        public int ChangedByUserId { get; set; }
+        public User ChangedByUser { get; set; }
 
         public DateTime ChangedAt { get; set; } = DateTime.Now;
     }

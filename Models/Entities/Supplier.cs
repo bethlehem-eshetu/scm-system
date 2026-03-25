@@ -65,8 +65,8 @@ namespace SCM_System.Models.Entities
         public ICollection<Tender> Tenders { get; set; }
         public ICollection<TenderBid> TenderBids { get; set; }
         public ICollection<PurchaseOrder> PurchaseOrders { get; set; }
-        public ICollection<SupplierEmployee> Employees { get; set; }
         public ICollection<Order> Orders { get; set; }
+        public ICollection<SupplierEmployee> Employees { get; set; }
         public ICollection<Commission> Commissions { get; set; }
         public ICollection<Rating> ReceivedRatings { get; set; }
         public ICollection<Conversation> Conversations { get; set; }

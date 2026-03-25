@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.ViewModels;
 using SCM_System.Services;
 using System.Security.Claims;
 
@@ -11,239 +12,97 @@ namespace SCM_System.Controllers
     [Authorize]
     public class BidController : Controller
     {
+        private readonly IBidService _bidService;
+        private readonly ITenderService _tenderService;
+        private readonly IPurchaseOrderService _poService;
         private readonly ApplicationDbContext _context;
-        private readonly INotificationService _notificationService;
 
-        public BidController(ApplicationDbContext context, INotificationService notificationService)
+        public BidController(IBidService bidService, ITenderService tenderService, IPurchaseOrderService poService, ApplicationDbContext context)
         {
+            _bidService = bidService;
+            _tenderService = tenderService;
+            _poService = poService;
             _context = context;
-            _notificationService = notificationService;
         }
 
-        private int GetCurrentUserId()
+        public async Task<IActionResult> Index()
         {
-            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            if (User.IsInRole("Supplier"))
+            {
+                var supplierId = await GetSupplierIdAsync();
+                var bids = await _bidService.GetBidsBySupplierAsync(supplierId);
+                return View("MyBids", bids);
+            }
+            return RedirectToAction("Index", "Home");
         }
 
-        // GET: Bid/Submit/5
         [Authorize(Roles = "Supplier")]
         public async Task<IActionResult> Submit(int tenderId)
         {
-            var tender = await _context.Tenders
-                .Include(t => t.Category)
-                .Include(t => t.Retailer)
-                .FirstOrDefaultAsync(m => m.Id == tenderId);
+            var tender = await _tenderService.GetTenderByIdAsync(tenderId);
+            if (tender == null || tender.Status != "Open") return NotFound();
 
-            if (tender == null)
-            {
-                return NotFound();
-            }
-
-            if (tender.Status != "Open" || tender.ClosingDate < DateTime.Today)
-            {
-                TempData["ErrorMessage"] = "This tender is no longer accepting bids.";
-                return RedirectToAction("AvailableTenders", "Tender");
-            }
-
-            // Validation Rule: Prevent multiple bids from the same supplier
-            var supplierId = GetCurrentUserId();
-            var existingBid = await _context.TenderBids
-                .AnyAsync(b => b.TenderId == tenderId && b.SupplierId == supplierId);
-
-            if (existingBid)
-            {
-                TempData["ErrorMessage"] = "You have already submitted a bid for this tender.";
-                return RedirectToAction("AvailableTenders", "Tender");
-            }
-
+            var model = new BidSubmitViewModel { TenderId = tenderId };
             ViewBag.Tender = tender;
-            return View(new TenderBid { TenderId = tenderId });
+            return View(model);
         }
 
-        // POST: Bid/Submit
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Supplier")]
-        public async Task<IActionResult> Submit([Bind("TenderId,BidAmount,DeliveryTimeline,BidNotes")] TenderBid bid)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Submit(BidSubmitViewModel model)
         {
-            var tender = await _context.Tenders.FindAsync(bid.TenderId);
-            if (tender == null || tender.Status != "Open" || tender.ClosingDate < DateTime.Today)
-            {
-                return NotFound("Tender not found or no longer open.");
-            }
-
-            var supplierId = GetCurrentUserId();
-            var existingBid = await _context.TenderBids
-                .AnyAsync(b => b.TenderId == bid.TenderId && b.SupplierId == supplierId);
-
-            if (existingBid)
-            {
-                ModelState.AddModelError("", "You have already submitted a bid for this tender.");
-            }
-
             if (ModelState.IsValid)
             {
-                bid.SupplierId = supplierId;
-                bid.Status = "Pending";
-                bid.SubmittedDate = DateTime.Now;
+                var supplierId = await GetSupplierIdAsync();
+                var bid = new TenderBid
+                {
+                    TenderId = model.TenderId,
+                    SupplierId = supplierId,
+                    ProposedTotalAmount = model.ProposedTotalAmount,
+                    DeliveryLeadTimeDays = model.DeliveryLeadTimeDays,
+                    ValidityPeriodDays = model.ValidityPeriodDays,
+                    Notes = model.Notes
+                };
 
-                _context.Add(bid);
-                await _context.SaveChangesAsync();
-                
-                await _notificationService.SendNotificationAsync(
-                    tender.RetailerId, 
-                    $"A new bid of {bid.BidAmount.ToString("C")} was submitted for tender '{tender.Title}'.", 
-                    "BidSubmitted");
-
-                TempData["SuccessMessage"] = "Your bid was submitted successfully.";
-                return RedirectToAction(nameof(MyBids));
+                await _bidService.SubmitBidAsync(bid);
+                return RedirectToAction(nameof(Index));
             }
-
-            ViewBag.Tender = tender;
-            return View(bid);
+            
+            ViewBag.Tender = await _tenderService.GetTenderByIdAsync(model.TenderId);
+            return View(model);
         }
 
-        // GET: Bid/MyBids
-        [Authorize(Roles = "Supplier")]
-        public async Task<IActionResult> MyBids()
-        {
-            var supplierId = GetCurrentUserId();
-            var bids = await _context.TenderBids
-                .Include(b => b.Tender)
-                    .ThenInclude(t => t.Category)
-                .Where(b => b.SupplierId == supplierId)
-                .OrderByDescending(b => b.SubmittedDate)
-                .ToListAsync();
-
-            return View(bids);
-        }
-
-        // GET: Bid/Review/5
         [Authorize(Roles = "Retailer")]
         public async Task<IActionResult> Review(int tenderId)
         {
-            var tender = await _context.Tenders
-                .Include(t => t.Category)
-                .Include(t => t.Bids)
-                    .ThenInclude(b => b.Supplier)
-                .FirstOrDefaultAsync(t => t.Id == tenderId);
-
-            if (tender == null)
-            {
-                return NotFound();
-            }
-
-            // Security Rule: Retailer must own the Tender
-            if (tender.RetailerId != GetCurrentUserId())
-            {
-                return Unauthorized("You do not have permission to review bids for this tender.");
-            }
-
-            return View(tender);
+            var bids = await _bidService.GetBidsForTenderAsync(tenderId);
+            ViewBag.Tender = await _tenderService.GetTenderByIdAsync(tenderId);
+            return View(bids);
         }
 
-        // POST: Bid/Accept/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Retailer")]
-        public async Task<IActionResult> Accept(int id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Accept(int id, string deliveryAddress)
         {
-            var bid = await _context.TenderBids
-                .Include(b => b.Tender)
-                .Include(b => b.Supplier)
-                .FirstOrDefaultAsync(b => b.Id == id);
-
-            if (bid == null) return NotFound();
-
-            var tender = bid.Tender;
-
-            // Security Rule: Retailer must own the Tender
-            if (tender.RetailerId != GetCurrentUserId()) return Unauthorized();
-
-            // Enforce strictly ONE accepted bid
-            if (tender.Status == "Awarded")
+            var bid = await _bidService.AcceptBidAsync(id);
+            if (bid != null)
             {
-                TempData["ErrorMessage"] = "This tender has already been awarded.";
-                return RedirectToAction(nameof(Review), new { tenderId = tender.Id });
+                await _poService.GeneratePurchaseOrderFromBidAsync(bid.Id, string.IsNullOrEmpty(deliveryAddress) ? "Default Store Address" : deliveryAddress);
             }
-
-            // Begin acceptance logic
-            bid.Status = "Accepted";
-            tender.Status = "Awarded";
-
-            // Reject all other bids for this tender
-            var otherBids = await _context.TenderBids
-                .Where(b => b.TenderId == tender.Id && b.Id != bid.Id)
-                .ToListAsync();
-            
-            foreach (var otherBid in otherBids)
-            {
-                otherBid.Status = "Rejected";
-            }
-
-            // System Action: Generate Purchase Order based on Data Snapshot rules
-            var po = new PurchaseOrder
-            {
-                PONumber = $"PO-T{tender.Id}-{DateTime.Now:yyyyMMdd}-{bid.Id}",
-                RetailerId = tender.RetailerId,
-                SupplierId = bid.SupplierId,
-                TenderBidId = bid.Id,
-                ProductId = 1, // Fallback ID because Tender is not strictly tied to a specific System Product, handled separately
-                ProductName = $"Tender: {tender.Title}",
-                UnitPrice = bid.BidAmount,
-                Quantity = tender.Quantity,
-                TotalAmount = bid.BidAmount * tender.Quantity,
-                Status = "Accepted", // Auto-accepted since it's the result of a mutual tender
-                OrderDate = DateTime.Now
-            };
-
-            _context.PurchaseOrders.Add(po);
-            await _context.SaveChangesAsync();
-
-            // Automatically create the Order since the PO is pre-accepted via Tender rules
-            var order = new Order
-            {
-                PurchaseOrderId = po.Id,
-                SupplierId = po.SupplierId,
-                OrderStatus = "Processing",
-                CreatedAt = DateTime.Now
-            };
-            
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-            
-            await _notificationService.SendNotificationAsync(
-                bid.SupplierId,
-                $"Congratulations! Your bid for tender '{tender.Title}' was accepted. PO {po.PONumber} has been generated.",
-                "BidAccepted");
-
-            TempData["SuccessMessage"] = $"Bid accepted successfully. Purchase Order {po.PONumber} has been generated.";
-            return RedirectToAction(nameof(Review), new { tenderId = tender.Id });
+            return RedirectToAction("Index", "PurchaseOrder");
         }
 
-        // POST: Bid/Reject/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Retailer")]
-        public async Task<IActionResult> Reject(int id)
+        private async Task<int> GetSupplierIdAsync()
         {
-            var bid = await _context.TenderBids
-                .Include(b => b.Tender)
-                .FirstOrDefaultAsync(b => b.Id == id);
-
-            if (bid == null) return NotFound();
-
-            // Security Rule: Retailer must own the Tender
-            if (bid.Tender.RetailerId != GetCurrentUserId()) return Unauthorized();
-
-            if (bid.Status == "Pending")
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
             {
-                bid.Status = "Rejected";
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Bid has been rejected.";
+                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+                return supplier?.Id ?? 0;
             }
-
-            return RedirectToAction(nameof(Review), new { tenderId = bid.TenderId });
+            return 0;
         }
     }
 }
