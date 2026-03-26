@@ -5,9 +5,15 @@ using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
 using System.Security.Cryptography;
 using System.Text;
+<<<<<<< HEAD
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+=======
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+>>>>>>> a2872f4e7830a12d1ec545e7aea43a7b757af3ca
 
 namespace SCM_System.Controllers
 {
@@ -465,7 +471,11 @@ namespace SCM_System.Controllers
                     HttpContext.Session.SetString("UserRole", user.Role);
                     HttpContext.Session.SetString("UserName", user.FullName);
 
+<<<<<<< HEAD
                     // Create claims for authentication
+=======
+                    // Add proper identity claims authentication
+>>>>>>> a2872f4e7830a12d1ec545e7aea43a7b757af3ca
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -474,6 +484,7 @@ namespace SCM_System.Controllers
                         new Claim(ClaimTypes.Role, user.Role)
                     };
 
+<<<<<<< HEAD
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var authProperties = new AuthenticationProperties
                     {
@@ -484,6 +495,20 @@ namespace SCM_System.Controllers
                     await HttpContext.SignInAsync(
                         CookieAuthenticationDefaults.AuthenticationScheme,
                         new ClaimsPrincipal(claimsIdentity),
+=======
+                    var claimsIdentity = new ClaimsIdentity(
+                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    var authProperties = new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
+                    };
+
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme, 
+                        new ClaimsPrincipal(claimsIdentity), 
+>>>>>>> a2872f4e7830a12d1ec545e7aea43a7b757af3ca
                         authProperties);
 
                     // Set success message
@@ -529,7 +554,13 @@ namespace SCM_System.Controllers
         {
             string userName = HttpContext.Session.GetString("UserName") ?? "User";
             HttpContext.Session.Clear();
+<<<<<<< HEAD
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+=======
+            
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+>>>>>>> a2872f4e7830a12d1ec545e7aea43a7b757af3ca
             TempData["SuccessMessage"] = $"👋 Goodbye, {userName}! You have been logged out successfully.";
             return RedirectToAction("Login");
         }

@@ -1,0 +1,40 @@
+@model IEnumerable<SCM_System.Models.Entities.Order>
+@{
+    ViewData["Title"] = "My Orders";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-4">
+    <h2>My Orders</h2>
+    <table class="table table-bordered table-hover mt-3 bg-white shadow-sm rounded">
+        <thead class="table-dark">
+            <tr>
+                <th>Order No</th>
+                <th>Supplier / Retailer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach(var order in Model) {
+            <tr>
+                <td class="fw-bold">@order.OrderNumber</td>
+                <td>
+                    @if(User.IsInRole("Retailer")) { <span>@order.Supplier?.CompanyName</span> }
+                    else { <span>@order.Retailer?.BusinessName</span> }
+                </td>
+                <td class="text-success fw-bold">@order.TotalAmount.ToString("C")</td>
+                <td><span class="badge p-2 bg-info text-dark">@order.OrderStatus</span></td>
+                <td><span class="badge bg-secondary">@order.PaymentStatus</span></td>
+                <td>@order.CreatedAt.ToString("MMM dd, yyyy")</td>
+                <td><a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-primary">Details</a></td>
+            </tr>
+        }
+        @if(!Model.Any()) {
+            <tr><td colspan="7" class="text-center">No active orders found.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

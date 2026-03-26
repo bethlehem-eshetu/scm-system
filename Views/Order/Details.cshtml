@@ -1,0 +1,114 @@
+@model SCM_System.Models.Entities.Order
+@{
+    ViewData["Title"] = "Order Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Order: @Model.OrderNumber</h2>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+
+    <div class="row">
+        <!-- Order info -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">General Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><strong>Retailer:</strong> @Model.Retailer?.BusinessName</div>
+                        <div class="col-md-6 mb-2"><strong>Supplier:</strong> @Model.Supplier?.CompanyName</div>
+                        <div class="col-md-6 mb-2"><strong>Total Amount:</strong> <span class="text-success fw-bold">@Model.TotalAmount.ToString("C")</span></div>
+                        <div class="col-md-6 mb-2"><strong>Payment Status:</strong> <span class="badge bg-secondary">@Model.PaymentStatus</span></div>
+                        <div class="col-md-6 mb-2"><strong>Date Created:</strong> @Model.CreatedAt.ToString("MMM dd, yyyy")</div>
+                        <div class="col-md-6 mb-2"><strong>Order Status:</strong> <span class="badge p-2 bg-info text-dark">@Model.OrderStatus</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0 table-hover">
+                        <thead class="table-light">
+                            <tr><th>Product</th><th>Qty</th><th>Unit Price</th></tr>
+                        </thead>
+                        <tbody>
+                            @if(Model.OrderItems != null) {
+                                foreach(var item in Model.OrderItems) {
+                                    <tr>
+                                        <td>@item.Product?.ProductName</td>
+                                        <td>@item.Quantity</td>
+                                        <td>@item.UnitPrice.ToString("C")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Update Status section -->
+            <div class="card shadow-sm mb-4 border-warning border-2">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Update Order Status</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdateStatus" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="row">
+                            <div class="col-md-5 form-group">
+                                <label class="fw-bold">New Status</label>
+                                <select name="status" class="form-select">
+                                    @if(Model.OrderStatus == "Processing") { <option value="Processing" selected>Processing</option> } else { <option value="Processing">Processing</option> }
+                                    @if(Model.OrderStatus == "Packed") { <option value="Packed" selected>Packed</option> } else { <option value="Packed">Packed</option> }
+                                    @if(Model.OrderStatus == "Shipped") { <option value="Shipped" selected>Shipped</option> } else { <option value="Shipped">Shipped</option> }
+                                    @if(Model.OrderStatus == "Delivered") { <option value="Delivered" selected>Delivered</option> } else { <option value="Delivered">Delivered</option> }
+                                    @if(Model.OrderStatus == "Cancelled") { <option value="Cancelled" selected>Cancelled</option> } else { <option value="Cancelled">Cancelled</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-7 form-group">
+                                <label class="fw-bold">Comments</label>
+                                <input type="text" name="comments" class="form-control" placeholder="Add a note (e.g., Packed in box 2)" required />
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <button type="submit" class="btn btn-primary fw-bold">Update Status & Log History</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Status History Tracker</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @if(Model.StatusHistory != null && Model.StatusHistory.Any()) {
+                            foreach(var history in Model.StatusHistory.OrderByDescending(h => h.ChangedAt)) {
+                                <li class="list-group-item @(history.Status == Model.OrderStatus ? "bg-light border-start border-4 border-primary" : "")">
+                                    <div class="d-flex w-100 justify-content-between">
+                                      <h6 class="mb-1 fw-bold text-primary">@history.Status</h6>
+                                      <small class="text-muted">@history.ChangedAt.ToString("MMM dd HH:mm")</small>
+                                    </div>
+                                    <p class="mb-1 small">@history.Comments</p>
+                                </li>
+                            }
+                        } else {
+                            <li class="list-group-item text-muted text-center p-4">No tracking history available yet.</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

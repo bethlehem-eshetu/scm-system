@@ -1,0 +1,35 @@
+@model IEnumerable<SCM_System.Models.Entities.TenderBid>
+@{
+    ViewData["Title"] = "My Bids";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-4">
+    <h2>My Bids</h2>
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Tender</th>
+                <th>Proposed Amount</th>
+                <th>Lead Time (Days)</th>
+                <th>Validity (Days)</th>
+                <th>Status</th>
+                <th>Submitted</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach(var item in Model) {
+            <tr>
+                <td>@item.Tender?.Title (@item.Tender?.ReferenceNumber)</td>
+                <td>@item.ProposedTotalAmount.ToString("C")</td>
+                <td>@item.DeliveryLeadTimeDays</td>
+                <td>@item.ValidityPeriodDays</td>
+                <td><span class="badge @(item.Status == "Accepted" ? "bg-success" : (item.Status == "Rejected" ? "bg-danger" : "bg-warning text-dark"))">@item.Status</span></td>
+                <td>@item.SubmittedAt.ToShortDateString()</td>
+            </tr>
+        }
+        @if(!Model.Any()) {
+            <tr><td colspan="6" class="text-center">You haven't submitted any bids yet.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

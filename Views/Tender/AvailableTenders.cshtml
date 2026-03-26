@@ -1,0 +1,36 @@
+@model IEnumerable<SCM_System.Models.Entities.Tender>
+@{
+    ViewData["Title"] = "Available Tenders";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-4">
+    <h2>Available Tenders</h2>
+    <table class="table table-striped table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Reference</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Deadline</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach(var item in Model) {
+            <tr>
+                <td>@item.ReferenceNumber</td>
+                <td>@item.Title</td>
+                <td>@item.Category.CategoryName</td>
+                <td>@item.SubmissionDeadline.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
+                    <a asp-controller="Bid" asp-action="Submit" asp-route-tenderId="@item.Id" class="btn btn-primary btn-sm">Submit Bid</a>
+                </td>
+            </tr>
+        }
+        @if(!Model.Any()) {
+            <tr><td colspan="5" class="text-center">No available tenders at the moment.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

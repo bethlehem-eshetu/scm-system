@@ -84,6 +84,13 @@ namespace SCM_System.Controllers
 
             product.SupplierId = supplierId.Value;
 
+            ModelState.Remove("Supplier");
+            ModelState.Remove("Category");
+            ModelState.Remove("Inventory");
+            ModelState.Remove("AttributeValues");
+            ModelState.Remove("PurchaseOrderItems");
+            ModelState.Remove("OrderItems");
+
             if (ModelState.IsValid)
             {
                 // Handle Image Upload
@@ -166,6 +173,13 @@ namespace SCM_System.Controllers
             }
 
             product.SupplierId = supplierId.Value;
+
+            ModelState.Remove("Supplier");
+            ModelState.Remove("Category");
+            ModelState.Remove("Inventory");
+            ModelState.Remove("AttributeValues");
+            ModelState.Remove("PurchaseOrderItems");
+            ModelState.Remove("OrderItems");
 
             if (ModelState.IsValid)
             {

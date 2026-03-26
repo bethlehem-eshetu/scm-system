@@ -17,10 +17,61 @@ namespace SCM_System.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("ProductVersion", "9.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("SCM_System.Models.Entities.Cart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RetailerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RetailerId")
+                        .IsUnique();
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CartId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CartId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("CartItems");
+                });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Commission", b =>
                 {
@@ -346,30 +397,45 @@ namespace SCM_System.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("OrderStatus")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Processing");
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("RetailerId")
+                    b.Property<int?>("PurchaseOrderId1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetailerId")
                         .HasColumnType("int");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("PurchaseOrderId")
-                        .IsUnique();
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("PurchaseOrderId1")
+                        .IsUnique()
+                        .HasFilter("[PurchaseOrderId1] IS NOT NULL");
 
                     b.HasIndex("RetailerId");
 
@@ -392,11 +458,11 @@ namespace SCM_System.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Quantity")
+                    b.Property<int?>("ProductId1")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
@@ -406,6 +472,8 @@ namespace SCM_System.Migrations
                     b.HasIndex("OrderId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductId1");
 
                     b.ToTable("OrderItems");
                 });
@@ -421,10 +489,10 @@ namespace SCM_System.Migrations
                     b.Property<DateTime>("ChangedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ChangedBy")
+                    b.Property<int>("ChangedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Notes")
+                    b.Property<string>("Comments")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -437,6 +505,8 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChangedByUserId");
 
                     b.HasIndex("OrderId");
 
@@ -649,7 +719,15 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ExpectedDeliveryDate")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeliveryAddress")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("ExpectedDeliveryDate")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("OrderDate")
@@ -679,16 +757,11 @@ namespace SCM_System.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PONumber")
-                        .IsUnique();
-
                     b.HasIndex("RetailerId");
 
                     b.HasIndex("SupplierId");
 
-                    b.HasIndex("TenderBidId")
-                        .IsUnique()
-                        .HasFilter("[TenderBidId] IS NOT NULL");
+                    b.HasIndex("TenderBidId");
 
                     b.ToTable("PurchaseOrders");
                 });
@@ -704,14 +777,14 @@ namespace SCM_System.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProductId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
@@ -719,6 +792,8 @@ namespace SCM_System.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductId1");
 
                     b.HasIndex("PurchaseOrderId");
 
@@ -1006,15 +1081,20 @@ namespace SCM_System.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("ClosingDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpectedDeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReferenceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("RetailerId")
                         .HasColumnType("int");
@@ -1024,13 +1104,16 @@ namespace SCM_System.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<DateTime>("SubmissionDeadline")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("SupplierId")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.HasKey("Id");
 
@@ -1051,30 +1134,31 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("BidAmount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("DeliveryLeadTimeDays")
+                        .HasColumnType("int");
 
-                    b.Property<string>("BidNotes")
+                    b.Property<string>("Notes")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DeliveryTimeline")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<decimal>("ProposedTotalAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateTime>("SubmittedDate")
+                    b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
                     b.Property<int>("TenderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ValidityPeriodDays")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -1098,16 +1182,24 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("EstimatedUnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.Property<int>("TenderId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -1224,12 +1316,42 @@ namespace SCM_System.Migrations
                     b.ToTable("Warehouses");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.Cart", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
+                        .WithOne("Cart")
+                        .HasForeignKey("SCM_System.Models.Entities.Cart", "RetailerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Retailer");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.CartItem", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Cart", "Cart")
+                        .WithMany("CartItems")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Commission", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithOne("Commission")
                         .HasForeignKey("SCM_System.Models.Entities.Commission", "PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
@@ -1272,7 +1394,7 @@ namespace SCM_System.Migrations
                     b.HasOne("SCM_System.Models.Entities.Order", "Order")
                         .WithOne("Delivery")
                         .HasForeignKey("SCM_System.Models.Entities.Delivery", "OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("DeliveryEmployee");
@@ -1353,14 +1475,20 @@ namespace SCM_System.Migrations
             modelBuilder.Entity("SCM_System.Models.Entities.Order", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
-                        .WithOne("Order")
-                        .HasForeignKey("SCM_System.Models.Entities.Order", "PurchaseOrderId")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SCM_System.Models.Entities.Retailer", null)
+                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", null)
+                        .WithOne("Order")
+                        .HasForeignKey("SCM_System.Models.Entities.Order", "PurchaseOrderId1");
+
+                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
                         .WithMany("Orders")
-                        .HasForeignKey("RetailerId");
+                        .HasForeignKey("RetailerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
                         .WithMany("Orders")
@@ -1369,6 +1497,8 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Retailer");
 
                     b.Navigation("Supplier");
                 });
@@ -1382,10 +1512,14 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.Product", "Product")
-                        .WithMany("OrderItems")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Product", null)
+                        .WithMany("OrderItems")
+                        .HasForeignKey("ProductId1");
 
                     b.Navigation("Order");
 
@@ -1394,11 +1528,19 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.OrderStatusHistory", b =>
                 {
+                    b.HasOne("SCM_System.Models.Entities.User", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("SCM_System.Models.Entities.Order", "Order")
                         .WithMany("StatusHistory")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ChangedByUser");
 
                     b.Navigation("Order");
                 });
@@ -1488,9 +1630,9 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.TenderBid", "TenderBid")
-                        .WithOne()
-                        .HasForeignKey("SCM_System.Models.Entities.PurchaseOrder", "TenderBidId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("TenderBidId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Retailer");
 
@@ -1502,10 +1644,14 @@ namespace SCM_System.Migrations
             modelBuilder.Entity("SCM_System.Models.Entities.PurchaseOrderItem", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Product", "Product")
-                        .WithMany("PurchaseOrderItems")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Product", null)
+                        .WithMany("PurchaseOrderItems")
+                        .HasForeignKey("ProductId1");
 
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithMany("PurchaseOrderItems")
@@ -1523,7 +1669,7 @@ namespace SCM_System.Migrations
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithOne("Rating")
                         .HasForeignKey("SCM_System.Models.Entities.Rating", "PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
@@ -1591,13 +1737,13 @@ namespace SCM_System.Migrations
                     b.HasOne("SCM_System.Models.Entities.ProductCategory", "Category")
                         .WithMany("Tenders")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
                         .WithMany("Tenders")
                         .HasForeignKey("RetailerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.Supplier", null)
@@ -1620,7 +1766,7 @@ namespace SCM_System.Migrations
                     b.HasOne("SCM_System.Models.Entities.Tender", "Tender")
                         .WithMany("Bids")
                         .HasForeignKey("TenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Supplier");
@@ -1648,6 +1794,11 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.Cart", b =>
+                {
+                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Conversation", b =>
@@ -1709,6 +1860,9 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Retailer", b =>
                 {
+                    b.Navigation("Cart")
+                        .IsRequired();
+
                     b.Navigation("Conversations");
 
                     b.Navigation("GivenRatings");

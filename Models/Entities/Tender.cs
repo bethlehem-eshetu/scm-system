@@ -1,10 +1,20 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
     public class Tender
     {
         public int Id { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string ReferenceNumber { get; set; }
+
+        [Required]
+        [StringLength(150)]
+        public string Title { get; set; }
+
+        public string Description { get; set; }
 
         [Required]
         public int RetailerId { get; set; }
@@ -15,20 +25,18 @@ namespace SCM_System.Models.Entities
         public ProductCategory Category { get; set; }
 
         [Required]
-        [StringLength(200)]
-        public string Title { get; set; }
+        public DateTime SubmissionDeadline { get; set; }
 
-        public string Description { get; set; }
-
-        public DateTime ClosingDate { get; set; }
+        [Required]
+        public DateTime ExpectedDeliveryDate { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } // Open, Closed, Awarded, Cancelled
+        public string Status { get; set; } = "Open"; // Open, Closed, Awarded, Cancelled
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Navigation properties
+        // Navigation
         public ICollection<TenderItem> TenderItems { get; set; }
         public ICollection<TenderBid> Bids { get; set; }
     }

@@ -58,10 +58,11 @@ namespace SCM_System.Models.Entities
         public bool IsDeleted { get; set; } = false;
 
         // Navigation properties
-        public ICollection<Order> Orders { get; set; }
-        public ICollection<PurchaseOrder> PurchaseOrders { get; set; }
         public ICollection<Tender> Tenders { get; set; }
+        public ICollection<PurchaseOrder> PurchaseOrders { get; set; }
+        public ICollection<Order> Orders { get; set; }
         public ICollection<Rating> GivenRatings { get; set; }
         public ICollection<Conversation> Conversations { get; set; }
+        public Cart Cart { get; set; }
     }
 }

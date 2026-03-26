@@ -12,6 +12,14 @@ builder.Logging.AddDebug();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<SCM_System.Services.IProductService, SCM_System.Services.ProductService>();
 
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
+    });
+
 // Add DbContext with detailed error logging
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -47,6 +55,13 @@ builder.Services.AddSession(options =>
 // Add HttpContextAccessor for session helpers
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddScoped<SCM_System.Services.INotificationService, SCM_System.Services.NotificationService>();
+builder.Services.AddScoped<SCM_System.Services.ITenderService, SCM_System.Services.TenderService>();
+builder.Services.AddScoped<SCM_System.Services.IBidService, SCM_System.Services.BidService>();
+builder.Services.AddScoped<SCM_System.Services.IPurchaseOrderService, SCM_System.Services.PurchaseOrderService>();
+builder.Services.AddScoped<SCM_System.Services.IOrderService, SCM_System.Services.OrderService>();
+builder.Services.AddScoped<SCM_System.Services.ICartService, SCM_System.Services.CartService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -70,10 +85,10 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         var logger = services.GetRequiredService<ILogger<Program>>();
 
-        // Ensure database is created (synchronous version to avoid async issues)
-        logger.LogInformation("Ensuring database is created...");
-        context.Database.EnsureCreated();
-        logger.LogInformation("Database check completed.");
+        // Apply all entity framework migrations
+        logger.LogInformation("Applying migrations...");
+        context.Database.Migrate();
+        logger.LogInformation("Database migration completed.");
 
         // Seed the database
         logger.LogInformation("Starting database seeding...");

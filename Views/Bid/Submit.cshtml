@@ -1,0 +1,66 @@
+@model SCM_System.Models.ViewModels.BidSubmitViewModel
+@{
+    ViewData["Title"] = "Submit Bid";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var tender = ViewBag.Tender as SCM_System.Models.Entities.Tender;
+}
+<div class="container mt-4">
+    <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Tender Summary: @tender?.Title</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6"><p><strong>Retailer:</strong> @tender?.Retailer?.BusinessName</p></div>
+                <div class="col-md-6"><p><strong>Deadline:</strong> @tender?.SubmissionDeadline.ToShortDateString()</p></div>
+            </div>
+            <hr />
+            <h5>Requested Items</h5>
+            <ul>
+                @if(tender?.TenderItems != null)
+                {
+                    foreach(var item in tender.TenderItems)
+                    {
+                        <li>@item.Quantity @item.Unit of @item.ProductName</li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="card shadow-sm p-4">
+        <h4 class="mb-3 border-bottom pb-2">Submit Your Bid</h4>
+        <form asp-action="Submit" method="post">
+            <input type="hidden" asp-for="TenderId" />
+            
+            <div class="row">
+                <div class="col-md-4 form-group mb-3">
+                    <label asp-for="ProposedTotalAmount" class="form-label fw-bold"></label>
+                    <input asp-for="ProposedTotalAmount" class="form-control" type="number" step="0.01" required />
+                    <span asp-validation-for="ProposedTotalAmount" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-4 form-group mb-3">
+                    <label asp-for="DeliveryLeadTimeDays" class="form-label fw-bold"></label>
+                    <input asp-for="DeliveryLeadTimeDays" class="form-control" type="number" required />
+                    <span asp-validation-for="DeliveryLeadTimeDays" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-4 form-group mb-3">
+                    <label asp-for="ValidityPeriodDays" class="form-label fw-bold"></label>
+                    <input asp-for="ValidityPeriodDays" class="form-control" type="number" required />
+                    <span asp-validation-for="ValidityPeriodDays" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-12 form-group mb-3">
+                    <label asp-for="Notes" class="form-label fw-bold">Additional Notes / Terms</label>
+                    <textarea asp-for="Notes" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Notes" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary px-4 mt-2">Submit Bid</button>
+            <a asp-controller="Tender" asp-action="AvailableTenders" class="btn btn-secondary px-4 mt-2 ms-2">Cancel</a>
+        </form>
+    </div>
+</div>

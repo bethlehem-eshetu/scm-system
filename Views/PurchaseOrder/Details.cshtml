@@ -1,0 +1,55 @@
+@model SCM_System.Models.Entities.PurchaseOrder
+@{
+    ViewData["Title"] = "Purchase Order Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>PO Summary: @Model.PONumber</h2>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+
+    <div class="card shadow-sm p-4 mb-4 border-top border-4 border-primary">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <p class="text-muted mb-0">Retailer</p>
+                <h5>@Model.Retailer?.BusinessName</h5>
+            </div>
+            <div class="col-md-6 mb-3">
+                <p class="text-muted mb-0">Supplier</p>
+                <h5>@Model.Supplier?.CompanyName</h5>
+            </div>
+            <div class="col-md-3 mb-3">
+                <p class="text-muted mb-0">Total Amount</p>
+                <h5 class="text-success">@Model.TotalAmount.ToString("C")</h5>
+            </div>
+            <div class="col-md-3 mb-3">
+                <p class="text-muted mb-0">Status</p>
+                <h5><span class="badge bg-secondary p-2">@Model.Status</span></h5>
+            </div>
+            <div class="col-md-3 mb-3">
+                <p class="text-muted mb-0">Date Generated</p>
+                <h5>@Model.OrderDate.ToString("MMM dd, yyyy")</h5>
+            </div>
+            <div class="col-md-3 mb-3">
+                <p class="text-muted mb-0">Expected Delivery</p>
+                <h5>@Model.ExpectedDeliveryDate.ToString("MMM dd, yyyy")</h5>
+            </div>
+            <div class="col-md-12 mt-2">
+                <p class="text-muted mb-0">Delivery Address</p>
+                <p class="fw-bold mb-0">@Model.DeliveryAddress</p>
+            </div>
+        </div>
+        
+        @if (User.IsInRole("Supplier") && Model.Status == "Pending")
+        {
+            <div class="mt-4 border-top pt-3 text-end">
+                <form asp-action="StatusAction" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" name="actionType" value="Accept" class="btn btn-success px-4 me-2">Accept PO</button>
+                    <button type="submit" name="actionType" value="Reject" class="btn btn-danger px-4">Reject PO</button>
+                </form>
+            </div>
+        }
+    </div>
+</div>

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
 {
@@ -11,13 +12,19 @@ namespace SCM_System.Models.Entities
         public Tender Tender { get; set; }
 
         [Required]
-        [StringLength(150)]
-        [Display(Name = "Product Name")]
+        [StringLength(100)]
         public string ProductName { get; set; }
+
+        public string Description { get; set; }
 
         [Required]
         public int Quantity { get; set; }
 
-        public string Description { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Unit { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? EstimatedUnitPrice { get; set; }
     }
 }

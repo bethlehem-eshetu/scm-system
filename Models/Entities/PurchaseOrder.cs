@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
@@ -9,7 +9,6 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(50)]
-        [Display(Name = "PO Number")]
         public string PONumber { get; set; }
 
         [Required]
@@ -25,18 +24,23 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } // Pending, Accepted, Rejected, Completed
+        public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Cancelled
 
+        [Required]
+        [StringLength(255)]
+        public string DeliveryAddress { get; set; }
+
+        [Required]
+        public DateTime ExpectedDeliveryDate { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
-        public DateTime? ExpectedDeliveryDate { get; set; }
-
-        // Navigation properties
+        // Navigation
         public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; }
         public Order Order { get; set; }
         public Commission Commission { get; set; }
