@@ -6,133 +6,118 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1>Welcome, @Model.User.FullName!</h1>
-            <p class="text-muted">@Model.CompanyName</p>
+    <div class="glass-panel p-4 mb-4 position-relative overflow-hidden" style="background: var(--hero-bg);">
+        <div class="animated-bg" style="opacity: 0.05;"></div>
+        <div class="position-relative z-index-1">
+            <h1 class="text-white mb-1 fw-bold">Welcome, @Model.User.FullName!</h1>
+            <p class="text-white-50 mb-0">Managing @Model.CompanyName Operations</p>
         </div>
     </div>
 
     <!-- Verification Status Alert -->
     @if (Model.VerificationStatus != "Verified")
     {
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <strong>Account Pending Verification!</strong> Your account is currently @Model.VerificationStatus. You'll be able to list products and participate in tenders once verified by admin.
+        <div class="alert alert-warning alert-dismissible fade show glass-card border-0 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+                <div>
+                    <h6 class="mb-0 fw-bold text-dark">Account Pending Verification!</h6>
+                    <small class="text-muted">Your account is currently @Model.VerificationStatus. You'll be able to list products and participate in tenders once verified by admin.</small>
+                </div>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
     <!-- Statistics Cards -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Products
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalProducts</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-box fa-2x text-gray-300"></i>
-                        </div>
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Total Products</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalProducts</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary">
+                        <i class="fas fa-box fa-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Orders
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalOrders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Total Orders</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalOrders</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-2 rounded-3 text-success">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Orders
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.PendingOrders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Pending Orders</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.PendingOrders</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-2 rounded-3 text-warning">
+                        <i class="fas fa-clock fa-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Tender Bids
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalTenders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-gavel fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Tender Bids</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalTenders</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-2 rounded-3 text-info">
+                        <i class="fas fa-gavel fa-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="row mt-4">
+    <div class="row">
         <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Product" asp-action="Create" class="btn btn-primary w-100">
-                                <i class="fas fa-plus"></i> Add Product
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Product" asp-action="Index" class="btn btn-success w-100">
-                                <i class="fas fa-list"></i> View Products
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Tender" asp-action="AvailableTenders" class="btn btn-info w-100">
-                                <i class="fas fa-gavel"></i> Browse Tenders
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Order" asp-action="Index" class="btn btn-warning w-100">
-                                <i class="fas fa-truck"></i> View Orders
-                            </a>
-                        </div>
+            <div class="glass-card p-4 overflow-hidden">
+                <h5 class="fw-bold mb-4 px-2"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h5>
+                
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a asp-controller="Product" asp-action="Create" class="btn btn-outline-primary w-100 py-3 rounded-4">
+                            <i class="fas fa-plus d-block mb-2 fa-lg"></i> Add Product
+                        </a>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-3 mb-2">
-                            <a asp-action="Employees" class="btn btn-secondary w-100">
-                                <i class="fas fa-users-cog"></i> Manage Employees
-                            </a>
-                        </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Product" asp-action="Index" class="btn btn-outline-success w-100 py-3 rounded-4">
+                            <i class="fas fa-list d-block mb-2 fa-lg"></i> My Products
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Tender" asp-action="AvailableTenders" class="btn btn-outline-info w-100 py-3 rounded-4">
+                            <i class="fas fa-gavel d-block mb-2 fa-lg"></i> Browse Tenders
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Order" asp-action="Index" class="btn btn-outline-warning w-100 py-3 rounded-4">
+                            <i class="fas fa-truck d-block mb-2 fa-lg"></i> Orders
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-action="Employees" class="btn btn-outline-secondary w-100 py-3 rounded-4">
+                            <i class="fas fa-users-cog d-block mb-2 fa-lg"></i> Manage Employees
+                        </a>
                     </div>
                 </div>
             </div>

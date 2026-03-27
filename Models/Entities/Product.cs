@@ -25,14 +25,14 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Base Price")]
         public decimal BasePrice { get; set; }
 
-        public string Description { get; set; }
-
+        public string? Description { get; set; }
+        
         [StringLength(50)]
-        public string SKU { get; set; }
+        public string? SKU { get; set; }
 
         [StringLength(255)]
         [Display(Name = "Image URL")]
-        public string ImageUrl { get; set; }
+        public string? ImageUrl { get; set; }
 
         [Required]
         [Range(0, int.MaxValue)]

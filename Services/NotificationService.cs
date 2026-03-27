@@ -5,7 +5,7 @@ namespace SCM_System.Services
 {
     public interface INotificationService
     {
-        Task SendNotificationAsync(int userId, string message, string type);
+        Task SendNotificationAsync(int userId, string title, string message, string type);
     }
 
     public class NotificationService : INotificationService
@@ -17,11 +17,12 @@ namespace SCM_System.Services
             _context = context;
         }
 
-        public async Task SendNotificationAsync(int userId, string message, string type)
+        public async Task SendNotificationAsync(int userId, string title, string message, string type)
         {
             var notification = new Notification
             {
                 UserId = userId,
+                Title = title,
                 Message = message,
                 Type = type,
                 IsRead = false,

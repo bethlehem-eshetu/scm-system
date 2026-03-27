@@ -90,13 +90,20 @@ namespace SCM_System.Controllers
             ModelState.Remove("AttributeValues");
             ModelState.Remove("PurchaseOrderItems");
             ModelState.Remove("OrderItems");
+            ModelState.Remove("imageFile");
 
             if (ModelState.IsValid)
             {
                 // Handle Image Upload
                 if (imageFile != null && imageFile.Length > 0)
                 {
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                    string webRootPath = _webHostEnvironment.WebRootPath;
+                    if (string.IsNullOrEmpty(webRootPath))
+                    {
+                        webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    }
+
+                    string uploadsFolder = Path.Combine(webRootPath, "images", "products");
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
@@ -188,7 +195,13 @@ namespace SCM_System.Controllers
                     // Handle Image Upload
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                        string webRootPath = _webHostEnvironment.WebRootPath;
+                        if (string.IsNullOrEmpty(webRootPath))
+                        {
+                            webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        }
+
+                        string uploadsFolder = Path.Combine(webRootPath, "images", "products");
                         if (!Directory.Exists(uploadsFolder))
                         {
                             Directory.CreateDirectory(uploadsFolder);

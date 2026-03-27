@@ -126,19 +126,21 @@ namespace SCM_System.Services
                     PONumber = $"PO-DIR-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}",
                     RetailerId = retailerId,
                     SupplierId = supplierId,
-                    TotalAmount = supplierItems.Sum(i => i.Quantity * i.Product.BasePrice),
+                    TotalAmount = supplierItems.Sum(i => (decimal)i.Quantity * i.Product.BasePrice),
                     Status = "Pending",
                     DeliveryAddress = deliveryAddress,
                     ExpectedDeliveryDate = expectedDeliveryDate,
                     CreatedAt = DateTime.Now,
-                    OrderDate = DateTime.Now,
-                    PurchaseOrderItems = supplierItems.Select(i => new PurchaseOrderItem
-                    {
-                        ProductId = i.ProductId,
-                        Quantity = i.Quantity,
-                        UnitPrice = i.Product.BasePrice
-                    }).ToList()
+                    OrderDate = DateTime.Now
                 };
+
+                po.PurchaseOrderItems = supplierItems.Select(i => new PurchaseOrderItem
+                {
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.Product.BasePrice,
+                    PurchaseOrder = po // Explicit relationship
+                }).ToList();
 
                 _context.PurchaseOrders.Add(po);
 
@@ -148,14 +150,19 @@ namespace SCM_System.Services
                 {
                     await _notificationService.SendNotificationAsync(
                         supplier.UserId,
-                        $"You received a new direct purchase order ({po.PONumber}) from {retailer?.BusinessName}.",
+                        "New Order Request",
+                        $"New direct purchase order request ({po.PONumber}) from {retailer?.BusinessName}. Please Review.",
                         "Info"
                     );
                 }
             }
 
             // Clear the cart
-            _context.CartItems.RemoveRange(cart.CartItems);
+            foreach(var item in cart.CartItems)
+            {
+                _context.CartItems.Remove(item);
+            }
+
             await _context.SaveChangesAsync();
         }
     }

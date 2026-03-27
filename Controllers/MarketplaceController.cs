@@ -124,7 +124,12 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Checkout failed: " + ex.Message;
+                var message = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    message += " | Inner: " + ex.InnerException.Message;
+                }
+                TempData["ErrorMessage"] = "Checkout failed: " + message;
                 return RedirectToAction(nameof(Cart));
             }
         }
