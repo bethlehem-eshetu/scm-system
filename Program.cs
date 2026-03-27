@@ -12,13 +12,7 @@ builder.Logging.AddDebug();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<SCM_System.Services.IProductService, SCM_System.Services.ProductService>();
 
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(2);
-    });
+
 
 // Add DbContext with detailed error logging
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -39,7 +33,7 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
         options.SlidingExpiration = true;
     });
 

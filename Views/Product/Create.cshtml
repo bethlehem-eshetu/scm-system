@@ -1,133 +1,572 @@
-@model SCM_System.Models.Entities.Product
+@model SCM_System.Models.ViewModels.ProductViewModel
 
 @{
-    ViewData["Title"] = "Create Product";
+    ViewData["Title"] = "Add New Product";
 }
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-primary text-white p-3">
-                    <h4 class="mb-0">
-                        <i class="bi bi-box-seam me-2"></i> Add New Product
-                    </h4>
-                </div>
-                <div class="card-body p-4">
-                    <form asp-action="Create" enctype="multipart/form-data" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-plus-circle me-2 text-primary"></i>Add New Product
+        </h1>
+        <div>
+            <a asp-action="MyProducts" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
 
-                        <div class="row g-4">
-                            <!-- Basic Information -->
-                            <div class="col-md-7">
-                                <h5 class="text-primary border-bottom pb-2 mb-3">Basic Information</h5>
-                                
-                                <div class="mb-3">
-                                    <label asp-for="ProductName" class="form-label fw-bold">Product Name <span class="text-danger">*</span></label>
-                                    <input asp-for="ProductName" class="form-control" placeholder="e.g., Organic Coffee Beans" required />
-                                    <span asp-validation-for="ProductName" class="text-danger"></span>
-                                </div>
-                                
-                                <div class="row mb-3">
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            <div asp-validation-summary="All" class="text-danger"></div>
+        </div>
+    }
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="productForm">
+        @Html.AntiForgeryToken()
+        
+        <div class="row">
+            <!-- Main Form Column -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
+                                    <i class="fas fa-info-circle me-1"></i>Basic Information
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing" type="button" role="tab">
+                                    <i class="fas fa-tags me-1"></i>Pricing & Inventory
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs" type="button" role="tab">
+                                    <i class="fas fa-microchip me-1"></i>Specifications
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab">
+                                    <i class="fas fa-shipping-fast me-1"></i>Shipping
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <!-- TAB 1: BASIC INFORMATION -->
+                            <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                                <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label asp-for="CategoryId" class="form-label fw-bold">Category <span class="text-danger">*</span></label>
-                                        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories" required>
+                                        <label asp-for="ProductName" class="form-label fw-bold">
+                                            Product Name <span class="text-danger">*</span>
+                                        </label>
+                                        <input asp-for="ProductName" class="form-control" placeholder="e.g., Organic Arabica Coffee Beans" />
+                                        <span asp-validation-for="ProductName" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label asp-for="SKU" class="form-label fw-bold">
+                                            SKU <span class="text-muted">(Auto)</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="SKU" class="form-control" placeholder="Auto-generated" />
+                                            <button type="button" class="btn btn-outline-secondary" onclick="generateSKU()">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="SKU" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label asp-for="Barcode" class="form-label fw-bold">
+                                            Barcode / UPC
+                                        </label>
+                                        <input asp-for="Barcode" class="form-control" placeholder="EAN-13 / UPC-A" />
+                                        <small class="text-muted">Optional for POS scanning</small>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label asp-for="CategoryId" class="form-label fw-bold">
+                                            Category <span class="text-danger">*</span>
+                                        </label>
+                                        <select asp-for="CategoryId" asp-items="Model.CategoryList" class="form-select">
                                             <option value="">-- Select Category --</option>
                                         </select>
-                                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                                        <span asp-validation-for="CategoryId" class="text-danger small"></span>
                                     </div>
+                                    
                                     <div class="col-md-6">
-                                        <label asp-for="SKU" class="form-label fw-bold">SKU (Optional)</label>
-                                        <input asp-for="SKU" class="form-control" placeholder="Stock Keeping Unit" />
-                                        <span asp-validation-for="SKU" class="text-danger"></span>
+                                        <label asp-for="SubCategoryId" class="form-label fw-bold">
+                                            Sub Category
+                                        </label>
+                                        <select asp-for="SubCategoryId" class="form-select" id="subCategorySelect">
+                                            <option value="">-- Select Sub Category --</option>
+                                        </select>
+                                        <small class="text-muted">Optional for better organization</small>
                                     </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label asp-for="Description" class="form-label fw-bold">Full Description</label>
-                                    <textarea asp-for="Description" class="form-control" rows="5" placeholder="Detailed product description..."></textarea>
-                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                    
+                                    <div class="col-md-6" style="display: none;">
+                                        <label asp-for="SupplierId" class="form-label fw-bold">
+                                            Supplier <span class="text-danger">*</span>
+                                        </label>
+                                        <select asp-for="SupplierId" asp-items="Model.SupplierList" class="form-select">
+                                            <option value="">-- Select Supplier --</option>
+                                        </select>
+                                        <span asp-validation-for="SupplierId" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label asp-for="Brand" class="form-label fw-bold">
+                                            Brand
+                                        </label>
+                                        <input asp-for="Brand" class="form-control" placeholder="e.g., Nestle, Samsung" />
+                                        <small class="text-muted">Manufacturer or brand name</small>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <label asp-for="Description" class="form-label fw-bold">
+                                            Full Description
+                                        </label>
+                                        <textarea asp-for="Description" class="form-control" rows="4" 
+                                                  placeholder="Detailed product description, features, benefits..."></textarea>
+                                        <span asp-validation-for="Description" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <label asp-for="ShortDescription" class="form-label fw-bold">
+                                            Short Description
+                                        </label>
+                                        <input asp-for="ShortDescription" class="form-control" 
+                                               placeholder="Brief summary for product listings (max 150 chars)" />
+                                        <small class="text-muted">Used in product cards and search results</small>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label asp-for="Tags" class="form-label fw-bold">
+                                            Tags
+                                        </label>
+                                        <input asp-for="Tags" class="form-control" placeholder="organic, premium, best-seller" />
+                                        <small class="text-muted">Comma separated for SEO and filtering</small>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Status</label>
+                                        <div class="form-check form-switch">
+                                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                                            <label asp-for="IsActive" class="form-check-label">Active (visible to customers)</label>
+                                        </div>
+                                        <div class="form-check mt-2">
+                                            <input asp-for="IsFeatured" class="form-check-input" type="checkbox">
+                                            <label asp-for="IsFeatured" class="form-check-label">Feature on homepage</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <!-- Pricing & Inventory -->
-                            <div class="col-md-5">
-                                <h5 class="text-primary border-bottom pb-2 mb-3">Pricing & Inventory</h5>
-                                
-                                <div class="mb-3">
-                                    <label asp-for="BasePrice" class="form-label fw-bold">Base Price <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">ETB</span>
-                                        <input asp-for="BasePrice" class="form-control" type="number" step="0.01" min="0" required />
+                            
+                            <!-- TAB 2: PRICING & INVENTORY -->
+                            <div class="tab-pane fade" id="pricing" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label asp-for="BasePrice" class="form-label fw-bold">
+                                            Base Price <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">ETB</span>
+                                            <input asp-for="BasePrice" class="form-control" type="number" step="0.01" />
+                                        </div>
+                                        <span asp-validation-for="BasePrice" class="text-danger small"></span>
                                     </div>
-                                    <span asp-validation-for="BasePrice" class="text-danger"></span>
-                                </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="Quantity" class="form-label fw-bold">Initial Stock <span class="text-danger">*</span></label>
-                                        <input asp-for="Quantity" class="form-control" type="number" min="0" required value="0" />
-                                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="CostPrice" class="form-label fw-bold">
+                                            Cost Price
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">ETB</span>
+                                            <input asp-for="CostPrice" class="form-control" type="number" step="0.01" />
+                                        </div>
+                                        <small class="text-muted">Your purchase cost (for profit calculation)</small>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="Unit" class="form-label fw-bold">Unit <span class="text-danger">*</span></label>
-                                        <input asp-for="Unit" class="form-control" placeholder="e.g., Kg, Pcs, Box" required />
-                                        <span asp-validation-for="Unit" class="text-danger"></span>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="WholesalePrice" class="form-label fw-bold">
+                                            Wholesale Price
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">ETB</span>
+                                            <input asp-for="WholesalePrice" class="form-control" type="number" step="0.01" />
+                                        </div>
+                                        <small class="text-muted">For bulk orders (min qty applies)</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="DiscountPercentage" class="form-label fw-bold">
+                                            Discount %
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="DiscountPercentage" class="form-control" type="number" step="0.01" min="0" max="100" />
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">Seasonal or promotional discount</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="TaxRate" class="form-label fw-bold">
+                                            Tax Rate
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="TaxRate" class="form-control" type="number" step="0.01" value="15" />
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">VAT / Sales tax rate</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Price Validation</label>
+                                        <div class="alert alert-info p-2 small">
+                                            <i class="fas fa-calculator me-1"></i>
+                                            Selling Price: <strong id="sellingPriceDisplay">0.00</strong> ETB
+                                        </div>
+                                    </div>
+                                    
+                                    <hr class="my-3">
+                                    
+                                    <div class="col-md-3">
+                                        <label asp-for="StockQuantity" class="form-label fw-bold">
+                                            Initial Stock <span class="text-danger">*</span>
+                                        </label>
+                                        <input asp-for="StockQuantity" class="form-control" type="number" min="0" value="0" />
+                                        <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label asp-for="Unit" class="form-label fw-bold">
+                                            Unit <span class="text-danger">*</span>
+                                        </label>
+                                        <select asp-for="Unit" class="form-select">
+                                            <option value="">Select Unit</option>
+                                            <option value="Kg">Kilogram (Kg)</option>
+                                            <option value="g">Gram (g)</option>
+                                            <option value="L">Liter (L)</option>
+                                            <option value="mL">Milliliter (mL)</option>
+                                            <option value="Pcs">Pieces (Pcs)</option>
+                                            <option value="Box">Box</option>
+                                            <option value="Pack">Pack</option>
+                                            <option value="Carton">Carton</option>
+                                            <option value="Pallet">Pallet</option>
+                                        </select>
+                                        <span asp-validation-for="Unit" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label asp-for="MinimumOrderQuantity" class="form-label fw-bold">
+                                            Min Order Qty
+                                        </label>
+                                        <input asp-for="MinimumOrderQuantity" class="form-control" type="number" min="1" value="1" />
+                                        <small class="text-muted">Minimum quantity per order</small>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label asp-for="ReorderLevel" class="form-label fw-bold">
+                                            Reorder Level
+                                        </label>
+                                        <input asp-for="ReorderLevel" class="form-control" type="number" min="0" value="0" />
+                                        <small class="text-muted">Auto-reorder when stock reaches this</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="MaximumStockLevel" class="form-label fw-bold">
+                                            Max Stock Level
+                                        </label>
+                                        <input asp-for="MaximumStockLevel" class="form-control" type="number" min="0" />
+                                        <small class="text-muted">Stock should not exceed this limit</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="ReorderQuantity" class="form-label fw-bold">
+                                            Reorder Quantity
+                                        </label>
+                                        <input asp-for="ReorderQuantity" class="form-control" type="number" min="0" />
+                                        <small class="text-muted">Quantity to order when reorder level reached</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="LeadTimeDays" class="form-label fw-bold">
+                                            Lead Time (Days)
+                                        </label>
+                                        <input asp-for="LeadTimeDays" class="form-control" type="number" min="0" />
+                                        <small class="text-muted">Days from order to delivery</small>
                                     </div>
                                 </div>
-
-                                <h5 class="text-primary border-bottom pb-2 mt-4 mb-3">Product Image</h5>
-                                
-                                <div class="mb-3">
-                                    <label for="imageFile" class="form-label fw-bold">Upload Image</label>
-                                    <input type="file" name="imageFile" id="imageFile" class="form-control" accept="image/*" onchange="previewImage(this)" />
-                                    <small class="text-muted d-block mt-1">Recommended size: 800x800px (JPG, PNG)</small>
+                            </div>
+                            
+                            <!-- TAB 3: SPECIFICATIONS -->
+                            <div class="tab-pane fade" id="specs" role="tabpanel">
+                                <div class="row g-3" id="dynamicAttributesContainer">
+                                    <div class="col-12 text-center py-4 text-muted">
+                                        <i class="fas fa-info-circle mb-2 fa-2x"></i>
+                                        <p>Please select a Category first to load relevant specifications.</p>
+                                    </div>
                                 </div>
-                                
-                                <div class="text-center mt-3 d-none" id="imagePreviewContainer">
-                                    <img id="imagePreview" src="#" alt="Image Preview" class="img-thumbnail" style="max-height: 200px; max-width: 100%; object-fit: contain;" />
+                            </div>
+                            
+                            <!-- TAB 4: SHIPPING -->
+                            <div class="tab-pane fade" id="shipping" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label asp-for="ShippingWeight" class="form-label fw-bold">
+                                            Shipping Weight
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="ShippingWeight" class="form-control" type="number" step="0.01" />
+                                            <span class="input-group-text">kg</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="ShippingLength" class="form-label fw-bold">
+                                            Package Length
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="ShippingLength" class="form-control" type="number" step="0.1" />
+                                            <span class="input-group-text">cm</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="ShippingWidth" class="form-label fw-bold">
+                                            Package Width
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="ShippingWidth" class="form-control" type="number" step="0.1" />
+                                            <span class="input-group-text">cm</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="ShippingHeight" class="form-label fw-bold">
+                                            Package Height
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="ShippingHeight" class="form-control" type="number" step="0.1" />
+                                            <span class="input-group-text">cm</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="HSCode" class="form-label fw-bold">
+                                            HS Code (Customs)
+                                        </label>
+                                        <input asp-for="HSCode" class="form-control" placeholder="e.g., 0901.21" />
+                                        <small class="text-muted">Harmonized System code for international shipping</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="IsHazardous" class="form-label fw-bold">
+                                            Hazardous Material
+                                        </label>
+                                        <div class="form-check mt-2">
+                                            <input asp-for="IsHazardous" class="form-check-input" type="checkbox">
+                                            <label asp-for="IsHazardous" class="form-check-label">This is a hazardous item</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Sidebar -->
+            <div class="col-lg-4">
+                <!-- Image Upload Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-image me-2"></i>Product Images</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div id="imagePreview" class="mb-3">
+                            <img id="mainImagePreview" src="#" alt="Preview" style="display: none; max-width: 100%; max-height: 200px;" class="img-fluid rounded" />
+                            <div id="noImagePlaceholder" class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                            </div>
+                        </div>
                         
-                        <hr class="mt-4 mb-4" />
+                        <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" onchange="previewImage(this)" />
+                        <small class="text-muted d-block mt-2">
+                            Recommended: 800x800px, JPG/PNG<br>
+                            Max file size: 5MB
+                        </small>
                         
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a asp-action="MyProducts" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
-                            </a>
-                            <button type="submit" class="btn btn-primary px-5 py-2 fw-bold">
-                                <i class="bi bi-save me-1"></i> Save Product
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('ImageFile').click()">
+                                <i class="fas fa-upload me-1"></i>Upload
                             </button>
                         </div>
-                    </form>
+                    </div>
+                </div>
+                
+                <!-- Additional Images Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-images me-2"></i>Gallery Images</h5>
+                    </div>
+                    <div class="card-body">
+                        <input asp-for="GalleryImages" type="file" class="form-control" multiple accept="image/*" />
+                        <small class="text-muted">Upload multiple product photos (max 10)</small>
+                    </div>
+                </div>
+                
+                <!-- SEO Card -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fab fa-searchengin me-2"></i>SEO Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="MetaTitle" class="form-label fw-bold">Meta Title</label>
+                            <input asp-for="MetaTitle" class="form-control" placeholder="SEO title for search engines" />
+                            <small class="text-muted">Recommended: 50-60 characters</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="MetaDescription" class="form-label fw-bold">Meta Description</label>
+                            <textarea asp-for="MetaDescription" class="form-control" rows="2" placeholder="SEO description for search results"></textarea>
+                            <small class="text-muted">Recommended: 150-160 characters</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="MetaKeywords" class="form-label fw-bold">Meta Keywords</label>
+                            <input asp-for="MetaKeywords" class="form-control" placeholder="keyword1, keyword2, keyword3" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Slug" class="form-label fw-bold">URL Slug</label>
+                            <input asp-for="Slug" class="form-control" placeholder="organic-coffee-beans" />
+                            <small class="text-muted">Auto-generated from product name</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        
+        <!-- Form Actions -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-body d-flex justify-content-between">
+                <div>
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <i class="fas fa-save me-2"></i>Save Product
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-lg px-4 ms-2" onclick="saveAndAddAnother()">
+                        <i class="fas fa-plus-circle me-2"></i>Save & Add Another
+                    </button>
+                </div>
+                <a asp-action="MyProducts" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     
     <script>
-        function previewImage(input) {
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            const previewImage = document.getElementById('imagePreview');
+        function generateSKU() {
+            var productName = document.getElementById('ProductName').value;
+            var categoryId = document.getElementById('CategoryId').value;
             
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    previewContainer.classList.remove('d-none');
-                }
-                
-                reader.readAsDataURL(input.files[0]);
+            if (productName) {
+                fetch(`/Product/GenerateSku?productName=${encodeURIComponent(productName)}&categoryId=${categoryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('SKU').value = data.sku;
+                    });
             } else {
-                previewContainer.classList.add('d-none');
-                previewImage.src = '#';
+                alert('Please enter product name first');
             }
         }
+        
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('mainImagePreview').src = e.target.result;
+                    document.getElementById('mainImagePreview').style.display = 'block';
+                    document.getElementById('noImagePlaceholder').style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        function calculateSellingPrice() {
+            var basePrice = parseFloat(document.getElementById('BasePrice').value) || 0;
+            var discount = parseFloat(document.getElementById('DiscountPercentage').value) || 0;
+            var tax = parseFloat(document.getElementById('TaxRate').value) || 0;
+            
+            var afterDiscount = basePrice * (1 - discount / 100);
+            var finalPrice = afterDiscount * (1 + tax / 100);
+            
+            document.getElementById('sellingPriceDisplay').innerText = finalPrice.toFixed(2);
+        }
+        
+        document.getElementById('BasePrice').addEventListener('input', calculateSellingPrice);
+        document.getElementById('DiscountPercentage').addEventListener('input', calculateSellingPrice);
+        document.getElementById('TaxRate').addEventListener('input', calculateSellingPrice);
+        
+        function saveAndAddAnother() {
+            var form = document.getElementById('productForm');
+            var action = form.action;
+            form.action = action + '?addAnother=true';
+            form.submit();
+        }
+
+        document.getElementById('CategoryId').addEventListener('change', function() {
+            var categoryId = this.value;
+            var container = document.getElementById('dynamicAttributesContainer');
+            
+            if (!categoryId) {
+                container.innerHTML = '<div class="col-12 text-center py-4 text-muted"><i class="fas fa-info-circle mb-2 fa-2x"></i><p>Please select a Category first to load relevant specifications.</p></div>';
+                return;
+            }
+            
+            container.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading specifications...</p></div>';
+            
+            fetch(`/Product/GetCategoryAttributes?categoryId=${categoryId}`)
+                .then(response => response.json())
+                .then(attributes => {
+                    if (attributes.length === 0) {
+                        container.innerHTML = '<div class="col-12 text-center py-4 text-muted"><p>No specific attributes defined for this category.</p></div>';
+                        return;
+                    }
+                    
+                    var html = '';
+                    attributes.forEach(attr => {
+                        var inputType = attr.dataType && attr.dataType.toLowerCase() === 'number' ? 'number' : 'text';
+                        var unitHtml = attr.unit ? `<span class="input-group-text">${attr.unit}</span>` : '';
+                        
+                        html += `
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">${attr.attributeName} ${attr.isRequired ? '<span class="text-danger">*</span>' : ''}</label>
+                                ${attr.unit ? '<div class="input-group">' : ''}
+                                    <input type="${inputType}" name="DynamicAttributes[${attr.id}]" class="form-control" ${attr.isRequired ? 'required' : ''} />
+                                ${unitHtml}
+                                ${attr.unit ? '</div>' : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error("Error fetching attributes", err);
+                    container.innerHTML = '<div class="col-12 text-danger">Error loading specifications.</div>';
+                });
+        });
     </script>
 }

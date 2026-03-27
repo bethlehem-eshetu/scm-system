@@ -12,14 +12,13 @@ namespace SCM_System.Data
             using (var context = new ApplicationDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-<<<<<<< HEAD
                 // Seed Product Categories
                 if (!context.ProductCategories.Any())
                 {
                     context.ProductCategories.AddRange(
                         new ProductCategory { CategoryName = "Electronics & Gadgets", Description = "Electronic devices and accessories" },
                         new ProductCategory { CategoryName = "Clothing & Apparel", Description = "Apparel and garments" },
-                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods" },
+                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods and drinks" },
                         new ProductCategory { CategoryName = "Home & Garden", Description = "Furniture and home accessories" },
                         new ProductCategory { CategoryName = "Health & Beauty", Description = "Personal care products" },
                         new ProductCategory { CategoryName = "Industrial Tools", Description = "Industrial and manufacturing equipment" },
@@ -33,11 +32,9 @@ namespace SCM_System.Data
                 }
 
                 // Look for any admin user
+                string adminPasswordHash = HashPassword("Admin@123");
                 if (!context.Users.Any(u => u.Role == "Admin"))
                 {
-                    // Hash password (Admin@123)
-                    string adminPasswordHash = HashPassword("Admin@123");
-
                     // Create admin user with gmail
                     var adminUser = new User
                     {
@@ -63,38 +60,6 @@ namespace SCM_System.Data
                     Console.WriteLine("Password: Admin@123");
                     Console.WriteLine("=================================");
                 }
-=======
-                // We no longer return early, but check each user conditionally.
-                // Hash password (Admin@123)
-                string adminPasswordHash = HashPassword("Admin@123");
-
-                if (!context.Users.Any(u => u.Role == "Admin"))
-                {
-                    // Create admin user with gmail
-                    var adminUser = new User
-                    {
-                        FullName = "System Administrator",
-                        Email = "admin@gmail.com",  // Changed to gmail
-                        PasswordHash = adminPasswordHash,
-                        PhoneNumber = "0912345678",
-                        Role = "Admin",
-                        AccountStatus = "Active",
-                        IsApproved = true,
-                        EmailVerified = true,
-                        PhoneVerified = true,
-                        CreatedAt = DateTime.Now,
-                        LoginAttempts = 0
-                    };
-
-                    context.Users.Add(adminUser);
-                }
-                context.SaveChanges();
-
-                Console.WriteLine("=================================");
-                Console.WriteLine("Admin user created successfully!");
-                Console.WriteLine("Email: admin@gmail.com");
-                Console.WriteLine("Password: Admin@123");
-                Console.WriteLine("=================================");
 
                 if (!context.Users.Any(u => u.Email == "retailer@gmail.com"))
                 {
@@ -152,20 +117,7 @@ namespace SCM_System.Data
                     };
                     context.Users.Add(warehouseUser);
                 }
-
-                if (!context.ProductCategories.Any())
-                {
-                    var categories = new List<ProductCategory>
-                    {
-                        new ProductCategory { CategoryName = "Electronics", Description = "Electronic devices and accessories" },
-                        new ProductCategory { CategoryName = "Clothing", Description = "Apparel and garments" },
-                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods and drinks" },
-                        new ProductCategory { CategoryName = "Furniture", Description = "Home and office furniture" },
-                        new ProductCategory { CategoryName = "Raw Materials", Description = "Basic materials for manufacturing" }
-                    };
-                    context.ProductCategories.AddRange(categories);
-                    context.SaveChanges();
-                }
+                context.SaveChanges();
 
                 // Add test supplier "re@gmail.com" and products
                 if (!context.Users.Any(u => u.Email == "re@gmail.com"))
@@ -201,8 +153,8 @@ namespace SCM_System.Data
                     context.Suppliers.Add(reSupplier);
                     context.SaveChanges();
 
-                    var electronicsCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName == "Electronics")?.Id ?? 1;
-                    var foodCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName == "Food & Beverage")?.Id ?? 1;
+                    var electronicsCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName.Contains("Electronics"))?.Id ?? 1;
+                    var foodCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName.Contains("Food & Beverage"))?.Id ?? 1;
 
                     var products = new List<Product>
                     {
@@ -236,9 +188,6 @@ namespace SCM_System.Data
                     context.Products.AddRange(products);
                     context.SaveChanges();
                 }
-
-                context.SaveChanges();
->>>>>>> a2872f4e7830a12d1ec545e7aea43a7b757af3ca
             }
         }
 

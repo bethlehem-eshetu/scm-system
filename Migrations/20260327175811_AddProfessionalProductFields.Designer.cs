@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SCM_System.Data;
 
@@ -11,9 +12,11 @@ using SCM_System.Data;
 namespace SCM_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327175811_AddProfessionalProductFields")]
+    partial class AddProfessionalProductFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -574,6 +577,10 @@ namespace SCM_System.Migrations
                     b.Property<decimal?>("CostPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("CountryOfOrigin")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -581,6 +588,10 @@ namespace SCM_System.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Dimensions")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal?>("DiscountPercentage")
                         .HasColumnType("decimal(5,2)");
@@ -607,6 +618,10 @@ namespace SCM_System.Migrations
 
                     b.Property<int?>("LeadTimeDays")
                         .HasColumnType("int");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int?>("MaximumStockLevel")
                         .HasColumnType("int");
@@ -664,6 +679,9 @@ namespace SCM_System.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("Specifications")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("SubCategoryId")
                         .HasColumnType("int");
 
@@ -681,6 +699,17 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("WarrantyPeriod")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("Weight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("WeightUnit")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<decimal?>("WholesalePrice")
                         .HasColumnType("decimal(18,2)");

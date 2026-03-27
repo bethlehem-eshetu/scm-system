@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.ViewModels;
 using System.Security.Claims;
 
 namespace SCM_System.Controllers
@@ -65,63 +66,160 @@ namespace SCM_System.Controllers
         }
 
         // GET: Product/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewBag.Categories = new SelectList(_context.ProductCategories, "Id", "CategoryName");
-            return View();
+            var supplierId = await GetCurrentSupplierIdAsync();
+            var supplier = await _context.Suppliers.FindAsync(supplierId);
+
+            var model = new ProductViewModel
+            {
+                CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName"),
+                SupplierList = supplier != null ? new SelectList(new[] { supplier }, "Id", "CompanyName", supplierId) : null,
+                SupplierId = supplierId ?? 0
+            };
+            return View(model);
         }
 
         // POST: Product/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductName,CategoryId,BasePrice,Description,Unit,Quantity,SKU")] Product product, IFormFile imageFile)
+        public async Task<IActionResult> Create(ProductViewModel model)
         {
             var supplierId = await GetCurrentSupplierIdAsync();
-            if (supplierId == null)
-            {
-                return Unauthorized();
-            }
+            if (supplierId == null) return Unauthorized();
 
-            product.SupplierId = supplierId.Value;
+            model.SupplierId = supplierId.Value;
 
-            ModelState.Remove("Supplier");
-            ModelState.Remove("Category");
-            ModelState.Remove("Inventory");
-            ModelState.Remove("AttributeValues");
-            ModelState.Remove("PurchaseOrderItems");
-            ModelState.Remove("OrderItems");
+            ModelState.Remove("CategoryList");
+            ModelState.Remove("SupplierList");
+            ModelState.Remove("GalleryImages");
 
             if (ModelState.IsValid)
             {
-                // Handle Image Upload
-                if (imageFile != null && imageFile.Length > 0)
+                var product = new Product
+                {
+                    SupplierId = model.SupplierId,
+                    CategoryId = model.CategoryId,
+                    ProductName = model.ProductName,
+                    BasePrice = model.BasePrice,
+                    Description = model.Description,
+                    SKU = model.SKU,
+                    Quantity = model.StockQuantity,
+                    Unit = model.Unit,
+                    IsAvailable = model.IsActive,
+                    CreatedAt = DateTime.Now,
+                    IsDeleted = false,
+
+                    Barcode = model.Barcode,
+                    SubCategoryId = model.SubCategoryId,
+                    Brand = model.Brand,
+                    ShortDescription = model.ShortDescription,
+                    Tags = model.Tags,
+                    IsFeatured = model.IsFeatured,
+                    CostPrice = model.CostPrice,
+                    WholesalePrice = model.WholesalePrice,
+                    DiscountPercentage = model.DiscountPercentage,
+                    TaxRate = model.TaxRate,
+                    MinimumOrderQuantity = model.MinimumOrderQuantity,
+                    MaximumStockLevel = model.MaximumStockLevel,
+                    ReorderLevel = model.ReorderLevel,
+                    ReorderQuantity = model.ReorderQuantity,
+                    LeadTimeDays = model.LeadTimeDays,
+                    ShippingWeight = model.ShippingWeight,
+                    ShippingLength = model.ShippingLength,
+                    ShippingWidth = model.ShippingWidth,
+                    ShippingHeight = model.ShippingHeight,
+                    HSCode = model.HSCode,
+                    IsHazardous = model.IsHazardous,
+                    MetaTitle = model.MetaTitle,
+                    MetaDescription = model.MetaDescription,
+                    MetaKeywords = model.MetaKeywords,
+                    Slug = model.Slug ?? model.ProductName?.ToLower().Replace(" ", "-")
+                };
+
+                // Handle Main Image Upload
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
-                    if (!Directory.Exists(uploadsFolder))
+                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                    string safeFileName = model.ImageFile.FileName.Replace(",", "_");
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + safeFileName;
+                    using (var fileStream = new FileStream(Path.Combine(uploadsFolder, uniqueFileName), FileMode.Create))
                     {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
+                        await model.ImageFile.CopyToAsync(fileStream);
                     }
                     product.ImageUrl = "/images/products/" + uniqueFileName;
                 }
 
-                product.IsAvailable = product.Quantity > 0;
-                product.CreatedAt = DateTime.Now;
-
                 _context.Add(product);
                 await _context.SaveChangesAsync();
                 
+                // Handle dynamic attribute saving
+                if (model.DynamicAttributes != null && model.DynamicAttributes.Any())
+                {
+                    foreach (var attr in model.DynamicAttributes)
+                    {
+                        if (!string.IsNullOrEmpty(attr.Value))
+                        {
+                            var pav = new ProductAttributeValue
+                            {
+                                ProductId = product.Id,
+                                AttributeId = attr.Key,
+                                Value = attr.Value
+                            };
+                            _context.ProductAttributeValues.Add(pav);
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+                
                 TempData["SuccessMessage"] = "Product created successfully!";
+                
+                if (Request.Query["addAnother"] == "true")
+                {
+                    return RedirectToAction(nameof(Create));
+                }
+                
                 return RedirectToAction(nameof(MyProducts));
             }
+            else
+            {
+                var errors = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                Console.WriteLine("❌ PRODUCT CREATE INVALID ModelState: " + errors);
+                ModelState.AddModelError(string.Empty, "Validation errors: " + errors);
+            }
 
-            ViewBag.Categories = new SelectList(_context.ProductCategories, "Id", "CategoryName", product.CategoryId);
-            return View(product);
+            model.CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", model.CategoryId);
+            var supplierObj = await _context.Suppliers.FindAsync(supplierId);
+            model.SupplierList = supplierObj != null ? new SelectList(new[] { supplierObj }, "Id", "CompanyName", supplierId) : null;
+            
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult GenerateSku(string productName, int categoryId)
+        {
+            if (string.IsNullOrEmpty(productName)) return Json(new { sku = "" });
+            var prefix = productName.Length >= 3 ? productName.Substring(0, 3).ToUpper() : productName.ToUpper();
+            var sku = $"{prefix}-{categoryId}-{DateTime.Now.Ticks.ToString().Substring(10, 4)}";
+            return Json(new { sku });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCategoryAttributes(int categoryId)
+        {
+            var attributes = await _context.ProductAttributeDefinitions
+                .Where(a => a.CategoryId == categoryId)
+                .OrderBy(a => a.AttributeName)
+                .Select(a => new {
+                    id = a.Id,
+                    attributeName = a.AttributeName,
+                    dataType = a.DataType,
+                    unit = a.Unit,
+                    isRequired = a.IsRequired
+                })
+                .ToListAsync();
+            return Json(attributes);
         }
 
         // GET: Product/Edit/5
@@ -174,6 +272,7 @@ namespace SCM_System.Controllers
 
             product.SupplierId = supplierId.Value;
 
+            ModelState.Remove("SupplierId");
             ModelState.Remove("Supplier");
             ModelState.Remove("Category");
             ModelState.Remove("Inventory");
