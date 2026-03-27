@@ -679,6 +679,31 @@ namespace SCM_System.Controllers
             }
         }
 
+        // GET: /Admin/AllUsers
+        public async Task<IActionResult> AllUsers()
+        {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var users = await _context.Users
+                    .OrderBy(u => u.Role)
+                    .ThenBy(u => u.FullName)
+                    .ToListAsync();
+
+                return View(users);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ AllUsers Error: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading users.";
+                return View(new List<User>());
+            }
+        }
+
         // GET: /Admin/AllSuppliers
         public async Task<IActionResult> AllSuppliers()
         {

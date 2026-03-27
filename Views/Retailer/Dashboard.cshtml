@@ -6,89 +6,86 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Welcome, @Model.User?.FullName!</h1>
-        <span class="badge bg-@(Model.User?.IsApproved == true ? "success" : "warning") fs-6">
-            @(Model.User?.IsApproved == true ? "Approved" : "Pending Approval")
-        </span>
+    <div class="glass-panel p-4 mb-4 position-relative overflow-hidden" style="background: var(--hero-bg);">
+        <div class="animated-bg" style="opacity: 0.05;"></div>
+        <div class="position-relative z-index-1 d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="text-white mb-1 fw-bold">Welcome, @Model.User?.FullName!</h1>
+                <p class="text-white-50 mb-0">Retailer Portal | EthioChain SCM</p>
+            </div>
+            <span class="badge bg-@(Model.User?.IsApproved == true ? "success" : "warning") bg-opacity-25 text-white border border-white border-opacity-25 px-3 py-2 rounded-pill">
+                <i class="fas @(Model.User?.IsApproved == true ? "fa-check-circle" : "fa-clock") me-1"></i>
+                @(Model.User?.IsApproved == true ? "Approved" : "Pending Approval")
+            </span>
+        </div>
     </div>
 
     @if (Model.User?.IsApproved != true)
     {
-        <div class="alert alert-warning">
-            <i class="fas fa-clock me-2"></i> Your account is pending approval. You'll be able to place orders once approved.
+        <div class="alert alert-warning alert-dismissible fade show glass-card border-0 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-clock fa-2x me-3 text-warning"></i>
+                <div>
+                    <h6 class="mb-0 fw-bold text-dark">Account Pending Approval</h6>
+                    <small class="text-muted">Your account is currently under review. You'll be able to place orders once approved by the administration.</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="row">
-        <!-- Statistics Cards -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Orders
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalOrders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                        </div>
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Total Orders</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalOrders</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Orders
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.PendingOrders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Pending Orders</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.PendingOrders</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-2 rounded-3 text-warning">
+                        <i class="fas fa-clock fa-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Tenders
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalTenders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-gavel fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Total Tenders</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalTenders</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-2 rounded-3 text-info">
+                        <i class="fas fa-gavel fa-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Active Tenders
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.ActiveTenders</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold mb-1">Active Tenders</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.ActiveTenders</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-2 rounded-3 text-success">
+                        <i class="fas fa-check-circle fa-lg"></i>
                     </div>
                 </div>
             </div>
@@ -96,33 +93,63 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="row mt-4">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+            <div class="glass-card p-4 overflow-hidden">
+                <h5 class="fw-bold mb-4 px-2"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h5>
+                
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a asp-controller="Marketplace" asp-action="Index" class="btn btn-outline-primary w-100 py-3 rounded-4">
+                            <i class="fas fa-search d-block mb-2 fa-lg"></i> Browse Products
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Tender" asp-action="Create" class="btn btn-outline-success w-100 py-3 rounded-4">
+                            <i class="fas fa-file-invoice d-block mb-2 fa-lg"></i> Create Tender
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Tender" asp-action="MyTenders" class="btn btn-outline-info w-100 py-3 rounded-4">
+                            <i class="fas fa-gavel d-block mb-2 fa-lg"></i> My Tenders
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Order" asp-action="Index" class="btn btn-outline-warning w-100 py-3 rounded-4">
+                            <i class="fas fa-history d-block mb-2 fa-lg"></i> Order History
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Marketplace" asp-action="Index" class="btn btn-primary w-100">
-                                <i class="fas fa-search me-2"></i> Browse Products
-                            </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explore Products -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="glass-card overflow-hidden">
+                <div class="p-4 border-bottom border-light d-flex justify-content-between align-items-center bg-primary bg-opacity-10">
+                    <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-search me-2"></i>Explore New Products</h6>
+                    <a asp-action="BrowseCatalog" class="btn btn-primary btn-sm rounded-pill px-4">Browse Catalog</a>
+                </div>
+                <div class="p-4 text-center">
+                    <div class="row align-items-center">
+                        <div class="col-md-8 text-md-start">
+                            <h5 class="fw-bold mb-2">Discover New Suppliers & Products</h5>
+                            <p class="text-muted mb-0 lh-sm">New products from verified suppliers are added daily. Browse the catalog to find the best deals for your business.</p>
                         </div>
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Tender" asp-action="Create" class="btn btn-success w-100">
-                                <i class="fas fa-file-invoice me-2"></i> Create Tender
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Tender" asp-action="MyTenders" class="btn btn-info w-100">
-                                <i class="fas fa-gavel me-2"></i> View Tenders
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a asp-controller="Order" asp-action="Index" class="btn btn-warning w-100">
-                                <i class="fas fa-history me-2"></i> Order History
-                            </a>
+                        <div class="col-md-4 text-center mt-3 mt-md-0">
+                            <div class="d-flex justify-content-center gap-3">
+                                <div class="text-center">
+                                    <div class="h4 fw-bold text-primary mb-0">100+</div>
+                                    <div class="small text-muted">Products</div>
+                                </div>
+                                <div class="vr mx-2 text-muted opacity-25"></div>
+                                <div class="text-center">
+                                    <div class="h4 fw-bold text-success mb-0">20+</div>
+                                    <div class="small text-muted">Suppliers</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -130,86 +157,17 @@
         </div>
     </div>
 
-    <!-- Business Information -->
+    <!-- Recent Activity Placeholder -->
     <div class="row">
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Business Information</h6>
+        <div class="col-12">
+            <div class="glass-card p-5 text-center">
+                <div class="text-muted opacity-50 mb-3">
+                    <i class="fas fa-chart-line fa-3x"></i>
                 </div>
-                <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <th>Business Name:</th>
-                            <td>@Model.BusinessName</td>
-                        </tr>
-                        <tr>
-                            <th>Business Type:</th>
-                            <td>@Model.BusinessType</td>
-                        </tr>
-                        <tr>
-                            <th>License Number:</th>
-                            <td>@Model.BusinessLicenseNumber</td>
-                        </tr>
-                        <tr>
-                            <th>TIN:</th>
-                            <td>@Model.TaxIdentificationNumber</td>
-                        </tr>
-                        <tr>
-                            <th>Store Size:</th>
-                            <td>@Model.StoreSize</td>
-                        </tr>
-                        <tr>
-                            <th>Address:</th>
-                            <td>@Model.BusinessAddress</td>
-                        </tr>
-                        <tr>
-                            <th>City:</th>
-                            <td>@Model.City, @Model.Country</td>
-                        </tr>
-                    </table>
-                </div>
+                <h5 class="fw-bold">Your Activity Summary</h5>
+                <p class="text-muted">You've reached the end of the dashboard. Check your Account Settings for business details.</p>
+                <a asp-action="AccountSettings" class="btn btn-outline-primary rounded-pill px-4">View Profile</a>
             </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Contact Information</h6>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <th>Contact Person:</th>
-                            <td>@Model.User?.FullName</td>
-                        </tr>
-                        <tr>
-                            <th>Email:</th>
-                            <td>@Model.User?.Email</td>
-                        </tr>
-                        <tr>
-                            <th>Phone:</th>
-                            <td>@Model.User?.PhoneNumber</td>
-                        </tr>
-                        <tr>
-                            <th>Member Since:</th>
-                            <td>@Model.CreatedAt.ToString("MMMM dd, yyyy")</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            @if (!string.IsNullOrEmpty(Model.Description))
-            {
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Business Description</h6>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-0">@Model.Description</p>
-                    </div>
-                </div>
-            }
         </div>
     </div>
 </div>

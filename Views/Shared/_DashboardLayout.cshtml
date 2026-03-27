@@ -14,13 +14,11 @@
     <style>
         :root {
             --sidebar-width: 280px;
-            --primary-color: #4f46e5;      /* Indigo */
-            --primary-dark: #4338ca;
-            --sidebar-bg: #1e1b4b;         /* Deep Indigo */
-            --sidebar-hover: rgba(255, 255, 255, 0.1);
-            --sidebar-color: #c7d2fe;
+            --sidebar-bg: #0f172a;         /* Slate 900 */
+            --sidebar-hover: rgba(255, 255, 255, 0.05);
+            --sidebar-color: #94a3b8;      /* Slate 400 */
             --sidebar-active: #ffffff;
-            --bg-color: #f3f4f6;
+            --bg-color: #f8fafc;
         }
 
         body {
@@ -67,16 +65,18 @@
         .sidebar-header .brand {
             color: white;
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             text-decoration: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
         }
         
-        .sidebar-header .brand i {
-            color: #818cf8;
+        .sidebar-header .brand img {
+            height: 32px;
+            width: 32px;
+            border-radius: 8px;
         }
 
         .sidebar-menu {
@@ -128,7 +128,7 @@
         .sidebar-menu li.active > a {
             background: var(--sidebar-hover);
             color: var(--sidebar-active);
-            border-left-color: #818cf8;
+            border-left-color: var(--primary-color);
         }
 
         .sidebar-menu li a:hover i {
@@ -151,8 +151,8 @@
         .sidebar-user .avatar {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
-            background: #818cf8;
+            border-radius: 12px;
+            background: var(--primary-color);
             color: white;
             display: flex;
             align-items: center;
@@ -264,8 +264,8 @@
         <nav id="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="brand">
-                    <i class="fas fa-cubes"></i>
-                    <span>SCM System</span>
+                    <img src="~/images/ethiochain-logo.jpn" alt="Logo" />
+                    <span>EthioChain SCM</span>
                 </a>
             </div>
 
@@ -332,7 +332,10 @@
                         <a asp-controller="Order" asp-action="Index"><i class="fas fa-clipboard-list"></i> My Orders</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-search"></i> Browse Catalog</a>
+                        <a asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search"></i> Browse Catalog</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
                     </li>
                 }
                 else if (role == "Warehouse")
@@ -387,7 +390,7 @@
                 </button>
 
                 <div class="d-flex align-items-center">
-                    <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                    <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
                         <i class="fas fa-sign-out-alt me-1"></i> Logout
                     </a>
                 </div>

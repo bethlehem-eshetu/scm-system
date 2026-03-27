@@ -26,17 +26,29 @@ namespace SCM_System.Controllers
         {
             if (User.IsInRole("Retailer"))
             {
-                var retailerId = await GetRetailerIdAsync();
-                var tenders = await _tenderService.GetTendersByRetailerAsync(retailerId);
-                return View("MyTenders", tenders);
+                return RedirectToAction(nameof(MyTenders));
             }
             else if (User.IsInRole("Supplier"))
             {
-                var tenders = await _tenderService.GetAllTendersAsync();
-                return View("AvailableTenders", tenders.Where(t => t.Status == "Open").ToList());
+                return RedirectToAction(nameof(AvailableTenders));
             }
             
             return RedirectToAction("Index", "Home");
+        }
+
+        [Authorize(Roles = "Supplier")]
+        public async Task<IActionResult> AvailableTenders()
+        {
+            var tenders = await _tenderService.GetAllTendersAsync();
+            return View(tenders.Where(t => t.Status == "Open").ToList());
+        }
+
+        [Authorize(Roles = "Retailer")]
+        public async Task<IActionResult> MyTenders()
+        {
+            var retailerId = await GetRetailerIdAsync();
+            var tenders = await _tenderService.GetTendersByRetailerAsync(retailerId);
+            return View(tenders);
         }
 
         [Authorize(Roles = "Retailer")]
