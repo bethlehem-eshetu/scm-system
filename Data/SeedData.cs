@@ -12,58 +12,6 @@ namespace SCM_System.Data
             using (var context = new ApplicationDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-<<<<<<< HEAD
-                // Seed Product Categories
-                if (!context.ProductCategories.Any())
-                {
-                    context.ProductCategories.AddRange(
-                        new ProductCategory { CategoryName = "Electronics & Gadgets", Description = "Electronic devices and accessories" },
-                        new ProductCategory { CategoryName = "Clothing & Apparel", Description = "Apparel and garments" },
-                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods" },
-                        new ProductCategory { CategoryName = "Home & Garden", Description = "Furniture and home accessories" },
-                        new ProductCategory { CategoryName = "Health & Beauty", Description = "Personal care products" },
-                        new ProductCategory { CategoryName = "Industrial Tools", Description = "Industrial and manufacturing equipment" },
-                        new ProductCategory { CategoryName = "Agriculture", Description = "Farming and agricultural supplies" },
-                        new ProductCategory { CategoryName = "Raw Materials", Description = "Basic materials for manufacturing" }
-                    );
-                    context.SaveChanges();
-                    Console.WriteLine("=================================");
-                    Console.WriteLine("Product Categories seeded!");
-                    Console.WriteLine("=================================");
-                }
-
-                // Look for any admin user
-                if (!context.Users.Any(u => u.Role == "Admin"))
-                {
-                    // Hash password (Admin@123)
-                    string adminPasswordHash = HashPassword("Admin@123");
-
-                    // Create admin user with gmail
-                    var adminUser = new User
-                    {
-                        FullName = "System Administrator",
-                        Email = "admin@gmail.com",  // Changed to gmail
-                        PasswordHash = adminPasswordHash,
-                        PhoneNumber = "0912345678",
-                        Role = "Admin",
-                        AccountStatus = "Active",
-                        IsApproved = true,
-                        EmailVerified = true,
-                        PhoneVerified = true,
-                        CreatedAt = DateTime.Now,
-                        LoginAttempts = 0
-                    };
-
-                    context.Users.Add(adminUser);
-                    context.SaveChanges();
-
-                    Console.WriteLine("=================================");
-                    Console.WriteLine("Admin user created successfully!");
-                    Console.WriteLine("Email: admin@gmail.com");
-                    Console.WriteLine("Password: Admin@123");
-                    Console.WriteLine("=================================");
-                }
-=======
                 // We no longer return early, but check each user conditionally.
                 // Hash password (Admin@123)
                 string adminPasswordHash = HashPassword("Admin@123");
@@ -238,7 +186,6 @@ namespace SCM_System.Data
                 }
 
                 context.SaveChanges();
->>>>>>> a2872f4e7830a12d1ec545e7aea43a7b757af3ca
             }
         }
 
