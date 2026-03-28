@@ -12,10 +12,27 @@ namespace SCM_System.Data
             using (var context = new ApplicationDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                // We no longer return early, but check each user conditionally.
-                // Hash password (Admin@123)
-                string adminPasswordHash = HashPassword("Admin@123");
+                // Seed Product Categories
+                if (!context.ProductCategories.Any())
+                {
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Electronics & Gadgets", Description = "Electronic devices and accessories" },
+                        new ProductCategory { CategoryName = "Clothing & Apparel", Description = "Apparel and garments" },
+                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods and drinks" },
+                        new ProductCategory { CategoryName = "Home & Garden", Description = "Furniture and home accessories" },
+                        new ProductCategory { CategoryName = "Health & Beauty", Description = "Personal care products" },
+                        new ProductCategory { CategoryName = "Industrial Tools", Description = "Industrial and manufacturing equipment" },
+                        new ProductCategory { CategoryName = "Agriculture", Description = "Farming and agricultural supplies" },
+                        new ProductCategory { CategoryName = "Raw Materials", Description = "Basic materials for manufacturing" }
+                    );
+                    context.SaveChanges();
+                    Console.WriteLine("=================================");
+                    Console.WriteLine("Product Categories seeded!");
+                    Console.WriteLine("=================================");
+                }
 
+                // Look for any admin user
+                string adminPasswordHash = HashPassword("Admin@123");
                 if (!context.Users.Any(u => u.Role == "Admin"))
                 {
                     // Create admin user with gmail
@@ -35,14 +52,14 @@ namespace SCM_System.Data
                     };
 
                     context.Users.Add(adminUser);
-                }
-                context.SaveChanges();
+                    context.SaveChanges();
 
-                Console.WriteLine("=================================");
-                Console.WriteLine("Admin user created successfully!");
-                Console.WriteLine("Email: admin@gmail.com");
-                Console.WriteLine("Password: Admin@123");
-                Console.WriteLine("=================================");
+                    Console.WriteLine("=================================");
+                    Console.WriteLine("Admin user created successfully!");
+                    Console.WriteLine("Email: admin@gmail.com");
+                    Console.WriteLine("Password: Admin@123");
+                    Console.WriteLine("=================================");
+                }
 
                 if (!context.Users.Any(u => u.Email == "retailer@gmail.com"))
                 {
@@ -100,20 +117,7 @@ namespace SCM_System.Data
                     };
                     context.Users.Add(warehouseUser);
                 }
-
-                if (!context.ProductCategories.Any())
-                {
-                    var categories = new List<ProductCategory>
-                    {
-                        new ProductCategory { CategoryName = "Electronics", Description = "Electronic devices and accessories" },
-                        new ProductCategory { CategoryName = "Clothing", Description = "Apparel and garments" },
-                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods and drinks" },
-                        new ProductCategory { CategoryName = "Furniture", Description = "Home and office furniture" },
-                        new ProductCategory { CategoryName = "Raw Materials", Description = "Basic materials for manufacturing" }
-                    };
-                    context.ProductCategories.AddRange(categories);
-                    context.SaveChanges();
-                }
+                context.SaveChanges();
 
                 // Add test supplier "re@gmail.com" and products
                 if (!context.Users.Any(u => u.Email == "re@gmail.com"))
@@ -149,8 +153,8 @@ namespace SCM_System.Data
                     context.Suppliers.Add(reSupplier);
                     context.SaveChanges();
 
-                    var electronicsCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName == "Electronics")?.Id ?? 1;
-                    var foodCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName == "Food & Beverage")?.Id ?? 1;
+                    var electronicsCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName.Contains("Electronics"))?.Id ?? 1;
+                    var foodCatId = context.ProductCategories.FirstOrDefault(c => c.CategoryName.Contains("Food & Beverage"))?.Id ?? 1;
 
                     var products = new List<Product>
                     {
@@ -185,7 +189,6 @@ namespace SCM_System.Data
                     context.SaveChanges();
                 }
 
-                context.SaveChanges();
             }
         }
 
