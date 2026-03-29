@@ -48,11 +48,14 @@
 
                 <div class="mb-4">
                     <h6 class="fw-bold mb-2">Availability</h6>
-                    @if (Model.Quantity > 0)
+                    @{
+                        var availableStock = Model.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
+                    }
+                    @if (availableStock > 0)
                     {
                         <div class="d-flex align-items-center text-success">
                             <i class="fas fa-check-circle me-2"></i>
-                            <span>In Stock (@Model.Quantity @Model.Unit available)</span>
+                            <span>In Stock (@availableStock @Model.Unit available)</span>
                         </div>
                     }
                     else
@@ -84,14 +87,17 @@
                             <div class="fw-bold text-dark">@Model.Supplier?.CompanyName</div>
                             <div class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i> @Model.Supplier?.City, @Model.Supplier?.Country</div>
                         </div>
-                        <a href="#" class="btn btn-link btn-sm ms-auto text-decoration-none">View Supplier Profile</a>
                     </div>
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex mt-4">
-                    <button class="btn btn-primary rounded-pill px-5 py-2">
-                        <i class="fas fa-cart-plus me-2"></i> Order Now
-                    </button>
+                    <form asp-controller="Retailer" asp-action="AddToCart" method="post" class="d-inline">
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 @(availableStock <= 0 ? "disabled" : "")">
+                            <i class="fas fa-cart-plus me-2"></i> Order Now
+                        </button>
+                    </form>
                     <button class="btn btn-outline-secondary rounded-pill px-4 py-2">
                         <i class="fas fa-envelope me-2"></i> Contact Supplier
                     </button>

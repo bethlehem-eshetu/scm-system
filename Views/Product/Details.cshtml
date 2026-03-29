@@ -57,10 +57,13 @@
 
                     <div class="row g-3 mb-4 bg-light rounded p-3 me-2 ms-0 shadow-sm">
                         <div class="col-sm-4">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">Current Stock</div>
-                            <div class="fs-5 fw-bold @(Model.Quantity == 0 ? "text-danger" : "text-success")">
-                                <i class="bi @(Model.Quantity == 0 ? "bi-x-circle" : "bi-check-circle") me-1"></i>
-                                @Model.Quantity @Model.Unit
+                            @{
+                                var totalStock = Model.Inventories?.Sum(i => i.QuantityOnHand) ?? 0;
+                            }
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Total System Stock</div>
+                            <div class="fs-5 fw-bold @(totalStock == 0 ? "text-danger" : "text-success")">
+                                <i class="bi @(totalStock == 0 ? "bi-x-circle" : "bi-check-circle") me-1"></i>
+                                @totalStock @Model.Unit
                             </div>
                         </div>
                         <div class="col-sm-4">

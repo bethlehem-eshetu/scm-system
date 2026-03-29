@@ -1,61 +1,208 @@
 @model SCM_System.Models.ViewModels.TenderCreateViewModel
 @{
     ViewData["Title"] = "Create Tender";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
-<div class="container mt-4">
-    <h2>Create New Tender</h2>
-    <div class="card shadow-sm p-4 mt-3">
-        <form asp-action="Create" method="post">
-            <div class="row">
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="Title" class="form-label mb-1 fw-bold"></label>
-                    <input asp-for="Title" class="form-control" required />
-                </div>
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="CategoryId" class="form-label mb-1 fw-bold"></label>
-                    <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories" required></select>
-                </div>
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="SubmissionDeadline" class="form-label mb-1 fw-bold"></label>
-                    <input asp-for="SubmissionDeadline" class="form-control" type="date" required />
-                </div>
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="ExpectedDeliveryDate" class="form-label mb-1 fw-bold"></label>
-                    <input asp-for="ExpectedDeliveryDate" class="form-control" type="date" required />
-                </div>
-                <div class="col-md-12 form-group mb-3">
-                    <label asp-for="Description" class="form-label mb-1 fw-bold"></label>
-                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                </div>
-            </div>
-            
-            <h4 class="mt-4 mb-3 border-bottom pb-2">Requested Items</h4>
-            <div class="row border p-3 bg-light rounded mb-3">
-                <div class="col-md-3 form-group">
-                    <label class="form-label fw-bold">Product Name</label>
-                    <input asp-for="Items[0].ProductName" class="form-control" required />
-                </div>
-                <div class="col-md-3 form-group">
-                    <label class="form-label fw-bold">Quantity</label>
-                    <input asp-for="Items[0].Quantity" class="form-control" type="number" required />
-                </div>
-                <div class="col-md-3 form-group">
-                    <label class="form-label fw-bold">Unit</label>
-                    <input asp-for="Items[0].Unit" class="form-control" required />
-                </div>
-                <div class="col-md-3 form-group">
-                    <label class="form-label fw-bold">Estimated Unit Price</label>
-                    <input asp-for="Items[0].EstimatedUnitPrice" class="form-control" type="number" step="0.01" />
-                </div>
-                <div class="col-md-12 form-group mt-2">
-                    <label class="form-label fw-bold">Item Description</label>
-                    <input asp-for="Items[0].Description" class="form-control" />
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary px-4 mt-2">Create Tender</button>
-            <a asp-action="Index" class="btn btn-secondary px-4 mt-2 ms-2">Cancel</a>
-        </form>
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Create New Tender</h2>
+            <p class="text-muted mb-0">Define your requirements and target matching suppliers</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i> Back to List
+        </a>
     </div>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        
+        <div class="row g-4">
+            <!-- Basic Information -->
+            <div class="col-lg-8">
+                <div class="card bg-glass text-dark border-0 h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom border-secondary py-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2 text-primary"></i> Basic Information</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Title" class="form-label fw-medium text-muted">Tender Title</label>
+                                <input asp-for="Title" class="form-control bg-light border-secondary text-dark" placeholder="e.g. Annual Electronics Supply 2026" required />
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CategoryId" class="form-label fw-medium text-muted">Target Category</label>
+                                <select asp-for="CategoryId" class="form-select bg-light border-secondary text-dark" asp-items="ViewBag.Categories" required>
+                                    <option value="">-- Select Category --</option>
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Language" class="form-label fw-medium text-muted">Submission Language</label>
+                                <select asp-for="Language" class="form-select bg-light border-secondary text-dark">
+                                    <option value="English">English</option>
+                                    <option value="Amharic">Amharic</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SubmissionDeadline" class="form-label fw-medium text-muted">Submission Deadline</label>
+                                <input asp-for="SubmissionDeadline" class="form-control bg-light border-secondary text-dark" type="datetime-local" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ExpectedDeliveryDate" class="form-label fw-medium text-muted">Expected Delivery</label>
+                                <input asp-for="ExpectedDeliveryDate" class="form-control bg-light border-secondary text-dark" type="date" required />
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label fw-medium text-muted">Brief Description</label>
+                                <textarea asp-for="Description" class="form-control bg-light border-secondary text-dark" rows="3" placeholder="Provide a high-level overview of the tender..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commercial & Logistics -->
+            <div class="col-lg-4">
+                <div class="card bg-glass text-dark border-0 h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom border-secondary py-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-truck me-2 text-warning"></i> Logistics & Terms</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="DeliveryLocation" class="form-label fw-medium text-muted">Delivery Location</label>
+                                <input asp-for="DeliveryLocation" class="form-control bg-light border-secondary text-dark" placeholder="e.g. Warehouse Addis Ababa" />
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="PaymentTerms" class="form-label fw-medium text-muted">Payment Terms</label>
+                                <input asp-for="PaymentTerms" class="form-control bg-light border-secondary text-dark" placeholder="e.g. 30% Advance, 70% LC" />
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="InspectionRequirement" class="form-label fw-medium text-muted">Inspection Requirement</label>
+                                <input asp-for="InspectionRequirement" class="form-control bg-light border-secondary text-dark" placeholder="e.g. Third-party audit required" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evaluation Criteria -->
+            <div class="col-lg-12">
+                <div class="card bg-glass text-dark border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom border-secondary py-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-chart-pie me-2 text-info"></i> Evaluation Criteria (%)</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4 align-items-center">
+                            <div class="col-md-4 text-center">
+                                <label asp-for="PriceWeight" class="form-label fw-medium text-muted d-block">Price Weight</label>
+                                <div class="input-group justify-content-center">
+                                    <input asp-for="PriceWeight" class="form-control bg-light border-secondary text-dark text-center rounded-start" style="max-width: 80px;" type="number" />
+                                    <span class="input-group-text bg-light border-secondary text-dark">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <label asp-for="TechnicalWeight" class="form-label fw-medium text-muted d-block">Technical Weight</label>
+                                <div class="input-group justify-content-center">
+                                    <input asp-for="TechnicalWeight" class="form-control bg-light border-secondary text-dark text-center rounded-start" style="max-width: 80px;" type="number" />
+                                    <span class="input-group-text bg-light border-secondary text-dark">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <label asp-for="DeliveryWeight" class="form-label fw-medium text-muted d-block">Delivery Weight</label>
+                                <div class="input-group justify-content-center">
+                                    <input asp-for="DeliveryWeight" class="form-control bg-light border-secondary text-dark text-center rounded-start" style="max-width: 80px;" type="number" />
+                                    <span class="input-group-text bg-light border-secondary text-dark">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-3 text-center mb-0"><i class="fas fa-info-circle me-1"></i> Total weights must sum up to 100%.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requested Items -->
+            <div class="col-lg-12">
+                <div class="card bg-glass text-dark border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom border-secondary py-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-list me-2 text-success"></i> Requested Items</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-light text-dark table-borderless align-middle mb-0">
+                                <thead>
+                                    <tr class="text-muted" style="font-size: 0.85rem;">
+                                        <th style="width: 30%;">PRODUCT NAME</th>
+                                        <th style="width: 15%;">QUANTITY</th>
+                                        <th style="width: 15%;">UNIT</th>
+                                        <th style="width: 20%;">EST. UNIT PRICE</th>
+                                        <th>SPECIFICATIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-bottom border-secondary" id="item-row-0">
+                                        <td>
+                                            <select asp-for="Items[0].ProductId" class="form-select bg-light border-secondary text-dark product-select" required data-index="0">
+                                                <option value="">-- Select Product --</option>
+                                                @foreach (var p in ViewBag.Products as IEnumerable<SCM_System.Models.Entities.Product>)
+                                                {
+                                                    <option value="@p.Id">@p.ProductName</option>
+                                                }
+                                            </select>
+                                            <input type="hidden" asp-for="Items[0].ProductName" id="product-name-0" />
+                                        </td>
+                                        <td>
+                                            <input asp-for="Items[0].Quantity" class="form-control bg-light border-secondary text-dark text-center" type="number" required />
+                                        </td>
+                                        <td>
+                                            <input asp-for="Items[0].Unit" class="form-control bg-light border-secondary text-dark text-center" id="product-unit-0" placeholder="pcs, kg..." required />
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input asp-for="Items[0].EstimatedUnitPrice" class="form-control bg-light border-secondary text-dark" type="number" step="0.01" />
+                                                <span class="input-group-text bg-light border-secondary text-dark border-start-0">ETB</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input asp-for="Items[0].Description" class="form-control bg-light border-secondary text-dark" placeholder="Size, Quality standard..." />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 text-end mb-5">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+                    <i class="fas fa-paper-plane me-2"></i> Publish Tender
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            $(document).on('change', '.product-select', function() {
+                const productId = $(this).val();
+                const index = $(this).data('index');
+                
+                if (productId) {
+                    $.get('/Tender/GetProductDetails/' + productId, function(data) {
+                        $('#product-name-' + index).val(data.name);
+                        $('#product-unit-' + index).val(data.unit);
+                    });
+                } else {
+                    $('#product-name-' + index).val('');
+                    $('#product-unit-' + index).val('');
+                }
+            });
+        });
+    </script>
+}

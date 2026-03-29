@@ -1,66 +1,247 @@
 @model SCM_System.Models.ViewModels.BidSubmitViewModel
 @{
-    ViewData["Title"] = "Submit Bid";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Submit Tender Bid";
+    Layout = "_DashboardLayout";
     var tender = ViewBag.Tender as SCM_System.Models.Entities.Tender;
 }
-<div class="container mt-4">
-    <div class="card shadow-sm mb-4 border-primary">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Tender Summary: @tender?.Title</h4>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6"><p><strong>Retailer:</strong> @tender?.Retailer?.BusinessName</p></div>
-                <div class="col-md-6"><p><strong>Deadline:</strong> @tender?.SubmissionDeadline.ToShortDateString()</p></div>
-            </div>
-            <hr />
-            <h5>Requested Items</h5>
-            <ul>
-                @if(tender?.TenderItems != null)
-                {
-                    foreach(var item in tender.TenderItems)
-                    {
-                        <li>@item.Quantity @item.Unit of @item.ProductName</li>
-                    }
-                }
-            </ul>
-        </div>
-    </div>
 
-    <div class="card shadow-sm p-4">
-        <h4 class="mb-3 border-bottom pb-2">Submit Your Bid</h4>
-        <form asp-action="Submit" method="post">
-            <input type="hidden" asp-for="TenderId" />
-            
-            <div class="row">
-                <div class="col-md-4 form-group mb-3">
-                    <label asp-for="ProposedTotalAmount" class="form-label fw-bold"></label>
-                    <input asp-for="ProposedTotalAmount" class="form-control" type="number" step="0.01" required />
-                    <span asp-validation-for="ProposedTotalAmount" class="text-danger"></span>
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Tender" asp-action="Index">Tenders</a></li>
+            <li class="breadcrumb-item active">Submit Bid</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <form asp-action="Submit" method="post" id="bidForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="TenderId" />
+                <input type="hidden" asp-for="Quantity" id="hiddenQuantity" />
+
+                <!-- Section 1: Financial Proposal -->
+                <div class="glass-card p-4 mb-4">
+                    <h5 class="fw-bold mb-4 text-primary border-bottom pb-2">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>1. Financial Proposal (Price)
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="UnitPrice" class="form-label fw-bold small">Unit Price ($) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">$</span>
+                                <input asp-for="UnitPrice" class="form-control border-start-0" type="number" step="0.01" required id="unitPrice" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Quantity (Required)</label>
+                            <input type="text" class="form-control bg-light" value="@Model.Quantity @(tender?.TenderItems?.FirstOrDefault()?.Unit)" readonly />
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label asp-for="DiscountPercentage" class="form-label fw-bold small">Discount (%)</label>
+                            <input asp-for="DiscountPercentage" class="form-control" type="number" step="0.1" id="discount" value="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="VATPercentage" class="form-label fw-bold small">VAT (%)</label>
+                            <input asp-for="VATPercentage" class="form-control" type="number" step="0.1" id="vat" value="15" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ValidityPeriodDays" class="form-label fw-bold small">Validity (Days) <span class="text-danger">*</span></label>
+                            <input asp-for="ValidityPeriodDays" class="form-control" type="number" required />
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal:</span>
+                            <span class="fw-bold" id="subtotalDisplay">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-danger">
+                            <span class="small">Discount:</span>
+                            <span class="small fw-bold" id="discountDisplay">-$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">VAT:</span>
+                            <span class="small fw-bold" id="vatDisplay">+$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-2">
+                            <span class="h5 fw-bold mb-0">Total Bid Amount:</span>
+                            <span class="h5 fw-bold mb-0 text-primary" id="totalDisplay">$0.00</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="col-md-4 form-group mb-3">
-                    <label asp-for="DeliveryLeadTimeDays" class="form-label fw-bold"></label>
-                    <input asp-for="DeliveryLeadTimeDays" class="form-control" type="number" required />
-                    <span asp-validation-for="DeliveryLeadTimeDays" class="text-danger"></span>
+
+                <!-- Section 2: Delivery Proposal -->
+                <div class="glass-card p-4 mb-4">
+                    <h5 class="fw-bold mb-4 text-warning border-bottom pb-2">
+                        <i class="fas fa-truck me-2"></i>2. Delivery Proposal (Logistics)
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="DeliveryLeadTimeDays" class="form-label fw-bold small">Lead Time (Days) <span class="text-danger">*</span></label>
+                            <input asp-for="DeliveryLeadTimeDays" class="form-control" type="number" required placeholder="e.g. 5" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ProposedDeliveryDate" class="form-label fw-bold small">Proposed Delivery Date</label>
+                            <input asp-for="ProposedDeliveryDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DeliveryMethod" class="form-label fw-bold small">Delivery Method <span class="text-danger">*</span></label>
+                            <select asp-for="DeliveryMethod" class="form-select" required>
+                                <option value="">Choose...</option>
+                                <option value="Own Fleet">Own Fleet</option>
+                                <option value="Third-party">Third-party Logistics</option>
+                                <option value="Mixed">Mixed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DeliveryCapacity" class="form-label fw-bold small">Delivery Capacity</label>
+                            <input asp-for="DeliveryCapacity" class="form-control" placeholder="e.g. Can deliver full quantity at once" />
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="col-md-4 form-group mb-3">
-                    <label asp-for="ValidityPeriodDays" class="form-label fw-bold"></label>
-                    <input asp-for="ValidityPeriodDays" class="form-control" type="number" required />
-                    <span asp-validation-for="ValidityPeriodDays" class="text-danger"></span>
+
+                <!-- Section 3: Technical Proposal -->
+                <div class="glass-card p-4 mb-4">
+                    <h5 class="fw-bold mb-4 text-info border-bottom pb-2">
+                        <i class="fas fa-vial me-2"></i>3. Technical Proposal (Quality)
+                    </h5>
+                    <div class="mb-3">
+                        <label asp-for="TechnicalProposal" class="form-label fw-bold small">Product Specification Match <span class="text-danger">*</span></label>
+                        <textarea asp-for="TechnicalProposal" class="form-control" rows="3" required placeholder="Explain how your product meets the requirements..."></textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="PackagingPlan" class="form-label fw-bold small">Packaging Plan <span class="text-danger">*</span></label>
+                            <input asp-for="PackagingPlan" class="form-control" placeholder="e.g. Sealed moisture-proof bags" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="InspectionCompliance" class="form-label fw-bold small">Inspection Compliance <span class="text-danger">*</span></label>
+                            <select asp-for="InspectionCompliance" class="form-select" required>
+                                <option value="">Select...</option>
+                                <option value="Accept">Accept Third-party Inspection</option>
+                                <option value="Reject">Reject Third-party Inspection</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="col-md-12 form-group mb-3">
-                    <label asp-for="Notes" class="form-label fw-bold">Additional Notes / Terms</label>
-                    <textarea asp-for="Notes" class="form-control" rows="4"></textarea>
-                    <span asp-validation-for="Notes" class="text-danger"></span>
+
+                <!-- Section 4: Commitment -->
+                <div class="glass-card p-4 mb-4">
+                    <h5 class="fw-bold mb-4 text-success border-bottom pb-2">
+                        <i class="fas fa-check-circle me-2"></i>4. Commitment & Notes
+                    </h5>
+                    <div class="mb-3 form-check form-switch p-3 bg-light rounded-3 ms-0">
+                        <input asp-for="PenaltyAcceptance" class="form-check-input ms-0 me-2" type="checkbox" id="penalty">
+                        <label class="form-check-label fw-bold small" for="penalty">Accept Delay Penalties?</label>
+                        <div class="form-text mt-0 ms-4 ps-1">Check this to agree to pre-defined penalties for delivery delays.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label fw-bold small">Additional Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <a asp-action="Index" class="btn btn-light rounded-pill px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Final Bid
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4 sticky-top" style="top: 100px;">
+                <h5 class="fw-bold mb-3">Tender Summary</h5>
+                <div class="p-3 bg-light rounded-4 mb-4">
+                    <div class="small fw-bold text-primary mb-1">Ref: @tender?.ReferenceNumber</div>
+                    <div class="fw-bold mb-2">@tender?.Title</div>
+                    <hr class="my-2 o-10">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small text-muted">Deadline:</span>
+                        <span class="small fw-bold">@tender?.SubmissionDeadline.ToString("MMM dd, yyyy")</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="small text-muted">Expected Delivery:</span>
+                        <span class="small fw-bold">@tender?.ExpectedDeliveryDate.ToString("MMM dd, yyyy")</span>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 small text-uppercase text-muted">Evaluation Weights</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Financial (Price)</span>
+                        <span class="fw-bold">@tender?.PriceWeight%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-primary" style="width: @tender?.PriceWeight%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Technical (Quality)</span>
+                        <span class="fw-bold">@tender?.TechnicalWeight%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-info" style="width: @tender?.TechnicalWeight%"></div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Delivery (Logistics)</span>
+                        <span class="fw-bold">@tender?.DeliveryWeight%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-warning" style="width: @tender?.DeliveryWeight%"></div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning border-0 rounded-4 p-3 small">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>No Contact Info:</strong> Bids must not include phone numbers or emails.
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary px-4 mt-2">Submit Bid</button>
-            <a asp-controller="Tender" asp-action="AvailableTenders" class="btn btn-secondary px-4 mt-2 ms-2">Cancel</a>
-        </form>
+        </div>
     </div>
 </div>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const quantity = parseInt($('#hiddenQuantity').val()) || 0;
+            
+            function calculateTotals() {
+                const unitPrice = parseFloat($('#unitPrice').val()) || 0;
+                const discountPct = parseFloat($('#discount').val()) || 0;
+                const vatPct = parseFloat($('#vat').val()) || 0;
+
+                const subtotal = unitPrice * quantity;
+                const discountAmt = subtotal * (discountPct / 100);
+                const vatableAmt = subtotal - discountAmt;
+                const vatAmt = vatableAmt * (vatPct / 100);
+                const total = vatableAmt + vatAmt;
+
+                $('#subtotalDisplay').text('$' + subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#discountDisplay').text('-$' + discountAmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#vatDisplay').text('+$' + vatAmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#totalDisplay').text('$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+            }
+
+            $('#unitPrice, #discount, #vat').on('input', calculateTotals);
+            calculateTotals();
+        });
+    </script>
+}

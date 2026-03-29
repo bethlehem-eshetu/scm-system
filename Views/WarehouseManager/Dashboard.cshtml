@@ -1,0 +1,232 @@
+@model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
+@{
+    ViewData["Title"] = "Warehouse Dashboard";
+    Layout = "_DashboardLayout";
+    var manager = ViewBag.Manager as SCM_System.Models.Entities.SupplierEmployee;
+    var warehouse = ViewBag.Warehouse as SCM_System.Models.Entities.Warehouse;
+}
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card {
+        border-left: 5px solid;
+    }
+    
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-Issued { background: #cce5ff; color: #004085; }
+    .status-Picking { background: #fff3cd; color: #856404; }
+    .status-Packed { background: #d4edda; color: #155724; }
+    .status-Ready { background: #d1ecf1; color: #0c5460; }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h2 class="fw-bold mb-0">Warehouse <span class="text-primary">@warehouse?.Name</span></h2>
+            <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>@warehouse?.City, @warehouse?.Region</p>
+        </div>
+        <div class="col-auto">
+            <div class="glass-card px-3 py-2 d-flex align-items-center">
+                <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div>
+                    <div class="small text-muted">Manager</div>
+                    <div class="fw-bold">@User.Identity.Name</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-4 stat-card border-primary h-100">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase mb-1">Pending Picking</div>
+                        <h2 class="fw-bold mb-0">@ViewBag.PendingOrders</h2>
+                    </div>
+                    <div class="text-primary"><i class="fas fa-clipboard-list fa-2x"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 stat-card border-warning h-100">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase mb-1">In Progress</div>
+                        <h2 class="fw-bold mb-0">@ViewBag.PickingOrders</h2>
+                    </div>
+                    <div class="text-warning"><i class="fas fa-box-open fa-2x"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 stat-card border-success h-100">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase mb-1">Ready for Delivery</div>
+                        <h2 class="fw-bold mb-0">@ViewBag.ReadyOrders</h2>
+                    </div>
+                    <div class="text-success"><i class="fas fa-shipping-fast fa-2x"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 stat-card border-danger h-100">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase mb-1">Low Stock Alerts</div>
+                        <h2 class="fw-bold mb-0">@ViewBag.LowStockCount</h2>
+                    </div>
+                    <div class="text-danger"><i class="fas fa-exclamation-triangle fa-2x"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workflow Section -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-card overflow-hidden">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Orders to Process</h5>
+                    <div class="btn-group btn-group-sm rounded-pill border overflow-hidden">
+                        <button class="btn btn-light active px-3">All</button>
+                        <button class="btn btn-light px-3">Pending</button>
+                        <button class="btn btn-light px-3">Picking</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50">
+                            <tr>
+                                <th class="ps-4">Order #</th>
+                                <th>Retailer</th>
+                                <th>Items</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var po in Model.Where(p => p.Status != "Assigned for Delivery" && p.Status != "Delivered" && p.Status != "Completed"))
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">@po.PONumber</div>
+                                        <div class="small text-muted">@po.OrderDate.ToString("MMM dd")</div>
+                                    </td>
+                                    <td>@po.Retailer?.BusinessName</td>
+                                    <td>@(po.PurchaseOrderItems?.Sum(i => i.Quantity) ?? 0)</td>
+                                    <td>
+                                        <span class="status-badge status-@(po.Status.Replace(" ", ""))">@po.Status</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        @if (po.Status == "PO Issued" || po.Status == "Pending")
+                                        {
+                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@po.Id" />
+                                                <input type="hidden" name="status" value="Picking" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">Start Picking</button>
+                                            </form>
+                                        }
+                                        else if (po.Status == "Picking")
+                                        {
+                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@po.Id" />
+                                                <input type="hidden" name="status" value="Packed" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-warning rounded-pill px-3">Mark Packed</button>
+                                            </form>
+                                        }
+                                        else if (po.Status == "Packed")
+                                        {
+                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@po.Id" />
+                                                <input type="hidden" name="status" value="Ready for Pickup" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Set Ready</button>
+                                            </form>
+                                        }
+                                        else if (po.Status == "Ready for Pickup")
+                                        {
+                                            <form asp-action="AssignDelivery" method="post" class="d-inline-flex gap-2 align-items-center">
+                                                <input type="hidden" name="id" value="@po.Id" />
+                                                <select name="agentId" class="form-select form-select-sm rounded-pill border-primary" style="width: 150px;" required>
+                                                    <option value="">Select Agent...</option>
+                                                    @foreach (var agent in ViewBag.DeliveryAgents as List<SCM_System.Models.Entities.SupplierEmployee>)
+                                                    {
+                                                        <option value="@agent.Id">@agent.User?.FullName (@agent.Phone)</option>
+                                                    }
+                                                </select>
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3"><i class="fas fa-truck me-1"></i>Assign</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts & Activity -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold mb-4"><i class="fas fa-bell me-2 text-danger"></i>Low Stock Alerts</h5>
+                <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-3 p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-3 p-2 me-3 shadow-sm">
+                            <i class="fas fa-exclamation-circle text-warning"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Wheat Flour</div>
+                            <div class="text-muted extra-small">Remaining: 12 kg</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-3 p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-3 p-2 me-3 shadow-sm">
+                            <i class="fas fa-times-circle text-danger"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Cooking Oil</div>
+                            <div class="text-muted extra-small">REACHED REORDER LEVEL</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4 opacity-10">
+                
+                <h6 class="fw-bold mb-3 small text-uppercase text-muted">Operational Quick Links</h6>
+                <div class="d-grid gap-2">
+                    <a asp-action="Inventory" class="btn btn-light text-start border rounded-3 py-2 px-3">
+                        <i class="fas fa-boxes me-2 text-primary"></i>Manage Inventory
+                    </a>
+                    <a href="#" class="btn btn-light text-start border rounded-3 py-2 px-3">
+                        <i class="fas fa-print me-2 text-primary"></i>Print Picking Labels
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

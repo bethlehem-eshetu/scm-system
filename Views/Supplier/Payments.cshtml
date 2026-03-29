@@ -1,0 +1,146 @@
+@model IEnumerable<SCM_System.Models.Entities.Commission>
+
+@{
+    ViewData["Title"] = "Commission & Financial Ledger";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4 g-4">
+        <div class="col-xl-8">
+            <div class="glass-panel p-4 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%);">
+                <div class="row align-items-center h-100">
+                    <div class="col-md-7 text-white">
+                        <h6 class="text-white-50 small fw-bold text-uppercase mb-2">Total Commission Outstanding</h6>
+                        <h1 class="display-4 fw-bold mb-3">@Model.Where(c => c.Status == "Pending").Sum(c => c.CommissionAmount).ToString("C0")</h1>
+                        <p class="mb-4 opacity-75">Settle your outstanding commissions to maintain a high trust score and avoid service interruptions.</p>
+                        <button class="btn btn-light rounded-pill px-4 fw-bold shadow-sm py-2">
+                            <i class="fas fa-credit-card me-2"></i> Pay Full Balance
+                        </button>
+                    </div>
+                    <div class="col-md-5 d-none d-md-block text-center text-white opacity-25">
+                        <i class="fas fa-wallet fa-8x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                    <div class="icon-shape bg-success bg-opacity-10 text-success rounded-circle p-4 mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-check-double fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Paid to Date</h5>
+                    <h3 class="fw-bold text-success mb-3">@Model.Where(c => c.Status == "Paid").Sum(c => c.CommissionAmount).ToString("C0")</h3>
+                    <p class="text-muted small mb-0">Across @Model.Count(c => c.Status == "Paid") completed transactions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commission Ledger -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">Commission Ledger</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light btn-sm rounded-pill px-3 border"><i class="fas fa-filter me-1"></i> Filter</button>
+                <button class="btn btn-light btn-sm rounded-pill px-3 border"><i class="fas fa-file-export me-1"></i> Statement</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase fw-bold">
+                        <tr>
+                            <th class="ps-4">Reference</th>
+                            <th>Order Details</th>
+                            <th>Amount</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var commission in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-primary">#COM-@commission.Id</div>
+                                        <div class="text-muted small">@commission.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">PO #@commission.PurchaseOrderId</div>
+                                        @if (!string.IsNullOrEmpty(commission.ChapaTransactionId))
+                                        {
+                                            <div class="text-muted small">ID: @commission.ChapaTransactionId</div>
+                                        }
+                                    </td>
+                                    <td class="fw-bold">@commission.PurchaseOrder.TotalAmount.ToString("C")</td>
+                                    <td class="text-danger fw-bold">@commission.CommissionAmount.ToString("C")</td>
+                                    <td>
+                                        <span class="badge @(commission.Status == "Paid" ? "bg-success" : "bg-warning text-dark") rounded-pill px-3 py-2">
+                                            @commission.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        @if (commission.Status == "Pending")
+                                        {
+                                            <form asp-action="PayCommission" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@commission.Id" />
+                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
+                                                    <i class="fas fa-external-link-alt me-1"></i> Pay with Chapa
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4" disabled>
+                                                <i class="fas fa-check me-1"></i> Settle
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="opacity-25 mb-3"><i class="fas fa-receipt fa-4x"></i></div>
+                                    <h5 class="text-muted">No commission records found</h5>
+                                    <p class="text-muted small">New records appear after orders are successfully delivered.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Information -->
+    <div class="mt-4 p-4 rounded-4 bg-light border border-dashed text-center">
+        <p class="mb-0 small text-muted">
+            <i class="fas fa-shield-alt text-success me-2"></i> All payments are processed securely via <strong>Chapa</strong>. We do not store your credit card details.
+        </p>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .glass-panel {
+            position: relative;
+            z-index: 1;
+        }
+        .glass-panel::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            background: linear-gradient(rgba(255,255,255,0.1), transparent);
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+}

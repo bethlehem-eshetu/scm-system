@@ -50,8 +50,15 @@ namespace SCM_System.Controllers
 
             var productsQuery = _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.Inventories) // Added to support aggregate stock calculation in view
                 .Where(p => p.SupplierId == supplierId && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedAt);
+
+            // Fetch active warehouses for the stock update modal
+            var warehouses = await _context.Warehouses
+                .Where(w => w.SupplierId == supplierId && w.Status == SCM_System.Models.Enums.WarehouseStatus.Active)
+                .ToListAsync();
+            ViewBag.Warehouses = new SelectList(warehouses, "Id", "Name");
 
             var totalItems = await productsQuery.CountAsync();
             var products = await productsQuery
@@ -111,7 +118,6 @@ namespace SCM_System.Controllers
                     BasePrice = model.BasePrice,
                     Description = model.Description,
                     SKU = model.SKU,
-                    Quantity = model.StockQuantity,
                     Unit = model.Unit,
                     IsAvailable = model.IsActive,
                     CreatedAt = DateTime.Now,
@@ -233,14 +239,8 @@ namespace SCM_System.Controllers
                     await _context.SaveChangesAsync();
                 }
                 
-                TempData["SuccessMessage"] = "Product created successfully!";
-                
-                if (Request.Query["addAnother"] == "true")
-                {
-                    return RedirectToAction(nameof(Create));
-                }
-                
-                return RedirectToAction(nameof(MyProducts));
+                TempData["SuccessMessage"] = "Product created successfully! Now assign initial stock to a warehouse.";
+                return RedirectToAction(nameof(AddStock), new { id = product.Id });
             }
             else
             {
@@ -382,7 +382,12 @@ namespace SCM_System.Controllers
                         product.ImageUrl = existingProduct.ImageUrl;
                     }
 
-                    product.IsAvailable = product.Quantity > 0;
+                    // Availability is now determined by sum of all inventories
+                    var totalStock = await _context.Inventories
+                        .Where(inv => inv.ProductId == product.Id)
+                        .SumAsync(inv => inv.QuantityOnHand - inv.QuantityReserved);
+
+                    product.IsAvailable = totalStock > 0;
 
                     _context.Update(product);
                     await _context.SaveChangesAsync();
@@ -439,48 +444,117 @@ namespace SCM_System.Controllers
             return View(product);
         }
 
-        // POST: Product/UpdateStock
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStock(int id, int stockChange, string action)
+        // GET: Product/AddStock/5
+        public async Task<IActionResult> AddStock(int id)
         {
             var supplierId = await GetCurrentSupplierIdAsync();
-            if (supplierId == null)
-            {
-                return Unauthorized();
-            }
+            if (supplierId == null) return Unauthorized();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Inventories)
+                .FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
+
+            if (product == null) return NotFound();
+
+            var warehouses = await _context.Warehouses
+                .Where(w => w.SupplierId == supplierId && w.Status == SCM_System.Models.Enums.WarehouseStatus.Active)
+                .ToListAsync();
+
+            ViewBag.Warehouses = new SelectList(warehouses, "Id", "Name");
+            ViewBag.ProductName = product.ProductName;
+            ViewBag.Unit = product.Unit;
+
+            return View();
+        }
+
+        // POST: Product/AddStock/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStock(int id, int warehouseId, int quantity)
+        {
+            var supplierId = await GetCurrentSupplierIdAsync();
+            if (supplierId == null) return Unauthorized();
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
-            
-            if (product == null || product.IsDeleted)
+            if (product == null) return NotFound();
+
+            var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == id && i.WarehouseId == warehouseId);
+
+            if (inventory == null)
             {
-                return NotFound();
+                inventory = new Inventory
+                {
+                    ProductId = id,
+                    WarehouseId = warehouseId,
+                    QuantityOnHand = quantity,
+                    QuantityReserved = 0,
+                    WarehouseLocation = "Main Section", // Default or user input
+                    LastUpdated = DateTime.Now
+                };
+                _context.Inventories.Add(inventory);
             }
+            else
+            {
+                inventory.QuantityOnHand += quantity;
+                inventory.LastUpdated = DateTime.Now;
+                _context.Update(inventory);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Refresh product availability
+            var totalStock = await _context.Inventories.Where(i => i.ProductId == id).SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
+            product.IsAvailable = totalStock > 0;
+            _context.Update(product);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Stock added successfully! Total available: {totalStock}";
+            return RedirectToAction(nameof(MyProducts));
+        }
+
+        // POST: Product/UpdateStock (Refactored for Inventory)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStock(int id, int warehouseId, int stockChange, string action)
+        {
+            var supplierId = await GetCurrentSupplierIdAsync();
+            if (supplierId == null) return Unauthorized();
+
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
+            if (product == null || product.IsDeleted) return NotFound();
+
+            var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == id && i.WarehouseId == warehouseId);
+            if (inventory == null) return NotFound("Inventory record for this warehouse not found.");
 
             try
             {
                 if (action == "increase")
                 {
-                    product.Quantity += stockChange;
+                    inventory.QuantityOnHand += stockChange;
                 }
                 else if (action == "decrease")
                 {
-                    product.Quantity -= stockChange;
-                    if (product.Quantity < 0) product.Quantity = 0;
+                    inventory.QuantityOnHand -= stockChange;
+                    if (inventory.QuantityOnHand < 0) inventory.QuantityOnHand = 0;
                 }
                 else if (action == "set")
                 {
-                    product.Quantity = stockChange;
-                    if (product.Quantity < 0) product.Quantity = 0;
+                    inventory.QuantityOnHand = stockChange;
+                    if (inventory.QuantityOnHand < 0) inventory.QuantityOnHand = 0;
                 }
 
-                // Auto update availability
-                product.IsAvailable = product.Quantity > 0;
+                inventory.LastUpdated = DateTime.Now;
+                _context.Update(inventory);
+                await _context.SaveChangesAsync();
 
+                // Auto update availability
+                var totalStock = await _context.Inventories.Where(inv => inv.ProductId == id).SumAsync(inv => inv.QuantityOnHand - inv.QuantityReserved);
+                product.IsAvailable = totalStock > 0;
                 _context.Update(product);
                 await _context.SaveChangesAsync();
                 
-                TempData["SuccessMessage"] = $"Stock updated successfully. New quantity: {product.Quantity}";
+                TempData["SuccessMessage"] = $"Stock updated successfully. New warehouse quantity: {inventory.QuantityOnHand}";
             }
             catch (Exception ex)
             {

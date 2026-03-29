@@ -1,0 +1,115 @@
+@model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
+@{
+    ViewData["Title"] = "Dispatch Center";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var agents = ViewBag.Agents as IEnumerable<SCM_System.Models.Entities.SupplierEmployee>;
+    var vehicles = ViewBag.Vehicles as IEnumerable<SCM_System.Models.Entities.Vehicle>;
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Dispatch Control Center</h2>
+            <p class="text-muted mb-0">Step 3: Assign a professional delivery agent and a suitable vehicle to finalize dispatch.</p>
+        </div>
+        <div class="d-flex gap-2 text-end">
+            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border border-success border-opacity-25">
+                <i class="fas fa-truck-loading me-2"></i> @Model.Count() Ready for Dispatch
+            </span>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 py-5 text-center">
+            <div class="opacity-25 mb-3">
+                <i class="fas fa-shipping-fast fa-4x text-muted"></i>
+            </div>
+            <h5 class="text-muted">Dispatch queue is empty.</h5>
+            <p class="small text-secondary">Orders will appear here once they are "Packed" and ready for transit.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var po in Model)
+            {
+                <div class="col-xl-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden d-flex flex-column">
+                        <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-primary text-white rounded-pill px-2 me-2">#@po.PONumber</span>
+                                <span class="fw-bold text-dark">@po.Retailer?.BusinessName</span>
+                            </div>
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill">READY FOR PICKUP</span>
+                        </div>
+                        <div class="card-body p-4 pt-0 flex-grow-1">
+                            <div class="row g-4 mb-4 pt-3">
+                                <div class="col-md-7">
+                                    <div class="mb-4">
+                                        <label class="smaller text-muted d-block mb-1">DELIVERY DESTINATION</label>
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-map-marker-alt text-danger me-2 mt-1"></i>
+                                            <span class="text-dark small fw-medium">@(po.Order?.DeliveryAddress ?? "No specific address provided")</span>
+                                        </div>
+                                    </div>
+                                    <label class="smaller text-muted d-block mb-2">SHIPMENT PREVIEW</label>
+                                    <div class="bg-light bg-opacity-50 p-3 rounded-4">
+                                        <ul class="list-unstyled mb-0">
+                                            @foreach (var item in po.PurchaseOrderItems.Take(3))
+                                            {
+                                                <li class="small mb-1 d-flex justify-content-between">
+                                                    <span>@item.Product?.ProductName</span>
+                                                    <span class="fw-bold text-muted">x@item.Quantity</span>
+                                                </li>
+                                            }
+                                            @if (po.PurchaseOrderItems.Count > 3)
+                                            {
+                                                <li class="smaller text-muted mt-2">+ @(po.PurchaseOrderItems.Count - 3) more items...</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <form asp-action="AssignDelivery" method="post" class="h-100 d-flex flex-column">
+                                        <input type="hidden" name="id" value="@po.Id" />
+                                        
+                                        <div class="mb-3">
+                                            <label class="smaller text-muted d-block fw-bold mb-2">SELECT AGENT</label>
+                                            <select name="agentId" class="form-select border-0 bg-light rounded-3 shadow-none py-2" required>
+                                                <option value="">-- Choose Agent --</option>
+                                                @foreach (var agent in agents)
+                                                {
+                                                    <option value="@agent.Id">@(agent.User?.FullName ?? "Staff") (@agent.Phone)</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="smaller text-muted d-block fw-bold mb-2">SELECT VEHICLE</label>
+                                            <select name="vehicleId" class="form-select border-0 bg-light rounded-3 shadow-none py-2" required>
+                                                <option value="">-- Choose Vehicle --</option>
+                                                @foreach (var vehicle in vehicles)
+                                                {
+                                                    <option value="@vehicle.Id">@vehicle.LicensePlate (@vehicle.VehicleType)</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold py-2 shadow-sm mt-auto">
+                                            <i class="fas fa-truck-loading me-2"></i> Confirm Dispatch
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>

@@ -1,0 +1,72 @@
+@model IEnumerable<SCM_System.Models.Entities.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Your <span class="text-primary">Notifications</span></h2>
+            <p class="text-muted">Stay updated with the latest updates on your orders and tenders</p>
+        </div>
+        @if (Model != null && Model.Any(n => !n.IsRead))
+        {
+            <span class="badge bg-danger rounded-pill px-3 py-2">
+                @Model.Count(n => !n.IsRead) New Notifications
+            </span>
+        }
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            @if (Model != null && Model.Any())
+            {
+                <div class="d-grid gap-3">
+                    @foreach (var note in Model)
+                    {
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative @(note.IsRead ? "opacity-75" : "border-start border-primary border-4 shadow")">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="rounded-circle p-3 me-3 d-flex align-items-center justify-content-center @(note.Type == "Success" ? "bg-success-soft text-success" : (note.Type == "Error" ? "bg-danger-soft text-danger" : "bg-primary-soft text-primary"))" style="width: 50px; height: 50px;">
+                                        <i class="fas @(note.Type == "Success" ? "fa-check-circle" : (note.Type == "Error" ? "fa-exclamation-circle" : "fa-bell")) fa-lg"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <h5 class="fw-bold mb-0">@note.Title</h5>
+                                            <small class="text-muted">@note.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                                        </div>
+                                        <p class="text-muted mb-3">@note.Message</p>
+                                        
+                                        @if (!string.IsNullOrEmpty(note.ActionUrl))
+                                        {
+                                            <a href="@note.ActionUrl" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                                Take Action <i class="fas fa-arrow-right ms-1 small"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="opacity-25 mb-4">
+                        <i class="fas fa-bell-slash fa-5x"></i>
+                    </div>
+                    <h4 class="text-muted">No notifications yet</h4>
+                    <p class="text-muted">We'll notify you here when there are updates on your account.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+</style>

@@ -39,8 +39,24 @@ namespace SCM_System.Controllers
         [Authorize(Roles = "Supplier")]
         public async Task<IActionResult> AvailableTenders()
         {
-            var tenders = await _tenderService.GetAllTendersAsync();
-            return View(tenders.Where(t => t.Status == "Open").ToList());
+            var supplierId = await GetSupplierIdAsync();
+            var supplier = await _context.Suppliers.FindAsync(supplierId);
+            if (supplier == null) return Unauthorized();
+
+            // Get all published tenders
+            var allTenders = await _tenderService.GetAllTendersAsync();
+            var publishedTenders = allTenders.Where(t => t.Status == "Published");
+
+            // Filter: Only show tenders where the supplier has products in that category
+            var supplierCategoryIds = await _context.Products
+                .Where(p => p.SupplierId == supplierId)
+                .Select(p => p.CategoryId)
+                .Distinct()
+                .ToListAsync();
+
+            var targetedTenders = publishedTenders.Where(t => supplierCategoryIds.Contains(t.CategoryId));
+
+            return View(targetedTenders);
         }
 
         [Authorize(Roles = "Retailer")]
@@ -55,6 +71,8 @@ namespace SCM_System.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.Categories = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName");
+            ViewBag.Products = await _context.Products.OrderBy(p => p.ProductName).ToListAsync();
+            
             var model = new TenderCreateViewModel();
             model.Items.Add(new TenderItemViewModel()); // Default one item
             return View(model);
@@ -76,11 +94,20 @@ namespace SCM_System.Controllers
                     CategoryId = model.CategoryId,
                     SubmissionDeadline = model.SubmissionDeadline,
                     ExpectedDeliveryDate = model.ExpectedDeliveryDate,
-                    RetailerId = retailerId
+                    RetailerId = retailerId,
+                    PackagingRequirements = model.PackagingRequirements,
+                    DeliveryLocation = model.DeliveryLocation,
+                    InspectionRequirement = model.InspectionRequirement,
+                    Language = model.Language,
+                    PaymentTerms = model.PaymentTerms,
+                    PriceWeight = model.PriceWeight,
+                    TechnicalWeight = model.TechnicalWeight,
+                    DeliveryWeight = model.DeliveryWeight
                 };
 
                 var items = model.Items.Select(i => new TenderItem
                 {
+                    ProductId = i.ProductId,
                     ProductName = i.ProductName,
                     Description = i.Description,
                     Quantity = i.Quantity,
@@ -93,7 +120,16 @@ namespace SCM_System.Controllers
             }
             
             ViewBag.Categories = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", model.CategoryId);
+            ViewBag.Products = await _context.Products.OrderBy(p => p.ProductName).ToListAsync();
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetProductDetails(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return NotFound();
+            return Json(new { name = product.ProductName, unit = product.Unit });
         }
 
         public async Task<IActionResult> Details(int id)
@@ -103,6 +139,24 @@ namespace SCM_System.Controllers
             return View(tender);
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Retailer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Award(int tenderId, int bidId)
+        {
+            var success = await _tenderService.AwardTenderAsync(tenderId, bidId);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Tender awarded successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to award tender.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = tenderId });
+        }
+
         private async Task<int> GetRetailerIdAsync()
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -110,6 +164,17 @@ namespace SCM_System.Controllers
             {
                 var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
                 return retailer?.Id ?? 0;
+            }
+            return 0;
+        }
+
+        private async Task<int> GetSupplierIdAsync()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+                return supplier?.Id ?? 0;
             }
             return 0;
         }

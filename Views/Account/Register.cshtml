@@ -1,494 +1,297 @@
 @model SCM_System.Models.ViewModels.RegisterViewModel
-
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Enterprise Registration";
+    Layout = "_Layout";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-5">
-                    <!-- Header -->
-                    <div class="text-center mb-5">
-                        <div class="mb-3">
-                            <div class="icon-circle bg-primary bg-opacity-10 mx-auto">
-                                <i class="fas fa-user-plus fa-2x text-primary"></i>
+<div class="container-fluid p-0 overflow-hidden">
+    <div class="row g-0 min-vh-100">
+        <!-- Left Column: Value Props & Sticky Branding -->
+        <div class="col-lg-4 d-none d-lg-block bg-primary p-5 position-relative">
+            <div class="sticky-top pt-5" style="top: 100px; z-index: 10;">
+                <div class="mb-5" data-aos="fade-right">
+                    <h2 class="fw-bold text-white mb-3">Join the Future of Ethiopian Logistics</h2>
+                    <p class="text-white text-opacity-75 lead">Onboard your enterprise today and connect with thousands of verified trading partners.</p>
+                </div>
+
+                <div class="list-group list-group-flush bg-transparent border-0 gap-4 mb-5" data-aos="fade-up">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="bg-white bg-opacity-20 text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-white fw-bold mb-1">One-Click Tenders</h6>
+                            <p class="small text-white text-opacity-75 mb-0">Post procurement needs and get bids from top-tier suppliers instantly.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="bg-white bg-opacity-20 text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-white fw-bold mb-1">Real-Time Dashboards</h6>
+                            <p class="small text-white text-opacity-75 mb-0">Monitor inventory, orders, and deliveries with precision telemetry.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="bg-white bg-opacity-20 text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-white fw-bold mb-1">Secure Payments</h6>
+                            <p class="small text-white text-opacity-75 mb-0">Integrated with Chapa for instant, safe business transactions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white bg-opacity-10 border border-white border-opacity-10 rounded-4 mt-5" data-aos="zoom-in">
+                    <p class="small text-white mb-0 italic">"EthioChain has transformed our procurement cycle from weeks to hours."</p>
+                    <div class="d-flex align-items-center mt-3">
+                        <div class="bg-white rounded-circle me-3" style="width: 32px; height: 32px;"></div>
+                        <span class="small fw-bold text-white">Dawit Tekle, CEO of Alpha Mart</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Background detail -->
+            <div class="position-absolute bottom-0 start-0 w-100 h-100 opacity-20 pointer-events-none" style="background: url('~/images/hero-illustration.png') no-repeat bottom left; background-size: 80%; filter: blur(40px);"></div>
+        </div>
+
+        <!-- Right Column: Registration Form -->
+        <div class="col-lg-8 bg-white p-5 d-flex flex-column align-items-center">
+            <div class="w-100" style="max-width: 700px;" data-aos="fade-up">
+                <div class="mb-5 text-center text-lg-start">
+                    <h3 class="fw-bold text-dark mb-2">Create Enterprise Account</h3>
+                    <p class="text-muted">Fill in your business details to get started with EthioChain.</p>
+                </div>
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
+                        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                    </div>
+                }
+
+                <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm" class="needs-validation">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Role" id="RoleHidden" />
+
+                    <!-- Step 1: Account Essentials -->
+                    <div class="mb-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">1</span>
+                            <h5 class="fw-bold mb-0">Account Essentials</h5>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="FullName" class="form-label small fw-bold text-muted text-uppercase">Representative Name</label>
+                                <input asp-for="FullName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" placeholder="John Doe" required />
+                                <span asp-validation-for="FullName" class="text-danger extra-small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label small fw-bold text-muted text-uppercase">Corporate Email</label>
+                                <input asp-for="Email" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="email" placeholder="john@company.com" required />
+                                <span asp-validation-for="Email" class="text-danger extra-small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase">Secure Password</label>
+                                <input asp-for="Password" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" required />
+                                <span asp-validation-for="Password" class="text-danger extra-small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
+                                <input asp-for="ConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" required />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger extra-small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label small fw-bold text-muted text-uppercase">Phone Number</label>
+                                <input asp-for="PhoneNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" placeholder="09xxxxxxxx" required />
+                                <span asp-validation-for="PhoneNumber" class="text-danger extra-small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Register As</label>
+                                <select id="RoleSelect" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none" required>
+                                    <option value="">-- Select Model --</option>
+                                    <option value="Supplier">Supplier (Sell Products)</option>
+                                    <option value="Retailer">Retailer (Buy Products)</option>
+                                </select>
                             </div>
                         </div>
-                        <h2 class="fw-bold">Create Your Account</h2>
-                        <p class="text-muted">Join Ethiopia's premier supply chain platform</p>
                     </div>
 
-                    <!-- Alert Messages -->
-                    @if (TempData["ErrorMessage"] != null)
-                    {
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    }
-
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Please fix the following errors:</strong>
-                            <ul class="mb-0 mt-2">
-                                @foreach (var modelStateKey in ViewData.ModelState.Keys)
-                                {
-                                    foreach (var error in ViewData.ModelState[modelStateKey].Errors)
-                                    {
-                                        <li>@error.ErrorMessage</li>
-                                    }
-                                }
-                            </ul>
-                        </div>
-                    }
-
-                    <!-- Registration Form -->
-                    <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm">
-                        @Html.AntiForgeryToken()
-
-                        <!-- Hidden role field -->
-                        <input type="hidden" asp-for="Role" id="RoleHidden" />
-
-                        <!-- Account Information -->
-                        <div class="card bg-light border-0 mb-4">
-                            <div class="card-body">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-user-circle text-primary me-2"></i>
-                                    Account Information
-                                </h5>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="FullName" class="form-label">Full Name <span class="text-danger">*</span></label>
-                                        <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
-                                        <span asp-validation-for="FullName" class="text-danger small"></span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
-                                        <input asp-for="Email" class="form-control" type="email" placeholder="you@example.com" />
-                                        <span asp-validation-for="Email" class="text-danger small"></span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="Password" class="form-label">Password <span class="text-danger">*</span></label>
-                                        <input asp-for="Password" class="form-control" type="password" placeholder="••••••••" />
-                                        <span asp-validation-for="Password" class="text-danger small"></span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="ConfirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                                        <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="••••••••" />
-                                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                                        <input asp-for="PhoneNumber" class="form-control" placeholder="09xxxxxxxx" />
-                                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="Role" class="form-label">Register As <span class="text-danger">*</span></label>
-                                        <select id="RoleSelect" class="form-select" required>
-                                            <option value="">-- Select Role --</option>
-                                            <option value="Supplier">Supplier (I want to sell products)</option>
-                                            <option value="Retailer">Retailer (I want to buy products)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Step 2: Dynamic Business Profile -->
+                    <div id="BusinessProfileSection" style="display: none;" class="mb-5 animate-slide-up">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">2</span>
+                            <h5 class="fw-bold mb-0">Business Capability Profile</h5>
                         </div>
 
                         <!-- Supplier Fields -->
                         <div id="SupplierFields" style="display: none;">
-                            <div class="card bg-light border-0 mb-4">
-                                <div class="card-body">
-                                    <h5 class="mb-3 text-success">
-                                        <i class="fas fa-building text-success me-2"></i>
-                                        Supplier Business Information
-                                    </h5>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label asp-for="CompanyName" class="form-label">Company Name <span class="text-danger">*</span></label>
-                                            <input asp-for="CompanyName" class="form-control" id="CompanyName" placeholder="Your company name" />
-                                            <span asp-validation-for="CompanyName" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="BusinessType" class="form-label">Business Type <span class="text-danger">*</span></label>
-                                            <select asp-for="BusinessType" class="form-control" id="BusinessType">
-                                                <option value="">-- Select Business Type --</option>
-                                                <option value="Manufacturer">Manufacturer</option>
-                                                <option value="Distributor">Distributor</option>
-                                                <option value="Wholesaler">Wholesaler</option>
-                                                <option value="Importer">Importer</option>
-                                            </select>
-                                            <span asp-validation-for="BusinessType" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="LicenseNumber" class="form-label">License Number <span class="text-danger">*</span></label>
-                                            <input asp-for="LicenseNumber" class="form-control" id="LicenseNumber" placeholder="Business license number" />
-                                            <span asp-validation-for="LicenseNumber" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="TaxIdentificationNumber" class="form-label">TIN <span class="text-danger">*</span></label>
-                                            <input asp-for="TaxIdentificationNumber" class="form-control" id="TaxIdentificationNumber" placeholder="Tax identification number" />
-                                            <span asp-validation-for="TaxIdentificationNumber" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label asp-for="LicenseFile" class="form-label">License Document <span class="text-danger">*</span></label>
-                                            <input asp-for="LicenseFile" class="form-control" id="LicenseFile" type="file" accept=".pdf,.jpg,.jpeg,.png" />
-                                            <small class="text-muted">Upload your business license (PDF, JPG, PNG. Max 5MB)</small>
-                                            <span asp-validation-for="LicenseFile" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label asp-for="CompanyAddress" class="form-label">Company Address <span class="text-danger">*</span></label>
-                                            <textarea asp-for="CompanyAddress" class="form-control" id="CompanyAddress" rows="2" placeholder="Full company address"></textarea>
-                                            <span asp-validation-for="CompanyAddress" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="Website" class="form-label">Website</label>
-                                            <input asp-for="Website" class="form-control" placeholder="https://example.com" />
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label asp-for="CompanyDescription" class="form-label">Company Description</label>
-                                            <textarea asp-for="CompanyDescription" class="form-control" rows="3" placeholder="Tell us about your company"></textarea>
-                                        </div>
-                                    </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="CompanyName" class="form-label small fw-bold text-muted text-uppercase">Legal Company Name</label>
+                                    <input asp-for="CompanyName" id="CompanyName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="BusinessType" class="form-label small fw-bold text-muted text-uppercase">Industry Focus</label>
+                                    <select asp-for="BusinessType" id="BusinessType" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
+                                        <option value="Manufacturer">Manufacturer</option>
+                                        <option value="Distributor">Distributor</option>
+                                        <option value="Wholesaler">Wholesaler</option>
+                                        <option value="Importer">Importer</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="LicenseNumber" class="form-label small fw-bold text-muted text-uppercase">Business License #</label>
+                                    <input asp-for="LicenseNumber" id="LicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="TaxIdentificationNumber" class="form-label small fw-bold text-muted text-uppercase">TIN</label>
+                                    <input asp-for="TaxIdentificationNumber" id="TaxIdentificationNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG)</label>
+                                    <input asp-for="LicenseFile" id="LicenseFile" type="file" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="CompanyAddress" class="form-label small fw-bold text-muted text-uppercase">Headquarters Address</label>
+                                    <textarea asp-for="CompanyAddress" id="CompanyAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Retailer Fields -->
                         <div id="RetailerFields" style="display: none;">
-                            <div class="card bg-light border-0 mb-4">
-                                <div class="card-body">
-                                    <h5 class="mb-3 text-warning">
-                                        <i class="fas fa-store text-warning me-2"></i>
-                                        Retailer Business Information
-                                    </h5>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label asp-for="BusinessName" class="form-label">Business Name <span class="text-danger">*</span></label>
-                                            <input asp-for="BusinessName" class="form-control" id="BusinessName" placeholder="Your business name" />
-                                            <span asp-validation-for="BusinessName" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="RetailerBusinessType" class="form-label">Business Type <span class="text-danger">*</span></label>
-                                            <select asp-for="RetailerBusinessType" class="form-control" id="RetailerBusinessType">
-                                                <option value="">-- Select Business Type --</option>
-                                                <option value="Retail Shop">Retail Shop</option>
-                                                <option value="Supermarket">Supermarket</option>
-                                                <option value="Distributor">Distributor</option>
-                                                <option value="Online Store">Online Store</option>
-                                            </select>
-                                            <span asp-validation-for="RetailerBusinessType" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="RetailerLicenseNumber" class="form-label">License Number <span class="text-danger">*</span></label>
-                                            <input asp-for="RetailerLicenseNumber" class="form-control" id="RetailerLicenseNumber" placeholder="Business license number" />
-                                            <span asp-validation-for="RetailerLicenseNumber" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="TaxIdentificationNumber" class="form-label">TIN (Optional)</label>
-                                            <input asp-for="TaxIdentificationNumber" class="form-control" id="RetailerTaxIdentificationNumber" placeholder="Tax identification number" />
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label asp-for="BusinessAddress" class="form-label">Business Address <span class="text-danger">*</span></label>
-                                            <textarea asp-for="BusinessAddress" class="form-control" id="BusinessAddress" rows="2" placeholder="Full business address"></textarea>
-                                            <span asp-validation-for="BusinessAddress" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label asp-for="StoreSize" class="form-label">Store Size <span class="text-danger">*</span></label>
-                                            <select asp-for="StoreSize" class="form-control" id="StoreSize">
-                                                <option value="">-- Select Store Size --</option>
-                                                <option value="Small">Small</option>
-                                                <option value="Medium">Medium</option>
-                                                <option value="Large">Large</option>
-                                            </select>
-                                            <span asp-validation-for="StoreSize" class="text-danger small"></span>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label asp-for="BusinessDescription" class="form-label">Business Description</label>
-                                            <textarea asp-for="BusinessDescription" class="form-control" rows="3" placeholder="Tell us about your business"></textarea>
-                                        </div>
-                                    </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="BusinessName" class="form-label small fw-bold text-muted text-uppercase">Retail Business Name</label>
+                                    <input asp-for="BusinessName" id="BusinessName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="RetailerBusinessType" class="form-label small fw-bold text-muted text-uppercase">Retail Model</label>
+                                    <select asp-for="RetailerBusinessType" id="RetailerBusinessType" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
+                                        <option value="Retail Shop">Retail Shop</option>
+                                        <option value="Supermarket">Supermarket</option>
+                                        <option value="Distributor">Distributor</option>
+                                        <option value="Online Store">Online Store</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="StoreSize" class="form-label small fw-bold text-muted text-uppercase">Operational Scale</label>
+                                    <select asp-for="StoreSize" id="StoreSize" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
+                                        <option value="Small">Small-Scale</option>
+                                        <option value="Medium">Medium-Scale</option>
+                                        <option value="Large">Large-Scale</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="RetailerLicenseNumber" class="form-label small fw-bold text-muted text-uppercase">License Number</label>
+                                    <input asp-for="RetailerLicenseNumber" id="RetailerLicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="BusinessAddress" class="form-label small fw-bold text-muted text-uppercase">Main Store Location</label>
+                                    <textarea asp-for="BusinessAddress" id="BusinessAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Location Information -->
-                        <div class="card bg-light border-0 mb-4">
-                            <div class="card-body">
-                                <h5 class="mb-3 text-secondary">
-                                    <i class="fas fa-map-marker-alt text-secondary me-2"></i>
-                                    Location Information
-                                </h5>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="City" class="form-label">City <span class="text-danger">*</span></label>
-                                        <input asp-for="City" class="form-control" id="CityField" placeholder="Your city" />
-                                        <span asp-validation-for="City" class="text-danger small"></span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="Country" class="form-label">Country</label>
-                                        <input asp-for="Country" class="form-control" value="Ethiopia" />
-                                    </div>
-                                </div>
+                    <!-- Step 3: Logistics Connectivity -->
+                    <div id="LogisticsSection" style="display: none;" class="mb-5 animate-slide-up">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">3</span>
+                            <h5 class="fw-bold mb-0">Logistics Connectivity</h5>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="City" class="form-label small fw-bold text-muted text-uppercase">Operational City</label>
+                                <input asp-for="City" id="CityField" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" required />
+                                <span asp-validation-for="City" class="text-danger extra-small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Country</label>
+                                <input value="Ethiopia" class="form-control bg-light border-0 rounded-3 py-2 px-3 opacity-75" readonly />
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
-                            <i class="fas fa-user-plus me-2"></i>Create Account
-                        </button>
-
-                        <!-- Login Link -->
-                        <div class="text-center">
-                            <p class="mb-0">
-                                Already have an account?
-                                <a asp-action="Login" class="text-primary fw-bold text-decoration-none">
-                                    Sign In <i class="fas fa-arrow-right ms-1"></i>
-                                </a>
-                            </p>
+                    <div class="p-4 bg-light bg-opacity-50 rounded-4 border-dashed border-2 text-center mb-5">
+                        <div class="form-check d-inline-block">
+                            <input class="form-check-input" type="checkbox" required id="agreeTerms">
+                            <label class="form-check-label small text-muted ms-2" for="agreeTerms">
+                                I verify all information is accurate and agree to the <a href="#" class="text-primary fw-bold">Enterprise Agreement</a>.
+                            </label>
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm mb-4">
+                        <i class="fas fa-check-double me-2"></i> Deploy Enterprise Account
+                    </button>
+
+                    <div class="text-center">
+                        <p class="text-muted small">
+                            Already part of the network? 
+                            <a asp-action="Login" class="text-primary fw-bold text-decoration-none ms-1">Sign In to Command Center</a>
+                        </p>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
 @section Styles {
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
-        .icon-circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .card {
-            border-radius: 16px;
-        }
-
-        .form-control, .form-select {
-            border: 1px solid #e2e8f0;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-        }
-
-            .form-control:focus, .form-select:focus {
-                border-color: #2563eb;
-                box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-            }
-
-        .btn-primary {
-            background: #2563eb;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-            .btn-primary:hover {
-                background: #1d4ed8;
-            }
-
-        .bg-light {
-            background-color: #f8fafc !important;
-        }
-
-        .text-primary {
-            color: #2563eb !important;
-        }
+        .extra-small { font-size: 0.75rem; }
+        .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .bg-primary { background-color: #0d6efd !important; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out; }
+        @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .border-dashed { border: 2px dashed #dee2e6 !important; }
     </style>
 }
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
+        AOS.init({ duration: 800, once: true });
+        
         $(document).ready(function() {
-            // Handle role selection change
             $('#RoleSelect').change(function() {
                 var role = $(this).val();
                 $('#RoleHidden').val(role);
 
-                // Disable all role-specific fields and hide them
-                $('#SupplierFields').hide().find('input, select, textarea').prop('disabled', true);
-                $('#RetailerFields').hide().find('input, select, textarea').prop('disabled', true);
-
-                // Remove required from ALL fields first
-                $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress, #BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', false);
-
-                // City is ALWAYS required
-                $('#CityField').prop('required', true);
-
-                if (role === 'Supplier') {
-                    $('#SupplierFields').show().find('input, select, textarea').prop('disabled', false);
-                    // Make supplier fields required
-                    $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress').prop('required', true);
-                } else if (role === 'Retailer') {
-                    $('#RetailerFields').show().find('input, select, textarea').prop('disabled', false);
-                    // Make retailer fields required
-                    $('#BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', true);
+                if (role) {
+                    $('#BusinessProfileSection').show();
+                    $('#LogisticsSection').show();
+                    
+                    $('#SupplierFields').toggle(role === 'Supplier');
+                    $('#RetailerFields').toggle(role === 'Retailer');
+                    
+                    // Toggle disabled to ensure correct submission
+                    $('#SupplierFields').find('input, select, textarea').prop('disabled', role !== 'Supplier');
+                    $('#RetailerFields').find('input, select, textarea').prop('disabled', role !== 'Retailer');
+                    
+                    // Explicit Required
+                    if (role === 'Supplier') {
+                        $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress').prop('required', true);
+                        $('#BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', false);
+                    } else {
+                        $('#CompanyName, #BusinessType, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress').prop('required', false);
+                        $('#BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', true);
+                    }
+                } else {
+                    $('#BusinessProfileSection').hide();
+                    $('#LogisticsSection').hide();
                 }
             });
 
-            // If role is already selected (e.g., after validation error)
-            var selectedRole = $('#RoleHidden').val();
-            if (selectedRole) {
-                $('#RoleSelect').val(selectedRole).trigger('change');
+            // Re-trigger if model error
+            if ($('#RoleHidden').val()) {
+                $('#RoleSelect').val($('#RoleHidden').val()).trigger('change');
             }
-
-            // Form submission validation
-            $('#registerForm').on('submit', function(e) {
-                var role = $('#RoleSelect').val();
-
-                // Check if role is selected
-                if (!role || role === '') {
-                    e.preventDefault();
-                    alert('Please select a role (Supplier or Retailer)');
-                    $('#RoleSelect').focus();
-                    return false;
-                }
-
-                // Check common required fields
-                if (!$('#FullName').val()) {
-                    e.preventDefault();
-                    alert('Full name is required');
-                    $('#FullName').focus();
-                    return false;
-                }
-
-                if (!$('#Email').val()) {
-                    e.preventDefault();
-                    alert('Email is required');
-                    $('#Email').focus();
-                    return false;
-                }
-
-                if (!$('#Password').val()) {
-                    e.preventDefault();
-                    alert('Password is required');
-                    $('#Password').focus();
-                    return false;
-                }
-
-                if ($('#Password').val() !== $('#ConfirmPassword').val()) {
-                    e.preventDefault();
-                    alert('Passwords do not match');
-                    $('#ConfirmPassword').focus();
-                    return false;
-                }
-
-                if (!$('#PhoneNumber').val()) {
-                    e.preventDefault();
-                    alert('Phone number is required');
-                    $('#PhoneNumber').focus();
-                    return false;
-                }
-
-                // Check city
-                if (!$('#CityField').val()) {
-                    e.preventDefault();
-                    alert('City is required');
-                    $('#CityField').focus();
-                    return false;
-                }
-
-                // Role-specific validation
-                if (role === 'Supplier') {
-                    if (!$('#CompanyName').val()) {
-                        e.preventDefault();
-                        alert('Company name is required');
-                        $('#CompanyName').focus();
-                        return false;
-                    }
-                    if (!$('#BusinessType').val()) {
-                        e.preventDefault();
-                        alert('Business type is required');
-                        $('#BusinessType').focus();
-                        return false;
-                    }
-                    if (!$('#LicenseNumber').val()) {
-                        e.preventDefault();
-                        alert('License number is required');
-                        $('#LicenseNumber').focus();
-                        return false;
-                    }
-                    if (!$('#LicenseFile').val()) {
-                        e.preventDefault();
-                        alert('License document is required');
-                        $('#LicenseFile').focus();
-                        return false;
-                    }
-                    if (!$('#TaxIdentificationNumber').val()) {
-                        e.preventDefault();
-                        alert('Tax identification number is required');
-                        $('#TaxIdentificationNumber').focus();
-                        return false;
-                    }
-                    if (!$('#CompanyAddress').val()) {
-                        e.preventDefault();
-                        alert('Company address is required');
-                        $('#CompanyAddress').focus();
-                        return false;
-                    }
-                } else if (role === 'Retailer') {
-                    if (!$('#BusinessName').val()) {
-                        e.preventDefault();
-                        alert('Business name is required');
-                        $('#BusinessName').focus();
-                        return false;
-                    }
-                    if (!$('#RetailerBusinessType').val()) {
-                        e.preventDefault();
-                        alert('Business type is required');
-                        $('#RetailerBusinessType').focus();
-                        return false;
-                    }
-                    if (!$('#RetailerLicenseNumber').val()) {
-                        e.preventDefault();
-                        alert('Business license number is required');
-                        $('#RetailerLicenseNumber').focus();
-                        return false;
-                    }
-                    if (!$('#BusinessAddress').val()) {
-                        e.preventDefault();
-                        alert('Business address is required');
-                        $('#BusinessAddress').focus();
-                        return false;
-                    }
-                    if (!$('#StoreSize').val()) {
-                        e.preventDefault();
-                        alert('Store size is required');
-                        $('#StoreSize').focus();
-                        return false;
-                    }
-                }
-
-                return true;
-            });
         });
     </script>
+    <partial name="_ValidationScriptsPartial" />
 }

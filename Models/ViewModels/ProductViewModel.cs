@@ -43,11 +43,6 @@ namespace SCM_System.Models.ViewModels
         public decimal? DiscountPercentage { get; set; }
         public decimal TaxRate { get; set; } = 15;
         
-        // Inventory fields
-        [Required]
-        [Display(Name = "Initial Stock")]
-        public int StockQuantity { get; set; } // maps to Quantity
-        
         public int MinimumOrderQuantity { get; set; } = 1;
         public int? MaximumStockLevel { get; set; }
         public int? ReorderLevel { get; set; } // Added by me based on html template

@@ -1,0 +1,85 @@
+@model IEnumerable<SCM_System.Models.Entities.Inventory>
+@{
+    ViewData["Title"] = "Low Stock Alerts";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1 text-danger"><i class="fas fa-exclamation-triangle me-2"></i> Low Stock Alerts</h2>
+            <p class="text-muted mb-0">Products requiring immediate replenishment to avoid order shortages</p>
+        </div>
+        <div class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2">
+            <i class="fas fa-box-tissue me-2"></i> @Model.Count() Critical Items
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5 shadow-sm rounded-4 bg-white">
+                <div class="text-success mb-3">
+                    <i class="fas fa-check-circle fa-4x"></i>
+                </div>
+                <h5 class="text-dark fw-bold">All Stock Levels Normal</h5>
+                <p class="text-muted">No products are currently below the safety threshold.</p>
+            </div>
+        }
+        @foreach (var alert in Model)
+        {
+            var available = alert.QuantityOnHand - alert.QuantityReserved;
+            <div class="col-xl-4 col-md-6">
+                <div class="card bg-glass border-0 border-start border-4 border-danger shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">@alert.Product?.ProductName</h6>
+                                <span class="badge bg-light text-muted border small">SKU: @(alert.Product?.SKU ?? "N/A")</span>
+                            </div>
+                            <div class="stat-circle bg-danger bg-opacity-10 text-danger">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center g-0 border rounded-3 overflow-hidden mb-3">
+                            <div class="col-6 py-2 border-end bg-light bg-opacity-50">
+                                <span class="smaller d-block text-muted">ON HAND</span>
+                                <span class="fw-bold text-dark">@alert.QuantityOnHand</span>
+                            </div>
+                            <div class="col-6 py-2">
+                                <span class="smaller d-block text-muted">AVAILABLE</span>
+                                <span class="fw-bold text-danger">@available</span>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning border-0 small mb-4 py-2 opacity-75">
+                            <i class="fas fa-info-circle me-1"></i> Below safety threshold (20)
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Warehouse" asp-action="Inventory" class="btn btn-outline-danger btn-sm rounded-pill">
+                                <i class="fas fa-edit me-2"></i> Adjust Quantities
+                            </a>
+                            <button class="btn btn-soft-secondary btn-sm rounded-pill" disabled>
+                                <i class="fas fa-envelope me-2"></i> Notify Supplier
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .bg-glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .smaller { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .btn-soft-secondary { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; border: none; }
+</style>

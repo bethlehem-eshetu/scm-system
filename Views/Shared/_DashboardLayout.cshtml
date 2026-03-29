@@ -264,7 +264,7 @@
         <nav id="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="brand">
-                    <img src="~/images/ethiochain-logo.jpn" alt="Logo" />
+                    <img src="~/images/ethiochain-logo.jpg" alt="Logo" />
                     <span>EthioChain SCM</span>
                 </a>
             </div>
@@ -291,78 +291,145 @@
                 else if (role == "Supplier")
                 {
                     <li>
-                        <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                        <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
                     </li>
+                    <li class="menu-label">Orders & Sales</li>
                     <li>
-                        <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-box"></i> Products</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> Available Tenders</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Bid" asp-action="Index"><i class="fas fa-file-contract"></i> My Bids</a>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-basket"></i> Customer Orders</a>
                     </li>
                     <li>
                         <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice-dollar"></i> Purchase Orders</a>
                     </li>
                     <li>
-                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-cart"></i> Orders</a>
+                        <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-boxes"></i> Product Catalog</a>
+                    </li>
+                    
+                    <li class="menu-label">Procurement & Bidding</li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> Available Tenders</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-box"></i> Catalog</a>
+                        <a asp-controller="Bid" asp-action="Index"><i class="fas fa-file-contract"></i> Submitted Bids</a>
                     </li>
-                    <li class="menu-label">Management</li>
+
+                    <li class="menu-label">Operations & Logistics</li>
                     <li>
-                        <a asp-controller="Supplier" asp-action="Employees"><i class="fas fa-users-cog"></i> Employees</a>
+                        <a asp-controller="Supplier" asp-action="OrderTracking"><i class="fas fa-map-marker-alt"></i> Live Order Tracking</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Warehouses"><i class="fas fa-warehouse"></i> Warehouses</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Vehicles"><i class="fas fa-truck"></i> Fleet Management</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Employees"><i class="fas fa-users"></i> Personnel</a>
+                    </li>
+
+                    <li class="menu-label">Finance & Analytics</li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Payments"><i class="fas fa-wallet"></i> Commissions & Payments</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-pie"></i> Business Insights</a>
+                    </li>
+
+                    <li class="menu-label">Settings</li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Notifications"><i class="fas fa-bell"></i> Notifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Profile"><i class="fas fa-cog"></i> Account Settings</a>
                     </li>
                 }
                 else if (role == "Retailer")
                 {
                     <li>
-                        <a asp-controller="Retailer" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                        <a asp-controller="Retailer" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
                     </li>
+                    <li class="menu-label">Marketplace</li>
                     <li>
-                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> My Tenders</a>
+                        <a asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search"></i> Browse Catalog</a>
+                    </li>
+                    
+                    <li class="menu-label">My Purchases</li>
+                    <li>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-cart"></i> Orders</a>
                     </li>
                     <li>
                         <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice"></i> Purchase Orders</a>
                     </li>
                     <li>
-                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-clipboard-list"></i> My Orders</a>
+                        <a asp-controller="Retailer" asp-action="OrderTracking"><i class="fas fa-shipping-fast"></i> Order Tracking</a>
+                    </li>
+
+                    <li class="menu-label">Sourcing</li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> My Tenders</a>
                     </li>
                     <li>
-                        <a asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search"></i> Browse Catalog</a>
+                        <a asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle"></i> Create Tender</a>
+                    </li>
+
+                    <li class="menu-label">Settings</li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="Notifications"><i class="fas fa-bell"></i> Notifications</a>
                     </li>
                     <li>
                         <a asp-controller="Retailer" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
                     </li>
                 }
-                else if (role == "Warehouse")
+                else if (role == "WarehouseManager")
                 {
                     <li>
-                        <a asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                        <a asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    <li class="menu-label">My Warehouse</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Inventory"><i class="fas fa-boxes"></i> Inventory Control</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-clipboard-check"></i> Picking List</a>
+                        <a asp-controller="Warehouse" asp-action="Alerts"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</a>
+                    </li>
+                    
+                    <li class="menu-label">Operations</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="OrdersToPick"><i class="fas fa-clipboard-list"></i> Orders to Pick</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-boxes"></i> Inventory</a>
+                        <a asp-controller="Warehouse" asp-action="Packing"><i class="fas fa-box"></i> Packing Station</a>
+                    </li>
+
+                    <li class="menu-label">Logistics & Tracking</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Ready"><i class="fas fa-truck-loading"></i> Ready Dispatch</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="AssignDelivery"><i class="fas fa-tasks"></i> Delivery Assignments</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="History"><i class="fas fa-history"></i> Dispatch History</a>
+                    </li>
+
+                    <li class="menu-label">Management</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Reports"><i class="fas fa-chart-line"></i> Performance Reports</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Details"><i class="fas fa-warehouse"></i> Warehouse Profile</a>
                     </li>
                 }
-                else if (role == "Delivery")
+                else if (role == "DeliveryAgent")
                 {
                     <li>
                         <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
                     </li>
                     <li>
-                        <a href="#"><i class="fas fa-route"></i> Deliveries</a>
+                        <a asp-controller="Delivery" asp-action="MyDeliveries"><i class="fas fa-route"></i> My Deliveries</a>
                     </li>
                 }
                 
-                <li class="menu-label">Settings</li>
-                <li>
-                    <a href="#"><i class="fas fa-cog"></i> Account Settings</a>
-                </li>
+
             </ul>
 
             <div class="sidebar-user">
@@ -389,6 +456,16 @@
                 </button>
 
                 <div class="d-flex align-items-center">
+                    @if (Context.Session.GetString("UserRole") == "Retailer")
+                    {
+                        <!-- Global Cart Toggle -->
+                        <button class="btn btn-light position-relative rounded-circle me-3 border-0 shadow-sm p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" id="cartToggleButton" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-shopping-cart text-primary"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="globalCartCount" style="display:none; font-size: 0.65em;">
+                                0
+                            </span>
+                        </button>
+                    }
                     <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
                         <i class="fas fa-sign-out-alt me-1"></i> Logout
                     </a>
@@ -440,5 +517,169 @@
     </script>
     
     @await RenderSectionAsync("Scripts", required: false)
+
+    @if (Context.Session.GetString("UserRole") == "Retailer")
+    {
+        <!-- Global Cart Offcanvas -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 400px; box-shadow: -5px 0 15px rgba(0,0,0,0.05);">
+            <div class="offcanvas-header bg-primary text-white">
+                <h5 class="offcanvas-title fw-bold" id="cartOffcanvasLabel"><i class="fas fa-shopping-cart me-2"></i> Your Cart</h5>
+                <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column" style="background-color: var(--bg-color);">
+                <div id="cartItemsContainer" class="flex-grow-1 overflow-auto pe-2">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div class="mt-2 text-muted">Loading cart...</div>
+                    </div>
+                </div>
+                
+                <div class="border-top pt-3 bg-white mt-auto rounded-3 shadow-sm p-3 border">
+                    <div class="d-flex justify-content-between mb-3 align-items-center">
+                        <span class="fw-bold text-muted">Subtotal:</span>
+                        <span class="fw-bold fs-5 text-primary" id="cartSubtotal">$0.00</span>
+                    </div>
+                    
+                    <form asp-controller="Retailer" asp-action="Checkout" method="post" id="checkoutForm">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-muted">Delivery Address <span class="text-danger">*</span></label>
+                            <textarea name="deliveryAddress" class="form-control form-control-sm border-0 bg-light" rows="2" required placeholder="Full delivery address..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Expected Delivery Date <span class="text-danger">*</span></label>
+                            <input type="date" name="expectedDeliveryDate" class="form-control form-control-sm border-0 bg-light" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold" id="checkoutBtn">
+                            <i class="fas fa-check-circle me-1"></i> Checkout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                function loadGlobalCart() {
+                    $.get('/Retailer/GetCartJson', function(res) {
+                        if (res.success) {
+                            let count = 0;
+                            if (res.items && res.items.length > 0) {
+                                let html = '';
+                                res.items.forEach(function(item) {
+                                    count += item.quantity;
+                                    html += `<div class="card mb-3 border-0 shadow-sm cart-item" data-id="${item.id}">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="mb-0 fw-bold text-truncate" style="max-width: 200px;" title="${item.productName}">${item.productName}</h6>
+                                                            <small class="text-muted"><i class="fas fa-store me-1"></i>${item.supplierName}</small>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="fw-bold text-primary">$${item.price.toFixed(2)}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                                            <button class="btn btn-outline-secondary btn-update-qty border-end-0" data-change="-1" type="button"><i class="fas fa-minus small"></i></button>
+                                                            <input type="text" class="form-control text-center border-secondary border-start-0 border-end-0 item-qty" value="${item.quantity}" readonly>
+                                                            <button class="btn btn-outline-secondary btn-update-qty border-start-0" data-change="1" type="button"><i class="fas fa-plus small"></i></button>
+                                                        </div>
+                                                        <button class="btn btn-link text-danger p-0 btn-remove-item" type="button"><i class="fas fa-trash"></i></button>
+                                                    </div>
+                                                </div>
+                                             </div>`;
+                                });
+                                $('#cartItemsContainer').html(html);
+                                $('#globalCartCount').text(count).show();
+                                $('#cartSubtotal').text('$' + res.subtotal.toFixed(2));
+                                $('#checkoutBtn').prop('disabled', false);
+                            } else {
+                                $('#cartItemsContainer').html(`
+                                    <div class="text-center py-5 opacity-50">
+                                        <i class="fas fa-shopping-basket fa-4x mb-3"></i>
+                                        <h5>Your cart is empty</h5>
+                                        <p class="small">Add items to proceed to checkout.</p>
+                                    </div>
+                                `);
+                                $('#globalCartCount').hide();
+                                $('#cartSubtotal').text('$0.00');
+                                $('#checkoutBtn').prop('disabled', true);
+                            }
+                        }
+                    });
+                }
+
+                loadGlobalCart();
+                $('#cartToggleButton').on('click', function() {
+                    loadGlobalCart();
+                });
+
+                $(document).on('submit', '.ajax-add-to-cart', function(e) {
+                    e.preventDefault();
+                    let form = $(this);
+                    let btn = form.find('button[type="submit"]');
+                    let originalHtml = btn.html();
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+                    $.post('/Retailer/AddToCart', form.serialize(), function(res) {
+                        btn.html(originalHtml).prop('disabled', false);
+                        if (res.success) {
+                            $('#globalCartCount').text(res.cartItemCount).show();
+                            var cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
+                            cartOffcanvas.show();
+                            loadGlobalCart();
+                        } else {
+                            alert(res.message);
+                        }
+                    }).fail(function() {
+                        btn.html(originalHtml).prop('disabled', false);
+                        alert('Error adding to cart.');
+                    });
+                });
+
+                $(document).on('click', '.btn-update-qty', function() {
+                    let btn = $(this);
+                    let itemCard = btn.closest('.cart-item');
+                    let id = itemCard.data('id');
+                    let qtyInput = itemCard.find('.item-qty');
+                    let currentQty = parseInt(qtyInput.val());
+                    let change = parseInt(btn.data('change'));
+                    let newQty = currentQty + change;
+                    
+                    if (newQty < 1) return;
+                    
+                    btn.prop('disabled', true);
+                    qtyInput.val(newQty);
+                    qtyInput.addClass('opacity-50');
+
+                    $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: newQty }, function(res) {
+                        btn.prop('disabled', false);
+                        qtyInput.removeClass('opacity-50');
+                        if (res.success) {
+                            loadGlobalCart();
+                        }
+                    }).fail(function() {
+                        btn.prop('disabled', false);
+                        qtyInput.removeClass('opacity-50').val(currentQty);
+                    });
+                });
+
+                $(document).on('click', '.btn-remove-item', function() {
+                    if(!confirm("Remove this item?")) return;
+                    let btn = $(this);
+                    let itemCard = btn.closest('.cart-item');
+                    let id = itemCard.data('id');
+                    
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                    
+                    $.post('/Retailer/RemoveFromCart', { cartItemId: id }, function(res) {
+                        if (res.success) {
+                            loadGlobalCart();
+                        }
+                    });
+                });
+            });
+        </script>
+    }
 </body>
 </html>

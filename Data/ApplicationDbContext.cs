@@ -24,6 +24,7 @@ namespace SCM_System.Data
         public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
+        public DbSet<Vehicle> Vehicles { get; set; }
 
         // Procurement & Order Management Tables
         public DbSet<Tender> Tenders { get; set; }
@@ -88,6 +89,20 @@ namespace SCM_System.Data
                 .HasForeignKey(se => se.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // SupplierEmployee - Warehouse (many-to-one)
+            modelBuilder.Entity<SupplierEmployee>()
+                .HasOne(se => se.Warehouse)
+                .WithMany(w => w.Employees)
+                .HasForeignKey(se => se.WarehouseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // SupplierEmployee - Vehicle (many-to-one)
+            modelBuilder.Entity<SupplierEmployee>()
+                .HasOne(se => se.Vehicle)
+                .WithMany(v => v.DeliveryAgents)
+                .HasForeignKey(se => se.VehicleId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // User - Penalty (one-to-many)
             modelBuilder.Entity<Penalty>()
                 .HasOne(p => p.User)
@@ -125,11 +140,11 @@ namespace SCM_System.Data
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Product - Inventory (one-to-one)
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Inventory)
-                .WithOne(i => i.Product)
-                .HasForeignKey<Inventory>(i => i.ProductId)
+            // Product - Inventory (one-to-many)
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Product)
+                .WithMany(p => p.Inventories)
+                .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Warehouse - Inventory (one-to-many)
@@ -200,6 +215,13 @@ namespace SCM_System.Data
                 .HasOne(w => w.Supplier)
                 .WithMany(s => s.Warehouses)
                 .HasForeignKey(w => w.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Vehicle - Supplier (many-to-one)
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.Supplier)
+                .WithMany(s => s.Vehicles)
+                .HasForeignKey(v => v.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ========== PAYMENT CONFIGURATIONS ==========
@@ -304,10 +326,10 @@ namespace SCM_System.Data
                 .HasForeignKey(po => po.TenderBidId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.PurchaseOrder)
-                .WithMany()
-                .HasForeignKey(o => o.PurchaseOrderId)
+            modelBuilder.Entity<PurchaseOrder>()
+                .HasOne(po => po.Order)
+                .WithMany(o => o.PurchaseOrders)
+                .HasForeignKey(po => po.OrderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OrderStatusHistory>()
@@ -318,13 +340,13 @@ namespace SCM_System.Data
 
             modelBuilder.Entity<PurchaseOrderItem>()
                 .HasOne(poi => poi.Product)
-                .WithMany()
+                .WithMany(p => p.PurchaseOrderItems)
                 .HasForeignKey(poi => poi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Product)
-                .WithMany()
+                .WithMany(p => p.OrderItems)
                 .HasForeignKey(oi => oi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 

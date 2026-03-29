@@ -39,10 +39,18 @@ namespace SCM_System.Controllers
         [Authorize(Roles = "Supplier")]
         public async Task<IActionResult> Submit(int tenderId)
         {
-            var tender = await _tenderService.GetTenderByIdAsync(tenderId);
-            if (tender == null || tender.Status != "Open") return NotFound();
+            var tender = await _context.Tenders.Include(t => t.TenderItems).FirstOrDefaultAsync(t => t.Id == tenderId);
+            if (tender == null || tender.Status != "Published") return NotFound();
 
-            var model = new BidSubmitViewModel { TenderId = tenderId };
+            var firstItem = tender.TenderItems.FirstOrDefault();
+            var model = new BidSubmitViewModel 
+            { 
+                TenderId = tenderId,
+                Quantity = firstItem?.Quantity ?? 0,
+                UnitPrice = firstItem?.EstimatedUnitPrice ?? 0,
+                ValidityPeriodDays = 30
+            };
+            
             ViewBag.Tender = tender;
             return View(model);
         }
@@ -55,21 +63,42 @@ namespace SCM_System.Controllers
             if (ModelState.IsValid)
             {
                 var supplierId = await GetSupplierIdAsync();
+                
+                // Calculate Totals
+                decimal subtotal = model.UnitPrice * model.Quantity;
+                decimal discountAmount = subtotal * (model.DiscountPercentage / 100.0m);
+                decimal vatableAmount = subtotal - discountAmount;
+                decimal vatAmount = vatableAmount * (model.VATPercentage / 100.0m);
+                decimal totalAmount = vatableAmount + vatAmount;
+
                 var bid = new TenderBid
                 {
                     TenderId = model.TenderId,
                     SupplierId = supplierId,
-                    ProposedTotalAmount = model.ProposedTotalAmount,
+                    UnitPrice = model.UnitPrice,
+                    Quantity = model.Quantity,
+                    Subtotal = subtotal,
+                    DiscountPercentage = model.DiscountPercentage,
+                    VATPercentage = model.VATPercentage,
+                    ProposedTotalAmount = totalAmount,
                     DeliveryLeadTimeDays = model.DeliveryLeadTimeDays,
+                    ProposedDeliveryDate = model.ProposedDeliveryDate,
+                    DeliveryMethod = model.DeliveryMethod,
+                    DeliveryCapacity = model.DeliveryCapacity,
                     ValidityPeriodDays = model.ValidityPeriodDays,
+                    TechnicalProposal = model.TechnicalProposal,
+                    PackagingPlan = model.PackagingPlan,
+                    InspectionCompliance = model.InspectionCompliance,
+                    PenaltyAcceptance = model.PenaltyAcceptance,
                     Notes = model.Notes
                 };
 
                 await _bidService.SubmitBidAsync(bid);
+                TempData["SuccessMessage"] = "Your bid has been submitted and evaluated.";
                 return RedirectToAction(nameof(Index));
             }
             
-            ViewBag.Tender = await _tenderService.GetTenderByIdAsync(model.TenderId);
+            ViewBag.Tender = await _context.Tenders.Include(t => t.TenderItems).FirstOrDefaultAsync(t => t.Id == model.TenderId);
             return View(model);
         }
 

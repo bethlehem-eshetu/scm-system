@@ -27,7 +27,9 @@ namespace SCM_System.Services
             return await _context.Tenders
                 .Include(t => t.Category)
                 .Include(t => t.TenderItems)
+                .Include(t => t.Bids)
                 .Where(t => t.RetailerId == retailerId)
+                .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
         }
 
@@ -45,17 +47,20 @@ namespace SCM_System.Services
         public async Task<Tender> CreateTenderAsync(Tender tender, List<TenderItem> items)
         {
             tender.CreatedAt = DateTime.Now;
-            tender.Status = "Open";
+            tender.Status = "Published"; // Default to Published as per new requirements
             
             _context.Tenders.Add(tender);
             await _context.SaveChangesAsync();
 
-            foreach (var item in items)
+            if (items != null)
             {
-                item.TenderId = tender.Id;
-                _context.TenderItems.Add(item);
+                foreach (var item in items)
+                {
+                    item.TenderId = tender.Id;
+                    _context.TenderItems.Add(item);
+                }
+                await _context.SaveChangesAsync();
             }
-            await _context.SaveChangesAsync();
 
             return tender;
         }
@@ -79,6 +84,43 @@ namespace SCM_System.Services
                 _context.Tenders.Remove(tender);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<bool> AwardTenderAsync(int tenderId, int bidId)
+        {
+            var tender = await _context.Tenders
+                .Include(t => t.Bids)
+                .Include(t => t.TenderItems)
+                .FirstOrDefaultAsync(t => t.Id == tenderId);
+
+            if (tender == null || tender.Status == "Awarded") return false;
+
+            var winningBid = await _context.TenderBids.FindAsync(bidId);
+            if (winningBid == null || winningBid.TenderId != tenderId) return false;
+
+            // Mark winning bid
+            winningBid.IsWinningBid = true;
+            winningBid.Status = "Accepted";
+
+            // Mark other bids as rejected
+            foreach (var bid in tender.Bids.Where(b => b.Id != bidId))
+            {
+                bid.Status = "Rejected";
+            }
+
+            tender.Status = "Awarded";
+            await _context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        public async Task<IEnumerable<Tender>> GetTendersByCategoryAsync(int categoryId)
+        {
+            return await _context.Tenders
+                .Include(t => t.Retailer)
+                .Include(t => t.Category)
+                .Where(t => t.CategoryId == categoryId && t.Status == "Published")
+                .ToListAsync();
         }
     }
 }

@@ -1,0 +1,243 @@
+@model SCM_System.Models.ViewModels.SupplierReportsViewModel
+
+@{
+    ViewData["Title"] = "Business Intelligence & Reports";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h3 class="fw-bold text-primary mb-1"><i class="fas fa-chart-pie me-2"></i>Business Intelligence</h3>
+        <p class="text-muted">Aggregate operational data and financial performance analytics</p>
+    </div>
+
+    <!-- Tabbed Navigation -->
+    <ul class="nav nav-pills nav-fill gap-2 p-1 bg-light rounded-pill mb-4 border shadow-sm" id="reportTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#warehouse">
+                <i class="fas fa-warehouse me-2"></i>Warehouse
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#inventory">
+                <i class="fas fa-boxes me-2"></i>Inventory
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#delivery">
+                <i class="fas fa-shipping-fast me-2"></i>Delivery
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#finance">
+                <i class="fas fa-hand-holding-usd me-2"></i>Finance
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="reportContent">
+        <!-- Warehouse Performance -->
+        <div class="tab-pane fade show active" id="warehouse">
+            <div class="row g-4">
+                <div class="col-xl-4 col-md-6 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Orders Processed</p>
+                        <h2 class="fw-bold text-primary mb-0">@Model.WarehousePerformance.TotalOrdersProcessed</h2>
+                        <div class="mt-3">
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">+15% from last month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-md-6 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Items Categorized</p>
+                        <h2 class="fw-bold text-success mb-0">@Model.WarehousePerformance.TotalItemsPacked</h2>
+                        <p class="text-muted small mt-2 mb-0">Across all warehouses</p>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-md-12 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Avg. Processing Time</p>
+                        <h2 class="fw-bold text-warning mb-0">@Model.WarehousePerformance.AvgProcessingTimeHours h</h2>
+                        <p class="text-muted small mt-2 mb-0 text-decoration-underline cursor-pointer">View Bottlenecks</p>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-transparent border-0 p-4">
+                            <h5 class="fw-bold mb-0">Warehouse Efficiency Breakdown</h5>
+                        </div>
+                        <div class="table-responsive px-4 pb-4">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Warehouse</th>
+                                        <th>Total Volume</th>
+                                        <th>Efficiency Rating</th>
+                                        <th class="text-end">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var w in Model.WarehousePerformance.WarehouseStats)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@w.WarehouseName</td>
+                                            <td>@w.Orders Orders</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="me-2 fw-bold">@w.Efficiency%</span>
+                                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                                        <div class="progress-bar bg-primary" style="width: @w.Efficiency%"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border">Optimal</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Report -->
+        <div class="tab-pane fade" id="inventory">
+            <div class="row g-4">
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white h-100">
+                        <h6 class="text-white-50 small fw-bold text-uppercase">Total Catalog Size</h6>
+                        <h1 class="fw-bold">@Model.Inventory.TotalProducts</h1>
+                        <p class="mb-0 mt-3 opacity-75">Active unique items in system</p>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-warning text-dark h-100">
+                        <h6 class="text-dark-50 small fw-bold text-uppercase">Low Stock Alerts</h6>
+                        <h1 class="fw-bold">@Model.Inventory.LowStockAlerts</h1>
+                        <a href="#" class="btn btn-dark btn-sm rounded-pill mt-2">Restock Now</a>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-md-12 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-danger text-white h-100">
+                        <h6 class="text-white-50 small fw-bold text-uppercase">Out of Stock</h6>
+                        <h1 class="fw-bold">@Model.Inventory.OutOfStockItems</h1>
+                        <p class="mb-0 mt-3 opacity-75">Immediate action required</p>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-transparent border-0 p-4">
+                            <h5 class="fw-bold mb-0">Replenishment Priority (Top 5)</h5>
+                        </div>
+                        <div class="table-responsive px-4 pb-4">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Current Stock</th>
+                                        <th>Reserved</th>
+                                        <th>Warehouse</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Inventory.TopLowStockItems)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-danger">@item.ProductName</td>
+                                            <td>@item.Stock Units</td>
+                                            <td>@item.Reserved Units</td>
+                                            <td>@item.Warehouse</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3">Create PO</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Report -->
+        <div class="tab-pane fade" id="delivery">
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                        <i class="fas fa-clock fa-2x text-primary mb-3"></i>
+                        <h4 class="fw-bold mb-1">@Model.Delivery.OnTimeRate%</h4>
+                        <p class="text-muted small mb-0">On-Time Delivery Rate</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                        <i class="fas fa-history fa-2x text-danger mb-3"></i>
+                        <h4 class="fw-bold mb-1">@Model.Delivery.DelayedDeliveries</h4>
+                        <p class="text-muted small mb-0">Detected Delays</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                        <i class="fas fa-check-double fa-2x text-success mb-3"></i>
+                        <h4 class="fw-bold mb-1">@Model.Delivery.CompletedDeliveries</h4>
+                        <p class="text-muted small mb-0">Total Success Feed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Report -->
+        <div class="tab-pane fade" id="finance">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-primary border-5">
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Gross Sales</p>
+                        <h3 class="fw-bold mb-0">@Model.Finance.TotalRevenue.ToString("C0")</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-warning border-5">
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Pending Release</p>
+                        <h3 class="fw-bold mb-0">@Model.Finance.PendingPayments.ToString("C0")</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-danger border-5">
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Commission Due</p>
+                        <h3 class="fw-bold mb-0">@Model.Finance.CommissionDue.ToString("C0")</h3>
+                    </div>
+                </div>
+                
+                <div class="col-12 mt-4 text-center">
+                    <img src="~/images/placeholder-chart-revenue.png" class="img-fluid rounded-4 shadow-sm border" style="max-height: 400px; width: 100%; object-fit: cover;" alt="Financial Trends" />
+                    <p class="text-muted mt-2 small">Monthly Revenue Distribution Visualization</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .nav-pills .nav-link {
+            color: #4b5563;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color) !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+        }
+        .card { transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .cursor-pointer { cursor: pointer; }
+    </style>
+}

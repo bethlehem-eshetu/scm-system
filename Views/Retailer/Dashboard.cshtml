@@ -1,173 +1,250 @@
 @model SCM_System.Models.Entities.Retailer
-
 @{
     ViewData["Title"] = "Retailer Dashboard";
     Layout = "_DashboardLayout";
+    var recentOrders = ViewBag.RecentOrders as IEnumerable<SCM_System.Models.Entities.Order>;
+    var recentNotes = ViewBag.RecentNotifications as IEnumerable<SCM_System.Models.Entities.Notification>;
 }
 
 <div class="container-fluid py-4">
-    <div class="glass-panel p-4 mb-4 position-relative overflow-hidden" style="background: var(--hero-bg);">
-        <div class="animated-bg" style="opacity: 0.05;"></div>
-        <div class="position-relative z-index-1 d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="text-white mb-1 fw-bold">Welcome, @Model.User?.FullName!</h1>
-                <p class="text-white-50 mb-0">Retailer Portal | EthioChain SCM</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Hello, <span class="text-primary">@Model.BusinessName</span> 👋</h2>
+            <p class="text-muted">Welcome back to your procurement control center.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a asp-action="Notifications" class="btn btn-white border rounded-pill px-3 shadow-sm position-relative">
+                <i class="fas fa-bell text-warning"></i>
+                @if (recentNotes != null && recentNotes.Any(n => !n.IsRead))
+                {
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                }
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-primary rounded-pill px-4 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-plus me-2"></i>Quick Actions
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow p-2">
+                    <li><a class="dropdown-item rounded-3" asp-controller="Tender" asp-action="Create"><i class="fas fa-gavel me-2 text-primary"></i>Create Tender</a></li>
+                    <li><a class="dropdown-item rounded-3" asp-action="BrowseCatalog"><i class="fas fa-search me-2 text-primary"></i>Browse Products</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item rounded-3" asp-action="OrderTracking"><i class="fas fa-truck-loading me-2 text-primary"></i>Track Orders</a></li>
+                </ul>
             </div>
-            <span class="badge bg-@(Model.User?.IsApproved == true ? "success" : "warning") bg-opacity-25 text-white border border-white border-opacity-25 px-3 py-2 rounded-pill">
-                <i class="fas @(Model.User?.IsApproved == true ? "fa-check-circle" : "fa-clock") me-1"></i>
-                @(Model.User?.IsApproved == true ? "Approved" : "Pending Approval")
-            </span>
         </div>
     </div>
 
-    @if (Model.User?.IsApproved != true)
-    {
-        <div class="alert alert-warning alert-dismissible fade show glass-card border-0 mb-4" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-clock fa-2x me-3 text-warning"></i>
-                <div>
-                    <h6 class="mb-0 fw-bold text-dark">Account Pending Approval</h6>
-                    <small class="text-muted">Your account is currently under review. You'll be able to place orders once approved by the administration.</small>
-                </div>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
+    <!-- Stat Cards Section -->
     <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card p-4 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small text-uppercase fw-bold mb-1">Total Orders</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.TotalOrders</h3>
-                    </div>
-                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary">
-                        <i class="fas fa-shopping-cart fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card p-4 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small text-uppercase fw-bold mb-1">Pending Orders</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.PendingOrders</h3>
-                    </div>
-                    <div class="bg-warning bg-opacity-10 p-2 rounded-3 text-warning">
-                        <i class="fas fa-clock fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card p-4 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small text-uppercase fw-bold mb-1">Total Tenders</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.TotalTenders</h3>
-                    </div>
-                    <div class="bg-info bg-opacity-10 p-2 rounded-3 text-info">
-                        <i class="fas fa-gavel fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card p-4 h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small text-uppercase fw-bold mb-1">Active Tenders</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.ActiveTenders</h3>
-                    </div>
-                    <div class="bg-success bg-opacity-10 p-2 rounded-3 text-success">
-                        <i class="fas fa-check-circle fa-lg"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="glass-card p-4 overflow-hidden">
-                <h5 class="fw-bold mb-4 px-2"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h5>
-                
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <a asp-controller="Marketplace" asp-action="Index" class="btn btn-outline-primary w-100 py-3 rounded-4">
-                            <i class="fas fa-search d-block mb-2 fa-lg"></i> Browse Products
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a asp-controller="Tender" asp-action="Create" class="btn btn-outline-success w-100 py-3 rounded-4">
-                            <i class="fas fa-file-invoice d-block mb-2 fa-lg"></i> Create Tender
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a asp-controller="Tender" asp-action="MyTenders" class="btn btn-outline-info w-100 py-3 rounded-4">
-                            <i class="fas fa-gavel d-block mb-2 fa-lg"></i> My Tenders
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a asp-controller="Order" asp-action="Index" class="btn btn-outline-warning w-100 py-3 rounded-4">
-                            <i class="fas fa-history d-block mb-2 fa-lg"></i> Order History
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Explore Products -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="glass-card overflow-hidden">
-                <div class="p-4 border-bottom border-light d-flex justify-content-between align-items-center bg-primary bg-opacity-10">
-                    <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-search me-2"></i>Explore New Products</h6>
-                    <a asp-action="BrowseCatalog" class="btn btn-primary btn-sm rounded-pill px-4">Browse Catalog</a>
-                </div>
-                <div class="p-4 text-center">
-                    <div class="row align-items-center">
-                        <div class="col-md-8 text-md-start">
-                            <h5 class="fw-bold mb-2">Discover New Suppliers & Products</h5>
-                            <p class="text-muted mb-0 lh-sm">New products from verified suppliers are added daily. Browse the catalog to find the best deals for your business.</p>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-gradient-brand">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="p-3 bg-white bg-opacity-20 rounded-4 text-white">
+                            <i class="fas fa-shopping-basket fa-lg"></i>
                         </div>
-                        <div class="col-md-4 text-center mt-3 mt-md-0">
-                            <div class="d-flex justify-content-center gap-3">
-                                <div class="text-center">
-                                    <div class="h4 fw-bold text-primary mb-0">100+</div>
-                                    <div class="small text-muted">Products</div>
+                        <div class="text-end">
+                            <div class="text-white text-opacity-75 small">Total Orders</div>
+                            <div class="text-white h3 fw-bold mb-0">@ViewBag.TotalOrders</div>
+                        </div>
+                    </div>
+                    <div class="progress bg-white bg-opacity-20" style="height: 6px;">
+                        <div class="progress-bar bg-white" style="width: 70%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="p-3 bg-primary bg-opacity-10 rounded-4 text-primary">
+                            <i class="fas fa-box fa-lg"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small">Active Orders</div>
+                            <div class="h3 fw-bold mb-0">@ViewBag.ActiveOrders</div>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 6px; background: rgba(0,0,0,0.05);">
+                        <div class="progress-bar bg-primary" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="p-3 bg-info bg-opacity-10 rounded-4 text-info">
+                            <i class="fas fa-file-invoice-dollar fa-lg"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small">Purchase Orders</div>
+                            <div class="h3 fw-bold mb-0">@ViewBag.TotalPurchaseOrders</div>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 6px; background: rgba(0,0,0,0.05);">
+                        <div class="progress-bar bg-info" style="width: 80%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="p-3 bg-success bg-opacity-10 rounded-4 text-success">
+                            <i class="fas fa-truck fa-lg"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small">Deliveries</div>
+                            <div class="h3 fw-bold mb-0">@ViewBag.DeliveriesInProgress</div>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 6px; background: rgba(0,0,0,0.05);">
+                        <div class="progress-bar bg-success" style="width: 25%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Overview Bar -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-4">
+        <h6 class="fw-bold mb-4">Order Status Overview</h6>
+        <div class="row g-3 text-center">
+            <div class="col">
+                <div class="p-3 rounded-4 bg-light border-bottom border-warning border-4">
+                    <div class="h4 fw-bold mb-1">@ViewBag.StatusPending</div>
+                    <div class="text-muted small">Pending</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="p-3 rounded-4 bg-light border-bottom border-primary border-4">
+                    <div class="h4 fw-bold mb-1">@ViewBag.StatusProcessing</div>
+                    <div class="text-muted small">Processing</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="p-3 rounded-4 bg-light border-bottom border-info border-4">
+                    <div class="h4 fw-bold mb-1">@ViewBag.StatusInTransit</div>
+                    <div class="text-muted small">In Transit</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="p-3 rounded-4 bg-light border-bottom border-success border-4">
+                    <div class="h4 fw-bold mb-1">@ViewBag.StatusDelivered</div>
+                    <div class="text-muted small">Delivered</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Orders -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-white p-4 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent Orders</h5>
+                    <a asp-action="OrderTracking" class="btn btn-sm btn-link text-decoration-none p-0">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50">
+                            <tr>
+                                <th class="ps-4">Order #</th>
+                                <th>Supplier</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (recentOrders != null && recentOrders.Any())
+                            {
+                                foreach (var o in recentOrders)
+                                {
+                                    <tr style="cursor: pointer" onclick="window.location.href='/Retailer/OrderTrackingDetails/@o.Id'">
+                                        <td class="ps-4 fw-bold">#@o.OrderNumber</td>
+                                        <td>@o.Supplier?.CompanyName</td>
+                                        <td>
+                                            <span class="badge rounded-pill bg-primary-soft text-primary px-3">@o.OrderStatus</span>
+                                        </td>
+                                        <td class="text-end pe-4 fw-bold">@o.TotalAmount.ToString("C")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <p class="text-muted mb-0">No recent orders found.</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity / Notifications Feed -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white p-4 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent Activity</h5>
+                    <a asp-action="Notifications" class="btn btn-sm btn-link text-decoration-none p-0 text-muted">See All</a>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="notification-feed">
+                        @if (recentNotes != null && recentNotes.Any())
+                        {
+                            foreach (var n in recentNotes)
+                            {
+                                <div class="d-flex mb-4 gap-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="rounded-circle p-2 @(n.Type == "Success" ? "bg-success-soft text-success" : (n.Type == "Error" ? "bg-danger-soft text-danger" : "bg-primary-soft text-primary"))">
+                                            <i class="fas @(n.Type == "Success" ? "fa-check" : (n.Type == "Error" ? "fa-times" : "fa-bell")) small"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold small mb-0 text-dark">@n.Title</div>
+                                        <div class="extra-small text-muted line-clamp-2">@n.Message</div>
+                                        <div class="extra-small text-muted opacity-50 mt-1" style="font-size: 0.7rem;">@n.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                                    </div>
                                 </div>
-                                <div class="vr mx-2 text-muted opacity-25"></div>
-                                <div class="text-center">
-                                    <div class="h4 fw-bold text-success mb-0">20+</div>
-                                    <div class="small text-muted">Suppliers</div>
-                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="fas fa-stream fa-2x mb-3 text-muted opacity-25"></i>
+                                <p class="text-muted mb-0">No recent activity.</p>
                             </div>
-                        </div>
+                        }
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activity Placeholder -->
-    <div class="row">
-        <div class="col-12">
-            <div class="glass-card p-5 text-center">
-                <div class="text-muted opacity-50 mb-3">
-                    <i class="fas fa-chart-line fa-3x"></i>
-                </div>
-                <h5 class="fw-bold">Your Activity Summary</h5>
-                <p class="text-muted">You've reached the end of the dashboard. Check your Account Settings for business details.</p>
-                <a asp-action="AccountSettings" class="btn btn-outline-primary rounded-pill px-4">View Profile</a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .bg-gradient-brand {
+        background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+    }
+    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+    .bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
+    
+    .extra-small { font-size: 0.8rem; }
+    
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>

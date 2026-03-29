@@ -1,0 +1,240 @@
+@model IEnumerable<SCM_System.Models.Entities.Order>
+
+@{
+    ViewData["Title"] = "Order Monitoring Hub";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-1"><i class="fas fa-truck-loading me-2"></i>Order Monitoring Hub</h3>
+            <p class="text-muted mb-0">Track real-time progress across warehouses and delivery agents</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group shadow-sm border rounded-pill overflow-hidden bg-white">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="orderSearch" class="form-control border-0" placeholder="Search Order ID or Retailer...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+        <button class="btn btn-primary rounded-pill px-4 filter-btn active" data-filter="all">All Orders</button>
+        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="Processing">Processing</button>
+        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="Packed">Packed</button>
+        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="In Transit">In Transit</button>
+        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="Delivered">Delivered</button>
+    </div>
+
+    <div class="row g-4" id="ordersGrid">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var order in Model)
+            {
+                <div class="col-xl-6 order-card" data-status="@order.OrderStatus">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden hover-lift">
+                        <div class="card-header border-0 bg-light p-3 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-primary rounded-pill me-2">#ORD-@order.Id</span>
+                                <span class="text-muted small">@order.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <span class="badge @GetStatusBadgeClass(order.OrderStatus) rounded-pill px-3 py-2">@order.OrderStatus</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row mb-4">
+                                <div class="col-6 border-end">
+                                    <p class="text-muted small fw-bold text-uppercase mb-1">Retailer</p>
+                                    <h6 class="fw-bold mb-0">@order.Retailer?.BusinessName</h6>
+                                    <p class="text-muted small mb-0">@order.Retailer?.City</p>
+                                </div>
+                                <div class="col-6 ps-4">
+                                    <p class="text-muted small fw-bold text-uppercase mb-1">Fulfillment</p>
+                                    <h6 class="fw-bold mb-0">@order.PurchaseOrders.Count Warehouses</h6>
+                                    <p class="text-muted small mb-0">@order.TotalAmount.ToString("C")</p>
+                                </div>
+                            </div>
+
+                            <!-- Progress Visualization -->
+                            <div class="mb-4 order-status-container" data-order-id="@order.Id">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="small fw-bold">Current Logistics Progress</span>
+                                    <span class="small text-primary fw-bold status-text">@order.OrderStatus</span>
+                                </div>
+                                
+                                <partial name="_OrderTrackingTimeline" model="order.OrderStatus" />
+                            </div>
+                        </div>
+                        <div class="card-footer border-0 bg-transparent p-3 pt-0">
+                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary w-100 rounded-pill fw-bold">View Global Details</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <div class="py-5 bg-light rounded-4 border-2 border-dashed">
+                    <i class="fas fa-search-location fa-4x text-muted mb-3 opacity-25"></i>
+                    <h5>No Active Monitoring Subscriptions</h5>
+                    <p class="text-muted">Currently there are no orders being tracked through the logistics pipeline.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning text-dark",
+            "Accepted" => "bg-info text-dark",
+            "Processing" => "bg-primary text-white",
+            "Packed" => "bg-purple text-white",
+            "In Transit" => "bg-indigo text-white",
+            "Delivered" => "bg-success text-white",
+            "Completed" => "bg-dark text-white",
+            _ => "bg-secondary"
+        };
+    }
+
+    int GetProgressPercentage(string status)
+    {
+        return status switch
+        {
+            "Pending" => 5,
+            "Accepted" => 20,
+            "Processing" => 40,
+            "Packed" => 60,
+            "In Transit" => 80,
+            "Delivered" => 95,
+            "Completed" => 100,
+            _ => 0
+        };
+    }
+
+    string GetProgressColor(string status)
+    {
+        if (status == "Delivered" || status == "Completed") return "bg-success";
+        if (status == "Pending" || status == "Accepted") return "bg-warning";
+        return "bg-primary";
+    }
+
+    bool IsCompleted(string currentStatus, string targetStatus)
+    {
+        var statuses = new List<string> { "Pending", "Accepted", "Processing", "Packed", "In Transit", "Delivered", "Completed" };
+        return statuses.IndexOf(currentStatus) >= statuses.IndexOf(targetStatus);
+    }
+}
+
+@section Styles {
+    <style>
+        .bg-purple { background-color: #6f42c1 !important; }
+        .bg-indigo { background-color: #6610f2 !important; }
+        
+        .timeline-connector {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            right: 10px;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            z-index: 1;
+            position: relative;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px #e5e7eb;
+        }
+
+        .timeline-dot.active {
+            background: #0d6efd;
+            box-shadow: 0 0 0 1px #0d6efd, 0 0 8px rgba(13, 110, 253, 0.5);
+        }
+
+        .hover-lift {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
+        }
+
+        .filter-btn.active {
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('orderSearch');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const orderCards = document.querySelectorAll('.order-card');
+
+            function filterOrders() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+
+                orderCards.forEach(card => {
+                    const status = card.dataset.status;
+                    const text = card.innerText.toLowerCase();
+                    
+                    const matchesSearch = text.includes(searchTerm);
+                    const matchesFilter = activeFilter === 'all' || status === activeFilter;
+
+                    if (matchesSearch && matchesFilter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            searchInput.addEventListener('input', filterOrders);
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterBtns.forEach(b => b.classList.remove('active', 'btn-primary'));
+                    filterBtns.forEach(b => b.classList.add('btn-outline-secondary'));
+                    
+                    this.classList.remove('btn-outline-secondary');
+                    this.classList.add('active', 'btn-primary');
+                    
+                    filterOrders();
+                });
+            });
+
+            // Polling for status updates
+            setInterval(function() {
+                document.querySelectorAll('.order-status-container').forEach(container => {
+                    const orderId = container.dataset.orderId;
+                    fetch(`/Order/GetStatus/${orderId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const statusText = container.querySelector('.status-text');
+                            if (statusText.innerText !== data.status) {
+                                // Status changed! Refresh the page or update UI partially
+                                // For simplicity and robustness, we can update the status badge and reload if needed
+                                // but ideally we'd swap the timeline partial content.
+                                // Let's just update the status text and reload the timeline if it changes.
+                                location.reload(); // Simple refresh for now to ensure all partials update
+                            }
+                        });
+                });
+            }, 5000); // Poll every 5 seconds
+        });
+    </script>
+}

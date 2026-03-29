@@ -1,0 +1,133 @@
+@model SCM_System.Models.Entities.Warehouse
+@{
+    ViewData["Title"] = "Update Hub Configuration";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Warehouses">Logistics Hubs</a></li>
+                    <li class="breadcrumb-item active">Configure Hub</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-primary mb-0"><i class="fas fa-edit me-2"></i>Configure Hub</h2>
+        </div>
+        <a asp-action="Warehouses" class="btn btn-outline-secondary rounded-pill px-4 border shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Hubs
+        </a>
+    </div>
+
+    <form asp-action="EditWarehouse" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="SupplierId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 border-0 shadow-sm mb-4"></div>
+
+        <div class="row g-4">
+            <!-- Left: Identity & Location -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Hub Identity & Location</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="Name" class="form-label text-muted small fw-bold text-uppercase">Commercial Hub Name <span class="text-danger">*</span></label>
+                                <input asp-for="Name" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" required>
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="WarehouseCode" class="form-label text-muted small fw-bold text-uppercase">Registry Code</label>
+                                <input asp-for="WarehouseCode" class="form-control p-3 bg-light border-0 rounded-3 shadow-none">
+                                <span asp-validation-for="WarehouseCode" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Region" class="form-label text-muted small fw-bold text-uppercase">Region <span class="text-danger">*</span></label>
+                                <input asp-for="Region" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" required>
+                                <span asp-validation-for="Region" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="City" class="form-label text-muted small fw-bold text-uppercase">City <span class="text-danger">*</span></label>
+                                <input asp-for="City" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" required>
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-12">
+                                <label asp-for="Address" class="form-label text-muted small fw-bold text-uppercase">Detailed Physical Address <span class="text-danger">*</span></label>
+                                <textarea asp-for="Address" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" rows="3" required></textarea>
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Capacity & Config -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-cog me-2 text-primary"></i>Operation Settings</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="StorageType" class="form-label text-muted small fw-bold text-uppercase">Storage Architecture</label>
+                                <select asp-for="StorageType" class="form-select border-0 bg-light p-3 rounded-3 shadow-none" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.StorageType>()"></select>
+                                <span asp-validation-for="StorageType" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MaxCapacity" class="form-label text-muted small fw-bold text-uppercase">Max Unit Capacity <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input asp-for="MaxCapacity" class="form-control p-3 bg-light border-0 rounded-start shadow-none" type="number" min="1" required>
+                                    <span class="input-group-text bg-light border-0 text-muted small">Units</span>
+                                </div>
+                                <span asp-validation-for="MaxCapacity" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="HandlingTimeHours" class="form-label text-muted small fw-bold text-uppercase">Handling Delta</label>
+                                <div class="input-group">
+                                    <input asp-for="HandlingTimeHours" class="form-control p-3 bg-light border-0 rounded-start shadow-none" type="number" min="0">
+                                    <span class="input-group-text bg-light border-0 text-muted small">Hours</span>
+                                </div>
+                                <span asp-validation-for="HandlingTimeHours" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-4 bg-light rounded-4 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-muted">Registry Metadata</span>
+                                <span class="badge bg-white text-dark border extra-small">Hub ID: @Model.Id</span>
+                            </div>
+                            <div class="small text-muted mb-1">Created: @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                            <div class="small text-muted">Encryption: AES-256 Protocol</div>
+                        </div>
+
+                        <div class="mt-5 pt-3">
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-lg">
+                                <i class="fas fa-save me-2"></i> Commit Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .extra-small { font-size: 0.65rem; }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.05);
+        border: 1px solid rgba(13, 110, 253, 0.2) !important;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,100 @@
+@{
+    ViewData["Title"] = "Supplier Account Details";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-body p-5 text-center bg-primary bg-opacity-10">
+                    <div class="avatar-xl bg-primary text-white rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center shadow-lg" style="width: 120px; height: 120px;">
+                        <i class="fas fa-building fa-4x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">Modern Trading SC</h4>
+                    <p class="text-muted small mb-0">Member since March 2026</p>
+                    <div class="mt-4">
+                        <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-certificate me-1"></i> Verified Supplier</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small fw-bold text-uppercase">Operational Status</span>
+                        <span class="text-success small fw-bold">Active</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small fw-bold text-uppercase">Active Warehouses</span>
+                        <span class="text-dark small fw-bold">4 Nodes</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small fw-bold text-uppercase">Trust Score</span>
+                        <span class="text-primary small fw-bold">98% Perfect</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Compliance & Documents</h6>
+                    <div class="list-group list-group-flush border-0">
+                        <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
+                            <span class="small text-muted"><i class="fas fa-file-pdf me-2"></i> Trade License</span>
+                            <span class="badge bg-light text-success border border-success border-opacity-25 rounded-pill">Validated</span>
+                        </div>
+                        <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
+                            <span class="small text-muted"><i class="fas fa-file-pdf me-2"></i> Tax Certificate</span>
+                            <span class="badge bg-light text-success border border-success border-opacity-25 rounded-pill">Validated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-4">Enterprise Account Configuration</h5>
+                <form>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Company Legal Name</label>
+                            <input type="text" class="form-control rounded-pill p-3 border-2" value="Modern Trading SC" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Company Email Address</label>
+                            <input type="email" class="form-control rounded-pill p-3 border-2" value="supply@moderntrading.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Primary Contact Phone</label>
+                            <input type="text" class="form-control rounded-pill p-3 border-2" value="+251 911 223 344">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">HQ Physical Address</label>
+                            <input type="text" class="form-control rounded-pill p-3 border-2" value="Bole Sub-City, Addis Ababa, ET">
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-3 pt-3 border-top">Trade Settings</h6>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="autoAccept" checked>
+                                <label class="form-check-label ms-2 text-dark fw-bold small" for="autoAccept">Enable Auto-Accept for Verified Retailers</label>
+                                <div class="form-text mt-0 ms-2 small">System will automatically allocate stock and issue POs for high-trust partners.</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="escrowRelease" checked>
+                                <label class="form-check-label ms-2 text-dark fw-bold small" for="escrowRelease">Instant Escrow Release Request</label>
+                                <div class="form-text mt-0 ms-2 small">Request immediate payment release upon delivery confirmation by agent.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 d-flex gap-3 justify-content-end">
+                        <button type="reset" class="btn btn-light rounded-pill px-5 fw-bold shadow-sm">Reset</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Save Global Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

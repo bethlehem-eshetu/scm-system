@@ -25,10 +25,13 @@
                             <span class="badge bg-light text-primary border border-primary-subtle rounded-pill px-2 py-1" style="font-size: 0.75rem;">
                                 @product.Category.CategoryName
                             </span>
-                            @if (product.Quantity > 0)
+                            @{
+                                var availableStock = product.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
+                            }
+                            @if (availableStock > 0)
                             {
                                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.75rem;">
-                                    In Stock
+                                    In Stock (@availableStock)
                                 </span>
                             }
                             else

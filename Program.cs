@@ -54,6 +54,7 @@ builder.Services.AddScoped<SCM_System.Services.IBidService, SCM_System.Services.
 builder.Services.AddScoped<SCM_System.Services.IPurchaseOrderService, SCM_System.Services.PurchaseOrderService>();
 builder.Services.AddScoped<SCM_System.Services.IOrderService, SCM_System.Services.OrderService>();
 builder.Services.AddScoped<SCM_System.Services.ICartService, SCM_System.Services.CartService>();
+builder.Services.AddScoped<SCM_System.Services.ISupplierService, SCM_System.Services.SupplierService>();
 
 var app = builder.Build();
 

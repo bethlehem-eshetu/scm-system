@@ -254,9 +254,6 @@ namespace SCM_System.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int>("QuantityAvailable")
-                        .HasColumnType("int");
-
                     b.Property<int>("QuantityOnHand")
                         .HasColumnType("int");
 
@@ -273,8 +270,7 @@ namespace SCM_System.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId")
-                        .IsUnique();
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("WarehouseId");
 
@@ -399,6 +395,14 @@ namespace SCM_System.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DeliveryAddress")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("ExpectedDeliveryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -414,11 +418,12 @@ namespace SCM_System.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("PurchaseOrderId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<int?>("PurchaseOrderId1")
-                        .HasColumnType("int");
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("RetailerId")
                         .HasColumnType("int");
@@ -430,12 +435,6 @@ namespace SCM_System.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PurchaseOrderId");
-
-                    b.HasIndex("PurchaseOrderId1")
-                        .IsUnique()
-                        .HasFilter("[PurchaseOrderId1] IS NOT NULL");
 
                     b.HasIndex("RetailerId");
 
@@ -458,9 +457,6 @@ namespace SCM_System.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ProductId1")
-                        .HasColumnType("int");
-
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
@@ -472,8 +468,6 @@ namespace SCM_System.Migrations
                     b.HasIndex("OrderId");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("ProductId1");
 
                     b.ToTable("OrderItems");
                 });
@@ -627,9 +621,6 @@ namespace SCM_System.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
                     b.Property<int?>("ReorderLevel")
                         .HasColumnType("int");
 
@@ -720,7 +711,6 @@ namespace SCM_System.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -800,21 +790,60 @@ namespace SCM_System.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("DeliveryAddress")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("DeliveryAgentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DeliveryMethod")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("ExpectedDeliveryDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("InvoiceNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PONumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("PackedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("PickedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProofOfDelivery")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<int>("RetailerId")
                         .HasColumnType("int");
@@ -823,6 +852,9 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
@@ -833,13 +865,33 @@ namespace SCM_System.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("VAT")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("VehicleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("DeliveryAgentId");
+
+                    b.HasIndex("OrderId");
 
                     b.HasIndex("RetailerId");
 
                     b.HasIndex("SupplierId");
 
                     b.HasIndex("TenderBidId");
+
+                    b.HasIndex("VehicleId");
+
+                    b.HasIndex("WarehouseId");
 
                     b.ToTable("PurchaseOrders");
                 });
@@ -855,9 +907,6 @@ namespace SCM_System.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ProductId1")
-                        .HasColumnType("int");
-
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int");
 
@@ -870,8 +919,6 @@ namespace SCM_System.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("ProductId1");
 
                     b.HasIndex("PurchaseOrderId");
 
@@ -1084,6 +1131,10 @@ namespace SCM_System.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DrivingLicenseNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1097,6 +1148,12 @@ namespace SCM_System.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsLicenseVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LicenseExpiryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -1108,12 +1165,22 @@ namespace SCM_System.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("VehicleId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SupplierId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
+
+                    b.HasIndex("VehicleId");
+
+                    b.HasIndex("WarehouseId");
 
                     b.ToTable("SupplierEmployees");
                 });
@@ -1162,12 +1229,33 @@ namespace SCM_System.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DeliveryLocation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DeliveryWeight")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ExpectedDeliveryDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("InspectionRequirement")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PackagingRequirements")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PriceWeight")
+                        .HasColumnType("int");
 
                     b.Property<string>("ReferenceNumber")
                         .IsRequired()
@@ -1186,6 +1274,9 @@ namespace SCM_System.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TechnicalWeight")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -1212,15 +1303,49 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("DeliveryCapacity")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<int>("DeliveryLeadTimeDays")
                         .HasColumnType("int");
 
-                    b.Property<string>("Notes")
-                        .IsRequired()
+                    b.Property<string>("DeliveryMethod")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("DiscountPercentage")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("InspectionCompliance")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsWinningBid")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PackagingPlan")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PenaltyAcceptance")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ProposedDeliveryDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<decimal>("ProposedTotalAmount")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("QualityGuarantee")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Score")
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1230,11 +1355,23 @@ namespace SCM_System.Migrations
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
+                    b.Property<string>("TechnicalProposal")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("TenderId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("VATPercentage")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ValidityPeriodDays")
                         .HasColumnType("int");
@@ -1263,6 +1400,9 @@ namespace SCM_System.Migrations
                     b.Property<decimal?>("EstimatedUnitPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1280,6 +1420,8 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("TenderId");
 
@@ -1355,6 +1497,68 @@ namespace SCM_System.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.Vehicle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HasTemperatureControl")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("InsuranceExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InsuranceStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("LastMaintenanceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LicensePlate")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("MaxLoadCapacity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RegistrationNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RoadworthinessStatus")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VehicleType")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("VolumeCapacity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("Vehicles");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Warehouse", b =>
                 {
                     b.Property<int>("Id")
@@ -1363,29 +1567,61 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Capacity")
-                        .HasColumnType("int");
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<int>("HandlingTimeHours")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MaxCapacity")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StorageType")
+                        .HasColumnType("int");
+
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("SupportsDelivery")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WarehouseCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -1494,8 +1730,8 @@ namespace SCM_System.Migrations
             modelBuilder.Entity("SCM_System.Models.Entities.Inventory", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Product", "Product")
-                        .WithOne("Inventory")
-                        .HasForeignKey("SCM_System.Models.Entities.Inventory", "ProductId")
+                        .WithMany("Inventories")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1552,16 +1788,6 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Order", b =>
                 {
-                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", null)
-                        .WithOne("Order")
-                        .HasForeignKey("SCM_System.Models.Entities.Order", "PurchaseOrderId1");
-
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
                         .WithMany("Orders")
                         .HasForeignKey("RetailerId")
@@ -1573,8 +1799,6 @@ namespace SCM_System.Migrations
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("PurchaseOrder");
 
                     b.Navigation("Retailer");
 
@@ -1590,14 +1814,10 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.HasOne("SCM_System.Models.Entities.Product", "Product")
-                        .WithMany()
+                        .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("SCM_System.Models.Entities.Product", null)
-                        .WithMany("OrderItems")
-                        .HasForeignKey("ProductId1");
 
                     b.Navigation("Order");
 
@@ -1695,6 +1915,16 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.PurchaseOrder", b =>
                 {
+                    b.HasOne("SCM_System.Models.Entities.SupplierEmployee", "DeliveryAgent")
+                        .WithMany()
+                        .HasForeignKey("DeliveryAgentId");
+
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany("PurchaseOrders")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
                         .WithMany("PurchaseOrders")
                         .HasForeignKey("RetailerId")
@@ -1712,24 +1942,38 @@ namespace SCM_System.Migrations
                         .HasForeignKey("TenderBidId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("SCM_System.Models.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId");
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DeliveryAgent");
+
+                    b.Navigation("Order");
+
                     b.Navigation("Retailer");
 
                     b.Navigation("Supplier");
 
                     b.Navigation("TenderBid");
+
+                    b.Navigation("Vehicle");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.PurchaseOrderItem", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Product", "Product")
-                        .WithMany()
+                        .WithMany("PurchaseOrderItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("SCM_System.Models.Entities.Product", null)
-                        .WithMany("PurchaseOrderItems")
-                        .HasForeignKey("ProductId1");
 
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithMany("PurchaseOrderItems")
@@ -1805,9 +2049,23 @@ namespace SCM_System.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SCM_System.Models.Entities.Vehicle", "Vehicle")
+                        .WithMany("DeliveryAgents")
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany("Employees")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Supplier");
 
                     b.Navigation("User");
+
+                    b.Navigation("Vehicle");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Tender", b =>
@@ -1854,13 +2112,32 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.TenderItem", b =>
                 {
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SCM_System.Models.Entities.Tender", "Tender")
                         .WithMany("TenderItems")
                         .HasForeignKey("TenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Product");
+
                     b.Navigation("Tender");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.Vehicle", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
+                        .WithMany("Vehicles")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Warehouse", b =>
@@ -1896,6 +2173,8 @@ namespace SCM_System.Migrations
 
                     b.Navigation("OrderItems");
 
+                    b.Navigation("PurchaseOrders");
+
                     b.Navigation("StatusHistory");
                 });
 
@@ -1903,8 +2182,7 @@ namespace SCM_System.Migrations
                 {
                     b.Navigation("AttributeValues");
 
-                    b.Navigation("Inventory")
-                        .IsRequired();
+                    b.Navigation("Inventories");
 
                     b.Navigation("OrderItems");
 
@@ -1925,9 +2203,6 @@ namespace SCM_System.Migrations
             modelBuilder.Entity("SCM_System.Models.Entities.PurchaseOrder", b =>
                 {
                     b.Navigation("Commission")
-                        .IsRequired();
-
-                    b.Navigation("Order")
                         .IsRequired();
 
                     b.Navigation("PurchaseOrderItems");
@@ -1972,6 +2247,8 @@ namespace SCM_System.Migrations
 
                     b.Navigation("Tenders");
 
+                    b.Navigation("Vehicles");
+
                     b.Navigation("Warehouses");
                 });
 
@@ -2005,8 +2282,15 @@ namespace SCM_System.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.Vehicle", b =>
+                {
+                    b.Navigation("DeliveryAgents");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Warehouse", b =>
                 {
+                    b.Navigation("Employees");
+
                     b.Navigation("Inventories");
                 });
 #pragma warning restore 612, 618

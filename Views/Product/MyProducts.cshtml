@@ -1,200 +1,296 @@
 @model IEnumerable<SCM_System.Models.Entities.Product>
 
 @{
-    ViewData["Title"] = "My Products";
+    ViewData["Title"] = "Product Intelligence Catalog";
+    Layout = "_DashboardLayout";
 }
 
-<div class="container mt-4">
+<div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Dashboard: Products</h2>
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Add New Product
-        </a>
+        <div>
+            <h3 class="fw-bold text-primary mb-1"><i class="fas fa-boxes me-2"></i>Product Intelligence</h3>
+            <p class="text-muted mb-0">Manage your high-fidelity product catalog and distributed inventory</p>
+        </div>
+        <div class="d-flex gap-3">
+            <div class="input-group shadow-sm border rounded-pill overflow-hidden bg-white" style="width: 300px;">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="productSearch" class="form-control border-0" placeholder="Search SKU or Name...">
+            </div>
+            <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                <i class="fas fa-plus-circle me-2"></i> Add New Product
+            </a>
+        </div>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th width="10%">Image</th>
-                        <th width="20%">Name</th>
-                        <th width="15%">Category</th>
-                        <th width="10%">Price</th>
-                        <th width="15%">Stock</th>
-                        <th width="10%">Status</th>
-                        <th width="20%">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
-                                    {
-                                        <img src="@item.ImageUrl" alt="@item.ProductName" class="img-thumbnail" style="max-height: 50px; max-width: 50px; object-fit: cover;" />
-                                    }
-                                    else
-                                    {
-                                        <div class="bg-light text-center border" style="width: 50px; height: 50px; line-height: 50px; font-size: 0.8rem; color: #999;">
-                                            No Img
-                                        </div>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="fw-bold">@item.ProductName</span><br />
-                                    <small class="text-muted">SKU: @(string.IsNullOrEmpty(item.SKU) ? "N/A" : item.SKU)</small>
-                                </td>
-                                <td>@item.Category.CategoryName</td>
-                                <td>@item.BasePrice.ToString("C")</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <span class="me-2 @(item.Quantity <= 0 ? "text-danger fw-bold" : "")">
-                                            @item.Quantity @item.Unit
-                                        </span>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#stockModal-@item.Id" title="Update Stock">
-                                            <i class="bi bi-box-seam"></i> ↕
-                                        </button>
-                                    </div>
-                                </td>
-                                <td>
-                                    @if (item.IsAvailable)
-                                    {
-                                        <span class="badge bg-success">Available</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">Out of Stock</span>
-                                    }
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Details</a>
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@item.Id">
-                                            Delete
-                                        </button>
-                                    </div>
-
-                                    <!-- Stock Update Modal -->
-                                    <div class="modal fade" id="stockModal-@item.Id" tabindex="-1" aria-labelledby="stockModalLabel-@item.Id" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-light">
-                                                    <h5 class="modal-title" id="stockModalLabel-@item.Id">Update Stock: @item.ProductName</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <form asp-action="UpdateStock" method="post">
-                                                    <div class="modal-body">
-                                                        <input type="hidden" name="id" value="@item.Id" />
-                                                        
-                                                        <p>Current Stock: <strong>@item.Quantity @item.Unit</strong></p>
-                                                        
-                                                        <div class="mb-3">
-                                                            <label class="form-label fw-bold">Action</label>
-                                                            <select name="action" class="form-select" id="action-@item.Id" onchange="toggleStockInput(@item.Id)">
-                                                                <option value="increase">Increase (+ Add new stock)</option>
-                                                                <option value="decrease">Decrease (- Remove stock)</option>
-                                                                <option value="set">Set (Replace current value)</option>
-                                                            </select>
-                                                        </div>
-                                                        
-                                                        <div class="mb-3">
-                                                            <label class="form-label fw-bold">Quantity Change</label>
-                                                            <div class="input-group">
-                                                                <input type="number" name="stockChange" class="form-control" min="0" required placeholder="Enter amount" />
-                                                                <span class="input-group-text">@item.Unit</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn btn-primary">Update Stock</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Delete Modal -->
-                                    <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@item.Id" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="deleteModalLabel-@item.Id">Confirm Delete</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    Are you sure you want to delete <strong>@item.ProductName</strong>? This action cannot be undone.
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post">
-                                                        <button type="submit" class="btn btn-danger">Delete</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
-                                <i class="bi bi-box-seam display-4 d-block mb-3 text-secondary"></i>
-                                <h5>No products found</h5>
-                                <p>You haven't added any products to your catalog yet.</p>
-                                <a asp-action="Create" class="btn btn-outline-primary mt-2">Add Your First Product</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-
-            <!-- Pagination Controls -->
-            @if (ViewBag.TotalPages > 1)
+    <!-- Product Grid -->
+    <div class="row g-4" id="productGrid">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
             {
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
-                            <a class="page-link" asp-action="MyProducts" asp-route-pageNumber="@(ViewBag.CurrentPage - 1)">Previous</a>
-                        </li>
-                        
-                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
-                        {
-                            <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
-                                <a class="page-link" asp-action="MyProducts" asp-route-pageNumber="@i">@i</a>
-                            </li>
-                        }
-                        
-                        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
-                            <a class="page-link" asp-action="MyProducts" asp-route-pageNumber="@(ViewBag.CurrentPage + 1)">Next</a>
-                        </li>
-                    </ul>
-                </nav>
+                var totalStock = item.Inventories?.Sum(i => i.QuantityOnHand) ?? 0;
+                var reservedStock = item.Inventories?.Sum(i => i.QuantityReserved) ?? 0;
+                var availableStock = totalStock - reservedStock;
+                var isLowStock = availableStock < (item.ReorderLevel ?? 10);
+                
+                <div class="col-xl-3 col-lg-4 col-md-6 product-card" data-name="@item.ProductName" data-sku="@item.SKU">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-lift position-relative">
+                        <!-- Stock Status Badge -->
+                        <div class="position-absolute top-0 end-0 m-3 z-index-2">
+                            @if (availableStock <= 0)
+                            {
+                                <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm">Out of Stock</span>
+                            }
+                            else if (isLowStock)
+                            {
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm">Low Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">In Stock</span>
+                            }
+                        </div>
+
+                        <!-- Product Image Area -->
+                        <div class="product-image-container bg-light position-relative" style="height: 200px;">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.ProductName" class="w-100 h-100 object-fit-cover transition-all" />
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50">
+                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                    <span class="small font-monospace">NO-PREVIEW</span>
+                                </div>
+                            }
+                            
+                            <!-- Quick Action Overlay -->
+                            <div class="product-overlay d-flex align-items-center justify-content-center gap-2">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-white btn-icon rounded-circle shadow">
+                                    <i class="fas fa-pencil-alt text-primary"></i>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-white btn-icon rounded-circle shadow">
+                                    <i class="fas fa-eye text-dark"></i>
+                                </a>
+                                <button type="button" class="btn btn-white btn-icon rounded-circle shadow text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@item.Id">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div class="mb-2">
+                                <span class="badge bg-light text-muted fw-normal rounded-pill px-2">@item.Category?.CategoryName</span>
+                            </div>
+                            <h5 class="fw-bold mb-1 text-truncate">@item.ProductName</h5>
+                            <p class="text-muted small mb-3">SKU: @(item.SKU ?? "N/A")</p>
+
+                            <div class="d-flex justify-content-between align-items-end mb-3">
+                                <div>
+                                    <p class="text-muted small mb-0">Wholesale Price</p>
+                                    <h4 class="fw-bold text-primary mb-0">@item.BasePrice.ToString("C")</h4>
+                                </div>
+                                <div class="text-end">
+                                    <p class="text-muted small mb-0">System Stock</p>
+                                    <h5 class="fw-bold mb-0 @(availableStock <= 0 ? "text-danger" : "text-dark")">@availableStock @item.Unit</h5>
+                                </div>
+                            </div>
+
+                            <!-- Inventory Distribution Mini-View -->
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="small text-muted">Reserved: @reservedStock @item.Unit</span>
+                                    <span class="small text-muted">@((double)availableStock/Math.Max(1,totalStock)*100).ToString("F0")% Health</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" style="width: @((double)availableStock/Math.Max(1,totalStock)*100)%"></div>
+                                    <div class="progress-bar bg-warning" style="width: @((double)reservedStock/Math.Max(1,totalStock)*100)%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                            <button type="button" class="btn btn-outline-primary w-100 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#stockModal-@item.Id">
+                                <i class="fas fa-warehouse me-2"></i> Update Inventory
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stock Update Modal -->
+                <div class="modal fade" id="stockModal-@item.Id" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-0 p-4">
+                                <h5 class="modal-title fw-bold">Inventory Control: @item.ProductName</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form asp-action="UpdateStock" method="post">
+                                <div class="modal-body p-4 pt-0">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    
+                                    <div class="alert alert-info border-0 rounded-4 mb-4">
+                                        <div class="d-flex">
+                                            <i class="fas fa-info-circle fs-4 me-3 mt-1"></i>
+                                            <div>
+                                                <h6 class="fw-bold mb-1">Global Inventory Strategy</h6>
+                                                <p class="small mb-0">Adjusting stock here will update the specific warehouse allocation and global marketplace availability.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold text-muted small text-uppercase">Target Node (Warehouse)</label>
+                                        <select name="warehouseId" class="form-select rounded-3 p-3 shadow-none border-2" asp-items="ViewBag.Warehouses" required>
+                                            <option value="">-- Locate Hub --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted small text-uppercase">Adjustment Type</label>
+                                            <select name="action" class="form-select rounded-3 p-3 shadow-none border-2">
+                                                <option value="increase">Restock (+)</option>
+                                                <option value="decrease">Audit Out (-)</option>
+                                                <option value="set">Force Sync (=)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted small text-uppercase">Quantity</label>
+                                            <div class="input-group">
+                                                <input type="number" name="stockChange" class="form-control rounded-3 p-3 shadow-none border-2" min="0" required />
+                                                <span class="input-group-text bg-light border-2 border-start-0 text-muted">@item.Unit</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 p-4 pt-0">
+                                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Discard</button>
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Commit Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Modal -->
+                <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-body p-5 text-center">
+                                <div class="icon-shape bg-danger bg-opacity-10 text-danger rounded-circle p-4 mx-auto mb-4" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-exclamation-triangle fs-1"></i>
+                                </div>
+                                <h4 class="fw-bold mb-2">Delete Product?</h4>
+                                <p class="text-muted mb-4">You are about to remove <strong>@item.ProductName</strong> from the marketplace. This will disable all active stock listings across warehouses.</p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-light rounded-pill px-5" data-bs-dismiss="modal">Cancel</button>
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post">
+                                        <button type="submit" class="btn btn-danger rounded-pill px-5 fw-bold shadow-sm">Confirm Deletion</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
-        </div>
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="text-center py-5 bg-light rounded-4 border-2 border-dashed">
+                    <i class="fas fa-box-open fa-4x text-muted mb-3 opacity-25"></i>
+                    <h5 class="fw-bold">No Products in Catalog</h5>
+                    <p class="text-muted mb-4">Start your supply chain by adding your first product listing.</p>
+                    <a asp-action="Create" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                        Create First Listing
+                    </a>
+                </div>
+            </div>
+        }
     </div>
+
+    <!-- Pagination -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-center mt-5">
+            <nav>
+                <ul class="pagination pagination-primary gap-2">
+                    <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link rounded-pill border-0 shadow-sm" asp-action="MyProducts" asp-route-pageNumber="@(ViewBag.CurrentPage - 1)"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                            <a class="page-link rounded-pill border-0 shadow-sm" asp-action="MyProducts" asp-route-pageNumber="@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link rounded-pill border-0 shadow-sm" asp-action="MyProducts" asp-route-pageNumber="@(ViewBag.CurrentPage + 1)"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
 </div>
+
+@section Styles {
+    <style>
+        .product-image-container { position: relative; overflow: hidden; }
+        .product-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .product-card:hover .product-overlay { opacity: 1; }
+        .product-card:hover img { transform: scale(1.1); }
+        
+        .btn-icon { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-icon:hover { transform: scale(1.1); }
+        
+        .pagination .page-link {
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('productSearch');
+            const productCards = document.querySelectorAll('.product-card');
+
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                productCards.forEach(card => {
+                    const name = card.dataset.name.toLowerCase();
+                    const sku = card.dataset.sku.toLowerCase();
+                    if (name.includes(term) || sku.includes(term)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

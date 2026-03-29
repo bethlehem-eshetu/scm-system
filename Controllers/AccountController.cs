@@ -504,13 +504,13 @@ namespace SCM_System.Controllers
                     {
                         return RedirectToAction("Dashboard", "Retailer");
                     }
-                    else if (user.Role == "Warehouse")
+                    else if (user.Role == "WarehouseManager")
                     {
                         return RedirectToAction("Dashboard", "Warehouse");
                     }
-                    else if (user.Role == "Delivery")
+                    else if (user.Role == "DeliveryAgent")
                     {
-                        return RedirectToAction("Dashboard", "Delivery");
+                        return RedirectToAction("MyDeliveries", "Delivery");
                     }
 
                     return RedirectToAction("Index", "Home");

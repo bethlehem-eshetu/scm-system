@@ -4,38 +4,53 @@
     ViewData["Title"] = "Supplier Catalog";
     Layout = "_DashboardLayout";
     var categories = ViewData["Categories"] as IEnumerable<SCM_System.Models.Entities.ProductCategory>;
+    var cities = ViewData["Cities"] as IEnumerable<string>;
 }
 
 <div class="container-fluid py-4">
     <!-- Header Section -->
     <div class="glass-card mb-4 p-4 border-0">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h3 class="fw-bold mb-1 text-primary">Supplier Catalog</h3>
-                <p class="text-muted mb-0">Browse and discover products from our verified suppliers.</p>
+        <h3 class="fw-bold mb-1 text-primary">Supplier Catalog</h3>
+        <p class="text-muted mb-3">Browse and discover products from our verified suppliers.</p>
+
+        <form asp-action="BrowseCatalog" method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="searchTerm" class="form-control rounded-pill" placeholder="Search products..." value="@Context.Request.Query["searchTerm"]" />
             </div>
-            <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <form asp-action="BrowseCatalog" method="get" class="d-flex gap-2">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3">
-                            <i class="fas fa-search text-muted"></i>
-                        </span>
-                        <input type="text" name="searchTerm" class="form-control border-start-0 ps-0" placeholder="Search products..." value="@Context.Request.Query["searchTerm"]" />
-                    </div>
-                    <select name="categoryId" class="form-select w-auto" onchange="this.form.submit()">
-                        <option value="">All Categories</option>
-                        @if (categories != null)
+            <div class="col-md-2">
+                <select name="categoryId" class="form-select rounded-pill">
+                    <option value="">All Categories</option>
+                    @if (categories != null)
+                    {
+                        foreach (var cat in categories)
                         {
-                            foreach (var cat in categories)
-                            {
-                                <option value="@cat.Id" selected="@(Context.Request.Query["categoryId"] == cat.Id.ToString())">@cat.CategoryName</option>
-                            }
+                            <option value="@cat.Id" selected="@(Context.Request.Query["categoryId"] == cat.Id.ToString())">@cat.CategoryName</option>
                         }
-                    </select>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">Search</button>
-                </form>
+                    }
+                </select>
             </div>
-        </div>
+            <div class="col-md-2">
+                <input type="number" step="0.01" name="minPrice" class="form-control rounded-pill" placeholder="Min Price..." value="@Context.Request.Query["minPrice"]" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" step="0.01" name="maxPrice" class="form-control rounded-pill" placeholder="Max Price..." value="@Context.Request.Query["maxPrice"]" />
+            </div>
+            <div class="col-md-2">
+                <select name="supplierCity" class="form-select rounded-pill">
+                    <option value="">All Locations</option>
+                    @if (cities != null)
+                    {
+                        foreach (var city in cities)
+                        {
+                            <option value="@city" selected="@(Context.Request.Query["supplierCity"] == city)">@city</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
     </div>
 
     <!-- Product Grid -->
@@ -74,7 +89,7 @@
                                 <span class="badge bg-primary rounded-pill">@product.Category?.CategoryName</span>
                             </div>
                         </div>
-                        <div class="p-3">
+                        <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
                             <h6 class="fw-bold mb-1 text-truncate" title="@product.ProductName">@product.ProductName</h6>
                             <div class="d-flex align-items-baseline mb-2">
                                 <span class="h5 fw-bold text-primary mb-0">@product.BasePrice.ToString("C")</span>
@@ -85,24 +100,35 @@
                                 <div class="small text-muted mb-1">
                                     <i class="fas fa-store me-1"></i> @product.Supplier?.CompanyName
                                 </div>
-                                @if (product.Quantity < 10)
+                                <div class="small text-muted mb-1">
+                                    <i class="fas fa-map-marker-alt me-1"></i> @product.Supplier?.City
+                                </div>
+                                @{
+                                    var availableStock = product.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
+                                }
+                                @if (availableStock < 10)
                                 {
                                     <div class="small text-danger fw-bold">
-                                        <i class="fas fa-exclamation-triangle me-1"></i> Low Stock: @product.Quantity
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Low Stock: @availableStock
                                     </div>
                                 }
                                 else
                                 {
                                     <div class="small text-success">
-                                        <i class="fas fa-check-circle me-1"></i> In Stock: @product.Quantity
+                                        <i class="fas fa-check-circle me-1"></i> In Stock: @availableStock
                                     </div>
                                 }
                             </div>
                             
-                            <div class="d-grid gap-2">
-                                <a asp-action="ProductDetails" asp-route-id="@product.Id" class="btn btn-outline-primary btn-sm rounded-pill">View Details</a>
-                                @* Placeholder for Add to Cart or Order *@
-                                @* <button class="btn btn-primary btn-sm rounded-pill">Add to Cart</button> *@
+                            <div class="mt-auto pt-2 border-top">
+                                <a asp-action="ProductDetails" asp-route-id="@product.Id" class="btn btn-outline-secondary btn-sm rounded-pill w-100 mb-2">View Details</a>
+                                <form action="/Retailer/AddToCart" method="post" class="ajax-add-to-cart">
+                                    <input type="hidden" name="productId" value="@product.Id" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100" @(availableStock <= 0 ? "disabled" : "")>
+                                        <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -115,21 +141,14 @@
 <style>
     .product-card {
         transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
     }
     .product-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
     }
-    .text-truncate-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;  
-        overflow: hidden;
-    }
-    .input-group-text {
-        border-right: none;
-    }
-    .form-control:focus {
+    .form-control:focus, .form-select:focus {
         box-shadow: none;
         border-color: #dee2e6;
     }

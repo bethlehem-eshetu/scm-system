@@ -1,0 +1,86 @@
+@model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
+@using SCM_System.Models.Constants
+@{
+    ViewData["Title"] = "Packing Section";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Packing & Processing</h2>
+            <p class="text-muted mb-0">Step 2: Carefully pack identified items and prepare for courier pickup.</p>
+        </div>
+        <div class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2 border border-info border-opacity-25">
+            <i class="fas fa-box me-2"></i> @Model.Count() In-Packing
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 py-5 text-center">
+            <div class="opacity-25 mb-3">
+                <i class="fas fa-box-open fa-4x text-muted"></i>
+            </div>
+            <h5 class="text-muted">No orders are currently in the packing area.</h5>
+            <p class="small text-secondary">Orders will move here once they are confirmed as "Picked".</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var po in Model)
+            {
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden d-flex flex-column">
+                        <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">Order #@po.PONumber</span>
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill">@po.Status</span>
+                        </div>
+                        <div class="card-body px-4 py-0 flex-grow-1">
+                            <div class="mb-3">
+                                <label class="smaller text-muted d-block">RETAILER</label>
+                                <div class="fw-bold fs-6">@po.Retailer?.BusinessName</div>
+                            </div>
+                            
+                            <div class="alert alert-info border-0 rounded-4 py-2 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="spinner-grow spinner-grow-sm text-info me-2" role="status"></div>
+                                    <span class="smaller fw-bold">Packing in progress...</span>
+                                </div>
+                            </div>
+
+                            <label class="smaller text-muted d-block mb-2">MANIFEST</label>
+                            <div class="list-group list-group-flush rounded-4 overflow-hidden border mb-3">
+                                @foreach (var item in po.PurchaseOrderItems)
+                                {
+                                    <div class="list-group-item bg-light bg-opacity-50 py-2 px-3 border-0 border-bottom d-flex justify-content-between align-items-center">
+                                        <div class="small fw-medium">@item.Product?.ProductName</div>
+                                        <div class="badge bg-white text-dark border">x@item.Quantity</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 p-4 pt-2">
+                            <form asp-action="UpdateStatus" method="post" class="d-grid shadow-sm">
+                                <input type="hidden" name="id" value="@po.Id" />
+                                <input type="hidden" name="status" value="@POStatus.Packed" />
+                                <input type="hidden" name="returnAction" value="Packing" />
+                                <button type="submit" class="btn btn-info text-white rounded-pill fw-bold py-2 shadow-sm">
+                                    <i class="fas fa-check-circle me-2"></i> Mark as Packed
+                                </button>
+                            </form>
+                            <div class="text-center mt-3">
+                                <a asp-action="Details" asp-route-id="@po.Id" class="smaller text-decoration-none text-muted fw-bold">VIEW FULL DETAILS</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>

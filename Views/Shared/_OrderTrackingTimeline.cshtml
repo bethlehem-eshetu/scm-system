@@ -1,0 +1,63 @@
+@model string
+@{
+    var currentStatus = Model ?? "Pending";
+    
+    // Status list in order
+    var statuses = new[] { 
+        new { Name = "Pending", Icon = "fa-clock", Color = "text-secondary" },
+        new { Name = "Accepted", Icon = "fa-check-circle", Color = "text-info" },
+        new { Name = "Processing", Icon = "fa-cogs", Color = "text-primary" },
+        new { Name = "Picked", Icon = "fa-hand-holding-box", Color = "text-primary" },
+        new { Name = "Packed", Icon = "fa-box", Color = "text-primary" },
+        new { Name = "Ready for Pickup", Icon = "fa-clipboard-check", Color = "text-success" },
+        new { Name = "In Transit", Icon = "fa-truck-moving", Color = "text-warning" },
+        new { Name = "Delivered", Icon = "fa-home", Color = "text-success" },
+        new { Name = "Completed", Icon = "fa-star", Color = "text-success" }
+    };
+
+    int currentIndex = Array.FindIndex(statuses, s => s.Name.Equals(currentStatus, StringComparison.OrdinalIgnoreCase));
+    if (currentIndex == -1) {
+        // Handle combined or partial statuses
+        if (currentStatus.Contains("Partially")) currentIndex = Array.FindIndex(statuses, s => s.Name == "Processing");
+        else currentIndex = 0;
+    }
+}
+
+<div class="tracking-timeline-container my-4">
+    <div class="d-flex justify-content-between position-relative mb-5">
+        <!-- Progress Bar Background -->
+        <div class="progress position-absolute w-100" style="height: 4px; top: 22px; left: 0; z-index: 0; background-color: #e2e8f0;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: @(statuses.Length > 1 ? (currentIndex * 100 / (statuses.Length - 1)) : 0)%; transition: width 0.8s ease;"></div>
+        </div>
+
+        @for (int i = 0; i < statuses.Length; i++)
+        {
+            var s = statuses[i];
+            var isActive = i <= currentIndex;
+            var isPending = i > currentIndex;
+            
+            <div class="text-center position-relative" style="z-index: 1; width: 60px;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 
+                            @(isActive ? "bg-success text-white shadow" : "bg-white text-muted border border-2")" 
+                     style="width: 48px; height: 48px; transition: all 0.3s ease;">
+                    <i class="fas @s.Icon fs-5"></i>
+                </div>
+                <div class="small fw-bold @(isActive ? "text-dark" : "text-muted opacity-50")" style="font-size: 0.65rem; line-height: 1.1;">
+                    @s.Name
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .tracking-timeline-container {
+        padding: 20px 0;
+        overflow-x: auto;
+    }
+    @@media (max-width: 768px) {
+        .tracking-timeline-container {
+            justify-content: flex-start !important;
+        }
+    }
+</style>

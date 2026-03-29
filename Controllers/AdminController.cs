@@ -996,8 +996,7 @@ namespace SCM_System.Controllers
 
                 // This year
                 ViewBag.NewSuppliersThisYear = _context.Suppliers.Count(s => s.CreatedAt >= startOfYear);
-                ViewBag.NewRetailersThisYear = _context.Retailers.Count(r => r.CreatedAt >= startOfYear);
-                ViewBag.TotalRevenue = _context.Orders.Sum(o => (decimal?)o.PurchaseOrder.TotalAmount) ?? 0;
+                ViewBag.TotalRevenue = _context.Orders.Where(o => o.OrderStatus == "Completed").Sum(o => (decimal?)o.TotalAmount) ?? 0;
 
                 // Approval stats
                 ViewBag.ApprovalRate = _context.Suppliers.Count() > 0
