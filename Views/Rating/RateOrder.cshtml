@@ -1,0 +1,120 @@
+﻿@model object
+@{
+    ViewData["Title"] = "Rate Order";
+    Layout = "_DashboardLayout";
+    var po = ViewBag.PurchaseOrder as SCM_System.Models.Entities.PurchaseOrder;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Rate Your Purchase
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-store fa-3x text-primary"></i>
+                        </div>
+                        <h5>@po?.Supplier?.CompanyName</h5>
+                        <p class="text-muted">Order #@po?.PONumber</p>
+                    </div>
+
+                    <form asp-action="SubmitRating" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="purchaseOrderId" value="@po?.Id" />
+
+                        <div class="mb-4 text-center">
+                            <label class="form-label fw-bold">Your Rating</label>
+                            <div class="star-rating">
+                                <i class="far fa-star" data-value="1"></i>
+                                <i class="far fa-star" data-value="2"></i>
+                                <i class="far fa-star" data-value="3"></i>
+                                <i class="far fa-star" data-value="4"></i>
+                                <i class="far fa-star" data-value="5"></i>
+                            </div>
+                            <input type="hidden" name="ratingValue" id="ratingValue" required />
+                            <div class="invalid-feedback d-block" id="ratingError" style="display: none;">Please select a rating</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Category (Optional)</label>
+                            <select name="category" class="form-select">
+                                <option value="">Select category...</option>
+                                <option value="Product Quality">Product Quality</option>
+                                <option value="Delivery Speed">Delivery Speed</option>
+                                <option value="Communication">Communication</option>
+                                <option value="Packaging">Packaging</option>
+                                <option value="Customer Service">Customer Service</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Your Review (Optional)</label>
+                            <textarea name="comment" class="form-control" rows="4" 
+                                      placeholder="Share your experience with this supplier..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Rating
+                            </button>
+                            <a asp-action="MyPurchaseOrders" asp-controller="Retailer" class="btn btn-secondary px-4">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .star-rating {
+        display: inline-flex;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .star-rating i {
+        font-size: 2rem;
+        color: #ddd;
+        transition: all 0.2s;
+    }
+    .star-rating i:hover,
+    .star-rating i.active {
+        color: #ffc107;
+    }
+</style>
+
+<script>
+    document.querySelectorAll('.star-rating i').forEach(star => {
+        star.addEventListener('click', function() {
+            let value = parseInt(this.dataset.value);
+            document.getElementById('ratingValue').value = value;
+            
+            document.querySelectorAll('.star-rating i').forEach((s, index) => {
+                if (index < value) {
+                    s.classList.remove('far');
+                    s.classList.add('fas', 'active');
+                } else {
+                    s.classList.remove('fas', 'active');
+                    s.classList.add('far');
+                }
+            });
+            
+            document.getElementById('ratingError').style.display = 'none';
+        });
+    });
+    
+    document.querySelector('form').addEventListener('submit', function(e) {
+        let rating = document.getElementById('ratingValue').value;
+        if (!rating) {
+            e.preventDefault();
+            document.getElementById('ratingError').style.display = 'block';
+        }
+    });
+</script>

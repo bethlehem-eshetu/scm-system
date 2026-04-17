@@ -11,7 +11,7 @@ namespace SCM_System.Models.Entities
         public Message Message { get; set; }
 
         [Required]
-        [StringLength(20)]
+        [StringLength(900)]
         public string ViolationType { get; set; } // Phone, Email, Social
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;

@@ -11,14 +11,14 @@ namespace SCM_System.Models.Entities
         public Order Order { get; set; }
 
         [Required]
-        [StringLength(20)]
-        public string Status { get; set; }
+        [StringLength(50)]
+        public string Status { get; set; } = string.Empty;
 
-        public string Comments { get; set; }
+        [StringLength(500)]
+        public string? Comments { get; set; }
 
-        [Required]
-        public int ChangedByUserId { get; set; }
-        public User ChangedByUser { get; set; }
+        public int? ChangedByUserId { get; set; }
+        public User? ChangedByUser { get; set; }
 
         public DateTime ChangedAt { get; set; } = DateTime.Now;
     }

@@ -1,0 +1,91 @@
+﻿@using SCM_System.Models.Entities
+@model List<SCM_System.Models.Entities.ReturnRequest>
+
+@{
+    ViewData["Title"] = "Return Requests";
+    Layout = "_DashboardLayout";
+    var pendingCount = Model.Count(r => r.Status == ReturnStatus.Pending);
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-undo-alt text-warning me-2"></i>Return Requests
+            @if (pendingCount > 0)
+            {
+                <span class="badge bg-danger ms-2">@pendingCount Pending</span>
+            }
+        </h1>
+        <a asp-action="Dashboard" asp-controller="Supplier" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2 text-primary"></i>Customer Return Requests
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-undo-alt fa-4x text-muted mb-3 opacity-25"></i>
+                    <h5 class="text-muted">No return requests</h5>
+                    <p class="text-muted">No customers have requested returns yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Return #</th>
+                                <th>Customer</th>
+                                <th>PO Number</th>
+                                <th>Reason</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model)
+                            {
+                                var statusClass = request.Status switch
+                                {
+                                    ReturnStatus.Pending => "bg-warning",
+                                    ReturnStatus.Approved => "bg-info",
+                                    ReturnStatus.Rejected => "bg-danger",
+                                    ReturnStatus.Processing => "bg-primary",
+                                    ReturnStatus.Completed => "bg-success",
+                                    _ => "bg-secondary"
+                                };
+                                
+                                <tr>
+                                    <td class="fw-bold">@request.ReturnNumber</td>
+                                    <td>@request.Retailer?.BusinessName</td>
+                                    <td>@request.PurchaseOrder?.PONumber</td>
+                                    <td>@request.Reason</td>
+                                    <td class="fw-bold">@request.RefundAmount.ToString("C")</td>
+                                    <td>
+                                        <span class="badge @statusClass rounded-pill px-3">@request.Status</span>
+                                     </td
+                                    <td>@request.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="fas fa-eye me-1"></i> View
+                                        </a>
+                                     </td
+                                 </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

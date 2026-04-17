@@ -19,6 +19,7 @@ namespace SCM_System.Controllers
             _supplierService = supplierService;
         }
 
+        
         // GET: /Supplier/Dashboard
         public async Task<IActionResult> Dashboard()
         {
@@ -41,6 +42,50 @@ namespace SCM_System.Controllers
             }
 
             var analytics = await _supplierService.GetDashboardAnalyticsAsync(supplier.Id);
+
+            // ========== ADD MESSAGING VIEWBAGS ==========
+
+            // Get unread message count
+            var unreadCount = await _context.Messages
+                .Where(m => (m.Conversation.RetailerId == userId ||
+                            m.Conversation.SupplierId == userId) &&
+                            m.SenderId != userId &&
+                            !m.IsRead)
+                .CountAsync();
+
+            ViewBag.UnreadMessagesCount = unreadCount;
+
+            // Get active penalties count
+            
+            ViewBag.ActivePenalties = await _context.Penalties
+                .CountAsync(p => p.UserId == userId && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
+
+            // Get recent conversations for dashboard widget
+            ViewBag.RecentConversations = await _context.Conversations
+                .Include(c => c.Retailer)
+                    .ThenInclude(r => r.User)
+                .Include(c => c.Supplier)
+                    .ThenInclude(s => s.User)
+                .Where(c => c.SupplierId == userId || c.RetailerId == userId)
+                .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
+                .Take(5)
+                .Select(c => new
+                {
+                    Id = c.Id,
+                    OtherUserName = c.SupplierId == userId ?
+                        (c.Retailer != null ? c.Retailer.User.FullName : "Retailer") :
+                        (c.Supplier != null ? c.Supplier.User.FullName : "Supplier"),
+                    OtherUserRole = c.SupplierId == userId ? "Retailer" : "Supplier",
+                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt)
+                        .Select(m => m.MessageText.Length > 50 ? m.MessageText.Substring(0, 50) + "..." : m.MessageText)
+                        .FirstOrDefault() ?? "No messages yet",
+                    LastMessageAt = c.LastMessageAt ?? c.CreatedAt,
+                    UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead)
+                })
+                .ToListAsync();
+
+            // ========== END OF ADDED VIEWBAGS ==========
+
             return View(analytics);
         }
 

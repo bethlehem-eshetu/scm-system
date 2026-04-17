@@ -35,6 +35,11 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Proof of Delivery")]
         public string ProofOfDelivery { get; set; }
 
+        public string? CustomerQRCode { get; set; }  // QR code shown to customer
+        public bool IsQRVerified { get; set; } = false;
+        public DateTime? QRVerifiedAt { get; set; }
+        public string? QRVerificationMethod { get; set; }
+
         // Navigation properties
         public ICollection<DeliveryTracking> TrackingHistory { get; set; }
     }

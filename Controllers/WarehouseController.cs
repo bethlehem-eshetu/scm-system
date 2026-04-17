@@ -332,7 +332,10 @@ namespace SCM_System.Controllers
             var manager = await GetCurrentManagerAsync();
             if (manager == null) return Unauthorized();
 
-            var po = await _context.PurchaseOrders.FirstOrDefaultAsync(p => p.Id == id && p.WarehouseId == manager.WarehouseId);
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Order)
+                .FirstOrDefaultAsync(p => p.Id == id && p.WarehouseId == manager.WarehouseId);
+
             if (po == null) return NotFound();
 
             var agent = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.Id == agentId && e.EmployeeRole == "DeliveryAgent");
@@ -352,11 +355,45 @@ namespace SCM_System.Controllers
             // Assign Agent & Vehicle
             po.DeliveryAgentId = agentId;
             po.VehicleId = vehicleId;
-            
+
             vehicle.Status = SCM_System.Models.Enums.VehicleStatus.InUse;
             vehicle.UpdatedAt = DateTime.Now;
 
             await _poService.UpdatePurchaseOrderStatusAsync(id, POStatus.InTransit, userId);
+
+            // ✅ FIX: Update main Order status when PO is In Transit
+            var order = po.Order;
+            if (order != null && order.OrderStatus != "In Transit")
+            {
+                // Check if any other POs are already In Transit or Delivered
+                var otherPOs = await _context.PurchaseOrders
+                    .Where(p => p.OrderId == order.Id && p.Id != po.Id)
+                    .Select(p => p.Status)
+                    .ToListAsync();
+
+                var hasInTransitOrDelivered = otherPOs.Any(s => s == POStatus.InTransit || s == POStatus.Delivered || s == POStatus.Completed);
+
+                if (hasInTransitOrDelivered)
+                {
+                    order.OrderStatus = "Partially In Transit";
+                }
+                else
+                {
+                    order.OrderStatus = "In Transit";
+                }
+
+                // Add status history
+                _context.OrderStatusHistories.Add(new OrderStatusHistory
+                {
+                    OrderId = order.Id,
+                    Status = order.OrderStatus,
+                    Comments = $"PO #{po.PONumber} is now In Transit with delivery agent {agent.User?.FullName}",
+                    ChangedByUserId = userId,
+                    ChangedAt = DateTime.Now
+                });
+
+                await _context.SaveChangesAsync();
+            }
 
             TempData["SuccessMessage"] = $"Order #{po.PONumber} assigned to {agent.User?.FullName} and Vehicle {vehicle.LicensePlate}. Status: In Transit.";
             return RedirectToAction(nameof(History));

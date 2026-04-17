@@ -1,0 +1,72 @@
+﻿@model List<SCM_System.Models.Entities.Rating>
+
+@{
+    ViewData["Title"] = "My Ratings";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-star text-warning me-2"></i>My Ratings
+        </h1>
+        <a asp-action="Dashboard" asp-controller="Retailer" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2 text-primary"></i>Ratings You've Given
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-star fa-4x text-muted mb-3 opacity-25"></i>
+                    <h5 class="text-muted">No ratings yet</h5>
+                    <p class="text-muted">Rate your delivered orders to help other retailers.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var rating in Model)
+                {
+                    <div class="border-bottom p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="text-warning mb-1">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        // ✅ Change RatingScore to RatingValue
+                                        if (i <= rating.RatingValue)
+                                        {
+                                            <i class="fas fa-star"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="far fa-star"></i>
+                                        }
+                                    }
+                                </div>
+                                <h6 class="mb-1">@rating.Supplier?.CompanyName</h6>
+                                <small class="text-muted">PO #@rating.PurchaseOrder?.PONumber</small>
+                                @if (!string.IsNullOrEmpty(rating.Category))
+                                {
+                                    <span class="badge bg-secondary ms-2">@rating.Category</span>
+                                }
+                            </div>
+                            <small class="text-muted">@rating.CreatedAt.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        @if (!string.IsNullOrEmpty(rating.Comment))
+                        {
+                            <p class="mb-0 mt-2">"@rating.Comment"</p>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

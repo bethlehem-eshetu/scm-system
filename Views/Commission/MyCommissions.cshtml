@@ -1,0 +1,252 @@
+﻿@model List<SCM_System.Models.Entities.Commission>
+
+@{
+    ViewData["Title"] = "My Commission Payments";
+    Layout = "_DashboardLayout";
+    decimal totalPending = ViewBag.TotalPending ?? 0;
+    decimal totalPaid = ViewBag.TotalPaid ?? 0;
+    string supplierName = ViewBag.SupplierName ?? "Supplier";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">
+                <i class="fas fa-hand-holding-usd text-success me-2"></i>Commission Payments
+            </h1>
+            <p class="text-muted">Manage and track your platform commission payments</p>
+        </div>
+        <div>
+            <a asp-action="Dashboard" asp-controller="Supplier" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Total Pending</p>
+                            <h3 class="fw-bold mb-0 text-warning">@totalPending.ToString("C")</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Total Paid</p>
+                            <h3 class="fw-bold mb-0 text-success">@totalPaid.ToString("C")</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Total Commission</p>
+                            <h3 class="fw-bold mb-0 text-primary">@((totalPending + totalPaid).ToString("C"))</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-chart-line fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commission Rate Info -->
+    <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Platform Commission Rate:</strong> 5% of order amount.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Commissions Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 p-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-list me-2 text-primary"></i>Commission History
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-receipt fa-4x text-muted mb-3 opacity-25"></i>
+                    <h5 class="text-muted">No commissions found</h5>
+                    <p class="text-muted">Commissions will appear here when orders are delivered.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>PO Number</th>
+                                <th>Order Amount</th>
+                                <th>Commission Rate</th>
+                                <th>Commission Amount</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Created</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var commission in Model)
+                            {
+                                bool isOverdue = commission.DueDate.HasValue && commission.DueDate < DateTime.Now && commission.Status == "Pending";
+                                <tr class="@(isOverdue ? "table-danger" : "")">
+                                    <td class="ps-4 fw-bold">#@commission.Id</td>
+                                    <td>
+                                        @if (commission.PurchaseOrder != null)
+                                        {
+                                            <span class="badge bg-secondary">PO-@commission.PurchaseOrder.PONumber</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>@commission.OrderAmount.ToString("C")</td>
+                                    <td>@(commission.CommissionRate * 100)%</td>
+                                    <td>
+                                        <span class="fw-bold">@commission.CommissionAmount.ToString("C")</span>
+                                    </td>
+                                    <td>
+                                        @if (commission.Status == "Paid")
+                                        {
+                                            <span class="badge bg-success rounded-pill px-3">
+                                                <i class="fas fa-check-circle me-1"></i>Paid
+                                            </span>
+                                        }
+                                        else if (commission.Status == "Processing")
+                                        {
+                                            <span class="badge bg-info rounded-pill px-3">
+                                                <i class="fas fa-spinner fa-spin me-1"></i>Processing
+                                            </span>
+                                        }
+                                        else if (isOverdue)
+                                        {
+                                            <span class="badge bg-danger rounded-pill px-3">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Overdue
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning rounded-pill px-3">
+                                                <i class="fas fa-clock me-1"></i>Pending
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (commission.DueDate.HasValue)
+                                        {
+                                            if (commission.DueDate < DateTime.Now && commission.Status != "Paid")
+                                            {
+                                                <span class="text-danger">
+                                                    <i class="fas fa-calendar-times me-1"></i>
+                                                    @commission.DueDate.Value.ToString("MMM dd, yyyy")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    @commission.DueDate.Value.ToString("MMM dd, yyyy")
+                                                </span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">@commission.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        @if (commission.Status == "Pending")
+                                        {
+                                            <a asp-action="Pay" asp-controller="Commission" asp-route-id="@commission.Id"
+                                                   class="btn btn-sm btn-success rounded-pill px-3">
+                                                <i class="fas fa-credit-card me-1"></i>Pay Now
+                                            </a>
+                                        }
+                                        else if (commission.Status == "Processing")
+                                        {
+                                            <button class="btn btn-sm btn-secondary rounded-pill px-3" disabled>
+                                                <i class="fas fa-spinner fa-spin me-1"></i>Processing
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
+                                                <i class="fas fa-check me-1"></i>Completed
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Payment Instructions -->
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
+        <div class="card-header bg-white border-0 p-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-info-circle me-2 text-info"></i>Payment Instructions
+            </h5>
+        </div>
+        <div class="card-body p-4 pt-0">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold">How to Pay:</h6>
+                    <ol class="text-muted">
+                        <li>Click the "Pay Now" button next to a pending commission</li>
+                        <li>You'll be redirected to the Chapa payment gateway</li>
+                        <li>Choose your preferred payment method (Tele Birr, Chapa, Bank Transfer, etc.)</li>
+                        <li>Complete the payment</li>
+                        <li>You'll be redirected back and the status will update automatically</li>
+                    </ol>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Payments must be completed within 7 days of commission creation</li>
+                            <li>Late payments may result in account restrictions</li>
+                            <li>Contact support if you experience any payment issues</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

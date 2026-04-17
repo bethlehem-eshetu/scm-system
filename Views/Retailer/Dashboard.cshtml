@@ -52,13 +52,17 @@
             <p class="text-muted">Welcome back to your procurement control center.</p>
         </div>
         <div class="d-flex gap-3">
-            <a asp-action="Notifications" class="btn btn-white border rounded-pill px-3 shadow-sm position-relative">
-                <i class="fas fa-bell text-warning"></i>
-                @if (recentNotes != null && recentNotes.Any(n => !n.IsRead))
-                {
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-                }
+            <!-- Message Inbox Button -->
+            <a href="@Url.Action("Inbox", "Message")" class="btn btn-outline-primary rounded-pill px-3 shadow-sm position-relative">
+                <i class="fas fa-envelope me-1"></i> Messages
+                <span id="messageBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
             </a>
+            
+            <a href="@Url.Action("Index", "Notification")" class="btn btn-outline-secondary rounded-pill px-3 shadow-sm position-relative">
+                <i class="fas fa-bell"></i>
+                <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
+            </a>
+            
             <div class="dropdown">
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-plus me-2"></i>Quick Actions
@@ -68,6 +72,14 @@
                     <li><a class="dropdown-item rounded-3" asp-action="BrowseCatalog"><i class="fas fa-search me-2 text-primary"></i>Browse Products</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item rounded-3" asp-action="OrderTracking"><i class="fas fa-truck-loading me-2 text-primary"></i>Track Orders</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item rounded-3 text-danger" href="@Url.Action("Index", "Penalty")">
+                        <i class="fas fa-gavel me-2 text-danger"></i>My Penalties
+                        @if (ViewBag.ActivePenalties > 0)
+                        {
+                            <span class="badge bg-danger ms-1">@ViewBag.ActivePenalties</span>
+                        }
+                    </a></li>
                 </ul>
             </div>
         </div>
@@ -181,7 +193,7 @@
     </div>
 
     <div class="row g-4">
-        <!-- Recent Orders -->
+        <!-- Recent Orders - FIXED with Status Sync -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <div class="card-header bg-white p-4 border-bottom-0 d-flex justify-content-between align-items-center">
@@ -203,11 +215,42 @@
                             {
                                 foreach (var o in recentOrders)
                                 {
+                                    // ✅ Calculate actual status based on Purchase Orders
+                                    var totalPOs = o.PurchaseOrders?.Count() ?? 0;
+                                    var deliveredPOs = o.PurchaseOrders?.Count(po => po.Status == "Delivered" || po.Status == "Completed") ?? 0;
+                                    var inTransitPOs = o.PurchaseOrders?.Count(po => po.Status == "In Transit") ?? 0;
+                                    
+                                    string displayStatus = o.OrderStatus;
+                                    
+                                    if (deliveredPOs == totalPOs && totalPOs > 0 && o.OrderStatus != "Delivered" && o.OrderStatus != "Completed")
+                                    {
+                                        displayStatus = "Delivered";
+                                    }
+                                    else if (inTransitPOs > 0 && deliveredPOs < totalPOs && o.OrderStatus != "In Transit")
+                                    {
+                                        displayStatus = "In Transit";
+                                    }
+                                    else if (deliveredPOs > 0 && deliveredPOs < totalPOs)
+                                    {
+                                        displayStatus = "Partially Delivered";
+                                    }
+                                    
+                                    var statusColor = displayStatus switch
+                                    {
+                                        "Pending" => "bg-warning",
+                                        "Processing" => "bg-info",
+                                        "In Transit" => "bg-primary",
+                                        "Partially Delivered" => "bg-info",
+                                        "Delivered" => "bg-success",
+                                        "Completed" => "bg-success",
+                                        _ => "bg-secondary"
+                                    };
+                                    
                                     <tr style="cursor: pointer" onclick="window.location.href='/Retailer/OrderTrackingDetails/@o.Id'">
                                         <td class="ps-4 fw-bold">#@o.OrderNumber</td>
                                         <td>@o.Supplier?.CompanyName</td>
                                         <td>
-                                            <span class="badge rounded-pill bg-primary-soft text-primary px-3">@o.OrderStatus</span>
+                                            <span class="badge rounded-pill @statusColor text-white px-3">@displayStatus</span>
                                         </td>
                                         <td class="text-end pe-4 fw-bold">@o.TotalAmount.ToString("C")</td>
                                     </tr>
@@ -266,6 +309,61 @@
             </div>
         </div>
     </div>
+
+    <!-- Recent Conversations Section -->
+    <div class="row g-4 mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white p-4 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-comments me-2 text-primary"></i>Recent Conversations
+                    </h5>
+                    <a href="@Url.Action("Inbox", "Message")" class="btn btn-sm btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    @if (ViewBag.RecentConversations != null && ViewBag.RecentConversations.Count > 0)
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var conv in ViewBag.RecentConversations)
+                            {
+                                <a href="@Url.Action("Conversation", "Message", new { id = conv.OtherUserId })" 
+                                   class="list-group-item list-group-item-action border-0 px-0 py-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="mb-1">
+                                                <span class="fw-bold">@conv.OtherUserName</span>
+                                                <span class="badge bg-secondary ms-2 small">@conv.OtherUserRole</span>
+                                                @if (conv.UnreadCount > 0)
+                                                {
+                                                    <span class="badge bg-primary ms-2">@conv.UnreadCount new</span>
+                                                }
+                                            </div>
+                                            <p class="mb-0 small text-muted">
+                                                @conv.LastMessage
+                                            </p>
+                                        </div>
+                                        <small class="text-muted ms-3">@conv.LastMessageAt.ToString("MMM dd")</small>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments fa-3x text-muted mb-3 opacity-25"></i>
+                            <p class="text-muted mb-0">No conversations yet</p>
+                            <a href="@Url.Action("SelectRecipient", "Message")" class="btn btn-sm btn-primary mt-2">
+                                Start New Conversation
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -286,4 +384,43 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
+    
+    .list-group-item-action:hover {
+        background-color: #f8f9fa;
+        transition: all 0.2s ease;
+    }
 </style>
+
+@section Scripts {
+    <script>
+        function loadNotificationCount() {
+            $.get('@Url.Action("GetUnreadCount", "Notification")', function(data) {
+                if (data.count > 0) {
+                    $('#notificationBadge').text(data.count).show();
+                } else {
+                    $('#notificationBadge').hide();
+                }
+            });
+        }
+        
+        function loadMessageCount() {
+            $.get('@Url.Action("GetUnreadCount", "Message")', function(data) {
+                if (data > 0) {
+                    $('#messageBadge').text(data).show();
+                } else {
+                    $('#messageBadge').hide();
+                }
+            });
+        }
+        
+        // Load on page load
+        loadNotificationCount();
+        loadMessageCount();
+        
+        // Refresh every 30 seconds
+        setInterval(function() {
+            loadNotificationCount();
+            loadMessageCount();
+        }, 30000);
+    </script>
+}

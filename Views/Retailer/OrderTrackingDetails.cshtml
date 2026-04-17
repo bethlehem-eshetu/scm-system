@@ -1,12 +1,37 @@
 @model SCM_System.Models.Entities.Order
 @{
-    ViewData["Title"] = "Order Tracking";
+    ViewData["Title"] = "Order Tracking Details";
     Layout = "_DashboardLayout";
     
     // Status Flow for Retailer
     var statuses = new[] { "Pending", "Processing", "Picked", "Packed", "In Transit", "Delivered", "Completed" };
-    int currentIdx = Array.IndexOf(statuses, Model.OrderStatus);
-    if (currentIdx == -1 && Model.OrderStatus == "Partially Processing") currentIdx = 1;
+    
+    // ✅ FIX: Determine correct status based on Purchase Orders
+    var totalPOs = Model.PurchaseOrders?.Count() ?? 0;
+    var deliveredPOs = Model.PurchaseOrders?.Count(po => po.Status == "Delivered" || po.Status == "Completed") ?? 0;
+    var inTransitPOs = Model.PurchaseOrders?.Count(po => po.Status == "In Transit") ?? 0;
+    
+    string displayStatus = Model.OrderStatus;
+    
+    // If all POs are delivered but order status not updated
+    if (deliveredPOs == totalPOs && totalPOs > 0 && Model.OrderStatus != "Delivered" && Model.OrderStatus != "Completed")
+    {
+        displayStatus = "Delivered";
+    }
+    // If any PO is In Transit but not delivered
+    else if (inTransitPOs > 0 && deliveredPOs < totalPOs && Model.OrderStatus != "In Transit")
+    {
+        displayStatus = "In Transit";
+    }
+    // If some POs are delivered
+    else if (deliveredPOs > 0 && deliveredPOs < totalPOs && Model.OrderStatus != "Partially Delivered")
+    {
+        displayStatus = "Partially Delivered";
+    }
+    
+    int currentIdx = Array.IndexOf(statuses, displayStatus);
+    if (currentIdx == -1 && displayStatus == "Partially Processing") currentIdx = 1;
+    if (currentIdx == -1 && displayStatus == "Partially Delivered") currentIdx = 4;
 
     var latestPO = Model.PurchaseOrders?.OrderByDescending(p => p.UpdatedAt).FirstOrDefault();
 }
@@ -18,7 +43,7 @@
             <p class="text-muted mb-0">Real-time logistics monitoring for your procurement</p>
         </div>
         <div class="text-end">
-            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-4 py-2 fs-6 border border-primary border-opacity-10">@Model.OrderStatus</span>
+            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-4 py-2 fs-6 border border-primary border-opacity-10">@displayStatus</span>
         </div>
     </div>
 
@@ -31,7 +56,7 @@
 
         <div class="d-flex justify-content-between position-relative px-2 mb-4" style="min-width: 800px;">
             <div class="position-absolute top-50 start-0 translate-middle-y w-100 bg-light" style="height: 6px; border-radius: 3px; z-index: 0; margin-top: -15px;"></div>
-            <div class="position-absolute top-50 start-0 translate-middle-y bg-primary" style="height: 6px; border-radius: 3px; z-index: 1; margin-top: -15px; width: @(currentIdx * 16.66)%; transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
+            <div class="position-absolute top-50 start-0 translate-middle-y bg-primary" style="height: 6px; border-radius: 3px; z-index: 1; margin-top: -15px; width: @(currentIdx * 14.28)%; transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
 
             @for (int i = 0; i < statuses.Length; i++)
             {
@@ -78,9 +103,10 @@
                     <i class="fas fa-info-circle me-2"></i> Our agent will notify you upon arrival at your business location.
                 </div>
                 
-                @if (Model.OrderStatus == "Delivered")
+                @if (displayStatus == "Delivered")
                 {
                     <form asp-controller="Order" asp-action="UpdateStatus" method="post" class="mt-auto">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@Model.Id" />
                         <input type="hidden" name="status" value="Completed" />
                         <input type="hidden" name="comments" value="Order confirmed by Retailer." />
@@ -115,13 +141,13 @@
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">@item.Product?.ProductName</div>
                                             <div class="extra-small text-muted">SKU: @item.Product?.Id.ToString("D5")</div>
-                                        </td>
-                                        <td><span class="badge bg-light text-dark border">x @item.Quantity @item.Product?.Unit</span></td>
+                                         </td
+                                        <td><span class="badge bg-light text-dark border">x @item.Quantity @item.Product?.Unit</span></td
                                         <td class="text-end pe-4">
-                                            <span class="badge @(Model.OrderStatus == "Delivered" || Model.OrderStatus == "Completed" ? "bg-success" : "bg-primary") bg-opacity-10 @(Model.OrderStatus == "Delivered" || Model.OrderStatus == "Completed" ? "text-success" : "text-primary") rounded-pill px-3">
-                                                @(Model.OrderStatus == "Delivered" || Model.OrderStatus == "Completed" ? "Delivered" : "Fulfillment Active")
+                                            <span class="badge @(displayStatus == "Delivered" || displayStatus == "Completed" ? "bg-success" : "bg-primary") bg-opacity-10 @(displayStatus == "Delivered" || displayStatus == "Completed" ? "text-success" : "text-primary") rounded-pill px-3">
+                                                @(displayStatus == "Delivered" || displayStatus == "Completed" ? "Delivered" : "Fulfillment Active")
                                             </span>
-                                        </td>
+                                        </td
                                     </tr>
                                 }
                             </tbody>
@@ -131,6 +157,54 @@
             </div>
         </div>
     </div>
+
+    <!-- PROOF OF DELIVERY SECTION -->
+    @if (Model.PurchaseOrders != null && Model.PurchaseOrders.Any(po => !string.IsNullOrEmpty(po.ProofOfDelivery)))
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-camera me-2 text-primary"></i>Proof of Delivery
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        @foreach (var po in Model.PurchaseOrders.Where(po => !string.IsNullOrEmpty(po.ProofOfDelivery)))
+                        {
+                            <div class="mb-4 pb-3 border-bottom">
+                                <label class="fw-bold mb-2">PO #@po.PONumber</label>
+                                @if (po.ProofOfDelivery.StartsWith("/uploads/"))
+                                {
+                                    <div class="mt-2">
+                                        <img src="@po.ProofOfDelivery" alt="Proof of Delivery" class="img-fluid rounded border shadow-sm" style="max-height: 250px; max-width: 100%;" />
+                                        <div class="mt-2">
+                                            <a href="@po.ProofOfDelivery" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                <i class="fas fa-external-link-alt me-1"></i> View Full Image
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-info bg-light border-0 rounded-3 mt-2">
+                                        <i class="fas fa-signature me-2 text-primary"></i>
+                                        <strong>Signature / Receipt Code:</strong> @po.ProofOfDelivery
+                                    </div>
+                                }
+                                @if (po.DeliveredAt.HasValue)
+                                {
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="far fa-clock me-1"></i> Delivered on: @po.DeliveredAt.Value.ToString("MMM dd, yyyy HH:mm")
+                                    </small>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 <style>
@@ -141,18 +215,21 @@
 
 @section Scripts {
     <script>
-        // Polling for status updates
+        // Polling for status updates every 10 seconds
         setInterval(function() {
             const container = document.querySelector('.order-status-container');
-            const orderId = container.dataset.orderId;
-            fetch(`/Order/GetStatus/${orderId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const currentStatusBadge = document.querySelector('.badge.bg-primary');
-                    if (currentStatusBadge && currentStatusBadge.innerText.trim() !== data.status) {
-                        location.reload(); 
-                    }
-                });
+            if (container) {
+                const orderId = container.dataset.orderId;
+                fetch(`/Order/GetStatus/${orderId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const currentStatusBadge = document.querySelector('.badge.bg-primary');
+                        if (currentStatusBadge && currentStatusBadge.innerText.trim() !== data.status) {
+                            location.reload(); 
+                        }
+                    })
+                    .catch(error => console.log('Status check failed:', error));
+            }
         }, 10000);
     </script>
 }

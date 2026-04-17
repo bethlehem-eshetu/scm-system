@@ -9,15 +9,39 @@
             --brand-primary: #0d6efd;
             --brand-secondary: #6366f1;
             --brand-gradient: linear-gradient(135deg, #0d6efd 0%, #6366f1 100%);
-            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.85);
             --glass-border: rgba(255, 255, 255, 0.4);
         }
 
+        /* Fullscreen Video Background */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+
+        /* Hero Section - Overlay on video */
         .hero-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
             padding: 120px 0 80px;
-            background: radial-gradient(circle at top right, rgba(13, 110, 253, 0.05), transparent),
-                        radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.05), transparent);
-            overflow: hidden;
+            z-index: 1;
         }
 
         .hero-title {
@@ -32,32 +56,20 @@
             -webkit-text-fill-color: transparent;
         }
 
+        /* Glass cards with better contrast */
         .glass-card {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
         }
 
-        .hero-image-wrapper {
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-image-wrapper::before {
-            content: '';
-            position: absolute;
-            width: 140%;
-            height: 140%;
-            top: -20%;
-            left: -20%;
-            background: var(--brand-gradient);
-            filter: blur(80px);
-            opacity: 0.1;
-            z-index: -1;
-            border-radius: 50%;
-        }
+            .glass-card:hover {
+                transform: translateY(-5px);
+                background: rgba(255, 255, 255, 0.95);
+            }
 
         .feature-icon-box {
             width: 60px;
@@ -106,177 +118,198 @@
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .btn-premium:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(13, 110, 253, 0.2);
-        }
+            .btn-premium:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(13, 110, 253, 0.2);
+            }
 
         .trust-badge {
             filter: grayscale(1);
-            opacity: 0.5;
+            opacity: 0.7;
             transition: all 0.3s;
+            color: white !important;
         }
 
-        .trust-badge:hover {
-            filter: grayscale(0);
-            opacity: 1;
+            .trust-badge:hover {
+                filter: grayscale(0);
+                opacity: 1;
+            }
+
+        /* Light sections - still visible over video background */
+        .bg-light-section {
+            background: #f8f9fa;
+            position: relative;
+            z-index: 2;
+        }
+
+        .text-white-custom {
+            color: white !important;
+        }
+
+        .text-white-80 {
+            color: rgba(255, 255, 255, 0.8) !important;
         }
     </style>
 }
 
-<section class="hero-section">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-6" data-aos="fade-right">
-                <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3 fw-bold">
-                    <i class="fas fa-shield-check me-2"></i> Verified Supply Chain Network
-                </div>
-                <h1 class="fw-bolder hero-title text-dark mb-4">
-                    The Pulse of <br />
-                    <span class="text-gradient">Modern Commerce</span> <br />
-                    in Ethiopia
-                </h1>
-                <p class="lead text-muted mb-5">
-                    Empowering retailers and suppliers with high-fidelity tracking, 
-                    intelligent tender management, and automated warehouse fulfillment.
-                </p>
-                <div class="d-flex flex-wrap gap-3">
-                    @if (Context.Session.GetInt32("UserId") == null)
-                    {
-                        <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-premium">
-                            <i class="fas fa-rocket me-2"></i> Get Started Free
-                        </a>
-                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-dark btn-premium">
-                            <i class="fas fa-sign-in-alt me-2"></i> Member Login
-                        </a>
-                    }
-                    else
-                    {
-                        <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-primary btn-premium">
-                            <i class="fas fa-columns me-2"></i> Enter Command Center
-                        </a>
-                    }
-                </div>
+<!-- Fullscreen Video Background -->
+<video class="video-background" autoplay muted loop playsinline>
+    <source src="~/videos/HOME.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7" data-aos="fade-right">
+                    <div class="badge bg-white bg-opacity-25 text-white px-3 py-2 rounded-pill mb-3 fw-bold border border-white border-opacity-25 d-inline-block">
+                        <i class="fas fa-shield-check me-2"></i> Verified Supply Chain Network
+                    </div>
+                    <h1 class="fw-bolder hero-title text-white mb-4">
+                        The Pulse of <br />
+                        <span class="text-gradient">Modern Commerce</span> <br />
+                        in Ethiopia
+                    </h1>
+                    <p class="lead text-white-80 mb-5" style="max-width: 600px;">
+                        Empowering retailers and suppliers with high-fidelity tracking,
+                        intelligent tender management, and automated warehouse fulfillment.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        @if (Context.Session.GetInt32("UserId") == null)
+                        {
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-premium">
+                                <i class="fas fa-rocket me-2"></i> Get Started Free
+                            </a>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-premium">
+                                <i class="fas fa-sign-in-alt me-2"></i> Member Login
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-primary btn-premium">
+                                <i class="fas fa-columns me-2"></i> Enter Command Center
+                            </a>
+                        }
+                    </div>
                 
-                <div class="mt-5 pt-4 border-top">
-                    <p class="smaller fw-bold text-muted text-uppercase mb-3">Trusted by regional leaders</p>
-                    <div class="d-flex gap-4">
-                        <span class="fw-bold fs-5 trust-badge">ETHIO TELECOM</span>
-                        <span class="fw-bold fs-5 trust-badge">CHAPA</span>
-                        <span class="fw-bold fs-5 trust-badge">EFDA</span>
+                    <div class="mt-5 pt-4 border-top border-white border-opacity-25">
+                        <p class="smaller fw-bold text-white-80 text-uppercase mb-3">Trusted by regional leaders</p>
+                        <div class="d-flex gap-4">
+                            <span class="fw-bold fs-5 trust-badge">ETHIO TELECOM</span>
+                            <span class="fw-bold fs-5 trust-badge">CHAPA</span>
+                            <span class="fw-bold fs-5 trust-badge">EFDA</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5" data-aos="zoom-in" data-aos-delay="200">
+                    <!-- Empty column for spacing, or you can add something here later -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid - Light background section -->
+    <section class="py-5 bg-light-section">
+        <div class="container py-5">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="fw-bold h1 mb-3">Enterprise Core Features</h2>
+                <p class="text-muted lead mx-auto" style="max-width: 600px;">Experience a seamlessly integrated ecosystem designed for speed and transparency.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card h-100 p-4 glass-card border-0">
+                        <div class="feature-icon-box bg-primary bg-opacity-10 text-primary">
+                            <i class="fas fa-gavel"></i>
+                        </div>
+                        <h4 class="fw-bold">Smart Bidding</h4>
+                        <p class="text-muted mb-0">Post tenders and receive competitive bids with algorithmic evaluation of supplier performance.</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card h-100 p-4 glass-card border-0">
+                        <div class="feature-icon-box bg-success bg-opacity-10 text-success">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <h4 class="fw-bold">Warehouse Hub</h4>
+                        <p class="text-muted mb-0">Multi-warehouse management with real-time stock allocation and picking/packing control.</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card h-100 p-4 glass-card border-0">
+                        <div class="feature-icon-box bg-info bg-opacity-10 text-info">
+                            <i class="fas fa-truck-container"></i>
+                        </div>
+                        <h4 class="fw-bold">Logistics Pulse</h4>
+                        <p class="text-muted mb-0">End-to-end delivery tracking with agent assignments, vehicle telemetry, and status polling.</p>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6" data-aos="zoom-in" data-aos-delay="200">
-                <div class="hero-image-wrapper">
-                    <img src="~/images/hero-illustration.png" alt="EthioChain SCM Ecosystem" class="img-fluid rounded-4 shadow-premium" />
-                </div>
-            </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Features Grid -->
-<section class="py-5 bg-white">
-    <div class="container py-5">
-        <div class="text-center mb-5" data-aos="fade-up">
-            <h2 class="fw-bold h1 mb-3">Enterprise Core Features</h2>
-            <p class="text-muted lead mx-auto" style="max-width: 600px;">Experience a seamlessly integrated ecosystem designed for speed and transparency.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-                <div class="card h-100 p-4 glass-card border-0">
-                    <div class="feature-icon-box bg-primary bg-opacity-10 text-primary">
-                        <i class="fas fa-gavel"></i>
+    <!-- How It Works Section -->
+    <section class="py-5 bg-light-section">
+        <div class="container py-5">
+            <h2 class="fw-bold h1 text-center mb-5" data-aos="fade-up">The Fulfillment Pipeline</h2>
+            <div class="row g-4 justify-content-center">
+                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="how-it-works-step">
+                        <div class="step-line d-none d-lg-block"></div>
+                        <div class="step-number">1</div>
+                        <h6 class="fw-bold">Order</h6>
+                        <p class="extra-small text-muted">Retailer places bulk orders</p>
                     </div>
-                    <h4 class="fw-bold">Smart Bidding</h4>
-                    <p class="text-muted mb-0">Post tenders and receive competitive bids with algorithmic evaluation of supplier performance.</p>
                 </div>
-            </div>
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-                <div class="card h-100 p-4 glass-card border-0">
-                    <div class="feature-icon-box bg-success bg-opacity-10 text-success">
-                        <i class="fas fa-warehouse"></i>
+                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="how-it-works-step">
+                        <div class="step-line d-none d-lg-block"></div>
+                        <div class="step-number">2</div>
+                        <h6 class="fw-bold">Accept</h6>
+                        <p class="extra-small text-muted">Supplier accepts and generates POs</p>
                     </div>
-                    <h4 class="fw-bold">Warehouse Hub</h4>
-                    <p class="text-muted mb-0">Multi-warehouse management with real-time stock allocation and picking/packing control.</p>
                 </div>
-            </div>
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-                <div class="card h-100 p-4 glass-card border-0">
-                    <div class="feature-icon-box bg-info bg-opacity-10 text-info">
-                        <i class="fas fa-truck-container"></i>
+                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="how-it-works-step">
+                        <div class="step-line d-none d-lg-block"></div>
+                        <div class="step-number">3</div>
+                        <h6 class="fw-bold">Pick/Pack</h6>
+                        <p class="extra-small text-muted">Warehouse prepares shipment</p>
                     </div>
-                    <h4 class="fw-bold">Logistics Pulse</h4>
-                    <p class="text-muted mb-0">End-to-end delivery tracking with agent assignments, vehicle telemetry, and status polling.</p>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="how-it-works-step">
+                        <div class="step-line d-none d-lg-block"></div>
+                        <div class="step-number">4</div>
+                        <h6 class="fw-bold">Dispatch</h6>
+                        <p class="extra-small text-muted">Agent pairs with vehicle</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="500">
+                    <div class="how-it-works-step">
+                        <div class="step-number">5</div>
+                        <h6 class="fw-bold">Track</h6>
+                        <p class="extra-small text-muted">Real-time status updates</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- How It Works Section -->
-<section class="py-5 bg-light">
-    <div class="container py-5">
-        <h2 class="fw-bold h1 text-center mb-5" data-aos="fade-up">The Fulfillment Pipeline</h2>
-        <div class="row g-4 justify-content-center">
-            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="100">
-                <div class="how-it-works-step">
-                    <div class="step-line d-none d-lg-block"></div>
-                    <div class="step-number">1</div>
-                    <h6 class="fw-bold">Order</h6>
-                    <p class="extra-small text-muted">Retailer places bulk orders</p>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="200">
-                <div class="how-it-works-step">
-                    <div class="step-line d-none d-lg-block"></div>
-                    <div class="step-number">2</div>
-                    <h6 class="fw-bold">Accept</h6>
-                    <p class="extra-small text-muted">Supplier accepts and generates POs</p>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="300">
-                <div class="how-it-works-step">
-                    <div class="step-line d-none d-lg-block"></div>
-                    <div class="step-number">3</div>
-                    <h6 class="fw-bold">Pick/Pack</h6>
-                    <p class="extra-small text-muted">Warehouse prepares shipment</p>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="400">
-                <div class="how-it-works-step">
-                    <div class="step-line d-none d-lg-block"></div>
-                    <div class="step-number">4</div>
-                    <h6 class="fw-bold">Dispatch</h6>
-                    <p class="extra-small text-muted">Agent pairs with vehicle</p>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="500">
-                <div class="how-it-works-step">
-                    <div class="step-number">5</div>
-                    <h6 class="fw-bold">Track</h6>
-                    <p class="extra-small text-muted">Real-time status updates</p>
-                </div>
+    <!-- Final CTA -->
+    <section class="py-6 position-relative text-center overflow-hidden bg-light-section">
+        <div class="container py-5 z-index-1 position-relative">
+            <div class="glass-card p-5 rounded-4 shadow-premium border-0 max-w-2xl mx-auto" data-aos="flip-up">
+                <h2 class="fw-bold mb-3">Ready to join the network?</h2>
+                <p class="text-muted mb-5">Join 500+ enterprises optimizing their operations today.</p>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-premium px-5">Launch Your Profile</a>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Final CTA -->
-<section class="py-6 position-relative text-center overflow-hidden">
-    <div class="container py-5 z-index-1 position-relative">
-        <div class="glass-card p-5 rounded-4 shadow-premium border-0 max-w-2xl mx-auto" data-aos="flip-up">
-            <h2 class="fw-bold mb-3">Ready to join the network?</h2>
-            <p class="text-muted mb-5">Join 500+ enterprises optimizing their operations today.</p>
-            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-premium px-5">Launch Your Profile</a>
-        </div>
-    </div>
-</section>
-
-@section Scripts {
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        AOS.init({ duration: 1000, once: true });
-    </script>
-}
+    @section Scripts {
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script>
+            AOS.init({ duration: 1000, once: true });
+        </script>
+    }

@@ -50,5 +50,10 @@ namespace SCM_System.Models.Entities
         public ICollection<OrderStatusHistory> StatusHistory { get; set; }
         public ICollection<PurchaseOrder> PurchaseOrders { get; set; }
         public Delivery Delivery { get; set; }
+
+        public ICollection<ReturnRequest> ReturnRequests { get; set; }
+
+        [StringLength(200)]
+        public string? QRCodeValue { get; set; }
     }
 }

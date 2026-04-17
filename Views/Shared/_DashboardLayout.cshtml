@@ -1,3 +1,4 @@
+@using SCM_System.Models.Entities
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -333,14 +334,23 @@
                         <a asp-controller="Supplier" asp-action="Employees"><i class="fas fa-users"></i> Personnel</a>
                     </li>
 
-                    <li class="menu-label">Finance & Analytics</li>
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Payments"><i class="fas fa-wallet"></i> Commissions & Payments</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-pie"></i> Business Insights</a>
-                    </li>
+                   <li class="menu-label">Finance & Analytics</li>
+                   
+<li>
+    <a asp-controller="Commission" asp-action="MyCommissions"><i class="fas fa-hand-holding-usd"></i> Commission Payments</a>
+</li>
+<li>
+    <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-pie"></i> Business Insights</a>
+</li>
+<li class="menu-label">Feedback</li>
+<li>
+    <a asp-controller="Rating" asp-action="SupplierRatings"><i class="fas fa-star"></i> Customer Ratings</a>
+</li>
 
+<li class="menu-label">Customer Support</li>
+<li>
+    <a asp-controller="Return" asp-action="SupplierReturns"><i class="fas fa-undo-alt"></i> Return Requests</a>
+</li>
                     <li class="menu-label">Settings</li>
                     <li>
                         <a asp-controller="Supplier" asp-action="Notifications"><i class="fas fa-bell"></i> Notifications</a>
@@ -377,7 +387,19 @@
                     <li>
                         <a asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle"></i> Create Tender</a>
                     </li>
+                    <li class="menu-label">Payments</li>
+<li>
+    <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-credit-card"></i> My Payments</a>
+</li>
 
+<li class="menu-label">Reviews</li>
+<li>
+    <a asp-controller="Rating" asp-action="MyRatings"><i class="fas fa-star"></i> My Ratings</a>
+</li>
+<li class="menu-label">Support</li>
+<li>
+    <a asp-controller="Return" asp-action="MyReturns"><i class="fas fa-undo-alt"></i> My Returns</a>
+</li>
                     <li class="menu-label">Settings</li>
                     <li>
                         <a asp-controller="Retailer" asp-action="Notifications"><i class="fas fa-bell"></i> Notifications</a>

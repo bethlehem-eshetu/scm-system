@@ -23,6 +23,7 @@ namespace SCM_System.Data
         public DbSet<EmailLog> EmailLogs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+
         // Product Catalog Tables
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<SupplierCategory> SupplierCategories { get; set; }
@@ -50,6 +51,7 @@ namespace SCM_System.Data
         // Delivery Tables
         public DbSet<Delivery> Deliveries { get; set; }
         public DbSet<DeliveryTracking> DeliveryTrackings { get; set; }
+        public DbSet<ReturnRequest> ReturnRequests { get; set; }
 
         // Payment Tables
         public DbSet<Commission> Commissions { get; set; }

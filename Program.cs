@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
+using SCM_System.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,8 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+builder.Services.AddHttpClient<IChapaService, ChapaService>();
+
 // Add HttpContextAccessor for session helpers
 builder.Services.AddHttpContextAccessor();
 
@@ -62,6 +65,13 @@ builder.Services.Configure<SCM_System.Models.EmailSettings>(builder.Configuratio
 builder.Services.AddTransient<SCM_System.Services.IEmailService, SCM_System.Services.EmailService>();
 builder.Services.AddHostedService<SCM_System.Services.EmailLogCleanupService>();
 
+builder.Services.AddScoped<ICommissionService, CommissionService>();
+builder.Services.AddScoped<IChapaService, ChapaService>();
+builder.Services.AddScoped<IReturnService, ReturnService>();
+// Add this after builder.Services.AddScoped statements
+builder.Services.AddScoped<IContactDetectionService, ContactDetectionService>();
+builder.Services.AddScoped<IPenaltyService, PenaltyService>();
+builder.Services.AddScoped<IRatingService, RatingService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
