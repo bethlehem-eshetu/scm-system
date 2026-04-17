@@ -81,12 +81,18 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ChapaPaymentUrl")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("ChapaTransactionId")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("CommissionAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CommissionRate")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -94,15 +100,37 @@ namespace SCM_System.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("OrderAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PaymentRequestData")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PaymentVerificationData")
+                    b.Property<string>("PaymentType")
                         .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("PaymentVerificationData")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RetailerId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -117,8 +145,12 @@ namespace SCM_System.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrderId");
+
                     b.HasIndex("PurchaseOrderId")
                         .IsUnique();
+
+                    b.HasIndex("RetailerId");
 
                     b.HasIndex("SupplierId");
 
@@ -171,6 +203,9 @@ namespace SCM_System.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("CustomerQRCode")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("DeliveredDate")
                         .HasColumnType("datetime2");
 
@@ -187,6 +222,9 @@ namespace SCM_System.Migrations
                     b.Property<DateTime?>("DepartureTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsQRVerified")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -194,6 +232,12 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("QRVerificationMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("QRVerifiedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("TrackingNumber")
                         .IsRequired()
@@ -285,11 +329,20 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("BlockedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BlockedReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
@@ -298,8 +351,14 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PenaltyId")
+                        .HasColumnType("int");
+
                     b.Property<int>("SenderId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("TriggeredPenalty")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -329,8 +388,8 @@ namespace SCM_System.Migrations
 
                     b.Property<string>("ViolationType")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(900)
+                        .HasColumnType("nvarchar(900)");
 
                     b.HasKey("Id");
 
@@ -349,7 +408,8 @@ namespace SCM_System.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ActionUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -363,7 +423,11 @@ namespace SCM_System.Migrations
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -371,8 +435,9 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Type")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -417,6 +482,10 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("QRCodeValue")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("RejectedAt")
                         .HasColumnType("datetime2");
@@ -483,20 +552,20 @@ namespace SCM_System.Migrations
                     b.Property<DateTime>("ChangedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ChangedByUserId")
+                    b.Property<int?>("ChangedByUserId")
                         .HasColumnType("int");
 
                     b.Property<string>("Comments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -515,14 +584,38 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("AppealDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AppealReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AppealResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AppealResponseDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("HasAppealed")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("IssuedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MessageId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MessageId1")
+                        .HasColumnType("int");
 
                     b.Property<string>("PenaltyType")
                         .IsRequired()
@@ -533,10 +626,21 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("IssuedByAdminId");
+
+                    b.HasIndex("MessageId1");
 
                     b.HasIndex("UserId");
 
@@ -933,17 +1037,33 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Category")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("HelpfulCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsVerifiedPurchase")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("NotHelpfulCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int");
 
-                    b.Property<int>("RatingScore")
+                    b.Property<int>("RatingValue")
                         .HasColumnType("int");
 
                     b.Property<int>("RetailerId")
@@ -952,7 +1072,12 @@ namespace SCM_System.Migrations
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
 
                     b.HasIndex("PurchaseOrderId")
                         .IsUnique();
@@ -1033,6 +1158,97 @@ namespace SCM_System.Migrations
                         .IsUnique();
 
                     b.ToTable("Retailers");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.ReturnRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Images")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsReturnLabelGenerated")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ItemsReceivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ItemsShippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("RefundAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RefundMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("RetailerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReturnNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrackingNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("RetailerId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("ReturnRequests");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Supplier", b =>
@@ -1662,11 +1878,21 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Commission", b =>
                 {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithOne("Commission")
                         .HasForeignKey("SCM_System.Models.Entities.Commission", "PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
+                        .WithMany()
+                        .HasForeignKey("RetailerId");
 
                     b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
                         .WithMany("Commissions")
@@ -1674,7 +1900,11 @@ namespace SCM_System.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Order");
+
                     b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Retailer");
 
                     b.Navigation("Supplier");
                 });
@@ -1829,8 +2059,7 @@ namespace SCM_System.Migrations
                     b.HasOne("SCM_System.Models.Entities.User", "ChangedByUser")
                         .WithMany()
                         .HasForeignKey("ChangedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("SCM_System.Models.Entities.Order", "Order")
                         .WithMany("StatusHistory")
@@ -1845,11 +2074,23 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Penalty", b =>
                 {
+                    b.HasOne("SCM_System.Models.Entities.User", "IssuedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("IssuedByAdminId");
+
+                    b.HasOne("SCM_System.Models.Entities.Message", "Message")
+                        .WithMany()
+                        .HasForeignKey("MessageId1");
+
                     b.HasOne("SCM_System.Models.Entities.User", "User")
                         .WithMany("Penalties")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("IssuedByAdmin");
+
+                    b.Navigation("Message");
 
                     b.Navigation("User");
                 });
@@ -1988,6 +2229,12 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Rating", b =>
                 {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithOne("Rating")
                         .HasForeignKey("SCM_System.Models.Entities.Rating", "PurchaseOrderId")
@@ -2006,6 +2253,8 @@ namespace SCM_System.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Order");
+
                     b.Navigation("PurchaseOrder");
 
                     b.Navigation("Retailer");
@@ -2022,6 +2271,41 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.ReturnRequest", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany("ReturnRequests")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("ReturnRequests")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
+                        .WithMany()
+                        .HasForeignKey("RetailerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Retailer");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Supplier", b =>
@@ -2175,6 +2459,8 @@ namespace SCM_System.Migrations
 
                     b.Navigation("PurchaseOrders");
 
+                    b.Navigation("ReturnRequests");
+
                     b.Navigation("StatusHistory");
                 });
 
@@ -2209,6 +2495,8 @@ namespace SCM_System.Migrations
 
                     b.Navigation("Rating")
                         .IsRequired();
+
+                    b.Navigation("ReturnRequests");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Retailer", b =>

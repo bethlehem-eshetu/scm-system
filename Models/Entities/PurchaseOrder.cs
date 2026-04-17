@@ -82,11 +82,14 @@ namespace SCM_System.Models.Entities
 
         // Navigation
         public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; }
-        
+        public ICollection<ReturnRequest> ReturnRequests { get; set; }
+
         [Required]
         public int OrderId { get; set; }
         public Order Order { get; set; }
         public Commission Commission { get; set; }
         public Rating Rating { get; set; }
+
+
     }
 }

@@ -13,5 +13,6 @@ namespace SCM_System.Services
         Task<bool> CancelOrderAsync(int orderId);
         Task<bool> AcceptOrderAsync(int orderId, int? warehouseId = null);
         Task<bool> RejectOrderAsync(int orderId, string reason);
+        Task<int> CreateMissingCommissionsForDeliveredOrders();
     }
 }

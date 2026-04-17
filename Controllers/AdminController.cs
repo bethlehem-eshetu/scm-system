@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
+using SCM_System.Services;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -12,10 +13,12 @@ namespace SCM_System.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly INotificationService _notificationService;
 
-        public AdminController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public AdminController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
             _webHostEnvironment = webHostEnvironment;
         }
 
@@ -113,6 +116,23 @@ namespace SCM_System.Controllers
                 ViewBag.RetailerProgress = ViewBag.TotalRetailers > 0
                     ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers)
                     : 0;
+
+                // ========== ADD THESE NEW VIEWBAG PROPERTIES ==========
+
+                // Message Monitoring Statistics
+                ViewBag.BlockedMessagesCount = _context.MessageViolations.Count(v => !v.IsResolved);
+                ViewBag.ActivePenaltiesCount = _context.Penalties.Count(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
+                ViewBag.TotalMessagesCount = _context.Messages.Count();
+
+                // Get recent blocked messages for dashboard display (optional)
+                ViewBag.RecentBlockedMessages = _context.MessageViolations
+                    .Include(v => v.Message)
+                        .ThenInclude(m => m.Sender)
+                    .OrderByDescending(v => v.CreatedAt)
+                    .Take(5)
+                    .ToList();
+
+                // ========== END OF ADDED PROPERTIES ==========
             }
             catch (Exception ex)
             {
@@ -1010,6 +1030,286 @@ namespace SCM_System.Controllers
             }
 
             return View();
+        }
+
+        // GET: /Admin/MessageLog
+        public async Task<IActionResult> MessageLog()
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Login", "Account");
+
+            try
+            {
+                // Get recent messages
+                var recentMessages = await _context.Messages
+                    .Include(m => m.Sender)
+                    .Include(m => m.Conversation)
+                        .ThenInclude(c => c.Supplier)
+                            .ThenInclude(s => s.User)
+                    .Include(m => m.Conversation)
+                        .ThenInclude(c => c.Retailer)
+                            .ThenInclude(r => r.User)
+                    .OrderByDescending(m => m.CreatedAt)
+                    .Take(100)
+                    .Select(m => new AdminMessageViewModel
+                    {
+                        MessageId = m.Id,
+                        SenderName = m.Sender.FullName,
+                        SenderRole = m.Sender.Role,
+                        Content = m.MessageText,
+                        SentAt = m.CreatedAt,
+                        IsRead = m.IsRead,
+                        ConversationId = m.ConversationId,
+                        ConversationBetween = $"{m.Conversation.Supplier.User.FullName} (Supplier) ↔ {m.Conversation.Retailer.User.FullName} (Retailer)"
+                    })
+                    .ToListAsync();
+
+                // Get violation statistics
+                var violations = await _context.MessageViolations
+                    .Include(v => v.Message)
+                    .OrderByDescending(v => v.CreatedAt)
+                    .Take(50)
+                    .ToListAsync();
+
+                ViewBag.BlockedMessagesCount = await _context.MessageViolations.CountAsync();
+                ViewBag.ActivePenaltiesCount = await _context.Penalties.CountAsync(p => p.IsActive);
+                ViewBag.TotalMessagesCount = await _context.Messages.CountAsync();
+
+                return View(recentMessages);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ MessageLog Error: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading message logs.";
+                return View(new List<AdminMessageViewModel>());
+            }
+        }
+
+        // GET: /Admin/BlockedMessages
+        public async Task<IActionResult> BlockedMessages()
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Login", "Account");
+
+            try
+            {
+                var blockedMessages = await _context.MessageViolations
+                    .Include(v => v.Message)
+                        .ThenInclude(m => m.Sender)
+                    .Include(v => v.Message)
+                        .ThenInclude(m => m.Conversation)
+                            .ThenInclude(c => c.Supplier)
+                                .ThenInclude(s => s.User)
+                    .Include(v => v.Message)
+                        .ThenInclude(m => m.Conversation)
+                            .ThenInclude(c => c.Retailer)
+                                .ThenInclude(r => r.User)
+                    .OrderByDescending(v => v.CreatedAt)
+                    .Select(v => new BlockedMessageViewModel
+                    {
+                        ViolationId = v.Id,
+                        MessageId = v.Message.Id,
+                        SenderName = v.Message.Sender.FullName,
+                        SenderRole = v.Message.Sender.Role,
+                        Content = v.Message.MessageText,
+                        ViolationType = v.ViolationType,
+                        CreatedAt = v.CreatedAt,
+                        IsResolved = v.IsResolved,
+                        ConversationId = v.Message.ConversationId,
+                        ConversationBetween = $"{v.Message.Conversation.Supplier.User.FullName} (Supplier) ↔ {v.Message.Conversation.Retailer.User.FullName} (Retailer)"
+                    })
+                    .ToListAsync();
+
+                return View(blockedMessages);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ BlockedMessages Error: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading blocked messages.";
+                return View(new List<BlockedMessageViewModel>());
+            }
+        }
+
+        // GET: /Admin/ViewConversation/{id}
+        public async Task<IActionResult> ViewConversation(int id)
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Login", "Account");
+
+            try
+            {
+                var conversation = await _context.Conversations
+                    .Include(c => c.Supplier)
+                        .ThenInclude(s => s.User)
+                    .Include(c => c.Retailer)
+                        .ThenInclude(r => r.User)
+                    .Include(c => c.Messages)
+                        .ThenInclude(m => m.Sender)
+                    .FirstOrDefaultAsync(c => c.Id == id);
+
+                if (conversation == null)
+                    return NotFound();
+
+                return View(conversation);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ ViewConversation Error: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading conversation.";
+                return RedirectToAction("MessageLog");
+            }
+        }
+
+        // POST: /Admin/ResolveViolation/{id}
+        [HttpPost]
+        public async Task<IActionResult> ResolveViolation(int id)
+        {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var violation = await _context.MessageViolations.FindAsync(id);
+                if (violation == null)
+                    return Json(new { success = false, message = "Violation not found" });
+
+                violation.IsResolved = true;
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: /Admin/Penalties
+        public async Task<IActionResult> Penalties()
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Login", "Account");
+
+            try
+            {
+                var penalties = await _context.Penalties
+                    .Include(p => p.User)
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToListAsync();
+
+                ViewBag.ActivePenaltiesCount = penalties.Count(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
+                ViewBag.PendingAppeals = 0; // You can add appeal functionality later
+
+                return View(penalties);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Penalties Error: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading penalties.";
+                return View(new List<Penalty>());
+            }
+        }
+
+        // GET: /Admin/UserPenalties/{userId}
+        public async Task<IActionResult> UserPenalties(int userId)
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Login", "Account");
+
+            try
+            {
+                var penalties = await _context.Penalties
+                    .Include(p => p.User)
+                    .Where(p => p.UserId == userId)
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToListAsync();
+
+                var user = await _context.Users.FindAsync(userId);
+                ViewBag.UserName = user?.FullName ?? $"User {userId}";
+                ViewBag.UserRole = user?.Role ?? "Unknown";
+
+                return View(penalties);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ UserPenalties Error: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading user penalties.";
+                return View(new List<Penalty>());
+            }
+        }
+
+        // POST: /Admin/ClearPenalty
+        [HttpPost]
+        public async Task<IActionResult> ClearPenalty(int penaltyId)
+        {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var penalty = await _context.Penalties.FindAsync(penaltyId);
+                if (penalty == null)
+                    return Json(new { success = false, message = "Penalty not found" });
+
+                penalty.IsActive = false;
+                penalty.ExpiresAt = DateTime.Now;
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // POST: /Admin/ResolveAppeal
+        // POST: /Admin/ResolveAppeal
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResolveAppeal(int penaltyId, bool approve, string response)
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Login", "Account");
+
+            try
+            {
+                var penalty = await _context.Penalties
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.Id == penaltyId);
+
+                if (penalty == null)
+                {
+                    TempData["ErrorMessage"] = "Penalty not found.";
+                    return RedirectToAction("Penalties");
+                }
+
+                penalty.AppealResponse = response;
+                penalty.AppealResponseDate = DateTime.Now;
+
+                if (approve)
+                {
+                    penalty.IsActive = false;
+                    penalty.ExpiresAt = DateTime.Now;
+
+                    TempData["SuccessMessage"] = $"Appeal approved. Penalty #{penalty.Id} has been removed.";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = $"Appeal denied. Penalty #{penalty.Id} remains active.";
+                }
+
+                await _context.SaveChangesAsync();
+
+                // ✅ Send notification to user about appeal decision
+                await _notificationService.SendAppealDecisionNotificationAsync(penalty.UserId, approve, response, penalty.Id);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error: {ex.Message}";
+            }
+
+            return RedirectToAction("Penalties");
         }
 
         // GET: /Admin/Logout

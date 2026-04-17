@@ -1,0 +1,118 @@
+﻿@using SCM_System.Models.ViewModels
+@model List<SelectRecipientViewModel>
+
+@{
+    ViewData["Title"] = ViewBag.Title;
+    string role = ViewBag.Role;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-@(role == "Supplier" ? "building" : "store") me-2 text-primary"></i>
+            @ViewBag.Title
+        </h1>
+        <a href="@Url.Action("Inbox")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Inbox
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-@(role == "Supplier" ? "building" : "store") fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No @(role)s Available</h4>
+                <p class="text-muted">There are no verified @(role.ToLower())s to message at this time.</p>
+                <a href="@Url.Action("Inbox")" class="btn btn-primary mt-3">
+                    <i class="fas fa-inbox me-2"></i>Back to Inbox
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var recipient in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar-circle @(role == "Supplier" ? "bg-warning" : "bg-info") text-white me-3">
+                                    @recipient.Initial
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0">@recipient.BusinessName</h5>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>@recipient.ContactPerson
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>@recipient.City
+                                </small>
+                            </p>
+                            
+                            <div class="mb-3">
+                                @if (recipient.IsVerified)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Verified
+                                    </span>
+                                }
+                            </div>
+                            
+                            <a asp-action="SendMessage" asp-route-receiverId="@recipient.UserId"
+                                   class="btn btn-@(role == "Supplier" ? "warning" : "info") w-100">
+                                <i class="fas fa-comment me-2"></i>Send Message
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .bg-warning {
+        background-color: #ffc107 !important;
+        color: #fff !important;
+    }
+    
+    .bg-info {
+        background-color: #17a2b8 !important;
+        color: #fff !important;
+    }
+    
+    .btn-warning {
+        color: #fff;
+        background-color: #ffc107;
+        border-color: #ffc107;
+    }
+    
+        .btn-warning:hover {
+            color: #fff;
+            background-color: #e0a800;
+        }
+    
+    .btn-info {
+        color: #fff;
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+</style>

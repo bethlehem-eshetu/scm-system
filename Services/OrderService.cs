@@ -8,11 +8,13 @@ namespace SCM_System.Services
     {
         private readonly INotificationService _notificationService;
         private readonly ApplicationDbContext _context;
+        private readonly ICommissionService _commissionService;
 
-        public OrderService(ApplicationDbContext context, INotificationService notificationService)
+        public OrderService(ApplicationDbContext context, INotificationService notificationService, ICommissionService commissionService)
         {
             _context = context;
             _notificationService = notificationService;
+            _commissionService = commissionService;
         }
 
         public async Task<IEnumerable<Order>> GetOrdersByRetailerAsync(int retailerId)
@@ -49,6 +51,8 @@ namespace SCM_System.Services
                 .FirstOrDefaultAsync(o => o.Id == id);
         }
 
+
+
         public async Task<Order> CreateOrderFromPurchaseOrderAsync(int purchaseOrderId)
         {
             var po = await _context.PurchaseOrders
@@ -66,16 +70,21 @@ namespace SCM_System.Services
                 TotalAmount = po.TotalAmount,
                 OrderStatus = "Processing",
                 PaymentStatus = "Pending",
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                QRCodeValue = "" // Temporary, will update after saving
             };
 
             _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // Save to get Order.Id
+
+            // Now generate QR code with the actual Order ID
+            order.QRCodeValue = GenerateOrderQRCode(order.Id);
+            _context.Orders.Update(order);
 
             po.OrderId = order.Id;
             _context.PurchaseOrders.Update(po);
 
-            foreach(var item in po.PurchaseOrderItems)
+            foreach (var item in po.PurchaseOrderItems)
             {
                 var orderItem = new OrderItem
                 {
@@ -87,7 +96,14 @@ namespace SCM_System.Services
                 _context.OrderItems.Add(orderItem);
             }
 
-            var history = new OrderStatusHistory { OrderId = order.Id, Status = "Processing", Comments = "Order generated from Purchase Order", ChangedByUserId = po.Supplier.UserId, ChangedAt = DateTime.Now };
+            var history = new OrderStatusHistory
+            {
+                OrderId = order.Id,
+                Status = "Processing",
+                Comments = "Order generated from Purchase Order",
+                ChangedByUserId = po.Supplier.UserId,
+                ChangedAt = DateTime.Now
+            };
             _context.OrderStatusHistories.Add(history);
             await _context.SaveChangesAsync();
 
@@ -97,41 +113,133 @@ namespace SCM_System.Services
         public async Task<Order> UpdateOrderStatusAsync(int orderId, string status, string comments, int changedByUserId)
         {
             var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                    .ThenInclude(i => i.Product)
+                .Include(o => o.PurchaseOrders)
+                    .ThenInclude(po => po.PurchaseOrderItems)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
-            if (order != null)
-            {
-                // Actual stock deduction occurs after delivery confirmation (Delivered) or completion
-                if ((status == "Delivered" || status == "Completed") && order.OrderStatus != "Delivered" && order.OrderStatus != "Completed")
-                {
-                    var pos = await _context.PurchaseOrders
-                        .Include(p => p.PurchaseOrderItems)
-                        .Where(p => p.OrderId == order.Id && p.Status != "Cancelled").ToListAsync();
+            if (order == null)
+                throw new Exception("Order not found");
 
-                    foreach (var po in pos)
+            var previousStatus = order.OrderStatus;
+            order.OrderStatus = status;
+
+            // ================================
+            // 🔥 COMMISSION CREATION FIX (MAIN FIX)
+            // ================================
+            if (status == "Delivered" || status == "Completed" || status == "Partially Delivered")
+            {
+                foreach (var po in order.PurchaseOrders)
+                {
+                    // ✅ ORDER PAYMENT (Retailer → Supplier)
+                    var existingOrderPayment = await _context.Commissions
+                        .FirstOrDefaultAsync(c =>
+                            c.PurchaseOrderId == po.Id &&
+                            c.PaymentType == "OrderPayment");
+
+                    if (existingOrderPayment == null)
                     {
-                        var inventories = await _context.Inventories.Where(i => i.WarehouseId == po.WarehouseId).ToListAsync();
-                        foreach (var item in po.PurchaseOrderItems)
+                        // ORDER PAYMENT (Retailer → Supplier)
+                        var orderPayment = new Commission
                         {
-                            var inv = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                            if (inv != null)
-                            {
-                                inv.QuantityReserved -= item.Quantity;
-                                inv.QuantityOnHand -= item.Quantity;
-                            }
-                        }
-                        po.Status = status;
+                            PurchaseOrderId = po.Id,
+                            OrderId = order.Id,
+                            SupplierId = po.SupplierId,
+                            RetailerId = order.RetailerId,
+                            OrderAmount = po.TotalAmount,
+                            CommissionRate = 1.00m,
+                            CommissionAmount = po.TotalAmount,
+                            PaymentType = "OrderPayment",
+                            Status = "Pending",
+                            PaymentRequestData = "",           // ✅ REQUIRED - MUST SET
+                            PaymentVerificationData = "",      // ✅ REQUIRED - MUST SET
+                            CreatedAt = DateTime.Now,
+                            DueDate = DateTime.Now.AddDays(7),
+                            Notes = $"Order payment for Purchase Order #{po.PONumber}"
+                        };
+
+                        _context.Commissions.Add(orderPayment);
+                    }
+
+                    // ✅ PLATFORM COMMISSION (Supplier → Platform)
+                    var existingPlatform = await _context.Commissions
+                        .FirstOrDefaultAsync(c =>
+                            c.PurchaseOrderId == po.Id &&
+                            c.PaymentType == "PlatformCommission");
+
+                    if (existingPlatform == null)
+                    {
+                        var commissionRate = 0.05m;
+
+                        // PLATFORM COMMISSION (Supplier → Platform)
+                        var platformCommission = new Commission
+                        {
+                            PurchaseOrderId = po.Id,
+                            OrderId = order.Id,
+                            SupplierId = po.SupplierId,
+                            OrderAmount = po.TotalAmount,
+                            CommissionRate = commissionRate,
+                            CommissionAmount = po.TotalAmount * commissionRate,
+                            PaymentType = "PlatformCommission",
+                            Status = "Pending",
+                            PaymentRequestData = "",           // ✅ REQUIRED - MUST SET
+                            PaymentVerificationData = "",      // ✅ REQUIRED - MUST SET
+                            CreatedAt = DateTime.Now,
+                            DueDate = DateTime.Now.AddDays(7),
+                            Notes = $"Platform commission for Purchase Order #{po.PONumber}"
+                        };
+
+                        _context.Commissions.Add(platformCommission);
                     }
                 }
-
-                order.OrderStatus = status;
-                
-                var history = new OrderStatusHistory { OrderId = order.Id, Status = status, Comments = comments, ChangedByUserId = changedByUserId, ChangedAt = DateTime.Now };
-                _context.OrderStatusHistories.Add(history);
-                await _context.SaveChangesAsync();
             }
+
+            await _context.SaveChangesAsync();
+
+            // ================================
+            // STOCK DEDUCTION (UNCHANGED)
+            // ================================
+            if ((status == "Delivered" || status == "Completed") &&
+                previousStatus != "Delivered" &&
+                previousStatus != "Completed")
+            {
+                var pos = await _context.PurchaseOrders
+                    .Include(p => p.PurchaseOrderItems)
+                    .Where(p => p.OrderId == order.Id && p.Status != "Cancelled")
+                    .ToListAsync();
+
+                foreach (var po in pos)
+                {
+                    var inventories = await _context.Inventories
+                        .Where(i => i.WarehouseId == po.WarehouseId)
+                        .ToListAsync();
+
+                    foreach (var item in po.PurchaseOrderItems)
+                    {
+                        var inv = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
+                        if (inv != null)
+                        {
+                            inv.QuantityReserved -= item.Quantity;
+                            inv.QuantityOnHand -= item.Quantity;
+                        }
+                    }
+                }
+            }
+
+            // ================================
+            // STATUS HISTORY
+            // ================================
+            var history = new OrderStatusHistory
+            {
+                OrderId = order.Id,
+                Status = status,
+                Comments = comments,
+                ChangedByUserId = changedByUserId,
+                ChangedAt = DateTime.Now
+            };
+
+            _context.OrderStatusHistories.Add(history);
+            await _context.SaveChangesAsync();
+
             return order;
         }
 
@@ -182,6 +290,7 @@ namespace SCM_System.Services
                 return false;
             }
         }
+
 
         public async Task<IEnumerable<OrderStatusHistory>> GetOrderStatusHistoryAsync(int orderId)
         {
@@ -353,7 +462,7 @@ namespace SCM_System.Services
                 var history = new OrderStatusHistory 
                 { 
                     OrderId = order.Id, 
-                    Status = order.OrderStatus, 
+                    Status = order.OrderStatus,
                     Comments = isSplit ? "Order split across multiple warehouses due to stock allocation." : "Order assigned to single warehouse for fulfillment.", 
                     ChangedByUserId = order.Supplier.UserId, 
                     ChangedAt = DateTime.Now 
@@ -402,7 +511,7 @@ namespace SCM_System.Services
             var history = new OrderStatusHistory 
             { 
                 OrderId = order.Id, 
-                Status = "Rejected", 
+                Status = "Rejected",
                 Comments = $"Order rejected by supplier. Reason: {reason}", 
                 ChangedByUserId = order.SupplierId, // Assuming SupplierId corresponds to a user for now, or use a specific user id
                 ChangedAt = DateTime.Now 
@@ -430,5 +539,96 @@ namespace SCM_System.Services
 
             return true;
         }
+
+
+        public async Task<int> CreateMissingCommissionsForDeliveredOrders()
+        {
+            var deliveredOrders = await _context.Orders
+                .Include(o => o.PurchaseOrders)
+                .Where(o => o.OrderStatus == "Delivered" || o.OrderStatus == "Completed")
+                .ToListAsync();
+
+            int createdCount = 0;
+
+            foreach (var order in deliveredOrders)
+            {
+                foreach (var po in order.PurchaseOrders.Where(p => p.Status == "Delivered" || p.Status == "Completed"))
+                {
+                    var existingOrderPayment = await _context.Commissions
+                        .FirstOrDefaultAsync(c => c.PurchaseOrderId == po.Id && c.PaymentType == "OrderPayment");
+
+                    if (existingOrderPayment == null)
+                    {
+                        var orderPayment = new Commission
+                        {
+                            PurchaseOrderId = po.Id,
+                            OrderId = order.Id,
+                            SupplierId = po.SupplierId,
+                            RetailerId = order.RetailerId,
+                            OrderAmount = po.TotalAmount,
+                            CommissionRate = 1.00m,
+                            CommissionAmount = po.TotalAmount,
+                            PaymentType = "OrderPayment",
+                            Status = "Pending",
+                            ChapaTransactionId = "",
+                            PaymentRequestData = "",
+                            PaymentVerificationData = "",
+                            CreatedAt = DateTime.Now,
+                            DueDate = DateTime.Now.AddDays(7),
+                            Notes = $"Order payment for Purchase Order #{po.PONumber}"
+                        };
+                        _context.Commissions.Add(orderPayment);
+                        createdCount++;
+                    }
+
+                    var existingPlatform = await _context.Commissions
+                        .FirstOrDefaultAsync(c => c.PurchaseOrderId == po.Id && c.PaymentType == "PlatformCommission");
+
+                    if (existingPlatform == null)
+                    {
+                        var commissionRate = 0.05m;
+                        var platformAmount = po.TotalAmount * commissionRate;
+
+                        var platformCommission = new Commission
+                        {
+                            PurchaseOrderId = po.Id,
+                            OrderId = order.Id,
+                            SupplierId = po.SupplierId,
+                            OrderAmount = po.TotalAmount,
+                            CommissionRate = commissionRate,
+                            CommissionAmount = platformAmount,
+                            PaymentType = "PlatformCommission",
+                            Status = "Pending",
+                            ChapaTransactionId = "",
+                            PaymentRequestData = "",
+                            PaymentVerificationData = "",
+                            CreatedAt = DateTime.Now,
+                            DueDate = DateTime.Now.AddDays(7),
+                            Notes = $"Platform commission for Purchase Order #{po.PONumber}"
+                        };
+                        _context.Commissions.Add(platformCommission);
+                        createdCount++;
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return createdCount;
+        }
+
+
+        // Add this method to OrderService.cs
+        private string GenerateOrderQRCode(int orderId)
+        {
+            // Generate a unique QR code that's easy to scan and verify
+            // Format: ORD-{orderId}-{timestamp}-{random}
+            var timestamp = DateTime.Now.Ticks.ToString().Substring(8);
+            var random = new Random().Next(1000, 9999);
+            return $"ORD-{orderId}-{timestamp}-{random}";
+        }
+
+        // Then, update your CreateOrderFromPurchaseOrderAsync method to include QR code:
+        
+
     }
 }

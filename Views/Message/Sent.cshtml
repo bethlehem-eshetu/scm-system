@@ -1,0 +1,68 @@
+﻿@using SCM_System.Models.ViewModels
+@model List<MessageViewModel>
+
+@{
+    ViewData["Title"] = "Sent Messages";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4 class="mb-0">
+                                <i class="fas fa-paper-plane me-2 text-primary"></i>Sent Messages
+                            </h4>
+                        </div>
+                        <div class="col-auto">
+                            <a href="@Url.Action("Inbox")" class="btn btn-outline-primary">
+                                <i class="fas fa-inbox me-1"></i>Back to Inbox
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-paper-plane fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No sent messages yet</h5>
+                            <p class="text-muted">Your sent messages will appear here</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var message in Model)
+                            {
+                                <div class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span class="fw-bold">To:</span>
+                                            <span class="ms-2">@message.ReceiverName</span>
+                                            <span class="badge bg-secondary ms-2">@message.SenderRole</span>
+                                        </div>
+                                        <small class="text-muted">@message.TimeAgo</small>
+                                    </div>
+                                    
+                                    <div class="ms-3">
+                                        <p class="mb-1">@message.Content</p>
+                                        
+                                        <div class="mt-2">
+                                            <span class="badge bg-@(message.IsRead ? "success" : "secondary")">
+                                                @(message.IsRead ? "Read" : "Delivered")
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

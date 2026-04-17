@@ -1,0 +1,159 @@
+﻿@model List<SCM_System.Models.Entities.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+    Layout = "_DashboardLayout";
+    string userRole = ViewBag.UserRole ?? "User";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-bell me-2 text-primary"></i>Notifications
+            @if (ViewBag.UnreadCount > 0)
+            {
+                <span class="badge bg-danger ms-2">@ViewBag.UnreadCount new</span>
+            }
+        </h1>
+        <div>
+            @if (Model.Any(n => !n.IsRead))
+            {
+                <button class="btn btn-outline-primary me-2" id="markAllReadBtn">
+                    <i class="fas fa-check-double me-1"></i>Mark All as Read
+                </button>
+            }
+            <a asp-action="Dashboard" asp-controller="@(userRole == "Supplier" ? "Supplier" : "Retailer")"
+                   class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2 text-primary"></i>Notification History
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No notifications</h5>
+                    <p class="text-muted">You're all caught up!</p>
+                </div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush" id="notificationsList">
+                    @foreach (var notification in Model)
+                    {
+                        <div class="list-group-item notification-item @(!notification.IsRead ? "bg-light" : "")" data-id="@notification.Id">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        @if (!notification.IsRead)
+                                        {
+                                            <span class="badge bg-primary me-2">New</span>
+                                        }
+                                        <h6 class="mb-0">
+                                            @if (notification.Type == "Success")
+                                            {
+                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                            }
+                                            else if (notification.Type == "Error")
+                                            {
+                                                <i class="fas fa-times-circle text-danger me-1"></i>
+                                            }
+                                            else if (notification.Type == "Warning")
+                                            {
+                                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-info-circle text-info me-1"></i>
+                                            }
+                                            @notification.Title
+                                        </h6>
+                                    </div>
+                                    <p class="mb-1">@notification.Message</p>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>
+                                        @GetTimeAgo(notification.CreatedAt)
+                                    </small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                                    {
+                                        <a href="@notification.ActionUrl" class="btn btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    }
+                                    @if (!notification.IsRead)
+                                    {
+                                        <button class="btn btn-outline-success mark-read-btn" data-id="@notification.Id">
+                                            <i class="fas fa-check"></i> Read
+                                        </button>
+                                    }
+                                    <button class="btn btn-outline-danger delete-btn" data-id="@notification.Id">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.Now - dateTime;
+
+        if (timeSpan.TotalMinutes < 1)
+            return "just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} minute{((int)timeSpan.TotalMinutes > 1 ? "s" : "")} ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours > 1 ? "s" : "")} ago";
+        if (timeSpan.TotalDays < 7)
+            return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays > 1 ? "s" : "")} ago";
+        if (timeSpan.TotalDays < 30)
+            return $"{(int)(timeSpan.TotalDays / 7)} week{((int)(timeSpan.TotalDays / 7) > 1 ? "s" : "")} ago";
+
+        return dateTime.ToString("MMM dd, yyyy");
+    }
+}
+
+@section Scripts {
+    <script>
+        // Mark single notification as read
+        $('.mark-read-btn').click(function() {
+            var id = $(this).data('id');
+            $.post('@Url.Action("MarkAsRead", "Notification")', { id: id }, function() {
+                location.reload();
+            });
+        });
+
+        // Mark all as read
+        $('#markAllReadBtn').click(function() {
+            $.post('@Url.Action("MarkAllAsRead", "Notification")', function() {
+                location.reload();
+            });
+        });
+
+        // Delete notification
+        $('.delete-btn').click(function() {
+            if (confirm('Delete this notification?')) {
+                var id = $(this).data('id');
+                $.post('@Url.Action("Delete", "Notification")', { id: id }, function() {
+                    location.reload();
+                });
+            }
+        });
+    </script>
+}

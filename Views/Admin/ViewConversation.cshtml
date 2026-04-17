@@ -1,0 +1,121 @@
+﻿@model SCM_System.Models.Entities.Conversation
+
+@{
+    ViewData["Title"] = "Conversation Details";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-comments text-primary me-2"></i>Conversation Details
+        </h1>
+        <div>
+            <a asp-action="MessageLog" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-1"></i> Back to Messages
+            </a>
+            <a asp-action="BlockedMessages" class="btn btn-outline-warning">
+                <i class="fas fa-ban me-1"></i> View Blocked
+            </a>
+        </div>
+    </div>
+
+    <!-- Conversation Info -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-users me-2 text-primary"></i>
+                <h5 class="mb-0">Conversation Between</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <h6 class="text-primary mb-2">Supplier</h6>
+                        <p class="mb-1"><strong>Name:</strong> @Model.Supplier?.User?.FullName</p>
+                        <p class="mb-1"><strong>Company:</strong> @Model.Supplier?.CompanyName</p>
+                        <p class="mb-0"><strong>Email:</strong> @Model.Supplier?.User?.Email</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <h6 class="text-info mb-2">Retailer</h6>
+                        <p class="mb-1"><strong>Name:</strong> @Model.Retailer?.User?.FullName</p>
+                        <p class="mb-1"><strong>Business:</strong> @Model.Retailer?.BusinessName</p>
+                        <p class="mb-0"><strong>Email:</strong> @Model.Retailer?.User?.Email</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2 text-primary"></i>Message History
+            </h5>
+        </div>
+        <div class="card-body p-4" style="background-color: #f8f9fa;">
+            @if (Model.Messages == null || !Model.Messages.Any())
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
+                    <p>No messages in this conversation</p>
+                </div>
+            }
+            else
+            {
+                foreach (var message in Model.Messages.OrderBy(m => m.CreatedAt))
+                {
+                    <div class="d-flex mb-4 @(message.Sender.Role == "Supplier" ? "justify-content-start" : "justify-content-end")">
+                        <div class="message-bubble @(message.Sender.Role == "Supplier" ? "message-sent" : "message-received") p-3" style="max-width: 70%;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="fw-bold">
+                                    @message.Sender.FullName (@message.Sender.Role)
+                                </small>
+                                <small class="text-muted ms-3">@message.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                            </div>
+                            <p class="mb-1">@message.MessageText</p>
+                            <div class="mt-2">
+                                @if (message.IsRead)
+                                {
+                                    <small class="text-success"><i class="fas fa-check-double"></i> Read</small>
+                                }
+                                else
+                                {
+                                    <small class="text-muted"><i class="fas fa-check"></i> Delivered</small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .message-bubble {
+        border-radius: 18px;
+        word-wrap: break-word;
+    }
+    
+    .message-sent {
+        background-color: #0d6efd;
+        color: white;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .message-received {
+        background-color: white;
+        color: #212529;
+        border: 1px solid #dee2e6;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .message-sent .text-muted {
+        color: rgba(255,255,255,0.7) !important;
+    }
+</style>

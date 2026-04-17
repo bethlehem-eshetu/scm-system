@@ -1,0 +1,212 @@
+﻿@using SCM_System.Models.Entities
+
+@model List<SCM_System.Models.Entities.Commission>
+
+@{
+    ViewData["Title"] = "My Payments";
+    Layout = "_DashboardLayout";
+    string userRole = ViewBag.UserRole ?? "User";
+    
+    var pendingPayments = Model.Where(p => p.Status == "Pending" && p.PaymentType == "OrderPayment").ToList();
+    var paidPayments = Model.Where(p => p.Status == "Paid" && p.PaymentType == "OrderPayment").ToList();
+    var totalPending = pendingPayments.Sum(p => p.CommissionAmount);
+    var totalPaid = paidPayments.Sum(p => p.CommissionAmount);
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-credit-card text-primary me-2"></i>My Payments
+        </h1>
+        <a asp-action="Dashboard" asp-controller="@(userRole == "Supplier" ? "Supplier" : "Retailer")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card bg-warning text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-white-50 mb-2">Pending Payments</h6>
+                    <h3 class="mb-0">@totalPending.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-white-50 mb-2">Completed Payments</h6>
+                    <h3 class="mb-0">@totalPaid.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Payments -->
+    @if (pendingPayments.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock text-warning me-2"></i>Pending Payments
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Order / PO #</th>
+                                <th>Payment Type</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var payment in pendingPayments)
+                            {
+                                <tr>
+                                    <td>#@payment.Id</td>
+                                    <td>
+                                        @if (payment.PurchaseOrder != null && !string.IsNullOrEmpty(payment.PurchaseOrder.PONumber))
+                                        {
+                                            <span>PO: @payment.PurchaseOrder.PONumber</span>
+                                        }
+                                        else if (payment.Order != null && !string.IsNullOrEmpty(payment.Order.OrderNumber))
+                                        {
+                                            <span>Order: @payment.Order.OrderNumber</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Order Payment</span>
+                                    </td>
+                                    <td><span class="fw-bold text-danger">@payment.CommissionAmount.ToString("C")</span></td>
+                                    <td>@(payment.DueDate?.ToString("MMM dd, yyyy") ?? "N/A")</td>
+                                    <td>
+                                        <span class="badge bg-warning">Pending</span>
+                                    </td>
+                                    <td>
+                                        <form asp-action="InitializePayment" asp-controller="Payment" method="post" style="display:inline;">
+                                            <input type="hidden" name="commissionId" value="@payment.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                                <i class="fas fa-credit-card me-1"></i>Pay Now
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Payment History -->
+    @if (paidPayments.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2 text-primary"></i>Payment History
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Order / PO #</th>
+                                <th>Payment Type</th>
+                                <th>Amount</th>
+                                <th>Paid Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var payment in paidPayments)
+                            {
+                                <tr>
+                                    <td>#@payment.Id</td>
+                                    <td>
+                                        @if (payment.PurchaseOrder != null && !string.IsNullOrEmpty(payment.PurchaseOrder.PONumber))
+                                        {
+                                            <span>PO: @payment.PurchaseOrder.PONumber</span>
+                                        }
+                                        else if (payment.Order != null && !string.IsNullOrEmpty(payment.Order.OrderNumber))
+                                        {
+                                            <span>Order: @payment.Order.OrderNumber</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Order Payment</span>
+                                    </td>
+                                    <td class="fw-bold text-success">@payment.CommissionAmount.ToString("C")</td>
+                                    <td>@(payment.PaidAt?.ToString("MMM dd, yyyy") ?? "N/A")</td>
+                                    <td>
+                                        <span class="badge bg-success">Paid</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!pendingPayments.Any() && !paidPayments.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-receipt fa-4x text-muted mb-3 opacity-25"></i>
+                <h5 class="text-muted">No payments found</h5>
+                <p class="text-muted">Payments will appear here when orders are delivered or completed.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .table tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        transition: all 0.2s ease;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 12px;
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+    }
+</style>

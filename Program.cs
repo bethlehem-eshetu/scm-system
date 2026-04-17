@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
+using SCM_System.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,8 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+builder.Services.AddHttpClient<IChapaService, ChapaService>();
+
 // Add HttpContextAccessor for session helpers
 builder.Services.AddHttpContextAccessor();
 
@@ -55,7 +58,13 @@ builder.Services.AddScoped<SCM_System.Services.IPurchaseOrderService, SCM_System
 builder.Services.AddScoped<SCM_System.Services.IOrderService, SCM_System.Services.OrderService>();
 builder.Services.AddScoped<SCM_System.Services.ICartService, SCM_System.Services.CartService>();
 builder.Services.AddScoped<SCM_System.Services.ISupplierService, SCM_System.Services.SupplierService>();
-
+builder.Services.AddScoped<ICommissionService, CommissionService>();
+builder.Services.AddScoped<IChapaService, ChapaService>();
+builder.Services.AddScoped<IReturnService, ReturnService>();
+// Add this after builder.Services.AddScoped statements
+builder.Services.AddScoped<IContactDetectionService, ContactDetectionService>();
+builder.Services.AddScoped<IPenaltyService, PenaltyService>();
+builder.Services.AddScoped<IRatingService, RatingService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

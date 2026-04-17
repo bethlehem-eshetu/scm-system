@@ -409,6 +409,47 @@
                     }
                 </div>
             </div>
+
+            @if (!string.IsNullOrEmpty(Model.QRCodeValue))
+{
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-qrcode me-2"></i>Delivery QR Code
+        </div>
+        <div class="card-body text-center">
+            <div id="qrcode-container" class="mb-3"></div>
+            <p class="text-muted">Show this QR code to the delivery agent when your order arrives.</p>
+            <button class="btn btn-sm btn-outline-primary" onclick="downloadQRCode()">
+                <i class="fas fa-download me-1"></i>Save QR Code
+            </button>
+        </div>
+    </div>
+}
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+    @if (!string.IsNullOrEmpty(Model.QRCodeValue))
+    {
+        <text>
+        new QRCode(document.getElementById("qrcode-container"), {
+            text: "@Model.QRCodeValue",
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        function downloadQRCode() {
+            var canvas = document.querySelector("#qrcode-container canvas");
+            var link = document.createElement('a');
+            link.download = 'order-@Model.Id-qrcode.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        </text>
+    }
+</script>
         </div>
     </div>
 </div>

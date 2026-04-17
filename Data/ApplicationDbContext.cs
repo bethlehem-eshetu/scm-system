@@ -17,6 +17,7 @@ namespace SCM_System.Data
         public DbSet<SupplierEmployee> SupplierEmployees { get; set; }
         public DbSet<Penalty> Penalties { get; set; }
 
+
         // Product Catalog Tables
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<ProductAttributeDefinition> ProductAttributeDefinitions { get; set; }
@@ -41,6 +42,7 @@ namespace SCM_System.Data
         // Delivery Tables
         public DbSet<Delivery> Deliveries { get; set; }
         public DbSet<DeliveryTracking> DeliveryTrackings { get; set; }
+        public DbSet<ReturnRequest> ReturnRequests { get; set; }
 
         // Payment Tables
         public DbSet<Commission> Commissions { get; set; }
