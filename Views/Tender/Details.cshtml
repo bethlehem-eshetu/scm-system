@@ -4,100 +4,136 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid px-4 py-3 bg-glass rounded-4 shadow">
+<div class="container-fluid px-4 py-3">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <div class="d-flex align-items-center mb-1">
-                <h2 class="fw-bold text-dark mb-0">Tender: @Model.ReferenceNumber</h2>
-                <span class="badge ms-3 @(Model.Status == "Published" ? "bg-primary" : Model.Status == "Awarded" ? "bg-success" : "bg-secondary") rounded-pill px-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index">Tenders</a></li>
+                    <li class="breadcrumb-item active">@Model.ReferenceNumber</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center">
+                <h2 class="fw-bold text-dark mb-0">Tender: @Model.Title</h2>
+                <span class="badge ms-3 @(Model.Status == "Published" ? "bg-primary" : Model.Status == "Awarded" ? "bg-success" : "bg-secondary") rounded-pill px-3 shadow-sm">
                     @Model.Status
                 </span>
             </div>
-            <p class="text-secondary mb-0">Issued by @Model.Retailer?.BusinessName | @Model.Category?.CategoryName</p>
+            <p class="text-muted mb-0">Issued by @Model.Retailer?.BusinessName • Category: @Model.Category?.CategoryName</p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Index" class="btn btn-outline-light rounded-pill">
-                <i class="fas fa-arrow-left me-2"></i> Back to List
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-list me-2"></i> Back to List
             </a>
             @if (User.IsInRole("Retailer") && Model.Status == "Published")
             {
-                <button class="btn btn-danger rounded-pill px-4" onclick="confirmDelete(@Model.Id)">
-                    <i class="fas fa-trash-alt me-2"></i> Cancel Tender
+                <button class="btn btn-outline-danger rounded-pill px-4" onclick="confirmDelete(@Model.Id)">
+                    <i class="fas fa-times-circle me-2"></i> Cancel Tender
                 </button>
             }
         </div>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success bg-success text-dark border-0 alert-dismissible fade show mb-4" role="alert">
-            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close " data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
     <div class="row g-4">
-        <!-- Left Column: Details -->
+        <!-- Left Column: Details & Items -->
         <div class="col-lg-8">
             <!-- General Info Card -->
-            <div class="card bg-glass border-0 text-dark mb-4 shadow-sm">
-                <div class="card-header bg-transparent border-bottom border-dark-10 py-3">
-                    <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2 text-primary"></i> General Information</h5>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-primary"><i class="fas fa-info-circle me-2"></i> Tender Specifications</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-4">
                         <div class="col-md-12">
-                            <label class="text-secondary small text-uppercase fw-bold mb-1">Title</label>
-                            <h4 class="text-dark mb-0">@Model.Title</h4>
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Detailed Description</label>
+                            <p class="text-dark mb-0 lead" style="white-space: pre-line;">@Model.Description</p>
                         </div>
-                        <div class="col-md-12">
-                            <label class="text-secondary small text-uppercase fw-bold mb-1">Description</label>
-                            <p class="text-light mb-0" style="white-space: pre-line;">@Model.Description</p>
+                        
+                        <div class="col-md-4">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Budget Range</label>
+                            <p class="text-dark mb-0 fw-bold">
+                                <i class="fas fa-money-bill-wave me-1 text-success"></i> 
+                                @(Model.BudgetMin?.ToString("N0") ?? "0") - @(Model.BudgetMax?.ToString("N0") ?? "Unspecified") ETB
+                            </p>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Partial Bidding</label>
+                            <p class="text-dark mb-0">
+                                @if(Model.AllowPartialBids) {
+                                    <span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i> Allowed</span>
+                                } else {
+                                    <span class="text-danger fw-bold"><i class="fas fa-times-circle me-1"></i> Not Allowed</span>
+                                }
+                            </p>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Attachments</label>
+                            <p class="text-dark mb-0">
+                                @if(!string.IsNullOrEmpty(Model.AttachmentPath)) {
+                                    <a href="/uploads/tenders/@System.IO.Path.GetFileName(Model.AttachmentPath)" class="btn btn-sm btn-link p-0 fw-bold" target="_blank">
+                                        <i class="fas fa-file-pdf me-1 text-danger"></i> Specifications.pdf
+                                    </a>
+                                } else {
+                                    <span class="text-muted small italic">No attachments</span>
+                                }
+                            </p>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Submission Deadline</label>
+                            <p class="text-dark mb-0"><i class="far fa-clock me-2 text-warning"></i> @Model.SubmissionDeadline.ToString("MMM dd, yyyy HH:mm")</p>
                         </div>
                         <div class="col-md-4">
-                            <label class="text-secondary small text-uppercase fw-bold mb-1">Submission Deadline</label>
-                            <p class="text-dark mb-0"><i class="far fa-calendar-alt me-2 text-warning"></i> @Model.SubmissionDeadline.ToString("MMM dd, yyyy HH:mm")</p>
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Expected Delivery</label>
+                            <p class="text-dark mb-0"><i class="fas fa-truck me-2 text-primary"></i> @Model.ExpectedDeliveryDate.ToString("MMM dd, yyyy")</p>
                         </div>
                         <div class="col-md-4">
-                            <label class="text-secondary small text-uppercase fw-bold mb-1">Expected Delivery</label>
-                            <p class="text-dark mb-0"><i class="fas fa-truck me-2 text-success"></i> @Model.ExpectedDeliveryDate.ToString("MMM dd, yyyy")</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-secondary small text-uppercase fw-bold mb-1">Language</label>
-                            <p class="text-dark mb-0"><i class="fas fa-language me-2 text-info"></i> @Model.Language</p>
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Preferred Language</label>
+                            <p class="text-dark mb-0">@Model.Language</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Requested Items Card -->
-            <div class="card bg-glass border-0 text-dark mb-4 shadow-sm">
-                <div class="card-header bg-transparent border-bottom border-dark-10 py-3">
-                    <h5 class="card-title mb-0"><i class="fas fa-list-ul me-2 text-success"></i> Requested Items</h5>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-success"><i class="fas fa-box-open me-2"></i> Line Items Requested</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table  table-borderless align-middle mb-0">
-                            <thead>
-                                <tr class="text-secondary" style="font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                    <th class="ps-4 py-3">PRODUCT</th>
-                                    <th>QUANTITY</th>
-                                    <th>UNIT</th>
-                                    <th>EST. UNIT PRICE</th>
-                                    <th class="pe-4">SPECIFICATIONS</th>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="text-muted small text-uppercase">
+                                    <th class="ps-4 py-3">Product Name</th>
+                                    <th>Quantity</th>
+                                    <th>Unit</th>
+                                    <th>Ref. Price</th>
+                                    <th class="pe-4">Specifications</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @if(Model.TenderItems != null)
                                 {
                                     foreach(var item in Model.TenderItems) {
-                                        <tr class="border-bottom border-dark-05">
-                                            <td class="ps-4 fw-bold">@item.ProductName</td>
-                                            <td>@item.Quantity</td>
-                                            <td><span class="badge bg-dark-soft border border-dark-10">@item.Unit</span></td>
-                                            <td>@(item.EstimatedUnitPrice?.ToString("C") ?? "N/A")</td>
-                                            <td class="pe-4 text-secondary small">@item.Description</td>
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold text-dark">@item.ProductName</div>
+                                                @if(item.ProductId.HasValue) {
+                                                    <span class="badge bg-info bg-opacity-10 text-info small border-0">Catalog Match</span>
+                                                } else {
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary small border-0">Custom Description</span>
+                                                }
+                                            </td>
+                                            <td class="fw-bold">@item.Quantity</td>
+                                            <td><span class="badge bg-light text-dark border">@item.Unit</span></td>
+                                            <td class="text-primary fw-bold">@(item.EstimatedUnitPrice?.ToString("N2") ?? "---") ETB</td>
+                                            <td class="pe-4">
+                                                <p class="small text-muted mb-0" style="max-width: 250px;">@(string.IsNullOrEmpty(item.Specifications) ? item.Description : item.Specifications)</p>
+                                            </td>
                                         </tr>
                                     }
                                 }
@@ -108,50 +144,52 @@
             </div>
 
             <!-- Bids Section -->
-            <div class="card bg-glass border-0 text-dark shadow-sm">
-                <div class="card-header bg-transparent border-bottom border-dark-10 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0"><i class="fas fa-gavel me-2 text-warning"></i> Received Bids</h5>
-                    <span class="badge bg-primary">@(Model.Bids?.Count ?? 0) Bids</span>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-warning"><i class="fas fa-hand-holding-usd me-2"></i> Received Proposals</h5>
+                    <span class="badge bg-dark rounded-pill">@(Model.Bids?.Count ?? 0) Submissions</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table  table-borderless align-middle mb-0">
-                            <thead>
-                                <tr class="text-secondary" style="font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                    <th class="ps-4">SUPPLIER</th>
-                                    <th>PROPOSAL AMOUNT</th>
-                                    <th>LEAD TIME</th>
-                                    <th>STATUS</th>
-                                    <th class="text-end pe-4">ACTIONS</th>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="text-muted small text-uppercase">
+                                    <th class="ps-4">Supplier</th>
+                                    <th>Proposed Total</th>
+                                    <th>Lead Time</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @if(Model.Bids != null && Model.Bids.Any())
                                 {
                                     foreach(var bid in Model.Bids) {
-                                        <tr class="border-bottom border-dark-05 @(bid.IsWinningBid ? "bg-success-subtle" : "")">
+                                        <tr class="@(bid.IsWinningBid ? "bg-success bg-opacity-10" : "")">
                                             <td class="ps-4">
-                                                <div class="fw-bold">@bid.Supplier?.CompanyName</div>
-                                                <div class="text-secondary small">@bid.SubmittedAt.ToString("MMM dd")</div>
+                                                <div class="fw-bold text-dark">@bid.Supplier?.CompanyName</div>
+                                                <div class="text-muted small">Submitted: @bid.SubmittedAt.ToString("MMM dd, yyyy")</div>
                                             </td>
-                                            <td class="fw-bold text-success">@bid.ProposedTotalAmount.ToString("C")</td>
-                                            <td>@bid.DeliveryLeadTimeDays Days</td>
+                                            <td class="fw-bold text-success">@bid.ProposedTotalAmount.ToString("N2") ETB</td>
+                                            <td class="fw-medium">@bid.DeliveryLeadTimeDays Days</td>
                                             <td>
-                                                <span class="badge rounded-pill @(bid.Status == "Accepted" ? "bg-success" : bid.Status == "Rejected" ? "bg-danger" : "bg-warning")">
+                                                <span class="badge rounded-pill @(bid.Status == "Accepted" ? "bg-success" : bid.Status == "Rejected" ? "bg-danger" : "bg-warning text-dark")">
                                                     @bid.Status
                                                 </span>
                                             </td>
                                             <td class="text-end pe-4">
                                                 <div class="d-flex gap-2 justify-content-end">
-                                                    <a href="#" class="btn btn-sm btn-outline-info rounded-pill"><i class="fas fa-eye"></i> View Proposal</a>
+                                                    <a asp-action="ReviewProposal" asp-route-id="@bid.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                                        <i class="fas fa-file-alt me-1"></i> Review
+                                                    </a>
                                                     @if (User.IsInRole("Retailer") && Model.Status == "Published")
                                                     {
                                                         <form asp-action="Award" asp-controller="Tender" method="post" class="d-inline">
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="tenderId" value="@Model.Id" />
                                                             <input type="hidden" name="bidId" value="@bid.Id" />
-                                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" onclick="return confirm('Are you sure you want to award this tender to @bid.Supplier?.CompanyName?')">
-                                                                <i class="fas fa-trophy me-1"></i> Award
+                                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm" onclick="return confirm('Are you sure you want to award this tender to @bid.Supplier?.CompanyName?')">
+                                                                <i class="fas fa-award me-1"></i> Award
                                                             </button>
                                                         </form>
                                                     }
@@ -163,9 +201,11 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="5" class="text-center py-5 text-secondary">
-                                            <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
-                                            No bids received yet.
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                                                <p class="mb-0">No active proposals found for this tender.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 }
@@ -176,68 +216,86 @@
             </div>
         </div>
 
-        <!-- Right Column: Specs & Evaluation -->
+        <!-- Right Column: Logistics & Evaluation -->
         <div class="col-lg-4">
-            <!-- Logistics & Terms Card -->
-            <div class="card bg-glass border-0 text-dark mb-4 shadow-sm">
-                <div class="card-header bg-transparent border-bottom border-dark-10 py-3">
-                    <h5 class="card-title mb-0"><i class="fas fa-file-contract me-2 text-warning"></i> Terms & Logistics</h5>
+            <!-- Commercial Terms Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-dark"><i class="fas fa-balance-scale me-2"></i> Commercial Terms</h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="mb-3">
-                        <label class="text-secondary small text-uppercase fw-bold d-block mb-1">Delivery Location</label>
-                        <p class="text-dark mb-0">@Model.DeliveryLocation</p>
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Delivery Location</label>
+                        <p class="text-dark fw-bold mb-0"><i class="fas fa-map-marker-alt text-danger me-2"></i>@Model.DeliveryLocation</p>
                     </div>
-                    <div class="mb-3">
-                        <label class="text-secondary small text-uppercase fw-bold d-block mb-1">Payment Terms</label>
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Payment Strategy</label>
                         <p class="text-dark mb-0">@Model.PaymentTerms</p>
                     </div>
-                    <div class="mb-3">
-                        <label class="text-secondary small text-uppercase fw-bold d-block mb-1">Packaging Requirements</label>
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Packaging Policy</label>
                         <p class="text-dark mb-0">@Model.PackagingRequirements</p>
                     </div>
                     <div class="mb-0">
-                        <label class="text-secondary small text-uppercase fw-bold d-block mb-1">Inspection Requirement</label>
+                        <label class="text-muted small text-uppercase fw-bold d-block mb-1">Quality Inspection</label>
                         <p class="text-dark mb-0">@Model.InspectionRequirement</p>
                     </div>
                 </div>
             </div>
 
             <!-- Evaluation Criteria Card -->
-            <div class="card bg-glass border-0 text-dark shadow-sm">
-                <div class="card-header bg-transparent border-bottom border-dark-10 py-3">
-                    <h5 class="card-title mb-0"><i class="fas fa-star me-2 text-info"></i> Evaluation Weights</h5>
+            <div class="card border-0 shadow-sm rounded-4 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-dark"><i class="fas fa-tasks me-2"></i> Evaluation Weights</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-secondary small">Price</span>
-                            <span class="fw-bold">@Model.PriceWeight%</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Commercial (Price)</span>
+                            <span class="badge bg-success">@Model.PriceWeight%</span>
                         </div>
-                        <div class="progress bg-dark-soft" style="height: 6px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: @Model.PriceWeight%;"></div>
+                        <div class="progress rounded-pill shadow-sm" style="height: 10px;">
+                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: @Model.PriceWeight%;"></div>
                         </div>
                     </div>
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-secondary small">Technical Proposal</span>
-                            <span class="fw-bold">@Model.TechnicalWeight%</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Technical Compliance</span>
+                            <span class="badge bg-primary">@Model.TechnicalWeight%</span>
                         </div>
-                        <div class="progress bg-dark-soft" style="height: 6px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: @Model.TechnicalWeight%;"></div>
+                        <div class="progress rounded-pill shadow-sm" style="height: 10px;">
+                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" style="width: @Model.TechnicalWeight%;"></div>
                         </div>
                     </div>
                     <div class="mb-0">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-secondary small">Delivery Capability</span>
-                            <span class="fw-bold">@Model.DeliveryWeight%</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Lead Time & Logistics</span>
+                            <span class="badge bg-info">@Model.DeliveryWeight%</span>
                         </div>
-                        <div class="progress bg-dark-soft" style="height: 6px;">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: @Model.DeliveryWeight%;"></div>
+                        <div class="progress rounded-pill shadow-sm" style="height: 10px;">
+                            <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style="width: @Model.DeliveryWeight%;"></div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            @if(Model.Status == "Awarded")
+            {
+                <div class="alert alert-success mt-4 border-0 rounded-4 shadow-sm p-4">
+                    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i> Award Concluded</h6>
+                    <p class="small mb-0">This tender was awarded. A Purchase Order has been generated and the fulfillment process has started.</p>
+                </div>
+            }
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id) {
+            if (confirm('Are you sure you want to cancel this tender? This action cannot be undone.')) {
+                // Implement cancel logic
+            }
+        }
+    </script>
+}

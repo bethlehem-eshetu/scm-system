@@ -13,11 +13,13 @@ namespace SCM_System.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IOrderService _orderService;
+        private readonly IPurchaseOrderService _poService;
 
-        public DeliveryController(ApplicationDbContext context, IOrderService orderService)
+        public DeliveryController(ApplicationDbContext context, IOrderService orderService, IPurchaseOrderService poService)
         {
             _context = context;
             _orderService = orderService;
+            _poService = poService;
         }
 
         private async Task<int> GetEmployeeIdAsync()
@@ -63,6 +65,8 @@ namespace SCM_System.Controllers
             var employeeId = await GetEmployeeIdAsync();
             if (employeeId != 0 && po.DeliveryAgentId != employeeId) return Unauthorized();
 
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             if (status == "Delivered")
             {
                 if (string.IsNullOrWhiteSpace(proofData) && string.IsNullOrWhiteSpace(po.ProofOfDelivery))
@@ -75,11 +79,14 @@ namespace SCM_System.Controllers
                 {
                     po.ProofOfDelivery = proofData;
                 }
-                po.DeliveredAt = DateTime.Now;
+                // po.DeliveredAt will be set inside poService.UpdatePurchaseOrderStatusAsync
             }
 
-            po.Status = status;
-            await _context.SaveChangesAsync();
+            // Centralized update (including Inventory deduction)
+            await _poService.UpdatePurchaseOrderStatusAsync(purchaseOrderId, status, userId);
+            
+            // Re-fetch to ensure we have updated status for parent check
+            po = await _context.PurchaseOrders.FindAsync(purchaseOrderId);
             
             // Check if ALL POs for the master order are Delivered
             if (status == "Delivered")
@@ -87,7 +94,7 @@ namespace SCM_System.Controllers
                 var allPOs = await _context.PurchaseOrders.Where(p => p.OrderId == po.OrderId).ToListAsync();
                 bool allDelivered = allPOs.All(p => p.Status == "Delivered" || p.Status == "Completed");
                 
-                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
                 if (allDelivered)
                 {
                     await _orderService.UpdateOrderStatusAsync(po.OrderId, "Delivered", "All warehouse deliveries have been completed.", userId);

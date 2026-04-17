@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 namespace SCM_System.Models.ViewModels
 {
@@ -33,6 +34,17 @@ namespace SCM_System.Models.ViewModels
         [Required(ErrorMessage = "Please select a role")]
         [Display(Name = "Register As")]
         public string Role { get; set; }
+
+        // Fayda Identity Fields
+        [Required(ErrorMessage = "Fayda Account Number (FAN) is required")]
+        [RegularExpression(@"^\d{16}$", ErrorMessage = "FAN must be a valid 16-digit number.")]
+        [Display(Name = "Fayda Account Number (FAN)")]
+        public string? FAN { get; set; }
+
+        [Required(ErrorMessage = "Date of Birth is required")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
+        public DateTime? DateOfBirth { get; set; }
 
         // Supplier fields
         [Display(Name = "Company Name")]
@@ -83,5 +95,12 @@ namespace SCM_System.Models.ViewModels
 
         [Display(Name = "Business Description")]
         public string? BusinessDescription { get; set; }
+
+        // Selected Categories for Supplier
+        [Display(Name = "Business Categories")]
+        public List<int>? SelectedCategoryIds { get; set; } = new List<int>();
+
+        // Selected Categories for Retailer (Deprecated for registration bypass)
+        // public List<int>? SelectedRetailerCategoryIds { get; set; } = new List<int>();
     }
 }

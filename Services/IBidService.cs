@@ -9,6 +9,6 @@ namespace SCM_System.Services
         Task<TenderBid> GetBidByIdAsync(int id);
         Task<TenderBid> SubmitBidAsync(TenderBid bid);
         Task<TenderBid> UpdateBidStatusAsync(int id, string status);
-        Task<TenderBid> AcceptBidAsync(int id);
+        Task<bool> AcceptBidAsync(int id, string deliveryAddress);
     }
 }

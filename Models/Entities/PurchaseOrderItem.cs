@@ -11,9 +11,14 @@ namespace SCM_System.Models.Entities
         public int PurchaseOrderId { get; set; }
         public PurchaseOrder PurchaseOrder { get; set; }
 
+        public int? ProductId { get; set; }
+        public Product? Product { get; set; }
+
         [Required]
-        public int ProductId { get; set; }
-        public Product Product { get; set; }
+        [StringLength(100)]
+        public string ProductName { get; set; }
+
+        public string? Description { get; set; }
 
         [Required]
         public int Quantity { get; set; }

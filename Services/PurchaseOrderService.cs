@@ -90,6 +90,8 @@ namespace SCM_System.Services
                             
                         allocations[inv.WarehouseId.Value].Add(new PurchaseOrderItem {
                             ProductId = tenderItem.ProductId,
+                            ProductName = tenderItem.ProductName,
+                            Description = tenderItem.Description,
                             Quantity = allocate,
                             UnitPrice = bid.UnitPrice
                         });
@@ -111,6 +113,8 @@ namespace SCM_System.Services
                             
                         allocations[firstWh.Id].Add(new PurchaseOrderItem {
                             ProductId = tenderItem.ProductId,
+                            ProductName = tenderItem.ProductName,
+                            Description = tenderItem.Description,
                             Quantity = remainingToAllocate,
                             UnitPrice = bid.UnitPrice
                         });
@@ -262,6 +266,33 @@ namespace SCM_System.Services
                             type,
                             $"/Retailer/OrderTrackingDetails/{po.OrderId}"
                         );
+                    }
+                }
+
+                // Handle Inventory Deduction on Delivery
+                if (status == POStatus.Delivered && oldStatus != POStatus.Delivered)
+                {
+                    // Refined logic: Loop through all items in the PO
+                    foreach (var item in po.PurchaseOrderItems)
+                    {
+                        var itemInv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == po.WarehouseId);
+                        
+                        if (itemInv == null)
+                        {
+                            throw new InvalidOperationException($"Inventory record missing for Product ID {item.ProductId} in Warehouse {po.WarehouseId}. Cannot complete delivery.");
+                        }
+
+                        if (itemInv.QuantityReserved < item.Quantity)
+                        {
+                            throw new InvalidOperationException($"Insufficient reserved stock for Product ID {item.ProductId}. Reserved: {itemInv.QuantityReserved}, Required: {item.Quantity}");
+                        }
+
+                        itemInv.QuantityReserved -= item.Quantity;
+                        itemInv.QuantityOnHand -= item.Quantity;
+                        
+                        if (itemInv.QuantityOnHand < 0) itemInv.QuantityOnHand = 0; // Safety
+                        
+                        _context.Update(itemInv);
                     }
                 }
 

@@ -26,7 +26,7 @@ namespace SCM_System.Controllers
             if (userId == null) return false;
 
             var user = _context.Users.Find(userId);
-            return user != null && user.Role == "Retailer" && user.IsApproved;
+            return user != null && user.Role == "Retailer" && user.IsApproved && user.IsFaydaVerified;
         }
 
         // GET: /Retailer/Dashboard
@@ -42,6 +42,16 @@ namespace SCM_System.Controllers
                 .FirstOrDefaultAsync(r => r.UserId == userId);
 
             if (retailer == null) return NotFound();
+
+            if (retailer.User != null && !string.IsNullOrEmpty(retailer.User.ApprovalStatusMessage))
+            {
+                ViewBag.ApprovalStatusMessage = retailer.User.ApprovalStatusMessage;
+                ViewBag.ApprovalStatusType = retailer.User.ApprovalStatusType;
+
+                // Clear after read
+                retailer.User.ApprovalStatusMessage = null;
+                await _context.SaveChangesAsync();
+            }
 
             // Advanced Stats for Dashboard
             var orders = await _context.Orders
@@ -167,7 +177,7 @@ namespace SCM_System.Controllers
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .Include(p => p.Inventories)
-                .Where(p => !p.IsDeleted && p.IsAvailable);
+                .Where(p => !p.IsDeleted && p.IsAvailable && p.Category.IsActive);
 
             if (!string.IsNullOrEmpty(searchTerm))
                 query = query.Where(p => p.ProductName.Contains(searchTerm) || p.Description.Contains(searchTerm));
@@ -182,7 +192,7 @@ namespace SCM_System.Controllers
 
             var products = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
             
-            ViewData["Categories"] = await _context.ProductCategories.ToListAsync();
+            ViewData["Categories"] = await _context.ProductCategories.Where(c => c.IsActive).OrderBy(c => c.CategoryName).ToListAsync();
             ViewData["Cities"] = await _context.Suppliers.Select(s => s.City).Distinct().ToListAsync();
             
             return View(products);

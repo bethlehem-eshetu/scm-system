@@ -282,10 +282,17 @@
                         <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
                     </li>
                     <li>
-                        <a asp-controller="Admin" asp-action="PendingSuppliers"><i class="fas fa-user-check"></i> Verifications</a>
+                        <a asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-check"></i> Verifications</a>
                     </li>
                     <li>
                         <a asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users"></i> All Users</a>
+                    </li>
+                    <li class="menu-label">System Admin</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-history"></i> Audit Logs</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-envelope-open-text"></i> Email Logs</a>
                     </li>
                 }
                 else if (role == "Supplier")

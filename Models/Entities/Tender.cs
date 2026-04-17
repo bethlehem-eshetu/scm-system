@@ -43,6 +43,12 @@ namespace SCM_System.Models.Entities
         public int PriceWeight { get; set; } = 40;
         public int TechnicalWeight { get; set; } = 40;
         public int DeliveryWeight { get; set; } = 20;
+ 
+        public decimal? BudgetMin { get; set; }
+        public decimal? BudgetMax { get; set; }
+        public bool AllowPartialBids { get; set; } = false;
+        public string? AttachmentPath { get; set; }
+        public string? PreferredSuppliers { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

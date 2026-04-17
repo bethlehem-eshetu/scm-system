@@ -47,6 +47,17 @@ namespace SCM_System.Models.ViewModels
         
         [Display(Name = "Accept Delay Penalties")]
         public bool PenaltyAcceptance { get; set; }
+
+        public string? WarrantyPeriod { get; set; }
+        public string? WarrantyType { get; set; }
+        public string? PreviousExperience { get; set; }
+        public string? PaymentTerms { get; set; }
+        
+        public string? ProductSpecifications { get; set; }
+        public string? QualityCertifications { get; set; }
+        public string? InsuranceCoverage { get; set; }
+        public string? AfterSalesSupport { get; set; }
+        public string? References { get; set; }
         
         public string? Notes { get; set; }
     }

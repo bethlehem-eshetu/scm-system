@@ -47,14 +47,36 @@
                                 <span class="badge bg-light text-dark border rounded-pill px-3">@user.Role</span>
                             </td>
                             <td>
-                                @if (user.IsApproved)
-                                {
-                                    <span class="badge bg-success bg-opacity-10 text-success px-3 rounded-pill border border-success border-opacity-25">Active</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning bg-opacity-10 text-warning px-3 rounded-pill border border-warning border-opacity-25">Pending</span>
-                                }
+                                <div class="mb-1">
+                                    @if (user.IsApproved)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 rounded-pill border border-success border-opacity-25">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 rounded-pill border border-warning border-opacity-25">Pending</span>
+                                    }
+                                </div>
+                                <div>
+                                    @if (user.IsFaydaVerified)
+                                    {
+                                        <span class="badge bg-info bg-opacity-10 text-info px-2 rounded-pill border border-info border-opacity-25 extra-small">
+                                            <i class="fas fa-id-card me-1"></i> Fayda Verified
+                                        </span>
+                                    }
+                                    else if (user.FaydaStatus == "Rejected")
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-2 rounded-pill border border-danger border-opacity-25 extra-small">
+                                            <i class="fas fa-times-circle me-1"></i> Fayda Rejected
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 rounded-pill border border-secondary border-opacity-25 extra-small">
+                                            <i class="fas fa-clock me-1"></i> Fayda Pending
+                                        </span>
+                                    }
+                                </div>
                             </td>
                             <td class="text-muted small">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
                             <td class="text-end">

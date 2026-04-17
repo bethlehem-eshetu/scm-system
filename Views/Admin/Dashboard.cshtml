@@ -128,7 +128,7 @@
                             </small>
                         </div>
                     </div>
-                    <a asp-action="PendingSuppliers" class="stretched-link"></a>
+                    <a asp-action="PendingUsers" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -165,8 +165,8 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <a asp-action="PendingSuppliers" class="btn btn-outline-primary w-100 py-3">
-                                <i class="fas fa-clock me-2"></i>Review Approvals
+                            <a asp-action="PendingUsers" class="btn btn-outline-primary w-100 py-3">
+                                <i class="fas fa-user-clock me-2"></i>User Verifications
                                 @if (ViewBag.PendingSuppliers > 0 || ViewBag.PendingRetailers > 0)
                                 {
                                     <span class="badge bg-danger ms-2">@(ViewBag.PendingSuppliers + ViewBag.PendingRetailers)</span>

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<SCM_System.Models.Entities.Retailer>
+@model IEnumerable<SCM_System.Models.Entities.Retailer>
 
 @{
     ViewData["Title"] = "All Retailers";
@@ -52,7 +52,15 @@
                         {
                             <tr>
                                 <td>@retailer.Id</td>
-                                <td>@retailer.BusinessName</td>
+                                <td>
+                                    <strong>@retailer.BusinessName</strong>
+                                    @if (retailer.User != null && retailer.User.IsFaydaVerified)
+                                    {
+                                        <span class="badge bg-primary ms-1" title="Fayda Identity Verified">
+                                            <i class="fas fa-id-card"></i> Fayda
+                                        </span>
+                                    }
+                                </td>
                                 <td>@retailer.User?.FullName</td>
                                 <td>@retailer.User?.Email</td>
                                 <td>@retailer.User?.PhoneNumber</td>

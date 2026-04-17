@@ -8,11 +8,13 @@ namespace SCM_System.Services
     {
         private readonly INotificationService _notificationService;
         private readonly ApplicationDbContext _context;
+        private readonly IPurchaseOrderService _poService;
 
-        public OrderService(ApplicationDbContext context, INotificationService notificationService)
+        public OrderService(ApplicationDbContext context, INotificationService notificationService, IPurchaseOrderService poService)
         {
             _context = context;
             _notificationService = notificationService;
+            _poService = poService;
         }
 
         public async Task<IEnumerable<Order>> GetOrdersByRetailerAsync(int retailerId)
@@ -81,6 +83,8 @@ namespace SCM_System.Services
                 {
                     OrderId = order.Id,
                     ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Description = item.Description,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice
                 };
@@ -103,26 +107,18 @@ namespace SCM_System.Services
 
             if (order != null)
             {
-                // Actual stock deduction occurs after delivery confirmation (Delivered) or completion
+                // Deduction logic removed here; centralization to PurchaseOrderService (Delivered status)
+                // However, we MUST propagate the status update to child POs so they can trigger their delivery logic
                 if ((status == "Delivered" || status == "Completed") && order.OrderStatus != "Delivered" && order.OrderStatus != "Completed")
                 {
                     var pos = await _context.PurchaseOrders
-                        .Include(p => p.PurchaseOrderItems)
-                        .Where(p => p.OrderId == order.Id && p.Status != "Cancelled").ToListAsync();
+                        .Where(p => p.OrderId == order.Id && p.Status != "Cancelled" && p.Status != "Delivered" && p.Status != "Completed")
+                        .ToListAsync();
 
                     foreach (var po in pos)
                     {
-                        var inventories = await _context.Inventories.Where(i => i.WarehouseId == po.WarehouseId).ToListAsync();
-                        foreach (var item in po.PurchaseOrderItems)
-                        {
-                            var inv = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                            if (inv != null)
-                            {
-                                inv.QuantityReserved -= item.Quantity;
-                                inv.QuantityOnHand -= item.Quantity;
-                            }
-                        }
-                        po.Status = status;
+                        // This will trigger inventory deduction in PurchaseOrderService
+                        await _poService.UpdatePurchaseOrderStatusAsync(po.Id, status, changedByUserId);
                     }
                 }
 
@@ -158,6 +154,8 @@ namespace SCM_System.Services
                     var inventories = await _context.Inventories.Where(i => i.WarehouseId == po.WarehouseId).ToListAsync();
                     foreach (var item in po.PurchaseOrderItems)
                     {
+                        if (item.ProductId == null) continue; // Custom product not in inventory
+
                         var inv = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
                         if (inv != null)
                         {
@@ -228,6 +226,8 @@ namespace SCM_System.Services
                     bool canFulfillAll = true;
                     foreach (var item in order.OrderItems)
                     {
+                        if (item.ProductId == null) continue; // Custom item skip inventory check
+
                         var inv = w.Inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
                         if (inv == null || (inv.QuantityOnHand - inv.QuantityReserved) < item.Quantity)
                         {
@@ -250,12 +250,17 @@ namespace SCM_System.Services
 
                     foreach (var item in order.OrderItems)
                     {
-                        var inventory = singleWarehouseMatch.Inventories.First(i => i.ProductId == item.ProductId);
-                        inventory.QuantityReserved += item.Quantity;
+                        if (item.ProductId.HasValue)
+                        {
+                            var inventory = singleWarehouseMatch.Inventories.First(i => i.ProductId == item.ProductId.Value);
+                            inventory.QuantityReserved += item.Quantity;
+                        }
                         
                         poAllocations[singleWarehouseMatch.Id].Add(new PurchaseOrderItem
                         {
                             ProductId = item.ProductId,
+                            ProductName = item.ProductName,
+                            Description = item.Description,
                             Quantity = item.Quantity,
                             UnitPrice = item.UnitPrice
                         });
@@ -302,6 +307,8 @@ namespace SCM_System.Services
                                 poAllocations[w.Id].Add(new PurchaseOrderItem
                                 {
                                     ProductId = item.ProductId,
+                                    ProductName = item.ProductName,
+                                    Description = item.Description,
                                     Quantity = allocate,
                                     UnitPrice = item.UnitPrice
                                 });
@@ -312,7 +319,30 @@ namespace SCM_System.Services
 
                         if (remainingQty > 0)
                         {
-                            throw new InvalidOperationException($"Insufficient global stock for product: {item.Product?.ProductName}");
+                            if (item.ProductId == null)
+                            {
+                                // Custom item that couldn't be allocated to any warehouse (shouldn't happen with at least one warehouse)
+                                // Assign to the first available warehouse anyway
+                                var fallbackWh = warehouses.First();
+                                if (!poAllocations.ContainsKey(fallbackWh.Id))
+                                {
+                                    poAllocations[fallbackWh.Id] = new List<PurchaseOrderItem>();
+                                    subtotalAllocations[fallbackWh.Id] = 0;
+                                }
+                                poAllocations[fallbackWh.Id].Add(new PurchaseOrderItem
+                                {
+                                    ProductId = null,
+                                    ProductName = item.ProductName,
+                                    Description = item.Description,
+                                    Quantity = remainingQty,
+                                    UnitPrice = item.UnitPrice
+                                });
+                                subtotalAllocations[fallbackWh.Id] += (remainingQty * item.UnitPrice);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException($"Insufficient global stock for product: {item.ProductName}");
+                            }
                         }
                     }
                 }

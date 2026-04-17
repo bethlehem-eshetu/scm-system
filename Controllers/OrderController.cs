@@ -49,11 +49,17 @@ namespace SCM_System.Controllers
                 bool allAvailable = true;
                 foreach (var item in order.OrderItems)
                 {
+                    if (item.ProductId == null) 
+                    {
+                        stockStatus[0] = true; // Use 0 as temporary key for custom items or handle differently
+                        continue;
+                    }
+
                     var globalStock = await _context.Inventories
                         .Where(i => i.ProductId == item.ProductId && i.Warehouse.SupplierId == sId)
                         .SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
                     
-                    stockStatus[item.ProductId] = globalStock >= item.Quantity;
+                    stockStatus[item.ProductId.Value] = globalStock >= item.Quantity;
                     if (globalStock < item.Quantity) allAvailable = false;
                 }
                 ViewBag.StockStatus = stockStatus;

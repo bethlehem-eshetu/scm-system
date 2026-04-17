@@ -16,9 +16,18 @@ namespace SCM_System.Data
         public DbSet<Retailer> Retailers { get; set; }
         public DbSet<SupplierEmployee> SupplierEmployees { get; set; }
         public DbSet<Penalty> Penalties { get; set; }
+        
+        // Identity Verification Mock
+        public DbSet<FaydaRegistry> FaydaRegistries { get; set; }
+        public DbSet<FaydaVerification> FaydaVerifications { get; set; }
+        public DbSet<EmailLog> EmailLogs { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         // Product Catalog Tables
         public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<SupplierCategory> SupplierCategories { get; set; }
+        public DbSet<RetailerCategory> RetailerCategories { get; set; }
+
         public DbSet<ProductAttributeDefinition> ProductAttributeDefinitions { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
@@ -139,6 +148,33 @@ namespace SCM_System.Data
                 .WithMany(pc => pc.Products)
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Supplier - Category Many-to-Many
+            modelBuilder.Entity<SupplierCategory>()
+                .HasOne(sc => sc.Supplier)
+                .WithMany(s => s.SupplierCategories)
+                .HasForeignKey(sc => sc.SupplierId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SupplierCategory>()
+                .HasOne(sc => sc.Category)
+                .WithMany(c => c.SupplierCategories)
+                .HasForeignKey(sc => sc.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Retailer - Category Many-to-Many
+            modelBuilder.Entity<RetailerCategory>()
+                .HasOne(rc => rc.Retailer)
+                .WithMany(r => r.RetailerCategories)
+                .HasForeignKey(rc => rc.RetailerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RetailerCategory>()
+                .HasOne(rc => rc.Category)
+                .WithMany(c => c.RetailerCategories)
+                .HasForeignKey(rc => rc.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
 
             // Product - Inventory (one-to-many)
             modelBuilder.Entity<Inventory>()
@@ -272,6 +308,20 @@ namespace SCM_System.Data
 
             // ========== SYSTEM CONFIGURATIONS ==========
 
+            // AuditLog - User (target user)
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(al => al.User)
+                .WithMany()
+                .HasForeignKey(al => al.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // AuditLog - PerformedByAdmin (the admin)
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(al => al.PerformedByAdmin)
+                .WithMany()
+                .HasForeignKey(al => al.PerformedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Notification - User (many-to-one)
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.User)
@@ -361,6 +411,15 @@ namespace SCM_System.Data
             // User unique constraints
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.FAN)
+                .IsUnique();
+
+            // FaydaRegistry unique constraint
+            modelBuilder.Entity<FaydaRegistry>()
+                .HasIndex(f => f.FAN)
                 .IsUnique();
 
             // Supplier unique constraints

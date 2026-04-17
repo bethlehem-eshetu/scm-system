@@ -43,18 +43,24 @@ namespace SCM_System.Controllers
             var supplier = await _context.Suppliers.FindAsync(supplierId);
             if (supplier == null) return Unauthorized();
 
-            // Get all published tenders
-            var allTenders = await _tenderService.GetAllTendersAsync();
-            var publishedTenders = allTenders.Where(t => t.Status == "Published");
-
-            // Filter: Only show tenders where the supplier has products in that category
-            var supplierCategoryIds = await _context.Products
-                .Where(p => p.SupplierId == supplierId)
-                .Select(p => p.CategoryId)
-                .Distinct()
+            // Get all published tenders with category info
+            var publishedTenders = await _context.Tenders
+                .Include(t => t.Category)
+                .Include(t => t.Retailer)
+                .Where(t => t.Status == "Published")
                 .ToListAsync();
 
-            var targetedTenders = publishedTenders.Where(t => supplierCategoryIds.Contains(t.CategoryId));
+            // Get supplier's registered categories
+            var supplierCategoryIds = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.CategoryId)
+                .ToListAsync();
+
+            // Filter: Match if supplier has the tender category OR the parent category
+            var targetedTenders = publishedTenders.Where(t => 
+                supplierCategoryIds.Contains(t.CategoryId) || 
+                (t.Category.ParentCategoryId.HasValue && supplierCategoryIds.Contains(t.Category.ParentCategoryId.Value))
+            ).ToList();
 
             return View(targetedTenders);
         }
@@ -70,11 +76,38 @@ namespace SCM_System.Controllers
         [Authorize(Roles = "Retailer")]
         public async Task<IActionResult> Create()
         {
-            ViewBag.Categories = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName");
+            var retailerId = await GetRetailerIdAsync();
+            if (retailerId == 0) return Unauthorized();
+
+            // Load categories hierarchically (Parent > Children)
+            var allCategories = await _context.ProductCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Level).ThenBy(c => c.CategoryName)
+                .ToListAsync();
+
+            var categoryList = new List<SelectListItem>();
+            var mainCategories = allCategories.Where(c => c.Level <= 1).ToList();
+            
+            foreach (var main in mainCategories)
+            {
+                var group = new SelectListGroup { Name = main.CategoryName };
+                categoryList.Add(new SelectListItem { Value = main.Id.ToString(), Text = main.CategoryName, Group = group });
+                
+                var subs = allCategories.Where(c => c.ParentCategoryId == main.Id).ToList();
+                foreach (var sub in subs)
+                {
+                    categoryList.Add(new SelectListItem { Value = sub.Id.ToString(), Text = "— " + sub.CategoryName, Group = group });
+                }
+            }
+
+            ViewBag.CategoryList = categoryList;
             ViewBag.Products = await _context.Products.OrderBy(p => p.ProductName).ToListAsync();
             
             var model = new TenderCreateViewModel();
-            model.Items.Add(new TenderItemViewModel()); // Default one item
+            model.SubmissionDeadline = DateTime.Now.AddDays(14);
+            model.ExpectedDeliveryDate = DateTime.Now.AddDays(30);
+            model.Items.Add(new TenderItemViewModel { Quantity = 1 }); 
+            
             return View(model);
         }
 
@@ -83,9 +116,26 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TenderCreateViewModel model)
         {
+            var retailerId = await GetRetailerIdAsync();
+            if (retailerId == 0) return Unauthorized();
+
             if (ModelState.IsValid)
             {
-                var retailerId = await GetRetailerIdAsync();
+                string attachmentPath = null;
+                if (model.Attachment != null && model.Attachment.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "tenders");
+                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                    
+                    var fileName = Guid.NewGuid().ToString() + "_" + model.Attachment.FileName;
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.Attachment.CopyToAsync(fileStream);
+                    }
+                    attachmentPath = "/uploads/tenders/" + fileName;
+                }
+
                 var tender = new Tender
                 {
                     ReferenceNumber = "RFQ-" + DateTime.Now.Ticks.ToString().Substring(8),
@@ -102,24 +152,50 @@ namespace SCM_System.Controllers
                     PaymentTerms = model.PaymentTerms,
                     PriceWeight = model.PriceWeight,
                     TechnicalWeight = model.TechnicalWeight,
-                    DeliveryWeight = model.DeliveryWeight
+                    DeliveryWeight = model.DeliveryWeight,
+                    BudgetMin = model.BudgetMin,
+                    BudgetMax = model.BudgetMax,
+                    AllowPartialBids = model.AllowPartialBids,
+                    AttachmentPath = attachmentPath,
+                    PreferredSuppliers = model.PreferredSuppliers
                 };
 
                 var items = model.Items.Select(i => new TenderItem
                 {
-                    ProductId = i.ProductId,
+                    ProductId = i.IsCustom ? (int?)null : i.ProductId,
                     ProductName = i.ProductName,
                     Description = i.Description,
+                    Specifications = i.Specifications,
                     Quantity = i.Quantity,
                     Unit = i.Unit,
                     EstimatedUnitPrice = i.EstimatedUnitPrice
                 }).ToList();
 
                 await _tenderService.CreateTenderAsync(tender, items);
+                TempData["SuccessMessage"] = "Tender published successfully!";
                 return RedirectToAction(nameof(Index));
             }
             
-            ViewBag.Categories = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", model.CategoryId);
+            // Re-load categories on error
+            var allCategories = await _context.ProductCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Level).ThenBy(c => c.CategoryName)
+                .ToListAsync();
+
+            var categoryList = new List<SelectListItem>();
+            var mainCategories = allCategories.Where(c => c.Level == 1).ToList();
+            foreach (var main in mainCategories)
+            {
+                var group = new SelectListGroup { Name = main.CategoryName };
+                categoryList.Add(new SelectListItem { Value = main.Id.ToString(), Text = main.CategoryName, Group = group, Selected = main.Id == model.CategoryId });
+                var subs = allCategories.Where(c => c.ParentCategoryId == main.Id).ToList();
+                foreach (var sub in subs)
+                {
+                    categoryList.Add(new SelectListItem { Value = sub.Id.ToString(), Text = "— " + sub.CategoryName, Group = group, Selected = sub.Id == model.CategoryId });
+                }
+            }
+
+            ViewBag.CategoryList = categoryList;
             ViewBag.Products = await _context.Products.OrderBy(p => p.ProductName).ToListAsync();
             return View(model);
         }
@@ -162,8 +238,9 @@ namespace SCM_System.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
-                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-                return retailer?.Id ?? 0;
+                var retailer = await _context.Retailers.Include(r => r.User).FirstOrDefaultAsync(r => r.UserId == userId);
+                if (retailer == null || !retailer.User.IsFaydaVerified) return 0;
+                return retailer.Id;
             }
             return 0;
         }
@@ -173,8 +250,9 @@ namespace SCM_System.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-                return supplier?.Id ?? 0;
+                var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
+                if (supplier == null || !supplier.User.IsFaydaVerified) return 0;
+                return supplier.Id;
             }
             return 0;
         }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
 {
@@ -43,6 +44,38 @@ namespace SCM_System.Models.Entities
         public bool EmailVerified { get; set; } = false;
 
         public bool PhoneVerified { get; set; } = false;
+        
+        // Fayda Identity Fields
+        [StringLength(16)]
+        [Display(Name = "Fayda Account Number (FAN)")]
+        public string? FAN { get; set; }
+
+        [Display(Name = "Date of Birth")]
+        public DateTime? DateOfBirth { get; set; }
+
+        public bool IsFaydaVerified { get; set; } = false;
+
+        [StringLength(20)]
+        public string FaydaStatus { get; set; } = "Pending"; // Pending, Verified, Rejected
+
+        public DateTime? FaydaVerifiedAt { get; set; }
+        
+        [Display(Name = "Rejection Reason")]
+        public string? RejectionReason { get; set; }
+
+        [Display(Name = "Approved At")]
+        public DateTime? ApprovedAt { get; set; }
+
+        public string ApprovalStatus { get; set; } = "Pending";
+
+        public string? VerifiedFullName { get; set; }
+        public string? VerifiedPhoneNumber { get; set; }
+
+        public string? ApprovalStatusMessage { get; set; }
+        public string? ApprovalStatusType { get; set; } // "Approved" or "Rejected"
+
+        [ForeignKey("FAN")]
+        public virtual FaydaVerification? FaydaVerification { get; set; }
 
         // Navigation properties
         public Supplier Supplier { get; set; }

@@ -87,14 +87,24 @@ namespace SCM_System.Controllers
                     DeliveryCapacity = model.DeliveryCapacity,
                     ValidityPeriodDays = model.ValidityPeriodDays,
                     TechnicalProposal = model.TechnicalProposal,
+                    Status = Request.Form["status"] == "Draft" ? "Draft" : "Pending",
                     PackagingPlan = model.PackagingPlan,
                     InspectionCompliance = model.InspectionCompliance,
                     PenaltyAcceptance = model.PenaltyAcceptance,
+                    WarrantyPeriod = model.WarrantyPeriod,
+                    WarrantyType = model.WarrantyType,
+                    PreviousExperience = model.PreviousExperience,
+                    PaymentTerms = model.PaymentTerms,
+                    ProductSpecifications = model.ProductSpecifications,
+                    QualityCertifications = model.QualityCertifications,
+                    InsuranceCoverage = model.InsuranceCoverage,
+                    AfterSalesSupport = model.AfterSalesSupport,
+                    References = model.References,
                     Notes = model.Notes
                 };
 
                 await _bidService.SubmitBidAsync(bid);
-                TempData["SuccessMessage"] = "Your bid has been submitted and evaluated.";
+                TempData["SuccessMessage"] = bid.Status == "Draft" ? "Your bid draft has been saved." : "Your bid has been submitted and evaluated.";
                 return RedirectToAction(nameof(Index));
             }
             
@@ -110,17 +120,41 @@ namespace SCM_System.Controllers
             return View(bids);
         }
 
+        [Authorize(Roles = "Retailer")]
+        public async Task<IActionResult> ReviewProposal(int id)
+        {
+            var bid = await _context.TenderBids
+                .Include(b => b.Supplier)
+                .Include(b => b.Tender)
+                .ThenInclude(t => t.TenderItems)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (bid == null) return NotFound();
+            
+            return View(bid);
+        }
+
         [HttpPost]
         [Authorize(Roles = "Retailer")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Accept(int id, string deliveryAddress)
         {
-            var bid = await _bidService.AcceptBidAsync(id);
+            var success = await _bidService.AcceptBidAsync(id, deliveryAddress);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Bid accepted successfully! Purchase order has been generated.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to accept bid.";
+            }
+
+            var bid = await _context.TenderBids.FindAsync(id);
             if (bid != null)
             {
-                await _poService.GeneratePurchaseOrderFromBidAsync(bid.Id, string.IsNullOrEmpty(deliveryAddress) ? "Default Store Address" : deliveryAddress);
+                return RedirectToAction("Review", new { tenderId = bid.TenderId });
             }
-            return RedirectToAction("Index", "PurchaseOrder");
+            return RedirectToAction("Index", "Tender");
         }
 
         private async Task<int> GetSupplierIdAsync()
@@ -128,8 +162,9 @@ namespace SCM_System.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-                return supplier?.Id ?? 0;
+                var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
+                if (supplier == null || !supplier.User.IsFaydaVerified) return 0;
+                return supplier.Id;
             }
             return 0;
         }

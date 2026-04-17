@@ -116,11 +116,32 @@ namespace SCM_System.Services
 
         public async Task<IEnumerable<Tender>> GetTendersByCategoryAsync(int categoryId)
         {
-            return await _context.Tenders
+            // Get the category to check its level
+            var category = await _context.ProductCategories.FindAsync(categoryId);
+            if (category == null) return Enumerable.Empty<Tender>();
+
+            IQueryable<Tender> query = _context.Tenders
                 .Include(t => t.Retailer)
                 .Include(t => t.Category)
-                .Where(t => t.CategoryId == categoryId && t.Status == "Published")
-                .ToListAsync();
+                .Where(t => t.Status == "Published");
+
+            if (category.Level == 1)
+            {
+                // If it's a parent category, include all tenders from children categories too
+                var childCategoryIds = await _context.ProductCategories
+                    .Where(c => c.ParentCategoryId == categoryId)
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                query = query.Where(t => t.CategoryId == categoryId || childCategoryIds.Contains(t.CategoryId));
+            }
+            else
+            {
+                // If it's a subcategory, only include exact matches
+                query = query.Where(t => t.CategoryId == categoryId);
+            }
+
+            return await query.ToListAsync();
         }
     }
 }

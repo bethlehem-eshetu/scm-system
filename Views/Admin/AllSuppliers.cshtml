@@ -1,4 +1,4 @@
-﻿@model IEnumerable<SCM_System.Models.Entities.Supplier>
+@model IEnumerable<SCM_System.Models.Entities.Supplier>
 
 @{
     ViewData["Title"] = "All Suppliers";
@@ -90,6 +90,12 @@
                                     <td>@supplier.Id</td>
                                     <td>
                                         <strong>@supplier.CompanyName</strong>
+                                        @if (supplier.User != null && supplier.User.IsFaydaVerified)
+                                        {
+                                            <span class="badge bg-primary ms-1" title="Fayda Identity Verified">
+                                                <i class="fas fa-id-card"></i> Fayda
+                                            </span>
+                                        }
                                     </td>
                                     <td>
                                         <span class="badge bg-info">@supplier.BusinessType</span>

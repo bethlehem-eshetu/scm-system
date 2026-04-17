@@ -22,6 +22,45 @@ namespace SCM_System.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SCM_System.Models.Entities.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PerformedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PerformedBy");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Cart", b =>
                 {
                     b.Property<int>("Id")
@@ -240,6 +279,142 @@ namespace SCM_System.Migrations
                     b.ToTable("DeliveryTrackings");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.EmailLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsSuccess")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("To")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmailLogs");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.FaydaRegistry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FAN")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FAN")
+                        .IsUnique();
+
+                    b.ToTable("FaydaRegistries");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.FaydaVerification", b =>
+                {
+                    b.Property<string>("FAN")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastOtpRequestTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OTP")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("OtpExpiry")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ResendCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("VerifiedDob")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VerifiedName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VerifiedPhone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("FAN");
+
+                    b.ToTable("FaydaVerifications");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Inventory", b =>
                 {
                     b.Property<int>("Id")
@@ -451,11 +626,19 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("ProductId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -769,6 +952,12 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
                     b.Property<int?>("ParentCategoryId")
                         .HasColumnType("int");
 
@@ -904,8 +1093,16 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ProductId")
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ProductId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int");
@@ -1035,6 +1232,32 @@ namespace SCM_System.Migrations
                     b.ToTable("Retailers");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.RetailerCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AssociatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetailerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("RetailerId");
+
+                    b.ToTable("RetailerCategories");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Supplier", b =>
                 {
                     b.Property<int>("Id")
@@ -1118,6 +1341,32 @@ namespace SCM_System.Migrations
                         .IsUnique();
 
                     b.ToTable("Suppliers");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.SupplierCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AssociatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("SupplierCategories");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.SupplierEmployee", b =>
@@ -1223,6 +1472,18 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AllowPartialBids")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AttachmentPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("BudgetMax")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("BudgetMin")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -1252,6 +1513,9 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PaymentTerms")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreferredSuppliers")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PriceWeight")
@@ -1303,6 +1567,9 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AfterSalesSupport")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("DeliveryCapacity")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -1320,6 +1587,9 @@ namespace SCM_System.Migrations
                     b.Property<string>("InspectionCompliance")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("InsuranceCoverage")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsWinningBid")
                         .HasColumnType("bit");
 
@@ -1329,8 +1599,17 @@ namespace SCM_System.Migrations
                     b.Property<string>("PackagingPlan")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PaymentTerms")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("PenaltyAcceptance")
                         .HasColumnType("bit");
+
+                    b.Property<string>("PreviousExperience")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProductSpecifications")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ProposedDeliveryDate")
                         .HasColumnType("datetime2");
@@ -1338,11 +1617,17 @@ namespace SCM_System.Migrations
                     b.Property<decimal>("ProposedTotalAmount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("QualityCertifications")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("QualityGuarantee")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<string>("References")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Score")
                         .HasColumnType("decimal(5,2)");
@@ -1375,6 +1660,12 @@ namespace SCM_System.Migrations
 
                     b.Property<int>("ValidityPeriodDays")
                         .HasColumnType("int");
+
+                    b.Property<string>("WarrantyPeriod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WarrantyType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1411,6 +1702,9 @@ namespace SCM_System.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<string>("Specifications")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("TenderId")
                         .HasColumnType("int");
 
@@ -1443,10 +1737,26 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("Pending");
 
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ApprovalStatusMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ApprovalStatusType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -1456,12 +1766,27 @@ namespace SCM_System.Migrations
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FAN")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("FaydaStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("FaydaVerifiedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFaydaVerified")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastLoginAt")
@@ -1484,15 +1809,28 @@ namespace SCM_System.Migrations
                     b.Property<bool>("PhoneVerified")
                         .HasColumnType("bit");
 
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("VerifiedFullName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VerifiedPhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("FAN")
+                        .IsUnique()
+                        .HasFilter("[FAN] IS NOT NULL");
 
                     b.ToTable("Users");
                 });
@@ -1628,6 +1966,25 @@ namespace SCM_System.Migrations
                     b.HasIndex("SupplierId");
 
                     b.ToTable("Warehouses");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.AuditLog", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.User", "PerformedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("PerformedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PerformedByAdmin");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Cart", b =>
@@ -1816,8 +2173,7 @@ namespace SCM_System.Migrations
                     b.HasOne("SCM_System.Models.Entities.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Order");
 
@@ -1972,8 +2328,7 @@ namespace SCM_System.Migrations
                     b.HasOne("SCM_System.Models.Entities.Product", "Product")
                         .WithMany("PurchaseOrderItems")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithMany("PurchaseOrderItems")
@@ -2024,6 +2379,25 @@ namespace SCM_System.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.RetailerCategory", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.ProductCategory", "Category")
+                        .WithMany("RetailerCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
+                        .WithMany("RetailerCategories")
+                        .HasForeignKey("RetailerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Retailer");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Supplier", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.User", "User")
@@ -2033,6 +2407,25 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.SupplierCategory", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.ProductCategory", "Category")
+                        .WithMany("SupplierCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
+                        .WithMany("SupplierCategories")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.SupplierEmployee", b =>
@@ -2129,6 +2522,15 @@ namespace SCM_System.Migrations
                     b.Navigation("Tender");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.User", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.FaydaVerification", "FaydaVerification")
+                        .WithMany()
+                        .HasForeignKey("FAN");
+
+                    b.Navigation("FaydaVerification");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Vehicle", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
@@ -2195,7 +2597,11 @@ namespace SCM_System.Migrations
 
                     b.Navigation("Products");
 
+                    b.Navigation("RetailerCategories");
+
                     b.Navigation("SubCategories");
+
+                    b.Navigation("SupplierCategories");
 
                     b.Navigation("Tenders");
                 });
@@ -2224,6 +2630,8 @@ namespace SCM_System.Migrations
 
                     b.Navigation("PurchaseOrders");
 
+                    b.Navigation("RetailerCategories");
+
                     b.Navigation("Tenders");
                 });
 
@@ -2242,6 +2650,8 @@ namespace SCM_System.Migrations
                     b.Navigation("PurchaseOrders");
 
                     b.Navigation("ReceivedRatings");
+
+                    b.Navigation("SupplierCategories");
 
                     b.Navigation("TenderBids");
 

@@ -224,10 +224,14 @@
                                         <td>
                                             @{
                                                 var stockStatus = ViewBag.StockStatus as Dictionary<int, bool>;
-                                                bool isAvailable = stockStatus != null && stockStatus.ContainsKey(item.ProductId) && stockStatus[item.ProductId];
+                                                bool isAvailable = true;
+                                                if (item.ProductId.HasValue)
+                                                {
+                                                    isAvailable = stockStatus != null && stockStatus.ContainsKey(item.ProductId.Value) && stockStatus[item.ProductId.Value];
+                                                }
                                             }
                                             <span class="badge rounded-pill @(isAvailable ? "bg-light text-success" : "bg-danger-soft text-danger")">
-                                                @(isAvailable ? "Available ✅" : "Insufficient Stock ❌")
+                                                @(isAvailable ? (item.ProductId.HasValue ? "Available ✅" : "Custom Item - No Stock Check") : "Insufficient Stock ❌")
                                             </span>
                                         </td>
                                     }

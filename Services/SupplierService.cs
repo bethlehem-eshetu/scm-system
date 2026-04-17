@@ -31,8 +31,12 @@ namespace SCM_System.Services
 
             var last30Days = DateTime.Now.AddDays(-30);
             
+            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.Id == supplierId);
+
             var viewModel = new SupplierDashboardViewModel
             {
+                IsFaydaVerified = supplier?.User?.IsFaydaVerified ?? false,
+                FaydaStatus = supplier?.User?.FaydaStatus ?? "Pending",
                 TotalRevenue = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount),
                 ActiveOrders = orders.Count(o => new[] { "Pending", "Accepted", "Processing", "Packed", "In Transit" }.Contains(o.OrderStatus)),
                 OrdersInDelivery = orders.Count(o => o.OrderStatus == "In Transit"),

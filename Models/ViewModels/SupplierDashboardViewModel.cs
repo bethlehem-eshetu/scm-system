@@ -11,6 +11,8 @@ namespace SCM_System.Models.ViewModels
         public int OrdersInDelivery { get; set; }
         public int LowStockItems { get; set; }
         public double CompletionRate { get; set; }
+        public bool IsFaydaVerified { get; set; }
+        public string FaydaStatus { get; set; } = "Pending";
 
         // Status Counts
         public Dictionary<string, int> StatusCounts { get; set; }

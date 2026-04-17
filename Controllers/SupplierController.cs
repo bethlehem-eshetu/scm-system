@@ -25,8 +25,20 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
             if (supplier == null) return RedirectToAction("AccessDenied", "Home");
+
+            if (supplier.User != null && !string.IsNullOrEmpty(supplier.User.ApprovalStatusMessage))
+            {
+                ViewBag.ApprovalStatusMessage = supplier.User.ApprovalStatusMessage;
+                ViewBag.ApprovalStatusType = supplier.User.ApprovalStatusType;
+
+                // Clear after read
+                supplier.User.ApprovalStatusMessage = null;
+                // Keep the type for now if needed, or clear both
+                // supplier.User.ApprovalStatusType = null; 
+                await _context.SaveChangesAsync();
+            }
 
             var analytics = await _supplierService.GetDashboardAnalyticsAsync(supplier.Id);
             return View(analytics);
@@ -109,7 +121,12 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier == null || !supplier.User.IsFaydaVerified)
+            {
+                TempData["ErrorMessage"] = "Identity verification (Fayda) required for this action.";
+                return RedirectToAction(nameof(Dashboard));
+            }
             ViewBag.Warehouses = await _context.Warehouses.Where(w => w.SupplierId == supplier.Id).ToListAsync();
             ViewBag.Vehicles = await _context.Vehicles.Where(v => v.SupplierId == supplier.Id).ToListAsync();
 
@@ -164,9 +181,12 @@ namespace SCM_System.Controllers
                         Role = model.Role,
                         AccountStatus = "Active",
                         IsApproved = true,
+                        ApprovalStatus = "Approved",
+                        IsFaydaVerified = true,
+                        FaydaStatus = "Verified",
                         CreatedAt = DateTime.Now,
-                        EmailVerified = false,
-                        PhoneVerified = false
+                        EmailVerified = true,
+                        PhoneVerified = true
                     };
 
                     _context.Users.Add(user);
@@ -377,8 +397,12 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-            if (supplier == null) return RedirectToAction("AccessDenied", "Home");
+            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier == null || !supplier.User.IsFaydaVerified)
+            {
+                TempData["ErrorMessage"] = "Identity verification (Fayda) required for this action.";
+                return RedirectToAction(nameof(Dashboard));
+            }
 
             return View();
         }
@@ -540,8 +564,12 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-            if (supplier == null) return RedirectToAction("AccessDenied", "Home");
+            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier == null || !supplier.User.IsFaydaVerified)
+            {
+                TempData["ErrorMessage"] = "Identity verification (Fayda) required for this action.";
+                return RedirectToAction(nameof(Dashboard));
+            }
 
             return View();
         }

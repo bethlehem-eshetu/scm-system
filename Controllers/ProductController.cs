@@ -31,8 +31,15 @@ namespace SCM_System.Controllers
                 return null;
             }
 
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-            return supplier?.Id;
+            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
+            
+            // Centralized Fayda check: Only verified suppliers can access product management
+            if (supplier == null || !supplier.User.IsFaydaVerified)
+            {
+                return null;
+            }
+
+            return supplier.Id;
         }
 
         // GET: Product/MyProducts
@@ -78,9 +85,15 @@ namespace SCM_System.Controllers
             var supplierId = await GetCurrentSupplierIdAsync();
             var supplier = await _context.Suppliers.FindAsync(supplierId);
 
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
             var model = new ProductViewModel
             {
-                CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName"),
+                CategoryList = new SelectList(supplierCategories, "Id", "CategoryName"),
                 SupplierList = supplier != null ? new SelectList(new[] { supplier }, "Id", "CompanyName", supplierId) : null,
                 SupplierId = supplierId ?? 0
             };
@@ -107,6 +120,15 @@ namespace SCM_System.Controllers
             ModelState.Remove("CategoryList");
             ModelState.Remove("SupplierList");
             ModelState.Remove("GalleryImages");
+
+            // Server-side Category Check
+            var isCategoryValid = await _context.SupplierCategories
+                .AnyAsync(sc => sc.SupplierId == supplierId && sc.CategoryId == model.CategoryId);
+
+            if (!isCategoryValid)
+            {
+                ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
 
             if (ModelState.IsValid)
             {
@@ -249,7 +271,13 @@ namespace SCM_System.Controllers
                 ModelState.AddModelError(string.Empty, "Validation errors: " + errors);
             }
 
-            model.CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", model.CategoryId);
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+            model.CategoryList = new SelectList(supplierCategories, "Id", "CategoryName", model.CategoryId);
             var supplierObj = await _context.Suppliers.FindAsync(supplierId);
             model.SupplierList = supplierObj != null ? new SelectList(new[] { supplierObj }, "Id", "CompanyName", supplierId) : null;
             
@@ -303,7 +331,13 @@ namespace SCM_System.Controllers
                 return NotFound();
             }
 
-            ViewBag.Categories = new SelectList(_context.ProductCategories, "Id", "CategoryName", product.CategoryId);
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", product.CategoryId);
             return View(product);
         }
 
@@ -339,6 +373,15 @@ namespace SCM_System.Controllers
             ModelState.Remove("AttributeValues");
             ModelState.Remove("PurchaseOrderItems");
             ModelState.Remove("OrderItems");
+
+            // Server-side Category Check
+            var isCategoryValid = await _context.SupplierCategories
+                .AnyAsync(sc => sc.SupplierId == supplierId && sc.CategoryId == product.CategoryId);
+
+            if (!isCategoryValid)
+            {
+                ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
 
             if (ModelState.IsValid)
             {
@@ -414,7 +457,13 @@ namespace SCM_System.Controllers
                 return RedirectToAction(nameof(MyProducts));
             }
             
-            ViewBag.Categories = new SelectList(_context.ProductCategories, "Id", "CategoryName", product.CategoryId);
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", product.CategoryId);
             return View(product);
         }
 
@@ -525,27 +574,60 @@ namespace SCM_System.Controllers
             if (product == null || product.IsDeleted) return NotFound();
 
             var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == id && i.WarehouseId == warehouseId);
-            if (inventory == null) return NotFound("Inventory record for this warehouse not found.");
 
             try
             {
-                if (action == "increase")
+                if (inventory == null)
                 {
-                    inventory.QuantityOnHand += stockChange;
+                    // If inventory record doesn't exist, only allow increase or set
+                    if (action == "increase" || action == "set")
+                    {
+                        inventory = new Inventory
+                        {
+                            ProductId = id,
+                            WarehouseId = warehouseId,
+                            QuantityOnHand = 0,
+                            QuantityReserved = 0,
+                            WarehouseLocation = "Main Section",
+                            LastUpdated = DateTime.Now
+                        };
+                        _context.Inventories.Add(inventory);
+                        
+                        // Apply stock change to the newly created record (starting from 0)
+                        inventory.QuantityOnHand = stockChange;
+                    }
+                    else
+                    {
+                        // For 'decrease', if it doesn't exist, we reject it
+                        TempData["ErrorMessage"] = "Cannot decrease stock: No inventory record exists for this warehouse.";
+                        return RedirectToAction(nameof(MyProducts));
+                    }
                 }
-                else if (action == "decrease")
+                else
                 {
-                    inventory.QuantityOnHand -= stockChange;
+                    if (action == "increase")
+                    {
+                        inventory.QuantityOnHand += stockChange;
+                    }
+                    else if (action == "decrease")
+                    {
+                        if (inventory.QuantityOnHand < stockChange)
+                        {
+                            TempData["ErrorMessage"] = "Cannot decrease stock below zero.";
+                            return RedirectToAction(nameof(MyProducts));
+                        }
+                        inventory.QuantityOnHand -= stockChange;
+                    }
+                    else if (action == "set")
+                    {
+                        inventory.QuantityOnHand = stockChange;
+                    }
+
                     if (inventory.QuantityOnHand < 0) inventory.QuantityOnHand = 0;
-                }
-                else if (action == "set")
-                {
-                    inventory.QuantityOnHand = stockChange;
-                    if (inventory.QuantityOnHand < 0) inventory.QuantityOnHand = 0;
+                    inventory.LastUpdated = DateTime.Now;
+                    _context.Update(inventory);
                 }
 
-                inventory.LastUpdated = DateTime.Now;
-                _context.Update(inventory);
                 await _context.SaveChangesAsync();
 
                 // Auto update availability

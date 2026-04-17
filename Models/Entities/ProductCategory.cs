@@ -16,6 +16,11 @@ namespace SCM_System.Models.Entities
         public int? ParentCategoryId { get; set; }
         public ProductCategory ParentCategory { get; set; }
 
+        public int Level { get; set; } = 1; // 1 for Main, 2 for Sub
+
+        public bool IsActive { get; set; } = true;
+
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation properties
@@ -23,5 +28,7 @@ namespace SCM_System.Models.Entities
         public ICollection<ProductAttributeDefinition> AttributeDefinitions { get; set; }
         public ICollection<Product> Products { get; set; }
         public ICollection<Tender> Tenders { get; set; }
+        public ICollection<SupplierCategory> SupplierCategories { get; set; }
+        public ICollection<RetailerCategory> RetailerCategories { get; set; } = new List<RetailerCategory>();
     }
 }

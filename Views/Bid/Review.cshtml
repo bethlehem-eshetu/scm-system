@@ -9,38 +9,43 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Review Bids: <span class="text-primary">@tender?.Title</span></h2>
-            <p class="text-muted">Reference: <span class="fw-bold">@tender?.ReferenceNumber</span> | Deadline: @tender?.SubmissionDeadline.ToString("MMM dd")</p>
+            <h2 class="fw-bold mb-0 text-dark">Review Bids: <span class="text-primary">@tender?.Title</span></h2>
+            <p class="text-muted mb-0">Reference: <span class="fw-bold">@tender?.ReferenceNumber</span> | Deadline: @tender?.SubmissionDeadline.ToString("MMM dd")</p>
         </div>
-        <a asp-controller="Tender" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 bg-white shadow-sm">
-            <i class="fas fa-arrow-left me-2"></i>Back to Tenders
-        </a>
+        <div class="d-flex gap-2">
+            <a asp-controller="Tender" asp-action="Details" asp-route-id="@tender?.Id" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-info-circle me-2"></i>Tender Details
+            </a>
+            <a asp-controller="Tender" asp-action="Index" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
     </div>
 
-    <!-- Evaluation Summary Card -->
-    <div class="glass-card p-4 mb-4 border-primary border-opacity-10">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h5 class="fw-bold mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>Evaluation Weights</h5>
-                <div class="d-flex gap-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary rounded-circle me-2" style="width: 12px; height: 12px;"></div>
-                        <span class="small fw-bold">Price: @tender?.PriceWeight%</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="bg-info rounded-circle me-2" style="width: 12px; height: 12px;"></div>
-                        <span class="small fw-bold">Technical: @tender?.TechnicalWeight%</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="bg-warning rounded-circle me-2" style="width: 12px; height: 12px;"></div>
-                        <span class="small fw-bold">Delivery: @tender?.DeliveryWeight%</span>
+    <!-- Evaluation Weighted Summary -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-4 bg-light bg-opacity-50">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="fw-bold text-muted text-uppercase small mb-3">Evaluation Criteria & System Weighting</h6>
+                    <div class="d-flex gap-4">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success rounded-circle p-1 me-2"><i class="fas fa-check small text-white"></i></span>
+                            <span class="small fw-bold">Commercial: @tender?.PriceWeight%</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary rounded-circle p-1 me-2"><i class="fas fa-check small text-white"></i></span>
+                            <span class="small fw-bold">Technical: @tender?.TechnicalWeight%</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-info rounded-circle p-1 me-2"><i class="fas fa-check small text-white"></i></span>
+                            <span class="small fw-bold">Logistics: @tender?.DeliveryWeight%</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4 text-end">
-                <div class="badge bg-primary bg-opacity-10 text-primary p-3 rounded-4">
-                    <div class="small fw-bold text-uppercase">Total Bids</div>
-                    <div class="h3 fw-bold mb-0">@Model.Count()</div>
+                <div class="col-md-4 text-end">
+                    <div class="small fw-bold text-muted mb-1">PROPOSALS RECEIVED</div>
+                    <div class="h2 fw-bold mb-0 text-primary">@Model.Count()</div>
                 </div>
             </div>
         </div>
@@ -51,95 +56,99 @@
         {
             var isBest = bid.Score == bestScore && bid.Score > 0;
             <div class="col-xl-6">
-                <div class="glass-card overflow-hidden h-100 position-relative @(bid.Status == "Accepted" ? "border-success border-2 shadow-lg" : "")">
+                <div class="card border-0 shadow-sm rounded-4 h-100 position-relative @(bid.Status == "Accepted" ? "border-2 border-success border-opacity-50 shadow-lg" : "")">
                     @if (isBest && bid.Status != "Accepted")
                     {
-                        <div class="position-absolute top-0 end-0 m-3">
-                            <span class="badge bg-warning text-dark p-2 rounded-pill shadow-sm">
-                                <i class="fas fa-star me-1"></i>SYSTEM RECOMMENDED
+                        <div class="position-absolute top-0 end-0 m-3 z-index-1">
+                            <span class="badge bg-warning text-dark p-2 rounded-pill shadow-sm border border-white">
+                                <i class="fas fa-gem me-1 text-primary"></i>BEST MATCH
                             </span>
                         </div>
                     }
 
-                    <div class="p-4 border-bottom bg-light bg-opacity-50">
-                        <div class="d-flex justify-content-between align-items-start">
+                    <div class="card-header bg-white border-bottom py-4 px-4">
+                        <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
-                                <div class="bg-white rounded-4 p-3 shadow-sm me-3 border text-center" style="width: 70px;">
-                                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Score</div>
+                                <div class="bg-primary bg-opacity-10 rounded-4 p-3 text-center me-3" style="min-width: 80px;">
+                                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Match Score</div>
                                     <div class="h4 fw-bold mb-0 text-primary">@bid.Score.ToString("0")%</div>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1">@bid.Supplier?.CompanyName</h5>
-                                    <div class="small text-muted"><i class="fas fa-calendar-alt me-1"></i>Submitted: @bid.SubmittedAt.ToString("MMM dd, HH:mm")</div>
+                                    <h5 class="fw-bold mb-1 text-dark">@bid.Supplier?.CompanyName</h5>
+                                    <div class="small text-muted">Submitted @bid.SubmittedAt.ToString("MMM dd")</div>
                                 </div>
                             </div>
-                            <span class="badge @(bid.Status == "Accepted" ? "bg-success" : (bid.Status == "Rejected" ? "bg-danger" : "bg-primary")) rounded-pill px-3 py-2">
+                            <span class="badge @(bid.Status == "Accepted" ? "bg-success" : (bid.Status == "Rejected" ? "bg-danger" : "bg-light text-primary border border-primary")) rounded-pill px-3 py-2">
                                 @bid.Status
                             </span>
                         </div>
                     </div>
 
-                    <div class="p-4">
+                    <div class="card-body p-4">
                         <div class="row g-4">
                             <!-- Financial -->
                             <div class="col-md-6 border-end">
-                                <h6 class="fw-bold small text-uppercase text-muted mb-3"><i class="fas fa-dollar-sign me-2"></i>Financial Proposal</h6>
-                                <div class="mb-2">
-                                    <div class="small text-muted">Total Bid Amount</div>
-                                    <div class="h5 fw-bold text-success mb-0">$@bid.ProposedTotalAmount.ToString("N2")</div>
+                                <h6 class="fw-bold small text-muted text-uppercase mb-3">Financial Terms</h6>
+                                <div class="mb-3">
+                                    <div class="h4 fw-bold text-success mb-0">@bid.ProposedTotalAmount.ToString("N2") <small style="font-size: 0.8rem;">ETB</small></div>
+                                    <div class="small text-muted">@bid.UnitPrice.ToString("N0") ETB per unit</div>
                                 </div>
-                                <div class="small mb-1">Unit Price: <strong>$@bid.UnitPrice.ToString("N2")</strong></div>
-                                <div class="small">Lead Time: <strong>@bid.DeliveryLeadTimeDays Days</strong></div>
+                                <div class="small mb-2">Lead Time: <strong class="text-dark">@bid.DeliveryLeadTimeDays Days</strong></div>
+                                <div class="small text-primary">Validity: <strong>@bid.ValidityPeriodDays Days</strong></div>
                             </div>
 
-                            <!-- Logistics & Technical -->
+                            <!-- Highlights -->
                             <div class="col-md-6">
-                                <h6 class="fw-bold small text-uppercase text-muted mb-3"><i class="fas fa-info-circle me-2"></i>Logistics & Quality</h6>
-                                <div class="small mb-2">Method: <strong>@bid.DeliveryMethod</strong></div>
-                                <div class="small mb-2">Inspection: <strong>@bid.InspectionCompliance</strong></div>
-                                <div class="small">Packaging: <strong>@bid.PackagingPlan</strong></div>
+                                <h6 class="fw-bold small text-muted text-uppercase mb-3">Service & Logistics</h6>
+                                <div class="small mb-2 d-flex align-items-center">
+                                    <i class="fas fa-shield-alt text-primary me-2" style="width: 15px;"></i>
+                                    <span>Warranty: <strong>@(string.IsNullOrEmpty(bid.WarrantyPeriod) ? "None" : bid.WarrantyPeriod)</strong></span>
+                                </div>
+                                <div class="small mb-2 d-flex align-items-center">
+                                    <i class="fas fa-truck text-secondary me-2" style="width: 15px;"></i>
+                                    <span>Method: <strong>@bid.DeliveryMethod</strong></span>
+                                </div>
+                                <div class="small mb-2 d-flex align-items-center">
+                                    <i class="fas fa-vial text-info me-2" style="width: 15px;"></i>
+                                    <span>Inspection: <strong>@bid.InspectionCompliance</strong></span>
+                                </div>
+                                <div class="small d-flex align-items-center">
+                                    @if(bid.PenaltyAcceptance) {
+                                        <i class="fas fa-check-circle text-success me-2" style="width: 15px;"></i>
+                                        <span class="text-success fw-bold">Penalties Accepted</span>
+                                    } else {
+                                        <i class="fas fa-times-circle text-danger me-2" style="width: 15px;"></i>
+                                        <span class="text-danger fw-bold">Penalties Declined</span>
+                                    }
+                                </div>
                             </div>
                         </div>
 
-                        <hr class="my-4 opacity-10">
-
-                        <div class="mb-3">
-                            <h6 class="fw-bold small text-muted mb-2">Technical Proposal Extract:</h6>
-                            <p class="small text-dark bg-light p-3 rounded-4 mb-0 border">
-                                @(string.IsNullOrEmpty(bid.TechnicalProposal) ? "No technical proposal provided." : bid.TechnicalProposal)
+                        <div class="mt-4 p-3 bg-light rounded-4 border">
+                            <h6 class="fw-bold small text-muted mb-2">Technical Summary:</h6>
+                            <p class="small text-dark mb-0 line-clamp-2">
+                                @(string.IsNullOrEmpty(bid.TechnicalProposal) ? "No description provided." : bid.TechnicalProposal)
                             </p>
                         </div>
-                        
-                        @if (!string.IsNullOrEmpty(bid.Notes))
-                        {
-                            <div class="mb-3">
-                                <h6 class="fw-bold small text-muted mb-2">Additional Notes:</h6>
-                                <div class="alert alert-info border-0 rounded-4 p-2 small mb-0">
-                                    <i class="fas fa-comment-alt me-2"></i>@bid.Notes
-                                </div>
-                            </div>
-                        }
                     </div>
 
-                    @if (tender?.Status == "Published" && bid.Status == "Pending")
-                    {
-                        <div class="p-4 bg-light bg-opacity-50 border-top">
-                            <form asp-action="Accept" method="post">
-                                <input type="hidden" name="id" value="@bid.Id" />
-                                <div class="row g-2">
-                                    <div class="col-md-8">
-                                        <input type="text" name="deliveryAddress" class="form-control rounded-pill border-primary" placeholder="Set Final Delivery Address..." required value="@tender.DeliveryLocation" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold" onclick="return confirm('Accept this bid? This will automatically generate the Purchase Order and assign warehouses.')">
-                                            <i class="fas fa-check-circle me-1"></i>Accept Bid
-                                        </button>
-                                    </div>
-                                </div>
+                    <div class="card-footer bg-white border-top p-4 d-flex justify-content-between align-items-center">
+                        <a asp-action="ReviewProposal" asp-route-id="@bid.Id" class="btn btn-outline-primary rounded-pill px-4">
+                            <i class="fas fa-search-plus me-2"></i>Detailed Review
+                        </a>
+                        
+                        @if (tender?.Status == "Published" && bid.Status == "Pending")
+                        {
+                            <form asp-action="Accept" method="post" class="d-flex gap-2">
                                 @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@bid.Id" />
+                                <input type="hidden" name="deliveryAddress" value="@tender.DeliveryLocation" />
+                                <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm" onclick="return confirm('Immediately award contract to @bid.Supplier?.CompanyName?')">
+                                    <i class="fas fa-award me-2"></i>Quick Award
+                                </button>
                             </form>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
         }
@@ -147,11 +156,11 @@
 </div>
 
 <style>
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;  
+        overflow: hidden;
     }
+    .z-index-1 { z-index: 1; }
 </style>

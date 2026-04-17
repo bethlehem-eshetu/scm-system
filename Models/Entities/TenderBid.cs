@@ -69,6 +69,17 @@ namespace SCM_System.Models.Entities
         [Column(TypeName = "decimal(5,2)")]
         public decimal Score { get; set; }
 
+        public string? WarrantyPeriod { get; set; }
+        public string? WarrantyType { get; set; }
+        public string? PreviousExperience { get; set; }
+        public string? PaymentTerms { get; set; }
+ 
+        public string? ProductSpecifications { get; set; }
+        public string? QualityCertifications { get; set; }
+        public string? InsuranceCoverage { get; set; }
+        public string? AfterSalesSupport { get; set; }
+        public string? References { get; set; }
+
         public bool IsWinningBid { get; set; } = false;
 
         public DateTime SubmittedAt { get; set; } = DateTime.Now;

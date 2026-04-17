@@ -29,18 +29,23 @@ namespace SCM_System.Models.ViewModels
         public int PriceWeight { get; set; } = 40;
         public int TechnicalWeight { get; set; } = 40;
         public int DeliveryWeight { get; set; } = 20;
+
+        public decimal? BudgetMin { get; set; }
+        public decimal? BudgetMax { get; set; }
+        public bool AllowPartialBids { get; set; }
+        public IFormFile? Attachment { get; set; }
+        public string? PreferredSuppliers { get; set; }
         
         public List<TenderItemViewModel> Items { get; set; } = new List<TenderItemViewModel>();
     }
 
     public class TenderItemViewModel
     {
-        [Required]
-        [Display(Name = "Product")]
-        public int ProductId { get; set; }
-
+        public int? ProductId { get; set; }
+        public bool IsCustom { get; set; }
         public string? ProductName { get; set; }
         public string? Description { get; set; }
+        public string? Specifications { get; set; }
         [Required]
         public int Quantity { get; set; }
         [Required]
