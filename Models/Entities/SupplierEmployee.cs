@@ -44,6 +44,24 @@ namespace SCM_System.Models.Entities
 
         public bool IsActive { get; set; } = true;
 
+        // Settings
+        [StringLength(200)]
+        [Display(Name = "Default Warehouse Location")]
+        public string? DefaultWarehouseLocation { get; set; }
+
+        [Display(Name = "Low Stock Threshold")]
+        public int LowStockThreshold { get; set; } = 5;
+
+        [StringLength(50)]
+        [Display(Name = "Picklist Format")]
+        public string PicklistFormat { get; set; } = "Detailed"; // Detailed, Summary, Minimal
+
+        [Display(Name = "Auto-Accept Pick Tasks")]
+        public bool AutoAcceptPickTasks { get; set; } = false;
+
+        [Display(Name = "Notify on Low Stock")]
+        public bool NotifyLowStock { get; set; } = true;
+
         // Navigation properties
         public ICollection<Delivery> Deliveries { get; set; }
     }

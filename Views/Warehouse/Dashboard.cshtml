@@ -38,7 +38,7 @@
                         </div>
                         <span class="badge bg-light text-primary border rounded-pill">Total Assigned</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.TotalOrders</h2>
+                    <h2 class="fw-bold mb-1">@(ViewBag.TotalOrders ?? 0)</h2>
                     <p class="text-muted smaller mb-0 fw-bold">Active Purchase Orders</p>
                 </div>
             </div>
@@ -52,7 +52,7 @@
                         </div>
                         <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">Awaiting Prep</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.PendingPrep</h2>
+                    <h2 class="fw-bold mb-1">@(ViewBag.PendingPrep ?? 0)</h2>
                     <p class="text-muted smaller mb-0 fw-bold">Needs Picking/Packing</p>
                 </div>
             </div>
@@ -66,7 +66,7 @@
                         </div>
                         <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Ready for Pickup</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.ReadyForPickup</h2>
+                    <h2 class="fw-bold mb-1">@(ViewBag.ReadyForPickup ?? 0)</h2>
                     <p class="text-muted smaller mb-0 fw-bold">Awaiting Courier</p>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                         </div>
                         <span class="badge bg-info bg-opacity-10 text-info rounded-pill">In Logistics</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.InProgress</h2>
+                    <h2 class="fw-bold mb-1">@(ViewBag.InProgress ?? 0)</h2>
                     <p class="text-muted smaller mb-0 fw-bold">In Transit / Delivering</p>
                 </div>
             </div>
@@ -179,7 +179,7 @@
                 <div class="card-body p-4 pt-0">
                     <div class="d-flex align-items-center justify-content-between mb-3 pt-3">
                         <div class="text-muted small">Total Committed Items</div>
-                        <div class="fw-bold fs-5 text-primary">@ViewBag.TotalReserved</div>
+                        <div class="fw-bold fs-5 text-primary">@(ViewBag.TotalReserved ?? 0)</div>
                     </div>
                     <div class="progress mb-4" style="height: 10px; border-radius: 5px; background: rgba(0,0,0,0.05);">
                         @{
@@ -189,11 +189,11 @@
                     </div>
                     <div class="row text-center g-2 mb-4">
                         <div class="col-6 border-end">
-                            <h4 class="fw-bold mb-0">@ViewBag.TotalOnHand</h4>
+                            <h4 class="fw-bold mb-0">@(ViewBag.TotalOnHand ?? 0)</h4>
                             <span class="text-muted smaller">On Hand</span>
                         </div>
                         <div class="col-6">
-                            <h4 class="fw-bold mb-0 @(ViewBag.LowStockCount > 0 ? "text-danger" : "text-success")">@ViewBag.LowStockCount</h4>
+                            <h4 class="fw-bold mb-0 @((ViewBag.LowStockCount ?? 0) > 0 ? "text-danger" : "text-success")">@(ViewBag.LowStockCount ?? 0)</h4>
                             <span class="text-muted smaller">Low Stock Alerts</span>
                         </div>
                     </div>
@@ -213,7 +213,7 @@
                                 </div>
                                 <span class="small fw-bold">Available Fleet</span>
                             </div>
-                            <span class="badge bg-light text-dark rounded-pill border">@ViewBag.AvailableVehicles Units</span>
+                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.AvailableVehicles ?? 0) Units</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
@@ -222,7 +222,7 @@
                                 </div>
                                 <span class="small fw-bold">Active Agents</span>
                             </div>
-                            <span class="badge bg-light text-dark rounded-pill border">@ViewBag.ActiveAgents Online</span>
+                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.ActiveAgents ?? 0) Online</span>
                         </div>
                     </div>
                     <div class="p-3 bg-light rounded-4 d-flex align-items-center">

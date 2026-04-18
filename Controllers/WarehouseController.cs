@@ -9,17 +9,19 @@ using System.Security.Claims;
 
 namespace SCM_System.Controllers
 {
-    [Authorize(Roles = "WarehouseManager")]
+    [Authorize(Roles = "Warehouse")]
     [Route("Warehouse")]
     public class WarehouseController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IPurchaseOrderService _poService;
+        private readonly ILogger<WarehouseController> _logger;
 
-        public WarehouseController(ApplicationDbContext context, IPurchaseOrderService poService)
+        public WarehouseController(ApplicationDbContext context, IPurchaseOrderService poService, ILogger<WarehouseController> logger)
         {
             _context = context;
             _poService = poService;
+            _logger = logger;
         }
 
         [Route("")]
@@ -46,7 +48,7 @@ namespace SCM_System.Controllers
                 return await _context.SupplierEmployees
                     .Include(e => e.Warehouse)
                     .Include(e => e.User)
-                    .FirstOrDefaultAsync(e => e.UserId == userId && e.EmployeeRole == "WarehouseManager");
+                    .FirstOrDefaultAsync(e => (e.UserId == userId) && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
             }
             return null;
         }
@@ -54,49 +56,61 @@ namespace SCM_System.Controllers
         [Route("Dashboard")]
         public async Task<IActionResult> Dashboard()
         {
-            var manager = await GetCurrentManagerAsync();
-            if (manager == null || !manager.WarehouseId.HasValue) return Unauthorized();
+            try
+            {
+                var manager = await GetCurrentManagerAsync();
+                if (manager == null || !manager.WarehouseId.HasValue) 
+                {
+                    _logger.LogWarning("Warehouse manager login failed: Record not found for user {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
+                    return Unauthorized();
+                }
 
-            int wId = manager.WarehouseId.Value;
-            int sId = manager.SupplierId;
+                int wId = manager.WarehouseId.Value;
+                int sId = manager.SupplierId;
 
-            var pos = await _context.PurchaseOrders
-                .Include(p => p.Retailer)
-                .Include(p => p.PurchaseOrderItems)
-                    .ThenInclude(i => i.Product)
-                .Where(p => p.WarehouseId == wId && p.Status != POStatus.Cancelled)
-                .ToListAsync();
+                var pos = await _context.PurchaseOrders
+                    .Include(p => p.Retailer)
+                    .Include(p => p.PurchaseOrderItems)
+                        .ThenInclude(i => i.Product)
+                    .Where(p => p.WarehouseId == wId && p.Status != POStatus.Cancelled)
+                    .ToListAsync();
 
-            ViewBag.Manager = manager;
-            ViewBag.Warehouse = manager.Warehouse;
-            
-            // Comprehensive Metrics
-            ViewBag.TotalOrders = pos.Count;
-            ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Processing);
-            ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
-            ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
-            ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
-            
-            // Stock Summary
-            var inventories = await _context.Inventories
-                .Where(i => i.WarehouseId == wId)
-                .ToListAsync();
-            
-            ViewBag.TotalReserved = inventories.Sum(i => i.QuantityReserved);
-            ViewBag.TotalOnHand = inventories.Sum(i => i.QuantityOnHand);
-            ViewBag.LowStockCount = inventories.Count(i => i.QuantityOnHand < 20); // Threshold 20
+                ViewBag.Manager = manager;
+                ViewBag.Warehouse = manager.Warehouse;
+                
+                // Comprehensive Metrics
+                ViewBag.TotalOrders = pos.Count;
+                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Processing);
+                ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
+                ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
+                ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
+                
+                // Stock Summary
+                var inventories = await _context.Inventories
+                    .Where(i => i.WarehouseId == wId)
+                    .ToListAsync();
+                
+                ViewBag.TotalReserved = inventories.Sum(i => i.QuantityReserved);
+                ViewBag.TotalOnHand = inventories.Sum(i => i.QuantityOnHand);
+                ViewBag.LowStockCount = inventories.Count(i => i.QuantityOnHand < 20); // Threshold 20
 
-            // Quick Stats (Fleet & Staff)
-            ViewBag.ActiveAgents = await _context.SupplierEmployees
-                .CountAsync(e => e.SupplierId == sId && e.EmployeeRole == "DeliveryAgent" && e.IsActive);
-            
-            ViewBag.AvailableVehicles = await _context.Vehicles
-                .CountAsync(v => v.SupplierId == sId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available);
+                // Quick Stats (Fleet & Staff)
+                ViewBag.ActiveAgents = await _context.SupplierEmployees
+                    .CountAsync(e => e.SupplierId == sId && (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person") && e.IsActive);
+                
+                ViewBag.AvailableVehicles = await _context.Vehicles
+                    .CountAsync(v => v.SupplierId == sId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available);
 
-            // Notifications (Recent updates)
-            ViewBag.RecentAlerts = pos.OrderByDescending(p => p.UpdatedAt).Take(5).ToList();
+                // Notifications (Recent updates)
+                ViewBag.RecentAlerts = pos.OrderByDescending(p => p.UpdatedAt).Take(5).ToList();
 
-            return View(pos);
+                return View(pos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Warehouse Dashboard");
+                return Content($"An error occurred while loading the dashboard: {ex.Message}. Check logs for details.");
+            }
         }
 
         [Route("OrdersToPick")]
@@ -397,6 +411,55 @@ namespace SCM_System.Controllers
 
             TempData["SuccessMessage"] = $"Order #{po.PONumber} assigned to {agent.User?.FullName} and Vehicle {vehicle.LicensePlate}. Status: In Transit.";
             return RedirectToAction(nameof(History));
+        }
+        [Route("Settings")]
+        public async Task<IActionResult> Settings()
+        {
+            var employeeIdStr = User.FindFirstValue("EmployeeId");
+            if (!int.TryParse(employeeIdStr, out int employeeId))
+            {
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+                var emp = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == userId);
+                if (emp == null) return Unauthorized();
+                employeeId = emp.Id;
+            }
+
+            var employee = await _context.SupplierEmployees.FindAsync(employeeId);
+            if (employee == null) return NotFound();
+
+            var viewModel = new SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel
+            {
+                EmployeeId = employee.Id,
+                DefaultWarehouseLocation = employee.DefaultWarehouseLocation,
+                LowStockThreshold = employee.LowStockThreshold,
+                PicklistFormat = employee.PicklistFormat,
+                AutoAcceptPickTasks = employee.AutoAcceptPickTasks,
+                NotifyLowStock = employee.NotifyLowStock
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost("Settings")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Settings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var employee = await _context.SupplierEmployees.FindAsync(model.EmployeeId);
+            if (employee == null) return NotFound();
+
+            employee.DefaultWarehouseLocation = model.DefaultWarehouseLocation;
+            employee.LowStockThreshold = model.LowStockThreshold;
+            employee.PicklistFormat = model.PicklistFormat;
+            employee.AutoAcceptPickTasks = model.AutoAcceptPickTasks;
+            employee.NotifyLowStock = model.NotifyLowStock;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Settings updated successfully.";
+            return RedirectToAction(nameof(Dashboard));
         }
     }
 }

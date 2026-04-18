@@ -593,6 +593,16 @@ namespace SCM_System.Controllers
                         new Claim(ClaimTypes.Role, user.Role)
                     };
 
+                    // Add EmployeeId claim for warehouse managers and delivery agents
+                    if (user.Role == "Warehouse" || user.Role == "DeliveryAgent")
+                    {
+                        var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == user.Id);
+                        if (employee != null)
+                        {
+                            claims.Add(new Claim("EmployeeId", employee.Id.ToString()));
+                        }
+                    }
+
                     var claimsIdentity = new ClaimsIdentity(
                         claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -623,7 +633,7 @@ namespace SCM_System.Controllers
                     {
                         return RedirectToAction("Dashboard", "Retailer");
                     }
-                    else if (user.Role == "WarehouseManager")
+                    else if (user.Role == "Warehouse")
                     {
                         return RedirectToAction("Dashboard", "Warehouse");
                     }
