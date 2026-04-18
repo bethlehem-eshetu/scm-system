@@ -559,25 +559,18 @@ namespace SCM_System.Controllers
                             return RedirectToAction("Login");
                         }
 
-                        // Check if user is approved
-                        if (!user.IsApproved)
+                        // Check if user is approved and active
+                        if (!user.IsApproved || user.AccountStatus != "Active")
                         {
-                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative review. Please check back later.";
+                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative review or is inactive. Please check back later.";
                             return RedirectToAction("Login");
                         }
 
-                        // Check if account is active
-                        if (user.AccountStatus != "Active")
+                        // Ensure Fayda verification flag is synced
+                        if (!user.IsFaydaVerified)
                         {
-                            TempData["ErrorMessage"] = $"❌ Your account is {user.AccountStatus}. Please contact support.";
-                            return RedirectToAction("Login");
-                        }
-
-                        // Block login if Fayda NOT verified OR not approved (ApprovalStatus Check)
-                        if (!user.IsFaydaVerified || user.ApprovalStatus != "Approved")
-                        {
-                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative approval or Fayda Identity verification.";
-                            return RedirectToAction("Login");
+                            user.IsFaydaVerified = true;
+                            await _context.SaveChangesAsync();
                         }
                     }
 

@@ -724,11 +724,33 @@ namespace SCM_System.Controllers
 
             user.IsApproved = true;
             user.IsFaydaVerified = true; // Critical Fix: Ensure user can log in
+            user.FaydaStatus = "Verified";
             user.AccountStatus = "Active";
             user.ApprovedAt = DateTime.Now;
             user.ApprovalStatus = "Approved";
             user.ApprovalStatusType = "Approved";
             user.ApprovalStatusMessage = "Your account has been approved! You can now access all platform features.";
+
+            // Sync with FaydaVerification table if record exists
+            if (user.FaydaVerification != null)
+            {
+                user.FaydaVerification.IsVerified = true;
+                user.FaydaVerification.VerifiedName = user.FullName;
+            }
+            else if (!string.IsNullOrEmpty(user.FAN))
+            {
+                // Optionally create missing verification record
+                var newVerification = new FaydaVerification
+                {
+                    FAN = user.FAN,
+                    UserEmail = user.Email,
+                    IsVerified = true,
+                    VerifiedName = user.FullName,
+                    VerifiedPhone = user.PhoneNumber,
+                    TransactionId = "ADMIN_APPROVAL_" + Guid.NewGuid().ToString().Substring(0, 8)
+                };
+                _context.FaydaVerifications.Add(newVerification);
+            }
 
             // Update associated roles
             if (user.Role == "Supplier")
