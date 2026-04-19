@@ -1,94 +1,132 @@
 @model SCM_System.Models.ViewModels.LoginViewModel
 @{
-    ViewData["Title"] = "Secure Login";
-    Layout = "_Layout"; // Use standard layout for auth pages
+    ViewData["Title"] = "Secure Portal Access";
+    Layout = "_Layout";
 }
 
-<div class="container-fluid p-0 overflow-hidden">
+<div class="login-wrapper container-fluid p-0 overflow-hidden">
     <div class="row g-0 min-vh-100">
-        <!-- Left Column: Branding & Illustration -->
-        <div class="col-lg-6 d-none d-lg-flex bg-light align-items-center justify-content-center p-5 position-relative">
-            <div class="z-index-1 text-center" style="max-width: 500px;">
-                <div class="mb-5" data-aos="fade-down">
-                    <img src="~/images/hero-illustration.png" alt="EthioChain SCM" class="img-fluid rounded-4 shadow-premium mb-4" />
-                    <h2 class="fw-bold text-dark">EthioChain Command Center</h2>
-                    <p class="text-muted">Access your professional SCM dashboard and manage your supply chain with precision.</p>
+        <!-- Left Column: Ethiopian SCM Context & Branding -->
+        <div class="col-lg-6 position-relative d-none d-lg-flex flex-column justify-content-center px-5 brand-section">
+            <div class="brand-overlay"></div>
+            <!-- Decorative Ethiopian Motif Pattern -->
+            <div class="motif-pattern"></div>
+            
+            <div class="z-index-2 position-relative text-white" style="max-width: 600px; margin: 0 auto;">
+                <div class="mb-5" data-aos="fade-right" data-aos-duration="1000">
+                    <div class="d-inline-flex align-items-center bg-white bg-opacity-25 px-3 py-1 rounded-pill mb-4 border border-white border-opacity-25">
+                        <span class="badge bg-warning text-dark me-2 rounded-pill">V 2.0</span>
+                        <span class="small fw-semibold letter-spacing-1">ETHIOPIA'S UNIFIED NETWORK</span>
+                    </div>
+                    <h1 class="display-4 fw-bolder mb-3 text-shadow-sm leading-tight">
+                        The Central Nervous System of <span class="text-warning">African Trade.</span>
+                    </h1>
+                    <p class="lead text-white text-opacity-75 mb-0 fw-light" style="line-height: 1.8;">
+                        Access the premier procurement and logistics engine powering thousands of verified Ethiopian suppliers, retailers, and distributors.
+                    </p>
                 </div>
                 
-                <div class="row g-3 text-start">
-                    <div class="col-6" data-aos="fade-up" data-aos-delay="100">
-                        <div class="p-3 bg-white rounded-4 shadow-sm border border-light">
-                            <i class="fas fa-truck-fast text-primary mb-2"></i>
-                            <h6 class="fw-bold small mb-1">Live Tracking</h6>
-                            <p class="extra-small text-muted mb-0">High-fidelity shipment updates.</p>
+                <div class="row g-4 mt-2">
+                    <div class="col-sm-6" data-aos="fade-up" data-aos-delay="200">
+                        <div class="glass-card p-4 rounded-4 h-100 border border-white border-opacity-10">
+                            <div class="icon-box bg-warning bg-opacity-20 text-warning rounded-circle mb-3 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-shield-alt fs-5"></i>
+                            </div>
+                            <h5 class="fw-bold text-white mb-2">Fayda Verified</h5>
+                            <p class="small text-white text-opacity-75 mb-0">National ID integration ensures every enterprise on EthioChain is legally vetted.</p>
                         </div>
                     </div>
-                    <div class="col-6" data-aos="fade-up" data-aos-delay="200">
-                        <div class="p-3 bg-white rounded-4 shadow-sm border border-light">
-                            <i class="fas fa-warehouse text-success mb-2"></i>
-                            <h6 class="fw-bold small mb-1">Stock Control</h6>
-                            <p class="extra-small text-muted mb-0">Real-time inventory sync.</p>
+                    <div class="col-sm-6" data-aos="fade-up" data-aos-delay="300">
+                        <div class="glass-card p-4 rounded-4 h-100 border border-white border-opacity-10">
+                            <div class="icon-box bg-info bg-opacity-20 text-info rounded-circle mb-3 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-route fs-5"></i>
+                            </div>
+                            <h5 class="fw-bold text-white mb-2">Live Telemetry</h5>
+                            <p class="small text-white text-opacity-75 mb-0">From Djibouti ports to Addis warehouses, track shipments with GPS precision.</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Trusted By Secton -->
+                <div class="mt-5 pt-4 border-top border-white border-opacity-25" data-aos="fade-in" data-aos-delay="500">
+                    <p class="extra-small text-uppercase tracking-widest text-white text-opacity-50 mb-3 fw-bold">Compliant With</p>
+                    <div class="d-flex align-items-center gap-4 opacity-75 grayscale-hover">
+                        <span class="fw-bold fs-5 tracking-wide"><i class="fas fa-university me-2"></i>NBE</span>
+                        <span class="fw-bold fs-5 tracking-wide"><i class="fas fa-file-invoice-dollar me-2"></i>ERCA</span>
+                        <span class="fw-bold fs-5 tracking-wide"><i class="fas fa-id-card me-2"></i>FAYDA</span>
                     </div>
                 </div>
             </div>
-            <!-- Decorative blobs -->
-            <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: radial-gradient(circle at 10% 10%, #0d6efd 0%, transparent 50%);"></div>
         </div>
 
-        <!-- Right Column: Login Form -->
-        <div class="col-lg-6 d-flex align-items-center justify-content-center p-5 bg-white">
-            <div class="w-100" style="max-width: 400px;" data-aos="fade-left">
+        <!-- Right Column: Login Interface -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center p-4 p-sm-5 bg-light-surface">
+            <div class="w-100 form-container" style="max-width: 440px;" data-aos="fade-up" data-aos-duration="800">
+                
                 <div class="text-center mb-5">
-                    <div class="avatar-lg bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
-                        <i class="fas fa-user-shield fs-3"></i>
+                    <div class="logo-wrapper mx-auto mb-4 shadow-sm bg-white d-flex align-items-center justify-content-center rounded-4">
+                        <img src="~/images/ethiochain-logo.jpg" alt="EthioChain Logo" class="img-fluid" style="width: 40px; height: 40px;" />
                     </div>
-                    <h3 class="fw-bold text-dark">Welcome Back</h3>
-                    <p class="text-muted">Securely sign in to your corporate account</p>
+                    <h2 class="fw-bold text-dark-blue mb-2">Enterprise Portal</h2>
+                    <p class="text-muted small">Enter your corporate credentials to synchronize.</p>
                 </div>
 
                 @if (TempData["ErrorMessage"] != null)
                 {
-                    <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
-                        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                    <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-4 mb-4 small fw-semibold shadow-sm d-flex align-items-center animate-shake">
+                        <i class="fas fa-exclamation-triangle me-3 fs-5"></i> 
+                        <div>@TempData["ErrorMessage"]</div>
                     </div>
                 }
 
-                <form asp-action="Login" method="post" class="needs-validation">
-                    <div class="form-floating mb-3">
-                        <input asp-for="Email" class="form-control border-0 bg-light rounded-4 px-4 shadow-none" placeholder="name@example.com" required />
-                        <label asp-for="Email" class="ps-4">Email address</label>
-                        <span asp-validation-for="Email" class="text-danger extra-small"></span>
+                <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
+                    <div class="card-body p-4 p-sm-5">
+                        <form asp-action="Login" method="post" class="needs-validation auth-form">
+                            <div class="form-floating mb-4 form-group-custom">
+                                <input asp-for="Email" class="form-control px-4 fw-semibold border-0 bg-light" placeholder="name@company.com" required autocomplete="email" />
+                                <label asp-for="Email" class="ps-4 text-muted"><i class="fas fa-envelope me-2"></i>Corporate Email</label>
+                                <span asp-validation-for="Email" class="text-danger extra-small mt-1 d-block fw-semibold"></span>
+                            </div>
+
+                            <div class="form-floating mb-4 form-group-custom position-relative">
+                                <input asp-for="Password" id="authPassword" type="password" class="form-control px-4 fw-semibold border-0 bg-light pe-5" placeholder="Password" required autocomplete="current-password" />
+                                <label asp-for="Password" class="ps-4 text-muted"><i class="fas fa-lock me-2"></i>Secure Password</label>
+                                <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <span asp-validation-for="Password" class="text-danger extra-small mt-1 d-block fw-semibold"></span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-5">
+                                <div class="form-check custom-checkbox">
+                                    <input asp-for="RememberMe" class="form-check-input border-secondary shadow-none cursor-pointer" />
+                                    <label asp-for="RememberMe" class="form-check-label small fw-medium text-muted cursor-pointer user-select-none">Remember this device</label>
+                                </div>
+                                <a href="#" class="small fw-bold brand-text text-decoration-none hover-underline">Reset Access?</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-brand w-100 py-3 rounded-pill fw-bold text-uppercase tracking-wide shadow-brand btn-hover-effect mb-4 position-relative overflow-hidden">
+                                <span class="position-relative z-index-2">Authenticate <i class="fas fa-arrow-right ms-2 transition-transform"></i></span>
+                            </button>
+
+                            <div class="text-center position-relative my-4">
+                                <hr class="border-secondary opacity-25">
+                                <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 extra-small text-uppercase text-muted fw-bold tracking-widest">Or</span>
+                            </div>
+
+                            <a asp-action="Register" class="btn border-2 border-primary border-opacity-10 text-primary w-100 py-3 rounded-pill fw-bold text-decoration-none hover-secondary-btn transition-all">
+                                <i class="fas fa-building me-2"></i> Register New Enterprise
+                            </a>
+                        </form>
                     </div>
+                </div>
 
-                    <div class="form-floating mb-3">
-                        <input asp-for="Password" type="password" class="form-control border-0 bg-light rounded-4 px-4 shadow-none" placeholder="Password" required />
-                        <label asp-for="Password" class="ps-4">Password</label>
-                        <span asp-validation-for="Password" class="text-danger extra-small"></span>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="form-check">
-                            <input asp-for="RememberMe" class="form-check-input rounded-2 shadow-none" />
-                            <label asp-for="RememberMe" class="form-check-label small text-muted">Keep me signed in</label>
-                        </div>
-                        <a href="#" class="small text-primary fw-bold text-decoration-none">Forgot Password?</a>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm mb-4">
-                        <i class="fas fa-sign-in-alt me-2"></i> Sign In to Dashboard
-                    </button>
-
-                    <div class="text-center">
-                        <p class="text-muted small mb-0">
-                            Don't have an enterprise account? 
-                            <a asp-action="Register" class="text-primary fw-bold text-decoration-none ms-1">Create Account</a>
-                        </p>
-                    </div>
-                </form>
-
-                <div class="mt-5 text-center">
-                    <p class="extra-small text-muted mb-0">© 2026 EthioChain SCM. All data is encrypted and secure.</p>
+                <div class="mt-5 text-center px-4">
+                    <p class="extra-small text-muted mb-0 fw-medium">
+                        By authenticating, you operate strictly under the 
+                        <a asp-controller="Home" asp-action="Terms" target="_blank" class="text-decoration-none fw-bold text-dark">Enterprise Agreement</a> and 
+                        <a asp-controller="Home" asp-action="Privacy" target="_blank" class="text-decoration-none fw-bold text-dark">Data Privacy</a> framework of Ethiopia.
+                    </p>
                 </div>
             </div>
         </div>
@@ -98,19 +136,195 @@
 @section Styles {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
+        /* EthioChain Premium Color Palette */
+        :root {
+            --ethio-blue: #0b3d60;
+            --ethio-blue-dark: #07253b;
+            --ethio-gold: #cba052;
+            --ethio-gold-light: #e6c587;
+            --ethio-green: #198754;
+            --bg-surface: #f8f9fc;
+        }
+
+        body {
+            background-color: var(--bg-surface);
+        }
+
+        /* Branding Section */
+        .brand-section {
+            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
+            overflow: hidden;
+        }
+
+        .brand-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(203, 160, 82, 0.15) 0%, transparent 50%);
+            z-index: 1;
+        }
+
+        .motif-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0.03;
+            background-image: radial-gradient(#fff 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 1;
+        }
+
+        /* Typography Utilities */
+        .text-dark-blue { color: var(--ethio-blue-dark) !important; }
+        .brand-text { color: var(--ethio-blue) !important; }
+        .text-warning { color: var(--ethio-gold) !important; }
+        .bg-warning { background-color: var(--ethio-gold) !important; }
+        .tracking-wide { letter-spacing: 0.05em; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        .text-shadow-sm { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .leading-tight { line-height: 1.1; }
+        .extra-small { font-size: 0.75rem; }
+        .z-index-2 { z-index: 2; }
+
+        /* UI Components */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .icon-box {
+            width: 48px; height: 48px;
+        }
+
+        .grayscale-hover > span {
+            transition: all 0.3s;
+            filter: grayscale(100%) opacity(0.7);
+        }
+        .grayscale-hover:hover > span {
+            filter: grayscale(0%) opacity(1);
+        }
+
+        .bg-light-surface { background-color: var(--bg-surface); }
+        
+        .logo-wrapper {
+            width: 72px; height: 72px;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .form-container:hover .logo-wrapper {
+            transform: scale(1.05) rotate(-5deg);
+        }
+
+        .shadow-premium {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 10px 20px -10px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Form Controls */
+        .form-group-custom .form-control {
+            height: calc(3.5rem + 2px);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            color: var(--ethio-blue-dark);
+        }
+        
+        .form-group-custom .form-control:focus {
+            background-color: #fff !important;
+            box-shadow: 0 0 0 4px rgba(11, 61, 96, 0.1);
+        }
+
         .form-floating > .form-control:focus ~ label,
         .form-floating > .form-control:not(:placeholder-shown) ~ label {
-            opacity: .65;
-            transform: scale(.85) translateY(-.5rem) translateX(.15rem);
-            color: var(--brand-primary);
+            opacity: 0.8;
+            transform: scale(0.85) translateY(-0.8rem) translateX(0.15rem);
+            color: var(--ethio-blue);
+            font-weight: 700;
         }
-        .extra-small { font-size: 0.75rem; }
-        .shadow-premium { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+
+        /* Buttons */
+        .btn-brand {
+            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
+            color: white;
+            border: none;
+            transition: all 0.4s ease;
+        }
+        .shadow-brand {
+            box-shadow: 0 10px 25px -5px rgba(11, 61, 96, 0.4);
+        }
+        
+        .btn-hover-effect::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+            z-index: 1;
+        }
+        .btn-hover-effect:hover::before { left: 100%; }
+        .btn-hover-effect:hover {
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 15px 30px -5px rgba(11, 61, 96, 0.5);
+        }
+        .btn-hover-effect:hover .transition-transform {
+            transform: translateX(5px);
+        }
+
+        .hover-secondary-btn:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-color: rgba(13, 110, 253, 0.3) !important;
+        }
+        .transition-all { transition: all 0.3s; }
+        
+        .hover-underline:hover { text-decoration: underline !important; }
+        .cursor-pointer { cursor: pointer; }
+
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        @@keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
     </style>
 }
 
 @section Scripts {
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>AOS.init({ duration: 800, once: true });</script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Initialize Animation on Scroll
+            AOS.init({ 
+                duration: 800, 
+                once: true,
+                offset: 50
+            });
+
+            // Password Toggle Visibility
+            const togglePassword = document.querySelector('#togglePassword');
+            const passwordNode = document.querySelector('#authPassword');
+            const toggleIcon = togglePassword.querySelector('i');
+
+            togglePassword.addEventListener('click', function (e) {
+                const type = passwordNode.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordNode.setAttribute('type', type);
+                
+                if(type === 'text') {
+                    toggleIcon.classList.remove('fa-eye');
+                    toggleIcon.classList.add('fa-eye-slash');
+                } else {
+                    toggleIcon.classList.remove('fa-eye-slash');
+                    toggleIcon.classList.add('fa-eye');
+                }
+            });
+        });
+    </script>
     <partial name="_ValidationScriptsPartial" />
 }
