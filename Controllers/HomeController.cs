@@ -5,11 +5,8 @@ namespace SCM_System.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IEmailService _emailService;
-
-        public HomeController(IEmailService emailService)
+        public HomeController()
         {
-            _emailService = emailService;
         }
 
         public IActionResult Index()
@@ -22,22 +19,14 @@ namespace SCM_System.Controllers
             return View();
         }
 
-        public IActionResult AccessDenied()
+        public IActionResult Terms()
         {
             return View();
         }
 
-        public async Task<IActionResult> TestEmail()
+        public IActionResult AccessDenied()
         {
-            try
-            {
-                await _emailService.SendEmailAsync("beshetu19@gmail.com", "Test Email", "<h1>✅ Working!</h1><p>Your SCM email is configured correctly.</p>");
-                return Content("✅ Email sent! Check your inbox.");
-            }
-            catch (Exception ex)
-            {
-                return Content($"❌ Error: {ex.Message}");
-            }
+            return View();
         }
     }
 }
