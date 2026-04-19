@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
+using SCM_System.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +37,6 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
         options.ExpireTimeSpan = TimeSpan.FromHours(2);
         options.SlidingExpiration = true;
     });
-
 // Add session support
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -45,6 +45,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+builder.Services.AddHttpClient<IChapaService, ChapaService>();
 
 // Add HttpContextAccessor for session helpers
 builder.Services.AddHttpContextAccessor();
@@ -55,7 +57,21 @@ builder.Services.AddScoped<SCM_System.Services.IBidService, SCM_System.Services.
 builder.Services.AddScoped<SCM_System.Services.IPurchaseOrderService, SCM_System.Services.PurchaseOrderService>();
 builder.Services.AddScoped<SCM_System.Services.IOrderService, SCM_System.Services.OrderService>();
 builder.Services.AddScoped<SCM_System.Services.ICartService, SCM_System.Services.CartService>();
+builder.Services.AddScoped<SCM_System.Services.ISupplierService, SCM_System.Services.SupplierService>();
+builder.Services.AddScoped<SCM_System.Services.IFaydaService, SCM_System.Services.FaydaService>();
 
+// Add Email Service
+builder.Services.Configure<SCM_System.Models.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<SCM_System.Services.IEmailService, SCM_System.Services.EmailService>();
+builder.Services.AddHostedService<SCM_System.Services.EmailLogCleanupService>();
+
+builder.Services.AddScoped<ICommissionService, CommissionService>();
+builder.Services.AddScoped<IChapaService, ChapaService>();
+builder.Services.AddScoped<IReturnService, ReturnService>();
+// Add this after builder.Services.AddScoped statements
+builder.Services.AddScoped<IContactDetectionService, ContactDetectionService>();
+builder.Services.AddScoped<IPenaltyService, PenaltyService>();
+builder.Services.AddScoped<IRatingService, RatingService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -87,7 +103,8 @@ using (var scope = app.Services.CreateScope())
         // Seed the database
         logger.LogInformation("Starting database seeding...");
         SeedData.Initialize(services);
-        logger.LogInformation("Database seeded successfully with admin user.");
+        FaydaSeeder.Seed(context);
+        logger.LogInformation("Database seeded successfully with admin user and Fayda mock registry.");
     }
     catch (Exception ex)
     {
@@ -106,10 +123,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

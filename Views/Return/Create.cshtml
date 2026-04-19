@@ -1,0 +1,101 @@
+﻿@model object
+@{
+    ViewData["Title"] = "Request Return";
+    Layout = "_DashboardLayout";
+    var po = ViewBag.PurchaseOrder as SCM_System.Models.Entities.PurchaseOrder;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-undo-alt me-2"></i>Request Return
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Order Info -->
+                    <div class="alert alert-light border mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">PO Number</small>
+                                <div class="fw-bold">@po?.PONumber</div>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Supplier</small>
+                                <div class="fw-bold">@po?.Supplier?.CompanyName</div>
+                            </div>
+                            <div class="col-md-6 mt-2">
+                                <small class="text-muted">Order Amount</small>
+                                <div class="fw-bold text-primary">@po?.TotalAmount.ToString("C")</div>
+                            </div>
+                            <div class="col-md-6 mt-2">
+                                <small class="text-muted">Delivered On</small>
+                                <div class="fw-bold">@po?.DeliveredAt?.ToString("MMM dd, yyyy")</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="purchaseOrderId" value="@po?.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Reason for Return <span class="text-danger">*</span></label>
+                            <select name="reason" class="form-select" required>
+                                <option value="">Select reason...</option>
+                                <option value="Damaged">Damaged Product</option>
+                                <option value="Wrong Item">Wrong Item Received</option>
+                                <option value="Defective">Defective Product</option>
+                                <option value="Expired">Expired Product</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="4"
+                                      placeholder="Please provide detailed information about the issue..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Refund Amount <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">ETB</span>
+                                <input type="number" name="refundAmount" class="form-control"
+                                       value="@po?.TotalAmount" step="0.01" required />
+                            </div>
+                            <small class="text-muted">Maximum refund amount is @po?.TotalAmount.ToString("C")</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Proof Image (Optional)</label>
+                            <input type="file" name="proofImage" class="form-control" accept="image/*" />
+                            <small class="text-muted">Upload a photo of the damaged/defective product</small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Return Policy:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Returns must be requested within 14 days of delivery</li>
+                                <li>Items must be in original packaging</li>
+                                <li>Refund will be processed after item inspection</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-warning px-4">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Return Request
+                            </button>
+                            <a asp-action="MyPurchaseOrders" asp-controller="Retailer" class="btn btn-secondary px-4">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

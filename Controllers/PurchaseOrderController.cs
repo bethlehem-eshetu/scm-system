@@ -35,6 +35,12 @@ namespace SCM_System.Controllers
                 var pos = await _poService.GetPurchaseOrdersBySupplierAsync(sId);
                 return View("SupplierIndex", pos);
             }
+            else if (User.IsInRole("WarehouseManager"))
+            {
+                var wId = await GetWarehouseIdAsync();
+                var pos = await _poService.GetPurchaseOrdersByWarehouseAsync(wId);
+                return View("SupplierIndex", pos);
+            }
             return RedirectToAction("Index", "Home");
         }
 
@@ -42,25 +48,40 @@ namespace SCM_System.Controllers
         {
             var po = await _poService.GetPurchaseOrderByIdAsync(id);
             if (po == null) return NotFound();
+
+            if (User.IsInRole("Retailer"))
+            {
+                var rId = await GetRetailerIdAsync();
+                if (po.RetailerId != rId) return Forbid();
+            }
+            else if (User.IsInRole("Supplier"))
+            {
+                var sId = await GetSupplierIdAsync();
+                if (po.SupplierId != sId) return Forbid();
+            }
+            else if (User.IsInRole("WarehouseManager"))
+            {
+                var wId = await GetWarehouseIdAsync();
+                if (po.WarehouseId != wId) return Forbid();
+            }
+            else
+            {
+                return Forbid();
+            }
+
             return View(po);
         }
 
         [HttpPost]
-        [Authorize(Roles = "Supplier")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> StatusAction(int id, string actionType)
+        public async Task<IActionResult> UpdateStatus(int id, string status)
         {
-            if (actionType == "Accept")
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
             {
-                await _poService.UpdatePurchaseOrderStatusAsync(id, "Accepted");
-                await _orderService.CreateOrderFromPurchaseOrderAsync(id);
+                await _poService.UpdatePurchaseOrderStatusAsync(id, status, userId);
             }
-            else if (actionType == "Reject")
-            {
-                await _poService.UpdatePurchaseOrderStatusAsync(id, "Rejected");
-            }
-            
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         private async Task<int> GetRetailerIdAsync()
@@ -81,6 +102,17 @@ namespace SCM_System.Controllers
             {
                 var s = await _context.Suppliers.FirstOrDefaultAsync(x => x.UserId == userId);
                 return s?.Id ?? 0;
+            }
+            return 0;
+        }
+
+        private async Task<int> GetWarehouseIdAsync()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var emp = await _context.SupplierEmployees.FirstOrDefaultAsync(x => x.UserId == userId);
+                return emp?.WarehouseId ?? 0;
             }
             return 0;
         }

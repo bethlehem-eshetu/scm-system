@@ -5,26 +5,62 @@ using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
 using System.Security.Cryptography;
 using System.Text;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Security.Claims;
 
 namespace SCM_System.Controllers
 {
+    public class OtpRequestModel { public string FAN { get; set; } public string Email { get; set; } }
+    public class OtpVerifyModel { public string FAN { get; set; } public string OTP { get; set; } }
+
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly SCM_System.Services.IFaydaService _faydaService;
 
-        public AccountController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public AccountController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, SCM_System.Services.IFaydaService faydaService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _faydaService = faydaService;
+        }
+
+        // POST: /Account/RequestFaydaOtp
+        [HttpPost]
+        public async Task<IActionResult> RequestFaydaOtp([FromBody] OtpRequestModel model)
+        {
+            if (string.IsNullOrEmpty(model?.FAN)) return Json(new { success = false, message = "FAN is required." });
+            if (string.IsNullOrEmpty(model?.Email)) return Json(new { success = false, message = "Email is required to receive OTP." });
+            
+            var result = await _faydaService.GenerateOtpAsync(model.FAN, model.Email);
+            
+            return Json(new { success = result.success, message = result.message });
+        }
+
+        // POST: /Account/VerifyFaydaOtp
+        [HttpPost]
+        public async Task<IActionResult> VerifyFaydaOtp([FromBody] OtpVerifyModel model)
+        {
+            if (string.IsNullOrEmpty(model?.FAN) || string.IsNullOrEmpty(model?.OTP)) return Json(new { success = false, message = "FAN and OTP are required." });
+            var result = await _faydaService.VerifyOtpAsync(model.FAN, model.OTP);
+            if (result.success)
+            {
+                var faydaData = await _faydaService.GetIdentityDataAsync(model.FAN ?? "");
+                return Json(new { success = true, fullName = faydaData.fullName, phoneNumber = faydaData.phoneNumber, dateOfBirth = faydaData.dob });
+            }
+            return Json(new { success = false, message = result.message });
         }
 
         // GET: /Account/Register
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
+            ViewBag.Categories = await _context.ProductCategories
+                .Include(c => c.SubCategories)
+                .Where(c => c.Level == 1)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
             return View();
         }
 
@@ -69,9 +105,8 @@ namespace SCM_System.Controllers
                     if (string.IsNullOrEmpty(model.CompanyName))
                         ModelState.AddModelError("CompanyName", "Company name is required");
 
-                    if (string.IsNullOrEmpty(model.BusinessType))
-                        ModelState.AddModelError("BusinessType", "Business type is required");
-
+                    // Industry Focus (BusinessType) is now redundant as Categories define the scope
+                    
                     if (string.IsNullOrEmpty(model.LicenseNumber))
                         ModelState.AddModelError("LicenseNumber", "License number is required");
 
@@ -85,6 +120,36 @@ namespace SCM_System.Controllers
                         ModelState.AddModelError("CompanyAddress", "Company address is required");
 
                     // Website and Description are optional
+                }
+
+                // FAN Validation (Simulated Fayda)
+                if (string.IsNullOrEmpty(model.FAN) || !System.Text.RegularExpressions.Regex.IsMatch(model.FAN, @"^\d{16}$"))
+                {
+                    ModelState.AddModelError("FAN", "FAN must be a valid 16-digit number.");
+                }
+
+                // Duplicate FAN Check
+                if (await _context.Users.AnyAsync(u => u.FAN == model.FAN))
+                {
+                    ModelState.AddModelError("FAN", "This Fayda ID is already registered.");
+                }
+
+                var faydaData = await _faydaService.GetIdentityDataAsync(model.FAN ?? "");
+                if (!faydaData.success)
+                {
+                    ModelState.AddModelError("FAN", "Fayda verification is required. Please verify your FAN first.");
+                }
+                else
+                {
+                    // Force the actual verified values for FullName, ignoring what user typed
+                    // PhoneNumber is editable and remains whatever they typed.
+                    model.FullName = faydaData.fullName;
+                }
+
+                // Date of Birth check
+                if (!model.DateOfBirth.HasValue)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Date of birth is required.");
                 }
                 else if (model.Role == "Retailer")
                 {
@@ -106,6 +171,44 @@ namespace SCM_System.Controllers
                     // Tax Id and Description are optional
                 }
 
+                // Check for duplicate license numbers and TIN
+                if (model.Role == "Supplier")
+                {
+                    if (!string.IsNullOrEmpty(model.LicenseNumber))
+                    {
+                        if (await _context.Suppliers.AnyAsync(s => s.LicenseNumber == model.LicenseNumber))
+                        {
+                            ModelState.AddModelError("LicenseNumber", "This license number is already registered.");
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(model.TaxIdentificationNumber))
+                    {
+                        if (await _context.Suppliers.AnyAsync(s => s.TaxIdentificationNumber == model.TaxIdentificationNumber))
+                        {
+                            ModelState.AddModelError("TaxIdentificationNumber", "This Tax Identification Number (TIN) is already registered.");
+                        }
+                    }
+
+                    if (model.SelectedCategoryIds == null || !model.SelectedCategoryIds.Any())
+                    {
+                        ModelState.AddModelError("SelectedCategoryIds", "Please select at least one business category.");
+                    }
+                }
+                else if (model.Role == "Retailer")
+                {
+                    if (!string.IsNullOrEmpty(model.RetailerLicenseNumber))
+                    {
+                        if (await _context.Retailers.AnyAsync(r => r.BusinessLicenseNumber == model.RetailerLicenseNumber))
+                        {
+                            ModelState.AddModelError("RetailerLicenseNumber", "This business license number is already registered.");
+                        }
+                    }
+
+                    // Retailers no longer select categories during registration
+                    // Validation for SelectedRetailerCategoryIds removed
+                }
+
                 // If there are validation errors, return to form
                 if (ModelState.ErrorCount > 0)
                 {
@@ -117,6 +220,12 @@ namespace SCM_System.Controllers
                             Console.WriteLine($"- {key}: {error.ErrorMessage}");
                         }
                     }
+                    // Load hierarchical categories for the view
+                    ViewBag.Categories = await _context.ProductCategories
+                        .Include(c => c.SubCategories)
+                        .Where(c => c.Level == 1)
+                        .OrderBy(c => c.CategoryName)
+                        .ToListAsync();
                     return View(model);
                 }
 
@@ -147,13 +256,23 @@ namespace SCM_System.Controllers
                         PasswordHash = HashPassword(model.Password),
                         PhoneNumber = model.PhoneNumber,
                         Role = model.Role,
+                        EmailVerified = false,
+                        PhoneVerified = false,
+                        FAN = model.FAN,
+                        DateOfBirth = model.DateOfBirth,
+                        IsFaydaVerified = true,
+                        FaydaStatus = "Verified",
+                        FaydaVerifiedAt = DateTime.Now,
+                        VerifiedFullName = model.FullName,
+                        VerifiedPhoneNumber = model.PhoneNumber,
                         AccountStatus = "Pending",
                         IsApproved = false,
-                        CreatedAt = DateTime.Now,
-                        LoginAttempts = 0,
-                        EmailVerified = false,
-                        PhoneVerified = false
+                        ApprovalStatus = "Pending"
                     };
+
+                    // ALL newly registered users are PENDING and restricted from logging in
+                    user.IsApproved = false;
+                    user.AccountStatus = "Pending";
 
                     _context.Users.Add(user);
                     await _context.SaveChangesAsync();
@@ -234,7 +353,23 @@ namespace SCM_System.Controllers
                         };
 
                         _context.Suppliers.Add(supplier);
+                        await _context.SaveChangesAsync(); // Save to get Supplier.Id
                         Console.WriteLine("Supplier record added to context");
+
+                        // Add Business Categories
+                        if (model.SelectedCategoryIds != null && model.SelectedCategoryIds.Any())
+                        {
+                            foreach (var categoryId in model.SelectedCategoryIds)
+                            {
+                                _context.SupplierCategories.Add(new SupplierCategory
+                                {
+                                    SupplierId = supplier.Id,
+                                    CategoryId = categoryId
+                                });
+                            }
+                            await _context.SaveChangesAsync();
+                            Console.WriteLine($"{model.SelectedCategoryIds.Count} categories associated with supplier");
+                        }
 
                         // Create notification for admin about new supplier
                         Console.WriteLine("Creating admin notification...");
@@ -283,7 +418,10 @@ namespace SCM_System.Controllers
                         };
 
                         _context.Retailers.Add(retailer);
+                        await _context.SaveChangesAsync(); // Save to get Retailer.Id
                         Console.WriteLine("Retailer record added to context");
+
+                        // Add Purchase Categories for Retailer REMOVED as per new design
 
                         // Create notification for admin about new retailer
                         Console.WriteLine("Creating admin notification...");
@@ -299,7 +437,7 @@ namespace SCM_System.Controllers
                                 Type = "Info",
                                 CreatedAt = DateTime.Now,
                                 IsRead = false,
-                                ActionUrl = "/Admin/PendingRetailers"  // ✅ FIXED: Added ActionUrl
+                                ActionUrl = "/Admin/PendingRetailers"
                             };
                             _context.Notifications.Add(notification);
                             Console.WriteLine("Admin notification added");
@@ -318,14 +456,7 @@ namespace SCM_System.Controllers
                     Console.WriteLine("Transaction committed successfully");
 
                     // Set success message
-                    if (model.Role == "Supplier")
-                    {
-                        TempData["SuccessMessage"] = "✅ Registration successful! Your supplier account is pending admin approval.";
-                    }
-                    else if (model.Role == "Retailer")
-                    {
-                        TempData["SuccessMessage"] = "✅ Registration successful! Your retailer account is pending admin approval.";
-                    }
+                    TempData["SuccessMessage"] = $"✅ Registration successful! Your {model.Role.ToLower()} account is pending administrative review. We have recorded your Fayda verification status: {user.FaydaStatus}.";
 
                     Console.WriteLine("Registration completed successfully!");
                     return RedirectToAction("Login");
@@ -417,42 +548,37 @@ namespace SCM_System.Controllers
                         return View(model);
                     }
 
-                    // Reset login attempts on successful login
-                    user.LoginAttempts = 0;
+                    // ADMIN & EMPLOYEE BYPASS: Admins and Supplier Employees (Warehouse/Delivery) bypass administrative/fayda approval checks
+                    bool isSpecialAccount = user.Role == "Admin" || user.Role == "WarehouseManager" || user.Role == "DeliveryAgent";
 
-                    // Check if user is approved
-                    if (!user.IsApproved)
+                    if (!isSpecialAccount)
                     {
-                        if (user.Role == "Supplier")
+                        if (user.AccountStatus == "Rejected")
                         {
-                            var supplier = await _context.Suppliers
-                                .FirstOrDefaultAsync(s => s.UserId == user.Id);
+                            TempData["ErrorMessage"] = $"❌ Your account has been rejected. Reason: {user.RejectionReason ?? "No reason provided."}";
+                            return RedirectToAction("Login");
+                        }
 
-                            if (supplier != null && supplier.VerificationStatus == "Pending")
-                            {
-                                TempData["ErrorMessage"] = "⏳ Your supplier account is pending verification. Admin will review your documents.";
-                            }
-                            else
-                            {
-                                TempData["ErrorMessage"] = "⏳ Your supplier account is pending admin approval.";
-                            }
-                        }
-                        else if (user.Role == "Retailer")
+                        // Check if user is approved
+                        if (!user.IsApproved)
                         {
-                            TempData["ErrorMessage"] = "⏳ Your retailer account is pending admin approval.";
+                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative review. Please check back later.";
+                            return RedirectToAction("Login");
                         }
-                        else
-                        {
-                            TempData["ErrorMessage"] = "⏳ Your account is pending admin approval.";
-                        }
-                        return RedirectToAction("Login");
-                    }
 
-                    // Check if account is active
-                    if (user.AccountStatus != "Active")
-                    {
-                        TempData["ErrorMessage"] = $"❌ Your account is {user.AccountStatus}. Please contact support.";
-                        return RedirectToAction("Login");
+                        // Check if account is active
+                        if (user.AccountStatus != "Active")
+                        {
+                            TempData["ErrorMessage"] = $"❌ Your account is {user.AccountStatus}. Please contact support.";
+                            return RedirectToAction("Login");
+                        }
+
+                        // Block login if Fayda NOT verified OR not approved (ApprovalStatus Check)
+                        if (!user.IsFaydaVerified || user.ApprovalStatus != "Approved")
+                        {
+                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative approval or Fayda Identity verification.";
+                            return RedirectToAction("Login");
+                        }
                     }
 
                     // Update last login
@@ -504,13 +630,13 @@ namespace SCM_System.Controllers
                     {
                         return RedirectToAction("Dashboard", "Retailer");
                     }
-                    else if (user.Role == "Warehouse")
+                    else if (user.Role == "WarehouseManager")
                     {
                         return RedirectToAction("Dashboard", "Warehouse");
                     }
-                    else if (user.Role == "Delivery")
+                    else if (user.Role == "DeliveryAgent")
                     {
-                        return RedirectToAction("Dashboard", "Delivery");
+                        return RedirectToAction("MyDeliveries", "Delivery");
                     }
 
                     return RedirectToAction("Index", "Home");
@@ -532,6 +658,7 @@ namespace SCM_System.Controllers
             string userName = HttpContext.Session.GetString("UserName") ?? "User";
             HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
             TempData["SuccessMessage"] = $"👋 Goodbye, {userName}! You have been logged out successfully.";
             return RedirectToAction("Login");
         }

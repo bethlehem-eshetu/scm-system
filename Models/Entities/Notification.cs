@@ -12,18 +12,22 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(100)]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [Required]
-        public string Message { get; set; }
+        [StringLength(500)]
+        public string Message { get; set; } = string.Empty;
 
-        [StringLength(50)]
-        public string? Type { get; set; } // Info, Warning, Success, Error
+        [StringLength(20)]
+        public string Type { get; set; } = "Info"; // Success, Error, Warning, Info
 
-        public bool IsRead { get; set; } = false;
+        [StringLength(200)]
+        public string? ActionUrl { get; set; } // Link to related page (e.g., /Message/Conversation/5)
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public string? ActionUrl { get; set; }
+        public bool IsRead { get; set; } = false;
+
+        public DateTime? ReadAt { get; set; }
     }
 }

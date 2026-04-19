@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "Supplier Notifications";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-1"><i class="fas fa-bell me-2"></i>Notifications</h3>
+            <p class="text-muted mb-0">Stay updated with real-time operational alerts and trade signals</p>
+        </div>
+        <button class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
+            <i class="fas fa-check-double me-2"></i> Mark All as Read
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="list-group list-group-flush">
+            <div class="list-group-item p-4 border-0 border-bottom bg-light bg-opacity-10">
+                <div class="d-flex gap-3">
+                    <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-circle p-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="fw-bold mb-1">New Order Received: #ORD-12345</h6>
+                            <span class="text-muted small">2 hours ago</span>
+                        </div>
+                        <p class="text-muted small mb-3">Retailer **City Mart** has placed a new order for 500 units of Premium Teff. Please accept to initiate fulfillment.</p>
+                        <div class="d-flex gap-2">
+                            <a href="#" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">View Order</a>
+                            <button class="btn btn-light btn-sm rounded-pill px-3 border">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-group-item p-4 border-0 border-bottom">
+                <div class="d-flex gap-3">
+                    <div class="icon-shape bg-success bg-opacity-10 text-success rounded-circle p-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-truck-check"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="fw-bold mb-1">Delivery Completed: PO-99887</h6>
+                            <span class="text-muted small">5 hours ago</span>
+                        </div>
+                        <p class="text-muted small mb-0">Agent **Abebe Tesfaye** has successfully delivered shipment to Arada Retail Hub. Commission ledger updated.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-group-item p-4 border-0">
+                <div class="d-flex gap-3">
+                    <div class="icon-shape bg-warning bg-opacity-10 text-warning rounded-circle p-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="fw-bold mb-1">Low Stock Alert: Organic Coffee</h6>
+                            <span class="text-muted small">Yesterday</span>
+                        </div>
+                        <p class="text-muted small mb-3">Inventory at Addis Ababa Warehouse has fallen below reorder level (15 units remaining).</p>
+                        <a href="#" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold">Manage Stock</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5 py-4 opacity-50">
+        <i class="fas fa-history fa-2x mb-3 text-muted"></i>
+        <h6 class="fw-bold text-muted">That's everything for now</h6>
+        <p class="small text-muted">We'll let you know when something important happens.</p>
+    </div>
+</div>

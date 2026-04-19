@@ -1,0 +1,264 @@
+@model IEnumerable<SCM_System.Models.Entities.User>
+@{
+    ViewData["Title"] = "Pending Approvals";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid py-5" style="background-color: #f4f7f6; min-vh-100;">
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 20px; background: linear-gradient(135deg, #1a237e 0%, #283593 100%);">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="fw-bold text-white mb-2"><i class="fas fa-shield-alt me-3"></i>Administrative Verification Hub</h2>
+                        <p class="text-white text-opacity-75 mb-0">Review pending enterprise applications and verify identities via the Fayda integration.</p>
+                    </div>
+                    <div class="text-end text-white">
+                        <div class="display-6 fw-bold">@Model.Count()</div>
+                        <div class="small text-uppercase opacity-75">Pending Reviews</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 animate-slide-in">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+    
+    @if (TempData["EmailWarning"] != null)
+    {
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4 animate-slide-in">
+            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["EmailWarning"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 animate-slide-in">
+            <i class="fas fa-times-circle me-2"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Search and Filters -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden">
+                <span class="input-group-text border-0 bg-white"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="userSearch" class="form-control border-0 shadow-none" placeholder="Search by name, email, or Fayda ID...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select id="roleFilter" class="form-select form-select-lg border-0 shadow-sm rounded-4">
+                <option value="">All Roles</option>
+                <option value="Supplier">Suppliers</option>
+                <option value="Retailer">Retailers</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select id="faydaFilter" class="form-select form-select-lg border-0 shadow-sm rounded-4">
+                <option value="">Fayda Status (All)</option>
+                <option value="Verified">Verified Only</option>
+                <option value="Pending">Pending Only</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-4" id="pendingUsersContainer">
+        @foreach (var user in Model)
+        {
+            <div class="col-xl-6 col-xxl-4 user-card" data-role="@user.Role" data-fayda="@user.FaydaStatus">
+                <div class="card border-0 shadow-sm h-100 transition-hover" style="border-radius: 20px; overflow: hidden;">
+                    <div class="card-header border-0 bg-white pt-4 px-4 pb-0">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-lg bg-soft-primary text-primary rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background-color: #e8eaf6; font-size: 1.2rem; font-weight: bold;">
+                                    @user.FullName.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="overflow-hidden">
+                                     <div class="d-flex align-items-center mb-1">
+                                        <h5 class="fw-bold mb-0 text-truncate me-2">@user.FullName</h5>
+                                        @if (user.Role == "Supplier" && user.Supplier != null)
+                                        {
+                                            <a asp-action="SupplierDetails" asp-route-id="@user.Supplier.Id" class="btn btn-sm btn-link p-0 text-primary" title="View Business Profile">
+                                                <i class="fas fa-external-link-alt small"></i>
+                                            </a>
+                                        }
+                                        else if (user.Role == "Retailer" && user.Retailer != null)
+                                        {
+                                            <a asp-action="RetailerDetails" asp-route-id="@user.Retailer.Id" class="btn btn-sm btn-link p-0 text-success" title="View Business Profile">
+                                                <i class="fas fa-external-link-alt small"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                    <p class="text-muted small mb-0 text-truncate">@user.Email</p>
+                                </div>
+                            </div>
+                            <span class="badge @(user.Role == "Supplier" ? "bg-info" : "bg-success") rounded-pill px-3 py-2">
+                                <i class="fas @(user.Role == "Supplier" ? "fa-truck" : "fa-store") me-1"></i> @user.Role
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded-4 border">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted text-uppercase fw-bold"><i class="fas fa-fingerprint me-1"></i> Fayda Identity</small>
+                                        @if (user.FaydaStatus == "Verified")
+                                        {
+                                            <span class="badge bg-success-soft text-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Verified</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-soft text-warning px-2 py-1"><i class="fas fa-clock me-1"></i> Pending</span>
+                                        }
+                                    </div>
+                                    <h6 class="mb-1 fw-bold">ID: <span class="text-primary font-monospace">@user.FAN</span></h6>
+                                    @if (user.FaydaVerification != null)
+                                    {
+                                        <div class="mt-2 text-muted small">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span><i class="fas fa-user-tag me-1"></i> Registry Name:</span>
+                                                <span class="fw-bold text-dark">@user.FaydaVerification.VerifiedName</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span><i class="fas fa-calendar-alt me-1"></i> DOB:</span>
+                                                <span class="fw-bold text-dark">@user.FaydaVerification.VerifiedDob?.ToString("MMM dd, yyyy")</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span><i class="fas fa-phone-alt me-1"></i> Registry Phone:</span>
+                                                <span class="fw-bold text-dark">@user.FaydaVerification.VerifiedPhone</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center small text-muted">
+                                    <span><i class="fas fa-clock me-1"></i> Registered On:</span>
+                                    <span>@user.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer border-0 bg-white p-4 pt-0">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <form asp-action="ApproveUser" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@user.Id" />
+                                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-4 fw-bold shadow-sm">
+                                        <i class="fas fa-check-circle me-1"></i> Approve
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-danger w-100 py-2 rounded-4 fw-bold" 
+                                        onclick="openRejectModal(@user.Id, '@user.FullName')">
+                                    <i class="fas fa-times-circle me-1"></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <div class="p-5 bg-white shadow-sm d-inline-block rounded-5">
+                    <i class="fas fa-user-check fa-4x text-success mb-3 opacity-25"></i>
+                    <h4 class="fw-bold">All caught up!</h4>
+                    <p class="text-muted mb-0">No pending enterprise applications require review.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg p-3" style="border-radius: 25px;">
+            <div class="modal-header border-0 pb-0">
+                <h4 class="modal-title fw-bold" id="rejectModalLabel">Reject Application</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="RejectUser" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body py-4">
+                    <input type="hidden" id="rejectUserId" name="id" value="" />
+                    <p class="text-muted mb-4">You are rejecting <strong id="rejectUserName" class="text-dark"></strong>. Please provide a clear reason that will be communicated to the user.</p>
+                    <div class="form-group mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Reason for Rejection</label>
+                        <textarea class="form-control bg-light border-0 rounded-4 p-3 shadow-none" name="reason" rows="4" required placeholder="Example: License document unclear, FAN identity mismatch..."></textarea>
+                    </div>
+                    <div class="alert alert-warning border-0 rounded-4 small">
+                        <i class="fas fa-info-circle me-2"></i> This action will set the user's account to 'Rejected' status.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light px-4 py-2 rounded-pill fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-hover:hover { transform: translateY(-5px); transition: transform 0.3s ease; }
+    .bg-success-soft { background-color: rgba(46, 125, 50, 0.1) !important; color: #2e7d32 !important; }
+    .bg-warning-soft { background-color: rgba(255, 143, 0, 0.1) !important; color: #ff8f00 !important; }
+    .bg-soft-primary { background-color: #f0f2f5 !important; }
+    .animate-slide-in { animation: fadeInRight 0.5s ease-out; }
+    @@keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .font-monospace { letter-spacing: 1px; }
+</style>
+
+@section Scripts {
+    <script>
+        function openRejectModal(userId, userName) {
+            $('#rejectUserId').val(userId);
+            $('#rejectUserName').text(userName);
+            var myModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+            myModal.show();
+        }
+
+        $(document).ready(function() {
+            // Live Search
+            $("#userSearch").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                filterUsers();
+            });
+
+            // Filters
+            $("#roleFilter, #faydaFilter").on("change", function() {
+                filterUsers();
+            });
+
+            function filterUsers() {
+                var searchText = $("#userSearch").val().toLowerCase();
+                var role = $("#roleFilter").val();
+                var fayda = $("#faydaFilter").val();
+
+                $(".user-card").each(function() {
+                    var cardRole = $(this).data('role');
+                    var cardFayda = $(this).data('fayda');
+                    var content = $(this).text().toLowerCase();
+
+                    var matchesSearch = content.indexOf(searchText) > -1;
+                    var matchesRole = !role || cardRole === role;
+                    var matchesFayda = !fayda || cardFayda === fayda;
+
+                    $(this).toggle(matchesSearch && matchesRole && matchesFayda);
+                });
+            }
+        });
+    </script>
+}

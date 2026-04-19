@@ -1,35 +1,147 @@
 @model IEnumerable<SCM_System.Models.Entities.TenderBid>
 @{
-    ViewData["Title"] = "My Bids";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Bid Submission Monitor";
+    Layout = "_DashboardLayout";
 }
-<div class="container mt-4">
-    <h2>My Bids</h2>
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Tender</th>
-                <th>Proposed Amount</th>
-                <th>Lead Time (Days)</th>
-                <th>Validity (Days)</th>
-                <th>Status</th>
-                <th>Submitted</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach(var item in Model) {
-            <tr>
-                <td>@item.Tender?.Title (@item.Tender?.ReferenceNumber)</td>
-                <td>@item.ProposedTotalAmount.ToString("C")</td>
-                <td>@item.DeliveryLeadTimeDays</td>
-                <td>@item.ValidityPeriodDays</td>
-                <td><span class="badge @(item.Status == "Accepted" ? "bg-success" : (item.Status == "Rejected" ? "bg-danger" : "bg-warning text-dark"))">@item.Status</span></td>
-                <td>@item.SubmittedAt.ToShortDateString()</td>
-            </tr>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-1"><i class="fas fa-file-contract me-2"></i>Bid Submission Monitor</h3>
+            <p class="text-muted mb-0">Track your proposals and monitor award statuses across active tenders</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Tender" asp-action="Index" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                <i class="fas fa-search me-2"></i> Browse New Tenders
+            </a>
+        </div>
+    </div>
+
+    <!-- Bid Analytics (Mini) -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 text-center">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Total Bids</span>
+                <h4 class="fw-bold mb-0">@Model.Count()</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 text-center border-start border-success border-4">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Won Bids</span>
+                <h4 class="fw-bold mb-0 text-success">@Model.Count(b => b.Status == "Accepted")</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 text-center border-start border-warning border-4">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Pending Award</span>
+                <h4 class="fw-bold mb-0 text-warning">@Model.Count(b => b.Status == "Pending")</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 text-center border-start border-danger border-4">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Not Awarded</span>
+                <h4 class="fw-bold mb-0 text-danger">@Model.Count(b => b.Status == "Rejected")</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var bid in Model)
+            {
+                <div class="col-xl-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden @(bid.Status == "Accepted" ? "border-start border-success border-5" : "")">
+                        <div class="card-header border-0 bg-transparent p-4 pb-0 d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="badge bg-light text-muted border rounded-pill px-2 me-2">@bid.Tender?.ReferenceNumber</span>
+                                    <span class="text-muted small">Submitted on @bid.SubmittedAt.ToString("MMM dd, yyyy")</span>
+                                </div>
+                                <h5 class="fw-bold mb-1">@bid.Tender?.Title</h5>
+                            </div>
+                            <span class="badge @GetBidStatusClass(bid.Status) rounded-pill px-3 py-2 shadow-sm">@bid.Status</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3 mb-4">
+                                <div class="col-sm-4 px-3 border-end">
+                                    <p class="text-muted small fw-bold text-uppercase mb-1">Prop. Total</p>
+                                    <h5 class="fw-bold text-primary mb-0">@bid.ProposedTotalAmount.ToString("C0")</h5>
+                                </div>
+                                <div class="col-sm-4 px-3 border-end">
+                                    <p class="text-muted small fw-bold text-uppercase mb-1">Lead Time</p>
+                                    <h5 class="fw-bold mb-0">@bid.DeliveryLeadTimeDays Days</h5>
+                                </div>
+                                <div class="col-sm-4 px-3">
+                                    <p class="text-muted small fw-bold text-uppercase mb-1">Validity</p>
+                                    <h5 class="fw-bold mb-0">@bid.ValidityPeriodDays Days</h5>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(bid.Notes))
+                            {
+                                <div class="bg-light rounded-4 p-3 mb-3 border-start border-primary border-4">
+                                    <p class="text-muted small fw-bold mb-1"><i class="fas fa-quote-left me-1"></i> Proposal Summary</p>
+                                    <p class="small mb-0 text-truncate-2">@bid.Notes</p>
+                                </div>
+                            }
+
+                            <div class="d-flex gap-2 mt-auto pt-2">
+                                <a asp-controller="Tender" asp-action="Details" asp-route-id="@bid.TenderId" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold flex-grow-1">
+                                    View Tender Original
+                                </a>
+                                <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold flex-grow-1">
+                                    View Detailed Proposal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         }
-        @if(!Model.Any()) {
-            <tr><td colspan="6" class="text-center">You haven't submitted any bids yet.</td></tr>
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <div class="py-5 bg-light rounded-4 border-2 border-dashed">
+                    <i class="fas fa-file-invoice fa-4x text-muted mb-3 opacity-25"></i>
+                    <h5 class="fw-bold">No Bids Submitted</h5>
+                    <p class="text-muted">You haven't participated in any tenders yet. Explore the marketplace to find new opportunities.</p>
+                    <a asp-controller="Tender" asp-action="Index" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                        Find Tenders
+                    </a>
+                </div>
+            </div>
         }
-        </tbody>
-    </table>
+    </div>
 </div>
+
+@functions {
+    string GetBidStatusClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning text-dark",
+            "Accepted" => "bg-success text-white",
+            "Rejected" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+}
+
+@section Styles {
+    <style>
+        .text-truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+        .hover-lift {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
+        }
+    </style>
+}

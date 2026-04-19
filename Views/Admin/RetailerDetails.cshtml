@@ -1,547 +1,303 @@
-﻿@model SCM_System.Models.Entities.Retailer
-
+@model SCM_System.Models.Entities.Retailer
 @{
-    ViewData["Title"] = "Retailer Details";
+    ViewData["Title"] = "Retailer Profile | " + Model.BusinessName;
 }
 
-<div class="container-fluid py-4">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="display-6">
-                <i class="fas fa-store me-2 text-primary"></i>Retailer Details
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a asp-action="AllRetailers">All Retailers</a></li>
-                    <li class="breadcrumb-item active">@Model.BusinessName</li>
-                </ol>
-            </nav>
-        </div>
-        <div>
-            <a asp-action="AllRetailers" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-        </div>
-    </div>
-
-    <!-- Alert Messages -->
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    <!-- Status Banner - FIXED: Using User properties only -->
-    @if (Model.User != null)
-    {
-        string statusClass = "";
-        string statusIcon = "";
-        string statusText = "";
-        string statusBadgeClass = "";
-
-        // Determine status based on User properties only (since Retailer doesn't have VerificationStatus)
-        if (Model.User.IsApproved && Model.User.AccountStatus == "Active")
-        {
-            statusClass = "alert-success";
-            statusIcon = "fa-check-circle";
-            statusText = "Approved";
-            statusBadgeClass = "bg-success";
-        }
-        else if (Model.User.AccountStatus == "Rejected")
-        {
-            statusClass = "alert-danger";
-            statusIcon = "fa-times-circle";
-            statusText = "Rejected";
-            statusBadgeClass = "bg-danger";
-        }
-        else if (Model.User.AccountStatus == "Pending" || !Model.User.IsApproved)
-        {
-            statusClass = "alert-warning";
-            statusIcon = "fa-clock";
-            statusText = "Pending Approval";
-            statusBadgeClass = "bg-warning text-dark";
-        }
-        else
-        {
-            statusClass = "alert-secondary";
-            statusIcon = "fa-question-circle";
-            statusText = Model.User.AccountStatus ?? "Unknown";
-            statusBadgeClass = "bg-secondary";
-        }
-
-        <div class="alert @statusClass mb-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <i class="fas @statusIcon me-2"></i>
-                    <strong>Status:</strong>
-                    <span class="badge @statusBadgeClass">@statusText</span>
-
-                    @if (!string.IsNullOrEmpty(Model.User.AccountStatus))
-                    {
-                        <span class="ms-2 text-muted">
-                            (Account Status: @Model.User.AccountStatus)
-                        </span>
-                    }
-                </div>
-                <div>
-                    @if (!Model.User.IsApproved && Model.User.AccountStatus != "Rejected")
-                    {
-                        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#approveModal">
-                            <i class="fas fa-check"></i> Approve Retailer
-                        </button>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                            <i class="fas fa-times"></i> Reject Retailer
-                        </button>
-                    }
-                    else if (Model.User.AccountStatus == "Rejected")
-                    {
-                        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#approveModal">
-                            <i class="fas fa-check"></i> Approve Retailer
-                        </button>
-                        <span class="badge bg-danger p-2">Account Rejected</span>
-                    }
-                    else if (Model.User.IsApproved)
-                    {
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                            <i class="fas fa-times"></i> Reject Retailer
-                        </button>
-                    }
+<div class="container-fluid py-5" style="background-color: #f8f9fa; min-height: 100vh;">
+    <!-- Top Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                <div class="card-body p-0">
+                    <div class="bg-success p-4 text-white d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-xl bg-white text-success rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">
+                                @Model.BusinessName.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <h2 class="fw-bold mb-0">@Model.BusinessName</h2>
+                                <p class="mb-0 text-white-50"><i class="fas fa-store me-2"></i>Retailer Account #@Model.Id</p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            @{
+                                var isApproved = Model.User?.IsApproved == true;
+                                var accountStatus = Model.User?.AccountStatus;
+                            }
+                            <span class="badge @(isApproved ? "bg-white text-success" : (accountStatus == "Rejected" ? "bg-danger" : "bg-warning text-dark")) rounded-pill px-4 py-2 fs-6 shadow-sm">
+                                <i class="fas @(isApproved ? "fa-check-circle" : (accountStatus == "Rejected" ? "fa-times-circle" : "fa-clock")) me-2"></i>
+                                @(isApproved ? "Approved" : (accountStatus == "Rejected" ? "Rejected" : "Pending Approval"))
+                            </span>
+                            <div class="mt-2 text-white-50 small">Retailer Status</div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white d-flex justify-content-between align-items-center">
+                        <div class="ms-3">
+                            <a asp-action="PendingUsers" class="btn btn-link text-decoration-none text-muted fw-bold">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Verification Hub
+                            </a>
+                        </div>
+                        <div class="me-3">
+                            @if (Model.User != null && !Model.User.IsApproved && Model.User.AccountStatus != "Rejected")
+                            {
+                                <form asp-action="ApproveUser" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.UserId" />
+                                    <button type="submit" class="btn btn-success px-4 rounded-3 fw-bold shadow-sm me-2">
+                                        <i class="fas fa-check-circle me-2"></i>Approve Retailer
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-outline-danger px-4 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                    <i class="fas fa-times-circle me-2"></i>Reject
+                                </button>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    }
+    </div>
 
-    <div class="row">
-        <!-- Business Information -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-building me-2"></i>Business Information</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
-                        <tr>
-                            <th style="width: 150px;">Business Name:</th>
-                            <td><strong>@Model.BusinessName</strong></td>
-                        </tr>
-                        <tr>
-                            <th>Business Type:</th>
-                            <td><span class="badge bg-info">@Model.BusinessType</span></td>
-                        </tr>
-                        <tr>
-                            <th>Business Address:</th>
-                            <td>@Model.BusinessAddress</td>
-                        </tr>
-                        <tr>
-                            <th>City:</th>
-                            <td>@Model.City</td>
-                        </tr>
-                        <tr>
-                            <th>Country:</th>
-                            <td>@Model.Country</td>
-                        </tr>
-                        <tr>
-                            <th>Store Size:</th>
-                            <td>
-                                @if (Model.StoreSize == "Small")
+    <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-lg-4">
+             <!-- Fayda Identity Card -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-soft-success p-2 rounded-3 me-3">
+                            <i class="fas fa-fingerprint fa-2x text-success"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Identity Snapshot</h5>
+                    </div>
+                    
+                    @if (Model.User?.FaydaVerification != null)
+                    {
+                        var vf = Model.User.FaydaVerification;
+                        <div class="p-3 rounded-4" style="background-color: #f1f8f1; border: 1px dashed #28a745;">
+                            <div class="text-center mb-3">
+                                @if (Model.User.IsFaydaVerified)
                                 {
-                                    <span class="badge bg-info">Small</span>
+                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill border border-info border-opacity-25 shadow-sm">
+                                        <i class="fas fa-check-shield me-2"></i>Verified Identity
+                                    </span>
                                 }
-                                else if (Model.StoreSize == "Medium")
+                                else if (Model.User.FaydaStatus == "Rejected")
                                 {
-                                    <span class="badge bg-warning text-dark">Medium</span>
-                                }
-                                else if (Model.StoreSize == "Large")
-                                {
-                                    <span class="badge bg-success">Large</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger border-opacity-25 shadow-sm">
+                                        <i class="fas fa-times-circle me-2"></i>Identity Rejected
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span>@Model.StoreSize</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning border-opacity-25 shadow-sm">
+                                        <i class="fas fa-clock me-2"></i>Identity Pending
+                                    </span>
                                 }
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Description:</th>
-                            <td>@(string.IsNullOrEmpty(Model.Description) ? "No description provided" : Model.Description)</td>
-                        </tr>
-                        <tr>
-                            <th>Registered:</th>
-                            <td>@Model.CreatedAt.ToString("MMMM dd, yyyy")</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Fan Account Number</label>
+                                <div class="p-2 bg-white rounded-3 border fw-bold font-monospace">@Model.User.FAN</div>
+                            </div>
 
-        <!-- Contact Information -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Contact Information</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.User != null)
-                    {
-                        <table class="table table-borderless">
-                            <tr>
-                                <th style="width: 150px;">Full Name:</th>
-                                <td>@Model.User.FullName</td>
-                            </tr>
-                            <tr>
-                                <th>Email:</th>
-                                <td>
-                                    <a href="mailto:@Model.User.Email">@Model.User.Email</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Phone:</th>
-                                <td>@Model.User.PhoneNumber</td>
-                            </tr>
-                            <tr>
-                                <th>Account Status:</th>
-                                <td>
-                                    @if (Model.User.IsApproved)
-                                    {
-                                        <span class="badge bg-success">Approved</span>
-                                    }
-                                    else if (Model.User.AccountStatus == "Rejected")
-                                    {
-                                        <span class="badge bg-danger">Rejected</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    }
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>User Role:</th>
-                                <td><span class="badge bg-info">@Model.User.Role</span></td>
-                            </tr>
-                            <tr>
-                                <th>Last Login:</th>
-                                <td>@(Model.User.LastLoginAt?.ToString("MMM dd, yyyy HH:mm") ?? "Never")</td>
-                            </tr>
-                            <tr>
-                                <th>Login Attempts:</th>
-                                <td>@(Model.User.LoginAttempts ?? 0)</td>
-                            </tr>
-                        </table>
+                            <div class="list-group list-group-flush small">
+                                <div class="list-group-item bg-transparent border-0 px-0 d-flex justify-content-between">
+                                    <span class="text-muted">Verified Name:</span>
+                                    <span class="fw-bold">@vf.VerifiedName</span>
+                                </div>
+                                <div class="list-group-item bg-transparent border-0 px-0 d-flex justify-content-between">
+                                    <span class="text-muted">Date of Birth:</span>
+                                    <span class="fw-bold">@vf.VerifiedDob?.ToString("MMM dd, yyyy")</span>
+                                </div>
+                                <div class="list-group-item bg-transparent border-0 px-0 d-flex justify-content-between">
+                                    <span class="text-muted">Registry Phone:</span>
+                                    <span class="fw-bold">@vf.VerifiedPhone</span>
+                                </div>
+                            </div>
+                        </div>
                     }
                     else
                     {
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i> User account information not found.
+                        <div class="text-center py-4 bg-light rounded-4">
+                            <i class="fas fa-id-card-alt fa-3x text-muted opacity-25 mb-3"></i>
+                            <p class="text-muted small mb-0">Waiting for biometric link...</p>
                         </div>
                     }
                 </div>
             </div>
-        </div>
 
-        <!-- License Information -->
-        @if (!string.IsNullOrEmpty(Model.BusinessLicenseNumber) || !string.IsNullOrEmpty(Model.TaxIdentificationNumber))
-        {
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>License Information</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-borderless">
-                            @if (!string.IsNullOrEmpty(Model.BusinessLicenseNumber))
-                            {
-                                <tr>
-                                    <th style="width: 150px;">License Number:</th>
-                                    <td>@Model.BusinessLicenseNumber</td>
-                                </tr>
-                            }
-                            @if (!string.IsNullOrEmpty(Model.TaxIdentificationNumber))
-                            {
-                                <tr>
-                                    <th>TIN:</th>
-                                    <td>@Model.TaxIdentificationNumber</td>
-                                </tr>
-                            }
-                        </table>
-                    </div>
-                </div>
-            </div>
-        }
-
-        <!-- Statistics -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <h3>@(Model.PurchaseOrders?.Count ?? 0)</h3>
-                            <p class="text-muted">Purchase Orders</p>
-                        </div>
-                        <div class="col-6">
-                            <h3>@(Model.Orders?.Count ?? 0)</h3>
-                            <p class="text-muted">Orders</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Purchase Orders Section -->
-    @if (Model.PurchaseOrders != null && Model.PurchaseOrders.Any())
-    {
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Purchase Orders</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>PO Number</th>
-                                        <th>Supplier</th>
-                                        <th>Order Date</th>
-                                        <th>Total Amount</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var po in Model.PurchaseOrders.OrderByDescending(p => p.OrderDate))
-                                    {
-                                        <tr>
-                                            <td><strong>@po.PONumber</strong></td>
-                                            <td>@(po.Supplier?.CompanyName ?? "N/A")</td>
-                                            <td>@po.OrderDate.ToString("MMM dd, yyyy")</td>
-                                            <td>$@po.TotalAmount.ToString("N2")</td>
-                                            <td>
-                                                @if (po.Status == "Completed")
-                                                {
-                                                    <span class="badge bg-success">Completed</span>
-                                                }
-                                                else if (po.Status == "Pending")
-                                                {
-                                                    <span class="badge bg-warning text-dark">Pending</span>
-                                                }
-                                                else if (po.Status == "Processing")
-                                                {
-                                                    <span class="badge bg-info">Processing</span>
-                                                }
-                                                else if (po.Status == "Accepted")
-                                                {
-                                                    <span class="badge bg-primary">Accepted</span>
-                                                }
-                                                else if (po.Status == "Rejected")
-                                                {
-                                                    <span class="badge bg-danger">Rejected</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">@po.Status</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                <a href="#" class="btn btn-sm btn-info" title="View Details">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                        @if (Model.PurchaseOrders.Count > 5)
-                        {
-                            <div class="text-center mt-3">
-                                <a href="#" class="btn btn-outline-primary btn-sm">View All Purchase Orders</a>
+            <!-- Contact Card -->
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Contact Profile</h5>
+                    <div class="space-y-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-light p-2 rounded-circle me-3"><i class="fas fa-user text-muted"></i></div>
+                            <div>
+                                <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Account Holder</small>
+                                <span class="fw-bold text-dark">@Model.User?.FullName</span>
                             </div>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Orders Section -->
-    @if (Model.Orders != null && Model.Orders.Any())
-    {
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Orders</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Order ID</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Items</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var order in Model.Orders.OrderByDescending(o => o.CreatedAt).Take(5))
-                                    {
-                                        <tr>
-                                            <td>#@order.Id</td>
-                                            <td>@order.CreatedAt.ToString("MMM dd, yyyy")</td>
-                                            <td>
-                                                @if (order.OrderStatus == "Delivered")
-                                                {
-                                                    <span class="badge bg-success">Delivered</span>
-                                                }
-                                                else if (order.OrderStatus == "Shipped")
-                                                {
-                                                    <span class="badge bg-info">Shipped</span>
-                                                }
-                                                else if (order.OrderStatus == "Processing")
-                                                {
-                                                    <span class="badge bg-warning text-dark">Processing</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">@order.OrderStatus</span>
-                                                }
-                                            </td>
-                                            <td>@(order.OrderItems?.Count ?? 0) items</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                        </div>
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-light p-2 rounded-circle me-3"><i class="fas fa-envelope text-muted"></i></div>
+                            <div>
+                                <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Email Address</small>
+                                <a href="mailto:@Model.User?.Email" class="text-success text-decoration-none fw-bold">@Model.User?.Email</a>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start">
+                            <div class="bg-light p-2 rounded-circle me-3"><i class="fas fa-phone text-muted"></i></div>
+                            <div>
+                                <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Direct Phone</small>
+                                <span class="fw-bold text-dark">@Model.User?.PhoneNumber</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    }
-</div>
 
-<!-- Approve Modal -->
-<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="approveModalLabel">
-                    <i class="fas fa-check-circle me-2"></i>Approve Retailer
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Right Column -->
+        <div class="col-lg-8">
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
+                        <div class="display-6 fw-bold text-success">@Model.PurchaseOrders.Count</div>
+                        <div class="text-muted small text-uppercase fw-bold">Purchase Orders</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
+                        <div class="display-6 fw-bold text-primary">@Model.Orders.Count</div>
+                        <div class="text-muted small text-uppercase fw-bold">Customer Orders</div>
+                    </div>
+                </div>
             </div>
-            <form asp-action="ApproveRetailer" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.Id" />
-                <div class="modal-body">
-                    <p>Are you sure you want to approve <strong>@Model.BusinessName</strong>?</p>
-                    <p class="text-muted small">The retailer will be notified and will be able to access the system.</p>
 
-                    @if (Model.User != null && Model.User.AccountStatus == "Rejected")
-                    {
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i> This account was previously rejected. Approving will reactivate it.
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <ul class="nav nav-tabs nav-justified mb-4 border-0" id="retailerTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active fw-bold border-0 bg-transparent text-muted text-success" id="about-tab" data-bs-toggle="tab" data-bs-target="#about" type="button">
+                                <i class="fas fa-info-circle me-2"></i>Business Info
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link fw-bold border-0 bg-transparent text-muted" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button">
+                                <i class="fas fa-history me-2"></i>Order Trace
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Business Info -->
+                        <div class="tab-pane fade show active" id="about">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-4 border mb-3">
+                                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Branch Category</h6>
+                                        <span class="badge @(Model.StoreSize == "Large" ? "bg-success" : (Model.StoreSize == "Medium" ? "bg-warning" : "bg-info")) px-3">@Model.StoreSize Segment</span>
+                                        <div class="mt-2 fw-bold text-dark">@Model.BusinessType</div>
+                                    </div>
+                                    <div class="p-3 bg-light rounded-4 border">
+                                        <h6 class="text-muted small text-uppercase fw-bold mb-2">HQ Address</h6>
+                                        <p class="small mb-1">@Model.BusinessAddress</p>
+                                        <p class="fw-bold small mb-0">@Model.City, @Model.Country</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-4 border mb-3 h-100">
+                                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Legal Credentials</h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="small text-muted">License:</span>
+                                            <span class="fw-bold font-monospace">@Model.BusinessLicenseNumber</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="small text-muted">TIN:</span>
+                                            <span class="fw-bold font-monospace">@Model.TaxIdentificationNumber</span>
+                                        </div>
+                                        <hr>
+                                        <p class="small text-muted italic">@(string.IsNullOrEmpty(Model.Description) ? "No business description provided." : Model.Description)</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    }
+
+                        <!-- Orders Trace -->
+                        <div class="tab-pane fade" id="orders">
+                            @if (Model.PurchaseOrders.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead>
+                                            <tr class="text-muted small">
+                                                <th>PO #</th>
+                                                <th>Supplier</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var po in Model.PurchaseOrders.OrderByDescending(p => p.OrderDate).Take(10))
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold text-dark">@po.PONumber</td>
+                                                    <td class="small">@po.Supplier?.CompanyName</td>
+                                                    <td class="fw-bold text-success">$@po.TotalAmount.ToString("N2")</td>
+                                                    <td>
+                                                        <span class="badge bg-soft-success text-success rounded-pill px-3">@po.Status</span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="fas fa-ghost fa-3x text-muted opacity-25 mb-3"></i>
+                                    <p class="text-muted mb-0">No transaction records found for this branch.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check me-1"></i>Approve Retailer
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="rejectModalLabel">
-                    <i class="fas fa-times-circle me-2"></i>Reject Retailer
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
+            <div class="modal-header border-0 pb-0">
+                <h4 class="modal-title fw-bold">Reject Retailer</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="RejectRetailer" method="post">
+            <form asp-action="RejectUser" asp-route-id="@Model.UserId" method="post">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.Id" />
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="rejectionReason" class="form-label fw-bold">Rejection Reason:</label>
-                        <textarea class="form-control" id="rejectionReason" name="rejectionReason"
-                                  rows="4" required placeholder="Please provide a detailed reason for rejection..."></textarea>
-                        <div class="form-text text-muted">
-                            <i class="fas fa-info-circle me-1"></i>This reason will be sent to the retailer.
-                        </div>
+                <div class="modal-body py-4">
+                    <p class="text-muted mb-4">You are rejecting <strong>@Model.BusinessName</strong>. This action is recorded.</p>
+                    <div class="form-group">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Reason for Rejection</label>
+                        <textarea class="form-control bg-light border-0 rounded-4 p-3 shadow-none" name="reason" rows="4" required placeholder="Explain the decision..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times me-1"></i>Reject Retailer
-                    </button>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Confirm Rejection</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            $('.alert').fadeOut('slow');
-        }, 5000);
-
-        // Validate rejection reason
-        $('#rejectModal form').on('submit', function(e) {
-            var reason = $('#rejectionReason').val().trim();
-            if (!reason) {
-                e.preventDefault();
-                alert('Please provide a rejection reason.');
-                return false;
-            }
-            if (reason.length < 10) {
-                e.preventDefault();
-                alert('Rejection reason must be at least 10 characters long.');
-                return false;
-            }
-        });
-
-        // Show confirmation for approve if previously rejected
-        $('#approveModal').on('show.bs.modal', function() {
-            var wasRejected = '@(Model.User?.AccountStatus == "Rejected")';
-            if (wasRejected === 'True') {
-                if (!confirm('This account was previously rejected. Are you sure you want to approve it?')) {
-                    $('#approveModal').modal('hide');
-                }
-            }
-        });
-
-        // Focus on textarea when reject modal opens
-        $('#rejectModal').on('shown.bs.modal', function() {
-            $('#rejectionReason').trigger('focus');
-        });
-    </script>
-}
+<style>
+    .bg-soft-success { background-color: rgba(46, 125, 50, 0.05) !important; }
+    .bg-success-soft { background-color: rgba(46, 125, 50, 0.1) !important; }
+    .nav-tabs .nav-link.active { border-bottom: 3px solid #28a745 !important; color: #28a745 !important; }
+    .avatar-xl { border: 4px solid rgba(255,255,255,0.2); }
+</style>

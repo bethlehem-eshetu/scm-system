@@ -6,9 +6,10 @@ namespace SCM_System.Services
     {
         Task<IEnumerable<PurchaseOrder>> GetPurchaseOrdersByRetailerAsync(int retailerId);
         Task<IEnumerable<PurchaseOrder>> GetPurchaseOrdersBySupplierAsync(int supplierId);
+        Task<IEnumerable<PurchaseOrder>> GetPurchaseOrdersByWarehouseAsync(int warehouseId);
         Task<PurchaseOrder> GetPurchaseOrderByIdAsync(int id);
         Task<PurchaseOrder> GeneratePurchaseOrderFromBidAsync(int tenderBidId, string deliveryAddress);
         Task<PurchaseOrder> CreateDirectPurchaseOrderAsync(PurchaseOrder po, List<PurchaseOrderItem> items);
-        Task<PurchaseOrder> UpdatePurchaseOrderStatusAsync(int id, string status);
+        Task<PurchaseOrder> UpdatePurchaseOrderStatusAsync(int id, string status, int userId);
     }
 }

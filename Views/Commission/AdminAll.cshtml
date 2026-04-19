@@ -1,0 +1,323 @@
+﻿@model List<SCM_System.Models.Entities.Commission>
+
+@{
+    ViewData["Title"] = "Commission Management";
+    Layout = "_DashboardLayout";
+    decimal totalEarned = ViewBag.TotalEarned ?? 0;
+    decimal totalPending = ViewBag.TotalPending ?? 0;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">
+                <i class="fas fa-chart-line text-primary me-2"></i>Commission Management
+            </h1>
+            <p class="text-muted">Monitor and manage platform commission earnings</p>
+        </div>
+        <div>
+            <a asp-action="Dashboard" asp-controller="Admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Revenue Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Total Revenue</p>
+                            <h3 class="fw-bold mb-0 text-primary">@((totalEarned + totalPending).ToString("C"))</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-dollar-sign fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Total Earned</p>
+                            <h3 class="fw-bold mb-0 text-success">@totalEarned.ToString("C")</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Pending Collection</p>
+                            <h3 class="fw-bold mb-0 text-warning">@totalPending.ToString("C")</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Total Commissions</p>
+                            <h3 class="fw-bold mb-0 text-info">@Model.Count</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                            <i class="fas fa-receipt fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commissions Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 p-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-list me-2 text-primary"></i>All Commissions
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-receipt fa-4x text-muted mb-3 opacity-25"></i>
+                    <h5 class="text-muted">No commissions found</h5>
+                    <p class="text-muted">Commissions will appear here when orders are delivered.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Supplier</th>
+                                <th>PO Number</th>
+                                <th>Order Amount</th>
+                                <th>Commission</th>
+                                <th>Status</th>
+                                <th>Transaction ID</th>
+                                <th>Created</th>
+                                <th>Paid Date</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var commission in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold">#@commission.Id</td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">@commission.Supplier?.CompanyName</span>
+                                            <small class="text-muted">@commission.Supplier?.User?.Email</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (commission.PurchaseOrder != null)
+                                        {
+                                            <span class="badge bg-secondary">@commission.PurchaseOrder.PONumber</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>@commission.OrderAmount.ToString("C")</td>
+                                    <td>
+                                        <span class="fw-bold text-primary">@commission.CommissionAmount.ToString("C")</span>
+                                        <br>
+                                        <small class="text-muted">(@(commission.CommissionRate * 100)%)</small>
+                                    </td>
+                                    <td>
+                                        @if (commission.Status == "Paid")
+                                        {
+                                            <span class="badge bg-success rounded-pill px-3">
+                                                <i class="fas fa-check-circle me-1"></i>Paid
+                                            </span>
+                                        }
+                                        else if (commission.Status == "Processing")
+                                        {
+                                            <span class="badge bg-info rounded-pill px-3">
+                                                <i class="fas fa-spinner fa-spin me-1"></i>Processing
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning rounded-pill px-3">
+                                                <i class="fas fa-clock me-1"></i>Pending
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(commission.ChapaTransactionId))
+                                        {
+                                            <code class="small">@commission.ChapaTransactionId?.Substring(0, Math.Min(15, commission.ChapaTransactionId.Length))...</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not initiated</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@commission.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    </td>
+                                    <td>
+                                        @if (commission.PaidAt.HasValue)
+                                        {
+                                            <small class="text-success">@commission.PaidAt.Value.ToString("MMM dd, yyyy")</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="#" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailsModal-@commission.Id">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if (commission.Status == "Pending" && commission.PaymentRequestData != null)
+                                            {
+                                                <a href="#" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#paymentDataModal-@commission.Id">
+                                                    <i class="fas fa-credit-card"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Details Modal -->
+                                <div class="modal fade" id="detailsModal-@commission.Id" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-primary text-white">
+                                                <h5 class="modal-title">Commission Details #@commission.Id</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6>Commission Information</h6>
+                                                        <table class="table table-sm">
+                                                            <tr><th>Order Amount:</th><td>@commission.OrderAmount.ToString("C")</td></tr>
+                                                            <tr><th>Commission Rate:</th><td>@(commission.CommissionRate * 100)%</td></tr>
+                                                            <tr><th>Commission Amount:</th><td class="fw-bold">@commission.CommissionAmount.ToString("C")</td></tr>
+                                                            <tr><th>Status:</th><td>@commission.Status</td></tr>
+                                                            <tr><th>Created:</th><td>@commission.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td></tr>
+                                                            <tr><th>Due Date:</th><td>@(commission.DueDate?.ToString("yyyy-MM-dd") ?? "N/A")</td></tr>
+                                                            <tr><th>Paid Date:</th><td>@(commission.PaidAt?.ToString("yyyy-MM-dd HH:mm") ?? "Not paid")</td></tr>
+                                                        </table>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6>Supplier Information</h6>
+                                                        <table class="table table-sm">
+                                                            <tr><th>Company:</th><td>@commission.Supplier?.CompanyName</td></tr>
+                                                            <tr><th>Contact:</th><td>@commission.Supplier?.User?.FullName</td></tr>
+                                                            <tr><th>Email:</th><td>@commission.Supplier?.User?.Email</td></tr>
+                                                            <tr><th>Phone:</th><td>@commission.Supplier?.User?.PhoneNumber</td></tr>
+                                                        </table>
+                                                        <h6 class="mt-3">Payment Information</h6>
+                                                        <table class="table table-sm">
+                                                            <tr><th>Transaction ID:</th><td><code>@(commission.ChapaTransactionId ?? "N/A")</code></td></tr>
+                                                            <tr><th>Notes:</th><td>@(commission.Notes ?? "N/A")</td></tr>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-bold mb-1">
+                        <i class="fas fa-download me-2 text-primary"></i>Export Data
+                    </h6>
+                    <p class="text-muted small mb-0">Download commission reports for accounting</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success btn-sm" onclick="exportToCSV()">
+                        <i class="fas fa-file-csv me-1"></i>Export CSV
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function exportToCSV() {
+            // Get current date for filename using JavaScript
+            var today = new Date();
+            var dateStr = today.getFullYear() +
+                         ('0' + (today.getMonth() + 1)).slice(-2) +
+                         ('0' + today.getDate()).slice(-2);
+            
+            var csv = [];
+            var rows = document.querySelectorAll('table tbody tr');
+            
+            // Add headers
+            var headers = ['ID', 'Supplier', 'PO Number', 'Order Amount', 'Commission',
+                          'Status', 'Transaction ID', 'Created', 'Paid Date'];
+            csv.push(headers.join(','));
+            
+            // Add data rows
+            for (var i = 0; i < rows.length; i++) {
+                var row = [], cols = rows[i].querySelectorAll('td');
+                
+                for (var j = 0; j < cols.length - 1; j++) { // Exclude actions column
+                    var text = cols[j].innerText.replace(/,/g, ';').replace(/\n/g, ' ');
+                    row.push('"' + text + '"');
+                }
+                csv.push(row.join(','));
+            }
+            
+            var blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            var url = URL.createObjectURL(blob);
+            link.href = url;
+            link.setAttribute('download', 'commissions_' + dateStr + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+}

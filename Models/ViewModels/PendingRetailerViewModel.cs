@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.ViewModels
 {
@@ -41,5 +41,12 @@ namespace SCM_System.Models.ViewModels
 
         [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; }
+
+        // Fayda Identity Verification
+        [Display(Name = "Fayda Verified")]
+        public bool IsFaydaVerified { get; set; }
+
+        [Display(Name = "Fayda Status")]
+        public string FaydaStatus { get; set; }
     }
 }

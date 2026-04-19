@@ -29,11 +29,8 @@ namespace SCM_System.Models.Entities
         public string? SKU { get; set; }
 
         [StringLength(255)]
+        [Display(Name = "Image URL")]
         public string? ImageUrl { get; set; }
-
-        [Required]
-        [Range(0, int.MaxValue)]
-        public int Quantity { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -112,7 +109,7 @@ namespace SCM_System.Models.Entities
         public string? Slug { get; set; }
 
         // Navigation properties
-        public Inventory Inventory { get; set; }
+        public ICollection<Inventory> Inventories { get; set; }
         public ICollection<ProductAttributeValue> AttributeValues { get; set; }
         public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; }

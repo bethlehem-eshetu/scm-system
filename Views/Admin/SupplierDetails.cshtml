@@ -1,285 +1,372 @@
-﻿@model SCM_System.Models.Entities.Supplier
-
+@model SCM_System.Models.Entities.Supplier
 @{
-    ViewData["Title"] = "Supplier Details";
+    ViewData["Title"] = "Supplier Profile | " + Model.CompanyName;
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Supplier Details</h1>
-        <div>
-            <a asp-action="AllSuppliers" class="btn btn-primary me-2">
-                <i class="fas fa-arrow-left"></i> Back to Suppliers
-            </a>
-            <a asp-action="Dashboard" class="btn btn-secondary">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-            </a>
+<div class="container-fluid py-5" style="background-color: #f8f9fa; min-height: 100vh;">
+    <!-- Top Progress Bar / Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                <div class="card-body p-0">
+                    <div class="bg-primary p-4 text-white d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-xl bg-white text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">
+                                @Model.CompanyName.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <h2 class="fw-bold mb-0">@Model.CompanyName</h2>
+                                <p class="mb-0 text-white-50"><i class="fas fa-id-card me-2"></i>Supplier Account #@Model.Id</p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge @(Model.VerificationStatus == "Verified" ? "bg-success" : (Model.VerificationStatus == "Rejected" ? "bg-danger" : "bg-warning text-dark")) rounded-pill px-4 py-2 fs-6 shadow-sm">
+                                <i class="fas @(Model.VerificationStatus == "Verified" ? "fa-check-circle" : (Model.VerificationStatus == "Rejected" ? "fa-times-circle" : "fa-clock")) me-2"></i>
+                                @Model.VerificationStatus
+                            </span>
+                            <div class="mt-2 text-white-50 small">Profile Status</div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white d-flex justify-content-between align-items-center">
+                        <div class="ms-3">
+                            <a asp-action="PendingUsers" class="btn btn-link text-decoration-none text-muted fw-bold">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Verification Hub
+                            </a>
+                        </div>
+                        <div class="me-3">
+                            @if (Model.VerificationStatus == "Pending")
+                            {
+                                <form asp-action="ApproveUser" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.UserId" />
+                                    <button type="submit" class="btn btn-primary px-4 rounded-3 fw-bold shadow-sm me-2">
+                                        <i class="fas fa-check-circle me-2"></i>Approve Agent
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-outline-danger px-4 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                    <i class="fas fa-times-circle me-2"></i>Reject
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Supplier Information -->
-        <div class="col-md-4">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Company Information</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr>
-                            <th>Company Name:</th>
-                            <td>@Model.CompanyName</td>
-                        </tr>
-                        <tr>
-                            <th>Business Type:</th>
-                            <td>@Model.BusinessType</td>
-                        </tr>
-                        <tr>
-                            <th>License Number:</th>
-                            <td>@Model.LicenseNumber</td>
-                        </tr>
-                        <tr>
-                            <th>TIN:</th>
-                            <td>@Model.TaxIdentificationNumber</td>
-                        </tr>
-                        <tr>
-                            <th>Address:</th>
-                            <td>@Model.CompanyAddress</td>
-                        </tr>
-                        <tr>
-                            <th>City:</th>
-                            <td>@Model.City</td>
-                        </tr>
-                        <tr>
-                            <th>Country:</th>
-                            <td>@Model.Country</td>
-                        </tr>
-                        <tr>
-                            <th>Website:</th>
-                            <td>
-                                @if (!string.IsNullOrEmpty(Model.Website))
+    <div class="row g-4">
+        <!-- Left Column: Identity & Contact -->
+        <div class="col-lg-4">
+            <!-- Fayda Identity Card -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-soft-primary p-2 rounded-3 me-3">
+                            <i class="fas fa-fingerprint fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Fayda Identity</h5>
+                    </div>
+                    
+                    @if (Model.User?.FaydaVerification != null)
+                    {
+                        var vf = Model.User.FaydaVerification;
+                        <div class="p-3 rounded-4" style="background-color: #f0f4ff; border: 1px dashed #ced4da;">
+                            <div class="text-center mb-3">
+                                @if (Model.User.IsFaydaVerified)
                                 {
-                                    <a href="@Model.Website" target="_blank">@Model.Website</a>
+                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill border border-info border-opacity-25 shadow-sm">
+                                        <i class="fas fa-check-shield me-2"></i>Verified Identity
+                                    </span>
+                                }
+                                else if (Model.User.FaydaStatus == "Rejected")
+                                {
+                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger border-opacity-25 shadow-sm">
+                                        <i class="fas fa-times-circle me-2"></i>Identity Rejected
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span>N/A</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning border-opacity-25 shadow-sm">
+                                        <i class="fas fa-clock me-2"></i>Identity Pending
+                                    </span>
                                 }
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Status:</th>
-                            <td>
-                                @if (Model.VerificationStatus == "Verified")
-                                {
-                                    <span class="badge bg-success">Verified</span>
-                                }
-                                else if (Model.VerificationStatus == "Pending")
-                                {
-                                    <span class="badge bg-warning">Pending</span>
-                                }
-                                else if (Model.VerificationStatus == "Rejected")
-                                {
-                                    <span class="badge bg-danger">Rejected</span>
-                                }
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Registered:</th>
-                            <td>@Model.CreatedAt.ToString("MMM dd, yyyy")</td>
-                        </tr>
-                    </table>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Fan Account Number</label>
+                                <div class="p-2 bg-white rounded-3 border fw-bold font-monospace">@Model.User.FAN</div>
+                            </div>
 
-                    @if (!string.IsNullOrEmpty(Model.LicenseFilePath))
+                            <div class="space-y-3">
+                                <div class="d-flex justify-content-between border-bottom pb-2">
+                                    <span class="text-muted small"><i class="fas fa-user-circle me-2"></i>Registry Name</span>
+                                    <span class="fw-bold text-dark">@vf.VerifiedName</span>
+                                </div>
+                                <div class="d-flex justify-content-between border-bottom py-2">
+                                    <span class="text-muted small"><i class="fas fa-birthday-cake me-2"></i>Date of Birth</span>
+                                    <span class="fw-bold text-dark">@vf.VerifiedDob?.ToString("MMMM dd, yyyy")</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-2">
+                                    <span class="text-muted small"><i class="fas fa-phone-alt me-2"></i>Registry Phone</span>
+                                    <span class="fw-bold text-dark">@vf.VerifiedPhone</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
                     {
-                        <a asp-action="ViewLicense" asp-route-id="@Model.Id" class="btn btn-info w-100" target="_blank">
-                            <i class="fas fa-file-pdf me-2"></i> View License Document
-                        </a>
+                        <div class="text-center py-4 bg-light rounded-4">
+                            <i class="fas fa-user-secret fa-3x text-muted opacity-25 mb-3"></i>
+                            <p class="text-muted small mb-0">No biometric snapshot link found.</p>
+                        </div>
                     }
                 </div>
             </div>
 
-            <!-- Contact Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Contact Information</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.User != null)
-                    {
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Contact Person:</th>
-                                <td>@Model.User.FullName</td>
-                            </tr>
-                            <tr>
-                                <th>Email:</th>
-                                <td><a href="mailto:@Model.User.Email">@Model.User.Email</a></td>
-                            </tr>
-                            <tr>
-                                <th>Phone:</th>
-                                <td>@Model.User.PhoneNumber</td>
-                            </tr>
-                            <tr>
-                                <th>Account Status:</th>
-                                <td>
-                                    @if (Model.User.IsApproved)
+            <!-- Business Contact Card -->
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Contact Information</h5>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item bg-transparent border-0 px-0 pb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-user text-muted"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Account Owner</small>
+                                    <span class="fw-bold text-dark">@Model.User?.FullName</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item bg-transparent border-0 px-0 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Official Email</small>
+                                    <a href="mailto:@Model.User?.Email" class="text-primary text-decoration-none fw-bold">@Model.User?.Email</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item bg-transparent border-0 px-0 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-phone text-muted"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Contact Number</small>
+                                    <span class="fw-bold text-dark">@Model.User?.PhoneNumber</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item bg-transparent border-0 px-0 pt-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-globe text-muted"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Business Website</small>
+                                    @if (!string.IsNullOrEmpty(Model.Website))
                                     {
-                                        <span class="badge bg-success">Active</span>
+                                        <a href="@(Model.Website.StartsWith("http") ? Model.Website : "http://" + Model.Website)" target="_blank" class="text-primary text-decoration-none fw-bold text-truncate d-inline-block" style="max-width: 150px;">@Model.Website</a>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-warning">Pending</span>
+                                        <span class="text-muted small">Not provided</span>
                                     }
-                                </td>
-                            </tr>
-                        </table>
-                    }
-                </div>
-            </div>
-
-            <!-- Description -->
-            @if (!string.IsNullOrEmpty(Model.Description))
-            {
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">Company Description</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-0">@Model.Description</p>
-                    </div>
-                </div>
-            }
-
-            <!-- Action Buttons -->
-            @if (Model.VerificationStatus == "Pending")
-            {
-                <div class="card shadow">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <form asp-action="ApproveSupplier" asp-route-id="@Model.Id" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success" onclick="return confirm('Approve this supplier?')">
-                                    <i class="fas fa-check me-2"></i> Approve
-                                </button>
-                            </form>
-
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                <i class="fas fa-times me-2"></i> Reject
-                            </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            }
+            </div>
         </div>
 
-        <!-- Statistics and Products -->
-        <div class="col-md-8">
-            <!-- Statistics Cards -->
-            <div class="row mb-4">
+        <!-- Right Column: Business Metrics & Documents -->
+        <div class="col-lg-8">
+            <div class="row g-4 mb-4">
                 <div class="col-md-4">
-                    <div class="card bg-primary text-white shadow">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-0">Total Products</h6>
-                                    <h2 class="mb-0">@(Model.Products?.Count ?? 0)</h2>
-                                </div>
-                                <i class="fas fa-box fa-3x opacity-50"></i>
-                            </div>
-                        </div>
+                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
+                        <div class="display-6 fw-bold text-primary">@Model.Products.Count</div>
+                        <div class="text-muted small text-uppercase fw-bold">Live Products</div>
                     </div>
                 </div>
-
                 <div class="col-md-4">
-                    <div class="card bg-success text-white shadow">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-0">Purchase Orders</h6>
-                                    <h2 class="mb-0">@(Model.PurchaseOrders?.Count ?? 0)</h2>
-                                </div>
-                                <i class="fas fa-file-invoice fa-3x opacity-50"></i>
-                            </div>
-                        </div>
+                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
+                        <div class="display-6 fw-bold text-success">@Model.PurchaseOrders.Count</div>
+                        <div class="text-muted small text-uppercase fw-bold">Active Orders</div>
                     </div>
                 </div>
-
                 <div class="col-md-4">
-                    <div class="card bg-warning text-white shadow">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-0">Tenders</h6>
-                                    <h2 class="mb-0">@(Model.Tenders?.Count ?? 0)</h2>
+                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
+                        <div class="display-6 fw-bold text-info">@Model.Tenders.Count</div>
+                        <div class="text-muted small text-uppercase fw-bold">Bids Won</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <ul class="nav nav-pills nav-fill mb-4 bg-light rounded-4 p-1" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active rounded-4 fw-bold" id="pills-business-tab" data-bs-toggle="pill" data-bs-target="#pills-business" type="button" role="tab">
+                                <i class="fas fa-building me-2"></i>Business Logic
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-4 fw-bold" id="pills-docs-tab" data-bs-toggle="pill" data-bs-target="#pills-docs" type="button" role="tab">
+                                <i class="fas fa-file-contract me-2"></i>Compliance Docs
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-4 fw-bold" id="pills-audit-tab" data-bs-toggle="pill" data-bs-target="#pills-audit" type="button" role="tab">
+                                <i class="fas fa-history me-2"></i>Audit History
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="pills-tabContent">
+                        <!-- Business Information Tab -->
+                        <div class="tab-pane fade show active" id="pills-business" role="tabpanel">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="mb-4">
+                                        <h6 class="text-muted small text-uppercase fw-bold mb-3">Enterprise Scope</h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Business Type:</span>
+                                            <span class="badge bg-light text-dark border">@Model.BusinessType</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>HQ Location:</span>
+                                            <span class="fw-bold">@Model.City, @Model.Country</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Detailed Address</h6>
+                                        <p class="text-dark bg-light p-3 rounded-4 border small">@Model.CompanyAddress</p>
+                                    </div>
                                 </div>
-                                <i class="fas fa-gavel fa-3x opacity-50"></i>
+                                <div class="col-md-6">
+                                    <div class="mb-4">
+                                        <h6 class="text-muted small text-uppercase fw-bold mb-3">Operational Meta</h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Registration Date:</span>
+                                            <span class="text-dark fw-bold">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Last Data Sync:</span>
+                                            <span class="text-dark fw-bold">@DateTime.Now.ToString("MMM dd, yyyy")</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Company Overview</h6>
+                                        <p class="text-muted small italic">@(string.IsNullOrEmpty(Model.Description) ? "No company profile description provided." : Model.Description)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Documents Tab -->
+                        <div class="tab-pane fade" id="pills-docs" role="tabpanel">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="card border p-3 rounded-4 bg-light shadow-none h-100">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-primary-soft p-2 rounded-3 me-2">
+                                                <i class="fas fa-certificate text-primary"></i>
+                                            </div>
+                                            <h6 class="mb-0 fw-bold">Operational License</h6>
+                                        </div>
+                                        <p class="small text-muted mb-3">Verified trade license document attached during onboarding.</p>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="small text-muted">License #:</span>
+                                            <span class="fw-bold text-dark font-monospace">@Model.LicenseNumber</span>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(Model.LicenseFilePath))
+                                        {
+                                            <a asp-action="ViewLicense" asp-route-id="@Model.Id" target="_blank" class="btn btn-primary btn-sm rounded-pill py-2 w-100 fw-bold">
+                                                <i class="fas fa-external-link-alt me-2"></i>Review Document
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <button disabled class="btn btn-outline-secondary btn-sm rounded-pill py-2 w-100">No Document Attached</button>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border p-3 rounded-4 bg-light shadow-none h-100">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-info-soft p-2 rounded-3 me-2">
+                                                <i class="fas fa-file-invoice-dollar text-info"></i>
+                                            </div>
+                                            <h6 class="mb-0 fw-bold">Fiscal Identity (TIN)</h6>
+                                        </div>
+                                        <p class="small text-muted mb-3">Tax identification number registered with the regional authority.</p>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="small text-muted">TIN:</span>
+                                            <span class="fw-bold text-dark font-monospace">@Model.TaxIdentificationNumber</span>
+                                        </div>
+                                        <div class="alert alert-info border-0 rounded-4 small py-2">
+                                            <i class="fas fa-check-shield me-2"></i>Fiscal data confirmed
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audit History Tab (Placeholder for now) -->
+                        <div class="tab-pane fade" id="pills-audit" role="tabpanel">
+                            <div class="text-center py-5">
+                                <i class="fas fa-history fa-3x text-muted opacity-25 mb-3"></i>
+                                <h6>Traceability Log</h6>
+                                <p class="text-muted small">Automatic logs of all approval/rejection actions are stored in the system audit vault.</p>
+                                <a asp-action="AuditLogs" class="btn btn-sm btn-outline-primary rounded-pill px-4">View All Audit Logs</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Products List -->
-            @if (Model.Products != null && Model.Products.Any())
-            {
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0">Products</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Product Name</th>
-                                        <th>Price</th>
-                                        <th>SKU</th>
-                                        <th>Created</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var product in Model.Products.Take(5))
-                                    {
-                                        <tr>
-                                            <td>@product.ProductName</td>
-                                            <td>@product.BasePrice.ToString("C")</td>
-                                            <td>@product.SKU</td>
-                                            <td>@product.CreatedAt.ToString("MMM dd, yyyy")</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            }
         </div>
     </div>
 </div>
 
 <!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Reject Supplier: @Model.CompanyName</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg p-3" style="border-radius: 25px;">
+            <div class="modal-header border-0 pb-0">
+                <h4 class="modal-title fw-bold">Reject Supplier</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="RejectSupplier" asp-route-id="@Model.Id" method="post">
                 @Html.AntiForgeryToken()
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="rejectionReason" class="form-label">Rejection Reason</label>
-                        <textarea class="form-control" id="rejectionReason" name="rejectionReason" rows="3" required></textarea>
-                        <div class="form-text">This reason will be sent to the supplier.</div>
+                <div class="modal-body py-4">
+                    <p class="text-muted mb-4">You are rejecting <strong>@Model.CompanyName</strong>. Provide a formal reason for the rejection.</p>
+                    <div class="form-group mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Rejection Reason</label>
+                        <textarea class="form-control bg-light border-0 rounded-4 p-3 shadow-none" name="rejectionReason" rows="4" required placeholder="Describe why this application was denied..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Reject Supplier</button>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light px-4 py-2 rounded-pill fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm">Confirm Denial</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    .bg-soft-primary { background-color: rgba(26, 35, 126, 0.05) !important; }
+    .bg-primary-soft { background-color: rgba(26, 35, 126, 0.1) !important; }
+    .bg-success-soft { background-color: rgba(46, 125, 50, 0.1) !important; }
+    .bg-warning-soft { background-color: rgba(255, 143, 0, 0.1) !important; }
+    .bg-info-soft { background-color: rgba(0, 188, 212, 0.1) !important; }
+    .nav-pills .nav-link.active { background-color: #fff; color: #1a237e; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .nav-pills .nav-link { color: #6c757d; border: 1px solid transparent; }
+    .avatar-xl { border: 4px solid rgba(255,255,255,0.2); }
+    .font-monospace { letter-spacing: 0.5px; }
+</style>

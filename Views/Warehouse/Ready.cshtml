@@ -1,0 +1,79 @@
+@model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
+@using SCM_System.Models.Constants
+@{
+    ViewData["Title"] = "Ready for Delivery";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Ready for Delivery</h2>
+            <p class="text-muted mb-0">Packed orders awaiting courier assignment or pickup</p>
+        </div>
+        <div class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">
+            <i class="fas fa-box-check me-2"></i> @Model.Count() Orders Ready
+        </div>
+    </div>
+
+    <div class="card bg-glass border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-dark border-0">
+                    <thead class="bg-light bg-opacity-50 small text-muted">
+                        <tr>
+                            <th class="ps-4">PO NUMBER</th>
+                            <th>RETAILER</th>
+                            <th>DESTINATION</th>
+                            <th>ITEMS</th>
+                            <th>STATUS</th>
+                            <th class="text-end pe-4">ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="opacity-25 mb-3">
+                                        <i class="fas fa-shipping-fast fa-4x"></i>
+                                    </div>
+                                    <h5 class="text-muted">No orders are ready for pickup</h5>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var po in Model)
+                        {
+                            <tr class="border-bottom border-light">
+                                <td class="ps-4 fw-bold">#@po.PONumber</td>
+                                <td>@po.Retailer?.BusinessName</td>
+                                <td><i class="fas fa-map-marker-alt me-1 text-danger"></i> @(po.Order?.DeliveryAddress ?? "N/A")</td>
+                                <td>@po.PurchaseOrderItems.Count Items</td>
+                                <td>
+                                    <span class="badge bg-soft-success text-success rounded-pill">@POStatus.Packed</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="card-footer border-0 bg-transparent p-4 pt-2">
+                                        <a asp-action="AssignDelivery" asp-route-id="@po.Id" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
+                                            <i class="fas fa-truck me-2"></i> Assign to Dispatch
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+</style>

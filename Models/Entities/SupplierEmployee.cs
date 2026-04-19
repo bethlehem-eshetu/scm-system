@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -13,6 +13,19 @@ namespace SCM_System.Models.Entities
         [Required]
         public int SupplierId { get; set; }
         public Supplier Supplier { get; set; }
+
+        public int? WarehouseId { get; set; }
+        public Warehouse Warehouse { get; set; }
+
+        public int? VehicleId { get; set; }
+        public Vehicle Vehicle { get; set; }
+
+        [StringLength(100)]
+        public string? DrivingLicenseNumber { get; set; }
+
+        public DateTime? LicenseExpiryDate { get; set; }
+
+        public bool IsLicenseVerified { get; set; } = false;
 
         [Required]
         [StringLength(50)]

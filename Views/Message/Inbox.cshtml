@@ -1,0 +1,131 @@
+﻿@using SCM_System.Models.ViewModels
+@model List<ConversationViewModel>
+
+@{
+    ViewData["Title"] = "Inbox";
+    string currentUserType = Context.Session.GetString("UserRole") ?? "Retailer";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4 class="mb-0">
+                                <i class="fas fa-inbox me-2 text-primary"></i>Inbox
+                            </h4>
+                        </div>
+                        <div class="col-auto">
+                            <a href="@Url.Action("Sent")" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-paper-plane me-1"></i>Sent Messages
+                            </a>
+                            <a href="@Url.Action("SelectRecipient")" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>New Message
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Penalty Warning Banner -->
+                @if (ViewBag.ActivePenalties > 0)
+                {
+                    <div class="alert alert-warning alert-dismissible fade show m-3 mb-0" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <strong>⚠️ Attention!</strong> You have @ViewBag.ActivePenalties active penalty(s).
+                                <p class="mb-0 small text-muted">Repeated violations may result in message restrictions or account suspension.</p>
+                            </div>
+                            <a href="@Url.Action("Index", "Penalty")" class="btn btn-sm btn-outline-warning ms-auto">
+                                View Penalties
+                            </a>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <div class="card-body p-0">
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">Your inbox is empty</h5>
+                            <p class="text-muted mb-4">
+                                Start connecting with @(currentUserType == "Supplier" ? "retailers" : "suppliers")
+                            </p>
+                            <a href="@Url.Action("SelectRecipient")" class="btn btn-primary">
+                                <i class="fas fa-comment me-1"></i>Start New Conversation
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var conversation in Model)
+                            {
+                                <a href="@Url.Action("Conversation", new { id = conversation.OtherUserId })"
+                                       class="list-group-item list-group-item-action p-3 @(conversation.UnreadCount > 0 ? "bg-light" : "")">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <div class="avatar-circle @(conversation.OtherUserType == "Supplier" ? "bg-warning" : "bg-info") text-white">
+                                                @(conversation.OtherUserName.Length > 0 ? conversation.OtherUserName.Substring(0, 1).ToUpper() : "?")
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <h6 class="mb-0 fw-bold">
+                                                    @conversation.OtherUserName
+                                                    <small class="text-muted ms-2">(@conversation.OtherUserType)</small>
+                                                </h6>
+                                                <small class="text-muted">@conversation.TimeAgo</small>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <p class="mb-0 text-truncate" style="max-width: 400px;">
+                                                    @if (conversation.UnreadCount > 0)
+                                                    {
+                                                        <span class="fw-bold">@conversation.LastMessage</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">@conversation.LastMessage</span>
+                                                    }
+                                                </p>
+                                                @if (conversation.UnreadCount > 0)
+                                                {
+                                                    <span class="badge bg-primary rounded-pill">@conversation.UnreadCount new</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .bg-warning {
+        background-color: #ffc107 !important;
+    }
+    
+    .bg-info {
+        background-color: #17a2b8 !important;
+    }
+</style>

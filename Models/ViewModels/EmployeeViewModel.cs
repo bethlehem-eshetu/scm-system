@@ -21,6 +21,19 @@ namespace SCM_System.Models.ViewModels
         [Required(ErrorMessage = "Role is required")]
         public string Role { get; set; } // "Warehouse" or "Delivery"
 
+        [Display(Name = "Assigned Warehouse")]
+        public int? WarehouseId { get; set; }
+
+        [Display(Name = "Assigned Vehicle")]
+        public int? VehicleId { get; set; }
+
+        [Display(Name = "Driving License Number")]
+        public string? DrivingLicenseNumber { get; set; }
+
+        [Display(Name = "License Expiry Date")]
+        [DataType(DataType.Date)]
+        public DateTime? LicenseExpiryDate { get; set; }
+
         [DataType(DataType.Password)]
         public string? Password { get; set; }
 

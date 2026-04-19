@@ -1,0 +1,108 @@
+@model SCM_System.Models.Entities.Product
+
+@{
+    ViewData["Title"] = "Product Details";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-action="BrowseCatalog">Catalog</a></li>
+            <li class="breadcrumb-item active">@Model.ProductName</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Product Image -->
+        <div class="col-lg-5">
+            <div class="glass-card p-2 border-0 overflow-hidden h-100">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" class="w-100 rounded-3 shadow-sm" style="object-fit: contain; max-height: 500px;" alt="@Model.ProductName">
+                }
+                else
+                {
+                    <div class="w-100 rounded-3 bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="fas fa-image fa-5x text-muted opacity-25"></i>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-7">
+            <div class="glass-card p-4 border-0 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-2">@Model.Category?.CategoryName</span>
+                        <h2 class="fw-bold text-dark mb-1">@Model.ProductName</h2>
+                        <div class="text-muted">SKU: @(string.IsNullOrEmpty(Model.SKU) ? "N/A" : Model.SKU)</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="h2 fw-bold text-primary mb-0">@Model.BasePrice.ToString("C")</div>
+                        <div class="text-muted small">Per @Model.Unit</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2">Availability</h6>
+                    @{
+                        var availableStock = Model.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
+                    }
+                    @if (availableStock > 0)
+                    {
+                        <div class="d-flex align-items-center text-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span>In Stock (@availableStock @Model.Unit available)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center text-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <span>Out of Stock</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2">Description</h6>
+                    <p class="text-muted lh-base">
+                        @(string.IsNullOrEmpty(Model.Description) ? "No description available for this product." : Model.Description)
+                    </p>
+                </div>
+
+                <hr class="my-4 opacity-50">
+
+                <!-- Supplier Info -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3">Supplier Information</h6>
+                    <div class="d-flex align-items-center p-3 rounded-3 bg-light bg-opacity-50">
+                        <div class="avatar me-3 bg-primary text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">@Model.Supplier?.CompanyName</div>
+                            <div class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i> @Model.Supplier?.City, @Model.Supplier?.Country</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex mt-4">
+                    <form asp-controller="Retailer" asp-action="AddToCart" method="post" class="d-inline">
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 @(availableStock <= 0 ? "disabled" : "")">
+                            <i class="fas fa-cart-plus me-2"></i> Order Now
+                        </button>
+                    </form>
+                    <button class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                        <i class="fas fa-envelope me-2"></i> Contact Supplier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

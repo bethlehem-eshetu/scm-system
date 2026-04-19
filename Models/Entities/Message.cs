@@ -20,5 +20,12 @@ namespace SCM_System.Models.Entities
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public bool IsRead { get; set; } = false;
+
+        // ✅ ADD THESE FIELDS
+        public bool IsBlocked { get; set; } = false;
+        public string? BlockedReason { get; set; }
+        public DateTime? BlockedAt { get; set; }
+        public bool TriggeredPenalty { get; set; } = false;
+        public int? PenaltyId { get; set; }
     }
 }

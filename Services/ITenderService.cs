@@ -10,5 +10,7 @@ namespace SCM_System.Services
         Task<Tender> CreateTenderAsync(Tender tender, List<TenderItem> items);
         Task<Tender> UpdateTenderStatusAsync(int id, string status);
         Task DeleteTenderAsync(int id);
+        Task<bool> AwardTenderAsync(int tenderId, int bidId);
+        Task<IEnumerable<Tender>> GetTendersByCategoryAsync(int categoryId);
     }
 }

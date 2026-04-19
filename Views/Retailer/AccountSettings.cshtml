@@ -1,0 +1,115 @@
+@model SCM_System.Models.Entities.Retailer
+
+@{
+    ViewData["Title"] = "Account Settings";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="glass-panel p-4 mb-4 position-relative overflow-hidden" style="background: var(--hero-bg);">
+        <div class="animated-bg" style="opacity: 0.05;"></div>
+        <div class="position-relative z-index-1">
+            <h1 class="text-white mb-1 fw-bold"><i class="fas fa-user-cog me-2"></i>Account Settings</h1>
+            <p class="text-white-50 mb-0">Manage your business profile and contact information</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Business Information -->
+        <div class="col-lg-7">
+            <div class="glass-card h-100">
+                <div class="p-4 border-bottom border-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-briefcase me-2"></i>Business Information</h6>
+                    <button class="btn btn-sm btn-primary rounded-pill px-3">Edit Profile</button>
+                </div>
+                <div class="p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2" style="width: 35%;">Business Name</th>
+                                    <td class="fw-semibold">@Model.BusinessName</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">Business Type</th>
+                                    <td><span class="badge bg-light text-dark px-3 rounded-pill fw-normal border">@Model.BusinessType</span></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">License Number</th>
+                                    <td><code class="text-primary fw-medium px-2 py-1 bg-primary bg-opacity-10 rounded">@Model.BusinessLicenseNumber</code></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">TIN</th>
+                                    <td><code class="text-secondary fw-medium px-2 py-1 bg-secondary bg-opacity-10 rounded">@Model.TaxIdentificationNumber</code></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">Store Size</th>
+                                    <td>@Model.StoreSize</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">Location</th>
+                                    <td>@Model.City, @Model.Country</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">Address</th>
+                                    <td class="text-wrap">@Model.BusinessAddress</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mt-4 pt-4 border-top border-light">
+                            <h6 class="mb-3 fw-bold text-info"><i class="fas fa-info-circle me-2"></i>About Business</h6>
+                            <p class="text-muted mb-0">@Model.Description</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact & Security -->
+        <div class="col-lg-5">
+            <div class="glass-card mb-4">
+                <div class="p-4 border-bottom border-light">
+                    <h6 class="mb-0 fw-bold text-success"><i class="fas fa-id-card me-2"></i>Contact Details</h6>
+                </div>
+                <div class="p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2" style="width: 40%;">Contact Person</th>
+                                    <td class="fw-semibold">@Model.User?.FullName</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">Email</th>
+                                    <td><a href="mailto:@Model.User?.Email" class="text-decoration-none">@Model.User?.Email</a></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted fw-medium py-2">Phone</th>
+                                    <td>@Model.User?.PhoneNumber</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="p-4 border-bottom border-light text-danger">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-shield-alt me-2"></i>Security Settings</h6>
+                </div>
+                <div class="p-4">
+                    <button class="btn btn-outline-danger w-100 mb-3 rounded-pill text-start">
+                        <i class="fas fa-key me-2"></i> Change Password
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 rounded-pill text-start">
+                        <i class="fas fa-history me-2"></i> Login Activity
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

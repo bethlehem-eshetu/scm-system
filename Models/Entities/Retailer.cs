@@ -64,5 +64,6 @@ namespace SCM_System.Models.Entities
         public ICollection<Rating> GivenRatings { get; set; }
         public ICollection<Conversation> Conversations { get; set; }
         public Cart Cart { get; set; }
+        public ICollection<RetailerCategory> RetailerCategories { get; set; } = new List<RetailerCategory>();
     }
 }

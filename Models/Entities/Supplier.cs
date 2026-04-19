@@ -71,5 +71,7 @@ namespace SCM_System.Models.Entities
         public ICollection<Rating> ReceivedRatings { get; set; }
         public ICollection<Conversation> Conversations { get; set; }
         public ICollection<Warehouse> Warehouses { get; set; }
+        public ICollection<Vehicle> Vehicles { get; set; }
+        public ICollection<SupplierCategory> SupplierCategories { get; set; }
     }
 }

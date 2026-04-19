@@ -1,0 +1,55 @@
+@model dynamic
+
+@{
+    ViewData["Title"] = "Add Inventory Stock";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow border-0 overflow-hidden">
+                <div class="card-header bg-primary text-white py-3 px-4">
+                    <h5 class="mb-0"><i class="fas fa-warehouse me-2"></i>Assign Stock to Warehouse</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info border-0 shadow-sm mb-4">
+                        <h6 class="alert-heading fw-bold"><i class="fas fa-info-circle me-1"></i> Product Created!</h6>
+                        <p class="mb-0">Product <strong>@ViewBag.ProductName</strong> has been saved. The final step is to assign its initial stock to one of your warehouses.</p>
+                    </div>
+
+                    <form asp-action="AddStock" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@ViewContext.RouteData.Values["id"]" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-600">Select Warehouse</label>
+                            <select name="warehouseId" class="form-select form-select-lg border-2" asp-items="ViewBag.Warehouses" required>
+                                <option value="">-- Choose a Warehouse --</option>
+                            </select>
+                            <div class="form-text mt-2 text-muted">Choose where you are storing this product.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-600">Initial Quantity (@ViewBag.Unit)</label>
+                            <div class="input-group input-group-lg border-2">
+                                <input type="number" name="quantity" class="form-control border-end-0" min="0" required placeholder="0" />
+                                <span class="input-group-text bg-white border-start-0 text-muted">@ViewBag.Unit</span>
+                            </div>
+                            <div class="form-text mt-2 text-muted">Enter the starting physical stock available in this warehouse.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm fw-bold">
+                                <i class="fas fa-check-circle me-2"></i>CONFIRM & ASSIGN STOCK
+                            </button>
+                            <a asp-action="MyProducts" class="btn btn-link text-secondary text-decoration-none mt-2">Skip for now, I'll add stock later</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light text-center py-3 border-0">
+                    <small class="text-muted">You can add more stock for other warehouses from the <strong>My Products</strong> dashboard.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

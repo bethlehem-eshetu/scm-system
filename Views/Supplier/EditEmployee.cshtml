@@ -1,93 +1,212 @@
 @model SCM_System.Models.ViewModels.EmployeeViewModel
-
 @{
-    ViewData["Title"] = "Edit Employee";
-    Layout = "_SupplierLayout";
+    ViewData["Title"] = "Update Employee Profile";
+    Layout = "_DashboardLayout";
 }
 
 <div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 rounded-lg">
-                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-bottom-0">
-                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-edit me-2"></i> Edit Employee</h6>
-                    <a asp-action="Employees" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
-                </div>
-                <div class="card-body p-4">
-                    <form asp-action="EditEmployee" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" asp-for="Id" />
-                        
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Employees">Employees</a></li>
+                    <li class="breadcrumb-item active">Edit Profile</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-primary mb-0"><i class="fas fa-user-edit me-2"></i>Edit Employee Profile</h2>
+        </div>
+        <a asp-action="Employees" class="btn btn-outline-secondary rounded-pill px-4 border shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Directory
+        </a>
+    </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6 text-center mb-4 mb-md-0 d-flex flex-column justify-content-center align-items-center bg-light rounded p-4">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
-                                    <i class="fas fa-user-tie"></i>
+    <form asp-action="EditEmployee" method="post" id="employeeForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 border-0 shadow-sm mb-4"></div>
+
+        <div class="row g-4">
+            <!-- Left Column: Personal Info -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Profile Configuration</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="FullName" class="form-label text-muted small fw-bold text-uppercase">Legal Full Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fas fa-user text-muted"></i></span>
+                                    <input asp-for="FullName" class="form-control rounded-end p-3 bg-light border-0" required>
                                 </div>
-                                <h5 class="text-muted">Update Details</h5>
-                                <p class="small text-muted text-center">Update the employee's personal and account details. Leave passwords blank to keep them unchanged.</p>
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
                             </div>
-                            
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="FullName" class="form-label font-weight-bold small text-muted">Full Name <span class="text-danger">*</span></label>
-                                    <input asp-for="FullName" class="form-control" />
-                                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                                <label asp-for="Email" class="form-label text-muted small fw-bold text-uppercase">Work Email <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fas fa-envelope text-muted"></i></span>
+                                    <input asp-for="Email" class="form-control rounded-end p-3 bg-light border-0" required>
                                 </div>
-
-                                <div class="mb-3">
-                                    <label asp-for="Email" class="form-label font-weight-bold small text-muted">Email Address <span class="text-danger">*</span></label>
-                                    <input asp-for="Email" class="form-control" />
-                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label text-muted small fw-bold text-uppercase">Primary Phone</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fas fa-phone text-muted"></i></span>
+                                    <input asp-for="PhoneNumber" class="form-control rounded-end p-3 bg-light border-0">
                                 </div>
-
-                                <div class="mb-3">
-                                    <label asp-for="PhoneNumber" class="form-label font-weight-bold small text-muted">Phone Number</label>
-                                    <input asp-for="PhoneNumber" class="form-control" />
-                                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
-                                </div>
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <hr class="my-4" />
-
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label asp-for="Role" class="form-label font-weight-bold small text-muted">Assign Role <span class="text-danger">*</span></label>
-                                <select asp-for="Role" class="form-select">
-                                    <option value="">-- Select Role --</option>
-                                    <option value="Warehouse">Warehouse Manager</option>
-                                    <option value="Delivery">Delivery Personnel</option>
-                                </select>
-                                <span asp-validation-for="Role" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Password" class="form-label font-weight-bold small text-muted">New Password (Optional)</label>
-                                <input asp-for="Password" class="form-control" placeholder="Leave blank to keep unchanged" />
+                        <h5 class="fw-bold mb-3 mt-5"><i class="fas fa-key me-2 text-primary"></i>Security Overrides</h5>
+                        <p class="text-muted small mb-4">Leave password fields blank to retain the current credentials.</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label text-muted small fw-bold text-uppercase">New Password</label>
+                                <input asp-for="Password" class="form-control p-3 bg-light border-0 rounded-3" type="password" placeholder="••••••••">
                                 <span asp-validation-for="Password" class="text-danger small"></span>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="ConfirmPassword" class="form-label font-weight-bold small text-muted">Confirm New Password</label>
-                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Leave blank to keep unchanged" />
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label text-muted small fw-bold text-uppercase">Confirm New Password</label>
+                                <input asp-for="ConfirmPassword" class="form-control p-3 bg-light border-0 rounded-3" type="password" placeholder="••••••••">
                                 <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-block py-2">
-                                <i class="fas fa-save me-2"></i> Save Changes
+            <!-- Right Column: Role & Assignment -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-briefcase me-2 text-primary"></i>Operational Assignment</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Functional Role <span class="text-danger">*</span></label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="Role" id="roleManager" value="WarehouseManager" @(Model.Role == "WarehouseManager" ? "checked" : "") required>
+                                    <label class="btn btn-outline-primary w-100 py-3 rounded-4 d-flex flex-column align-items-center" for="roleManager">
+                                        <i class="fas fa-user-tie mb-2 fs-4"></i>
+                                        <span class="fw-bold">WH Manager</span>
+                                    </label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="Role" id="roleAgent" value="DeliveryAgent" @(Model.Role == "DeliveryAgent" ? "checked" : "")>
+                                    <label class="btn btn-outline-success w-100 py-3 rounded-4 d-flex flex-column align-items-center" for="roleAgent">
+                                        <i class="fas fa-shuttle-van mb-2 fs-4"></i>
+                                        <span class="fw-bold">Delivery Agent</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Dynamic Field: Warehouse -->
+                        <div id="warehouseSection" style="display:none;">
+                            <label asp-for="WarehouseId" class="form-label text-muted small fw-bold text-uppercase">Assigned Warehouse Node</label>
+                            @if (ViewBag.Warehouses != null && ((IEnumerable<SCM_System.Models.Entities.Warehouse>)ViewBag.Warehouses).Any())
+                            {
+                                <select asp-for="WarehouseId" class="form-select border-0 bg-light p-3 rounded-3 shadow-none">
+                                    <option value="">-- Choose Warehouse --</option>
+                                    @foreach (var w in ViewBag.Warehouses)
+                                    {
+                                        <option value="@w.Id">@w.Name (@w.City)</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning-soft text-warning rounded-3 border-0 small p-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> No active warehouses.
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Dynamic Field: Vehicle & License -->
+                        <div id="deliverySection" style="display:none;">
+                            <div class="mb-4">
+                                <label asp-for="VehicleId" class="form-label text-muted small fw-bold text-uppercase">Assigned Fleet Vehicle</label>
+                                @if (ViewBag.Vehicles != null && ((IEnumerable<SCM_System.Models.Entities.Vehicle>)ViewBag.Vehicles).Any())
+                                {
+                                    <select asp-for="VehicleId" class="form-select border-0 bg-light p-3 rounded-3 shadow-none">
+                                        <option value="">-- Choose Vehicle --</option>
+                                        @foreach (var v in ViewBag.Vehicles)
+                                        {
+                                            <option value="@v.Id">@v.LicensePlate - @v.VehicleType</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning-soft text-warning rounded-3 border-0 small p-3">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> No fleet vehicles available.
+                                    </div>
+                                }
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label asp-for="DrivingLicenseNumber" class="form-label text-muted small fw-bold text-uppercase">Driver License ID</label>
+                                    <input asp-for="DrivingLicenseNumber" class="form-control p-3 bg-light border-0 rounded-3 shadow-none">
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="LicenseExpiryDate" class="form-label text-muted small fw-bold text-uppercase">Expiry Date</label>
+                                    <input asp-for="LicenseExpiryDate" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" type="date">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 d-flex gap-3">
+                            <button type="submit" class="btn btn-primary flex-grow-1 rounded-pill py-3 fw-bold shadow-lg">
+                                <i class="fas fa-save me-2"></i> Update Profile
                             </button>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
+
+<style>
+    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.05);
+        border: 1px solid rgba(13, 110, 253, 0.2) !important;
+    }
+</style>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            function toggleDesignationFields() {
+                var selectedRole = $('input[name="Role"]:checked').val();
+                if (selectedRole === "WarehouseManager") {
+                    $("#warehouseSection").slideDown();
+                    $("#deliverySection").slideUp();
+                } else if (selectedRole === "DeliveryAgent") {
+                    $("#deliverySection").slideDown();
+                    $("#warehouseSection").slideUp();
+                } else {
+                    $("#warehouseSection").hide();
+                    $("#deliverySection").hide();
+                }
+            }
+
+            $('input[name="Role"]').on('change', function() {
+                if ($(this).val() === "WarehouseManager") $("#VehicleId").val("");
+                if ($(this).val() === "DeliveryAgent") $("#WarehouseId").val("");
+                toggleDesignationFields();
+            });
+            
+            toggleDesignationFields(); // Initial check
+        });
+    </script>
 }

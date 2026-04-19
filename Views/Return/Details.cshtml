@@ -1,0 +1,286 @@
+﻿@using SCM_System.Models.Entities
+@model SCM_System.Models.Entities.ReturnRequest
+
+@{
+    ViewData["Title"] = $"Return #{Model.ReturnNumber}";
+    Layout = "_DashboardLayout";
+    string userRole = User.IsInRole("Supplier") ? "Supplier" : "Retailer";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-undo-alt text-warning me-2"></i>Return Request #@Model.ReturnNumber
+        </h1>
+        <a asp-action="@(userRole == "Supplier" ? "SupplierReturns" : "MyReturns")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Returns
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Status Timeline -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>Return Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline-vertical">
+                        <div class="timeline-item @(Model.Status >= ReturnStatus.Pending ? "completed" : "")">
+                            <div class="timeline-icon bg-warning">
+                                <i class="fas fa-clock text-white"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">Request Submitted</h6>
+                                <small class="text-muted">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item @(Model.Status >= ReturnStatus.Approved ? "completed" : (Model.Status == ReturnStatus.Rejected ? "rejected" : ""))">
+                            <div class="timeline-icon bg-info">
+                                <i class="fas fa-check-circle text-white"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">@(Model.Status == ReturnStatus.Rejected ? "Request Rejected" : "Request Reviewed")</h6>
+                                @if (Model.ApprovedAt.HasValue)
+                                {
+                                    <small class="text-muted">@Model.ApprovedAt.Value.ToString("MMM dd, yyyy HH:mm")</small>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.RejectionReason))
+                                {
+                                    <p class="text-danger small mt-1 mb-0">Reason: @Model.RejectionReason</p>
+                                }
+                            </div>
+                        </div>
+                        
+                        @if (Model.Status != ReturnStatus.Rejected)
+                        {
+                            <div class="timeline-item @(Model.Status >= ReturnStatus.Processing ? "completed" : "")">
+                                <div class="timeline-icon bg-primary">
+                                    <i class="fas fa-truck text-white"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-0">Items Shipped Back</h6>
+                                    @if (Model.ItemsShippedAt.HasValue)
+                                    {
+                                        <small class="text-muted">@Model.ItemsShippedAt.Value.ToString("MMM dd, yyyy HH:mm")</small>
+                                        <br />
+                                        <small class="text-muted">Tracking: @Model.TrackingNumber</small>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item @(Model.Status >= ReturnStatus.Completed ? "completed" : "")">
+                                <div class="timeline-icon bg-success">
+                                    <i class="fas fa-dollar-sign text-white"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-0">Refund Processed</h6>
+                                    @if (Model.CompletedAt.HasValue)
+                                    {
+                                        <small class="text-muted">@Model.CompletedAt.Value.ToString("MMM dd, yyyy HH:mm")</small>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Details -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>Return Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr><th>Return Number:</th><td>@Model.ReturnNumber</td></tr>
+                                <tr><th>PO Number:</th><td>@Model.PurchaseOrder?.PONumber</td></tr>
+                                <tr><th>Order Number:</th><td>@Model.Order?.OrderNumber</td></tr>
+                                <tr><th>Reason:</th><td>@Model.Reason</td></tr>
+                                <tr><th>Refund Amount:</th><td class="fw-bold text-success">@Model.RefundAmount.ToString("C")</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr><th>Status:</th>
+                                    <td>
+                                        <span class="badge @(Model.Status == ReturnStatus.Pending ? "bg-warning" : 
+                                                         Model.Status == ReturnStatus.Approved ? "bg-info" :
+                                                         Model.Status == ReturnStatus.Rejected ? "bg-danger" :
+                                                         Model.Status == ReturnStatus.Completed ? "bg-success" : "bg-primary") rounded-pill px-3">
+                                            @Model.Status
+                                        </span>
+                                     </td
+                                </tr>
+                                <tr><th>Requested:</th><td>@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td></tr>
+                                @if (Model.ApprovedAt.HasValue)
+                                {
+                                    <tr><th>Reviewed:</th><td>@Model.ApprovedAt.Value.ToString("MMM dd, yyyy HH:mm")</td></tr>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.AdminNotes))
+                                {
+                                    <tr><th>Admin Notes:</th><td>@Model.AdminNotes</td></tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mt-3">
+                            <label class="fw-bold">Description:</label>
+                            <p class="text-muted">@Model.Description</p>
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Images))
+                    {
+                        <div class="mt-3">
+                            <label class="fw-bold">Proof Image:</label>
+                            <div class="mt-2">
+                                <img src="@Model.Images" alt="Proof" class="img-fluid rounded border" style="max-height: 200px;" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Action Buttons based on Role and Status -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-gavel me-2 text-primary"></i>Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (userRole == "Supplier" && Model.Status == ReturnStatus.Pending)
+                    {
+                        <div class="d-flex gap-3">
+                            <form asp-action="Approve" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <div class="mb-2">
+                                    <textarea name="adminNotes" class="form-control" rows="2" 
+                                              placeholder="Add notes (optional)..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success rounded-pill px-4">
+                                    <i class="fas fa-check-circle me-2"></i>Approve Return
+                                </button>
+                            </form>
+                            
+                            <form asp-action="Reject" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <div class="mb-2">
+                                    <textarea name="rejectionReason" class="form-control" rows="2" 
+                                              placeholder="Rejection reason *" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                    <i class="fas fa-times-circle me-2"></i>Reject Return
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    
+                    @if (userRole == "Retailer" && Model.Status == ReturnStatus.Approved && !Model.ItemsShippedAt.HasValue)
+                    {
+                        <form asp-action="MarkAsShipped" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label class="form-label">Tracking Number</label>
+                                <input type="text" name="trackingNumber" class="form-control" required />
+                            </div>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-truck me-2"></i>Mark as Shipped
+                            </button>
+                        </form>
+                    }
+                    
+                    @if (userRole == "Supplier" && Model.Status == ReturnStatus.Processing && !Model.CompletedAt.HasValue)
+                    {
+                        <form asp-action="ProcessRefund" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success rounded-pill px-4">
+                                <i class="fas fa-dollar-sign me-2"></i>Process Refund
+                            </button>
+                        </form>
+                    }
+                    
+                    @if (Model.Status == ReturnStatus.Completed)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            This return has been completed and refund has been processed.
+                        </div>
+                    }
+                    
+                    @if (Model.Status == ReturnStatus.Rejected)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            This return request has been rejected. Reason: @Model.RejectionReason
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-vertical {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 30px;
+        bottom: -30px;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item.completed:not(:last-child)::before {
+        background: #198754;
+    }
+    
+    .timeline-item.rejected:not(:last-child)::before {
+        background: #dc3545;
+    }
+    
+    .timeline-icon {
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    
+    .timeline-content {
+        padding-left: 20px;
+    }
+</style>

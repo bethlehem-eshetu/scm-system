@@ -12,25 +12,57 @@ namespace SCM_System.Models.Entities
         public PurchaseOrder PurchaseOrder { get; set; }
 
         [Required]
+        public int OrderId { get; set; }
+        public Order Order { get; set; }
+
+        [Required]
         public int SupplierId { get; set; }
         public Supplier Supplier { get; set; }
+
+        // ✅ Add this for retailer payments (who is paying)
+        public int? RetailerId { get; set; }
+        public Retailer? Retailer { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal OrderAmount { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CommissionRate { get; set; } = 0.05m;
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal CommissionAmount { get; set; }
 
-        [StringLength(100)]
-        [Display(Name = "Chapa Transaction ID")]
-        public string ChapaTransactionId { get; set; }
-
-        public string PaymentRequestData { get; set; }
-
-        public string PaymentVerificationData { get; set; }
+        // ✅ Add PaymentType to distinguish who pays whom
+        [Required]
+        [StringLength(30)]
+        public string PaymentType { get; set; } = "PlatformCommission"; // PlatformCommission, OrderPayment
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } = "Pending"; // Pending, Paid, Failed
+        public string Status { get; set; } = "Pending";
+
+        [StringLength(100)]
+        public string? ChapaTransactionId { get; set; }
+
+        [StringLength(200)]
+        public string? ChapaPaymentUrl { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public DateTime? PaidAt { get; set; }
+
+        public DateTime? DueDate { get; set; }
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
+
+        [Column(TypeName = "nvarchar(max)")]
+        public string? PaymentRequestData { get; set; }
+
+        [Column(TypeName = "nvarchar(max)")]
+        public string? PaymentVerificationData { get; set; }
     }
 }

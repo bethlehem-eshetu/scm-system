@@ -1,0 +1,89 @@
+@model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
+@{
+    ViewData["Title"] = "Dispatch History";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Dispatch History</h2>
+            <p class="text-muted small">Timeline of all orders fulfilled and shipped from this facility.</p>
+        </div>
+        <a asp-action="Reports" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-file-invoice me-2"></i> View Performance Reports
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 text-uppercase smaller text-muted">Manifest #</th>
+                        <th class="text-uppercase smaller text-muted">Retailer</th>
+                        <th class="text-uppercase smaller text-muted">Agent & Vehicle</th>
+                        <th class="text-uppercase smaller text-muted">Status</th>
+                        <th class="text-uppercase smaller text-muted">Fulfilled Date</th>
+                        <th class="text-end pe-4 text-uppercase smaller text-muted">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-history fa-3x text-light mb-3"></i>
+                                <p class="text-muted">No completed dispatches found in history.</p>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var po in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">#@po.PONumber</div>
+                                <div class="extra-small text-muted">ID: @po.Id</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold">@po.Order?.Retailer?.BusinessName</div>
+                                <div class="extra-small text-muted">@po.Order?.Retailer?.City</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle p-2 me-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-truck text-primary extra-small"></i>
+                                    </div>
+                                    <div>
+                                        <div class="small fw-bold">@(po.DeliveryAgent?.User?.FullName ?? "Unknown")</div>
+                                        <div class="extra-small text-muted">@(po.Vehicle?.LicensePlate ?? "No Vehicle")</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge @(po.Status == "Completed" ? "bg-success" : (po.Status == "In Transit" ? "bg-info" : "bg-primary")) rounded-pill px-3 py-2 smaller">
+                                    @po.Status
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small">@po.UpdatedAt.ToString("MMM dd, yyyy")</div>
+                                <div class="extra-small text-muted">@po.UpdatedAt.ToString("HH:mm")</div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-light btn-sm rounded-pill px-3 fw-bold">
+                                    View Manifest
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .smaller { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; }
+    .extra-small { font-size: 0.65rem; }
+    .bg-light { background-color: #f8fafc !important; }
+</style>

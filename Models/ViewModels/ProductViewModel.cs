@@ -43,11 +43,6 @@ namespace SCM_System.Models.ViewModels
         public decimal? DiscountPercentage { get; set; }
         public decimal TaxRate { get; set; } = 15;
         
-        // Inventory fields
-        [Required]
-        [Display(Name = "Initial Stock")]
-        public int StockQuantity { get; set; } // maps to Quantity
-        
         public int MinimumOrderQuantity { get; set; } = 1;
         public int? MaximumStockLevel { get; set; }
         public int? ReorderLevel { get; set; } // Added by me based on html template
@@ -60,8 +55,15 @@ namespace SCM_System.Models.ViewModels
         // Dynamic attributes for the EAV model
         public Dictionary<int, string>? DynamicAttributes { get; set; } = new Dictionary<int, string>();
         
-        // Crowdsourced new specifications mapping
+        // Custom Attributes created on the fly by the Supplier
         public List<NewAttributeViewModel>? NewAttributes { get; set; } = new List<NewAttributeViewModel>();
+        
+        public class NewAttributeViewModel
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Value { get; set; } = string.Empty;
+            public string? Unit { get; set; }
+        }
         
         // Shipping fields
         public decimal? ShippingWeight { get; set; }
@@ -81,12 +83,5 @@ namespace SCM_System.Models.ViewModels
         public IFormFile? ImageFile { get; set; }
         public string? ExistingImageUrl { get; set; }
         public List<IFormFile>? GalleryImages { get; set; }
-    }
-
-    public class NewAttributeViewModel
-    {
-        public string Name { get; set; }
-        public string? Value { get; set; }
-        public string? Unit { get; set; }
     }
 }

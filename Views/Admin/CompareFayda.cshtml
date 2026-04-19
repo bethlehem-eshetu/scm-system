@@ -1,0 +1,195 @@
+@using SCM_System.Models.Entities
+@{
+    ViewData["Title"] = "Fayda Identity Comparison";
+    Layout = "_AdminLayout";
+    var user = ViewBag.User as User;
+    var fayda = ViewBag.Fayda as FaydaRegistry;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Fayda Identity Audit</h2>
+            <p class="text-muted small mb-0">Cross-referencing submitted user data against the National Digital Identity Registry.</p>
+        </div>
+        <a asp-action="PendingUsers" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i> Back to Pending
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Manual Audit Cards -->
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom border-light">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <h6 class="fw-bold mb-0">Side-by-Side Verification (FAN: @user.FAN)</h6>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="border-0 ps-4 py-3 text-uppercase extra-small fw-bold text-muted" style="width: 20%;">Field</th>
+                                    <th class="border-0 py-3 text-uppercase extra-small fw-bold text-muted" style="width: 35%;">Registry Value (Official)</th>
+                                    <th class="border-0 py-3 text-uppercase extra-small fw-bold text-muted" style="width: 35%;">Submitted Value (Profile)</th>
+                                    <th class="border-0 pe-4 py-3 text-uppercase extra-small fw-bold text-muted text-center" style="width: 10%;">Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Full Name -->
+                                <tr>
+                                    <td class="ps-4 fw-bold small text-muted">Full Name</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="fw-bold text-dark">@(fayda?.FullName ?? "NOT FOUND")</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-dark">@user.FullName</span>
+                                        <div class="extra-small text-muted">Snapshotted: @user.VerifiedFullName</div>
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        @if (fayda != null && fayda.FullName.Equals(user.VerifiedFullName, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <span class="badge bg-success-soft text-success rounded-pill px-3 py-2"><i class="fas fa-check me-1"></i> Match</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-soft text-danger rounded-pill px-3 py-2"><i class="fas fa-times me-1"></i> Mismatch</span>
+                                        }
+                                    </td>
+                                </tr>
+
+                                <!-- Phone Number -->
+                                <tr>
+                                    <td class="ps-4 fw-bold small text-muted">Phone Number</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="fw-bold text-dark">@(fayda?.PhoneNumber ?? "N/A")</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-dark">@user.PhoneNumber</span>
+                                        <div class="extra-small text-muted">Snapshotted: @user.VerifiedPhoneNumber</div>
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        @if (fayda != null && fayda.PhoneNumber == user.VerifiedPhoneNumber)
+                                        {
+                                            <span class="badge bg-success-soft text-success rounded-pill px-3 py-2"><i class="fas fa-check me-1"></i> Match</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-soft text-warning rounded-pill px-3 py-2"><i class="fas fa-exclamation-triangle me-1"></i> Check</span>
+                                        }
+                                    </td>
+                                </tr>
+
+                                <!-- Date of Birth -->
+                                <tr>
+                                    <td class="ps-4 fw-bold small text-muted">Date of Birth</td>
+                                    <td>
+                                        <span class="fw-bold text-dark">@(fayda?.DateOfBirth.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-dark">@(user.DateOfBirth?.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        @if (fayda != null && user.DateOfBirth.HasValue && fayda.DateOfBirth.Date == user.DateOfBirth.Value.Date)
+                                        {
+                                            <span class="badge bg-success-soft text-success rounded-pill px-3 py-2"><i class="fas fa-check me-1"></i> Match</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-soft text-danger rounded-pill px-3 py-2"><i class="fas fa-times me-1"></i> Mismatch</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Panel -->
+        <div class="col-lg-4">
+             <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white py-3 border-bottom border-light">
+                    <h6 class="fw-bold mb-0">System Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4 text-center">
+                        @if (user.IsFaydaVerified)
+                        {
+                            <div class="display-6 text-success mb-2"><i class="fas fa-shield-check"></i></div>
+                            <h5 class="fw-bold text-success">Verified at Source</h5>
+                            <p class="extra-small text-muted">This user successfully passed OTP verification via Fayda on @user.FaydaVerifiedAt?.ToString("MMM dd, HH:mm")</p>
+                        }
+                        else
+                        {
+                            <div class="display-6 text-danger mb-2"><i class="fas fa-shield-exclamation"></i></div>
+                            <h5 class="fw-bold text-danger">Unverified / Mismatch</h5>
+                            <p class="extra-small text-muted">This user has not completed Fayda verification or the data record is discrepant.</p>
+                        }
+                    </div>
+                    
+                    <hr class="text-light">
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="showDecisionModal('Approved')">Quick Approve</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="showDecisionModal('Rejected')">Reject Account</button>
+                    </div>
+                </div>
+             </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white py-3 border-bottom border-light">
+                    <h6 class="fw-bold mb-0">Submitted Identity Evidence</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="extra-small text-muted text-uppercase fw-bold mb-1 d-block">Full Legal Name</label>
+                            <p class="fw-bold text-dark border-bottom pb-2">@user.FullName</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small text-muted text-uppercase fw-bold mb-1 d-block">Phone Number</label>
+                            <p class="fw-bold text-dark border-bottom pb-2">@user.PhoneNumber</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small text-muted text-uppercase fw-bold mb-1 d-block">Role</label>
+                            <span class="badge bg-info-soft text-info rounded-pill">@user.Role</span>
+                        </div>
+                        <div class="col-md-6">
+                             <label class="extra-small text-muted text-uppercase fw-bold mb-1 d-block">Registration Date</label>
+                             <p class="small text-dark">@user.CreatedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                        </div>
+                    </div>
+                    
+                    @if (user.Role == "Supplier")
+                    {
+                        <div class="mt-4 p-3 bg-light rounded-3">
+                            <h6 class="fw-bold extra-small text-uppercase text-muted"><i class="fas fa-building me-2"></i> Supplier Context</h6>
+                            <p class="mb-0 small">Please review the company license and TIN documentation in the Supplier Details view before final approval.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+    .bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
+    .extra-small { font-size: 0.65rem; }
+</style>

@@ -120,27 +120,29 @@ namespace SCM_System.Services
                 var supplierId = group.Key;
                 var supplierItems = group.ToList();
 
-                // Create PO
-                var po = new PurchaseOrder
+                // Create Order directly
+                var order = new Order
                 {
-                    PONumber = $"PO-DIR-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}",
+                    OrderNumber = $"ORD-DIR-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}",
                     RetailerId = retailerId,
                     SupplierId = supplierId,
-                    TotalAmount = supplierItems.Sum(i => i.Quantity * i.Product.BasePrice),
-                    Status = "Pending",
+                    TotalAmount = supplierItems.Sum(i => (decimal)i.Quantity * i.Product.BasePrice),
+                    OrderStatus = "Pending",
+                    PaymentStatus = "Pending",
                     DeliveryAddress = deliveryAddress,
                     ExpectedDeliveryDate = expectedDeliveryDate,
-                    CreatedAt = DateTime.Now,
-                    OrderDate = DateTime.Now,
-                    PurchaseOrderItems = supplierItems.Select(i => new PurchaseOrderItem
-                    {
-                        ProductId = i.ProductId,
-                        Quantity = i.Quantity,
-                        UnitPrice = i.Product.BasePrice
-                    }).ToList()
+                    CreatedAt = DateTime.Now
                 };
 
-                _context.PurchaseOrders.Add(po);
+                order.OrderItems = supplierItems.Select(i => new OrderItem
+                {
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.Product.BasePrice,
+                    Order = order
+                }).ToList();
+
+                _context.Orders.Add(order);
 
                 // Notify supplier
                 var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.Id == supplierId);
@@ -148,14 +150,19 @@ namespace SCM_System.Services
                 {
                     await _notificationService.SendNotificationAsync(
                         supplier.UserId,
-                        $"You received a new direct purchase order ({po.PONumber}) from {retailer?.BusinessName}.",
+                        "New Order Request",
+                        $"New direct order request ({order.OrderNumber}) from {retailer?.BusinessName}. Please Review.",
                         "Info"
                     );
                 }
             }
 
             // Clear the cart
-            _context.CartItems.RemoveRange(cart.CartItems);
+            foreach(var item in cart.CartItems)
+            {
+                _context.CartItems.Remove(item);
+            }
+
             await _context.SaveChangesAsync();
         }
     }

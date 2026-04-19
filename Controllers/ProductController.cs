@@ -31,8 +31,15 @@ namespace SCM_System.Controllers
                 return null;
             }
 
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-            return supplier?.Id;
+            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
+            
+            // Centralized Fayda check: Only verified suppliers can access product management
+            if (supplier == null || !supplier.User.IsFaydaVerified)
+            {
+                return null;
+            }
+
+            return supplier.Id;
         }
 
         // GET: Product/MyProducts
@@ -50,8 +57,15 @@ namespace SCM_System.Controllers
 
             var productsQuery = _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.Inventories) // Added to support aggregate stock calculation in view
                 .Where(p => p.SupplierId == supplierId && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedAt);
+
+            // Fetch active warehouses for the stock update modal
+            var warehouses = await _context.Warehouses
+                .Where(w => w.SupplierId == supplierId && w.Status == SCM_System.Models.Enums.WarehouseStatus.Active)
+                .ToListAsync();
+            ViewBag.Warehouses = new SelectList(warehouses, "Id", "Name");
 
             var totalItems = await productsQuery.CountAsync();
             var products = await productsQuery
@@ -71,9 +85,15 @@ namespace SCM_System.Controllers
             var supplierId = await GetCurrentSupplierIdAsync();
             var supplier = await _context.Suppliers.FindAsync(supplierId);
 
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
             var model = new ProductViewModel
             {
-                CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName"),
+                CategoryList = new SelectList(supplierCategories, "Id", "CategoryName"),
                 SupplierList = supplier != null ? new SelectList(new[] { supplier }, "Id", "CompanyName", supplierId) : null,
                 SupplierId = supplierId ?? 0
             };
@@ -90,9 +110,25 @@ namespace SCM_System.Controllers
 
             model.SupplierId = supplierId.Value;
 
+            ModelState.Remove("Supplier");
+            ModelState.Remove("Category");
+            ModelState.Remove("Inventory");
+            ModelState.Remove("AttributeValues");
+            ModelState.Remove("PurchaseOrderItems");
+            ModelState.Remove("OrderItems");
+            ModelState.Remove("imageFile");
             ModelState.Remove("CategoryList");
             ModelState.Remove("SupplierList");
             ModelState.Remove("GalleryImages");
+
+            // Server-side Category Check
+            var isCategoryValid = await _context.SupplierCategories
+                .AnyAsync(sc => sc.SupplierId == supplierId && sc.CategoryId == model.CategoryId);
+
+            if (!isCategoryValid)
+            {
+                ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
 
             if (ModelState.IsValid)
             {
@@ -104,7 +140,6 @@ namespace SCM_System.Controllers
                     BasePrice = model.BasePrice,
                     Description = model.Description,
                     SKU = model.SKU,
-                    Quantity = model.StockQuantity,
                     Unit = model.Unit,
                     IsAvailable = model.IsActive,
                     CreatedAt = DateTime.Now,
@@ -139,7 +174,13 @@ namespace SCM_System.Controllers
                 // Handle Main Image Upload
                 if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                    string webRootPath = _webHostEnvironment.WebRootPath;
+                    if (string.IsNullOrEmpty(webRootPath))
+                    {
+                        webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    }
+
+                    string uploadsFolder = Path.Combine(webRootPath, "images", "products");
                     if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
                     string safeFileName = model.ImageFile.FileName.Replace(",", "_");
                     string uniqueFileName = Guid.NewGuid().ToString() + "_" + safeFileName;
@@ -171,55 +212,57 @@ namespace SCM_System.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
-                
-                // Handle new crowdsourced attributes generated by supplier
+
+                // Handle brand new crowdsourced attributes created by the supplier
                 if (model.NewAttributes != null && model.NewAttributes.Any())
                 {
                     foreach (var newAttr in model.NewAttributes)
                     {
-                        if (string.IsNullOrWhiteSpace(newAttr.Name) || string.IsNullOrWhiteSpace(newAttr.Value)) continue;
-                        
+                        if (string.IsNullOrWhiteSpace(newAttr.Name) || string.IsNullOrWhiteSpace(newAttr.Value)) 
+                            continue;
+
+                        // Check if another supplier already created an attribute with this name for this category
                         var existingDef = await _context.ProductAttributeDefinitions
-                            .FirstOrDefaultAsync(d => d.CategoryId == model.CategoryId && d.AttributeName.ToLower() == newAttr.Name.ToLower());
-                            
-                        int defId;
+                            .FirstOrDefaultAsync(a => a.CategoryId == model.CategoryId && 
+                                                      a.AttributeName.ToLower() == newAttr.Name.ToLower());
+
+                        int definitionId;
+
                         if (existingDef != null)
                         {
-                            defId = existingDef.Id;
+                            definitionId = existingDef.Id;
                         }
                         else
                         {
-                            var newDef = new SCM_System.Models.Entities.ProductAttributeDefinition
+                            // Create a new globally available Category Attribute Definition
+                            var newDef = new ProductAttributeDefinition
                             {
                                 CategoryId = model.CategoryId,
-                                AttributeName = newAttr.Name,
+                                AttributeName = newAttr.Name.Trim(),
                                 DataType = decimal.TryParse(newAttr.Value, out _) ? "Number" : "Text",
-                                Unit = newAttr.Unit ?? string.Empty,
+                                Unit = newAttr.Unit?.Trim(),
                                 IsRequired = false
                             };
+                            
                             _context.ProductAttributeDefinitions.Add(newDef);
                             await _context.SaveChangesAsync();
-                            defId = newDef.Id;
+                            definitionId = newDef.Id;
                         }
-                        
-                        _context.ProductAttributeValues.Add(new SCM_System.Models.Entities.ProductAttributeValue
+
+                        // Now map the value to this product using the new or existing definition
+                        var pav = new ProductAttributeValue
                         {
                             ProductId = product.Id,
-                            AttributeId = defId,
-                            Value = newAttr.Value
-                        });
+                            AttributeId = definitionId,
+                            Value = newAttr.Value.Trim()
+                        };
+                        _context.ProductAttributeValues.Add(pav);
                     }
                     await _context.SaveChangesAsync();
                 }
                 
-                TempData["SuccessMessage"] = "Product created successfully!";
-                
-                if (Request.Query["addAnother"] == "true")
-                {
-                    return RedirectToAction(nameof(Create));
-                }
-                
-                return RedirectToAction(nameof(MyProducts));
+                TempData["SuccessMessage"] = "Product created successfully! Now assign initial stock to a warehouse.";
+                return RedirectToAction(nameof(AddStock), new { id = product.Id });
             }
             else
             {
@@ -228,7 +271,13 @@ namespace SCM_System.Controllers
                 ModelState.AddModelError(string.Empty, "Validation errors: " + errors);
             }
 
-            model.CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", model.CategoryId);
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+            model.CategoryList = new SelectList(supplierCategories, "Id", "CategoryName", model.CategoryId);
             var supplierObj = await _context.Suppliers.FindAsync(supplierId);
             model.SupplierList = supplierObj != null ? new SelectList(new[] { supplierObj }, "Id", "CompanyName", supplierId) : null;
             
@@ -264,221 +313,158 @@ namespace SCM_System.Controllers
         // GET: Product/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             var supplierId = await GetCurrentSupplierIdAsync();
-            if (supplierId == null) return Unauthorized();
-
-            var product = await _context.Products
-                .Include(p => p.AttributeValues)
-                .FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
-            
-            if (product == null || product.IsDeleted) return NotFound();
-
-            var model = new SCM_System.Models.ViewModels.ProductViewModel
+            if (supplierId == null)
             {
-                Id = product.Id,
-                ProductName = product.ProductName,
-                CategoryId = product.CategoryId,
-                BasePrice = product.BasePrice,
-                CostPrice = product.CostPrice,
-                WholesalePrice = product.WholesalePrice,
-                DiscountPercentage = product.DiscountPercentage,
-                TaxRate = product.TaxRate,
-                StockQuantity = product.Quantity,
-                MinimumOrderQuantity = product.MinimumOrderQuantity,
-                MaximumStockLevel = product.MaximumStockLevel,
-                ReorderLevel = product.ReorderLevel,
-                ReorderQuantity = product.ReorderQuantity,
-                LeadTimeDays = product.LeadTimeDays,
-                Unit = product.Unit,
-                Description = product.Description,
-                SKU = product.SKU,
-                ExistingImageUrl = product.ImageUrl,
-                IsActive = product.IsAvailable,
-                IsFeatured = product.IsFeatured,
-                Brand = product.Brand,
-                ShortDescription = product.ShortDescription,
-                Tags = product.Tags,
-                ShippingWeight = product.ShippingWeight,
-                ShippingLength = product.ShippingLength,
-                ShippingWidth = product.ShippingWidth,
-                ShippingHeight = product.ShippingHeight,
-                HSCode = product.HSCode,
-                IsHazardous = product.IsHazardous,
-                MetaTitle = product.MetaTitle,
-                MetaDescription = product.MetaDescription,
-                MetaKeywords = product.MetaKeywords,
-                Slug = product.Slug,
-                DynamicAttributes = product.AttributeValues.ToDictionary(a => a.AttributeId, a => a.Value),
-                SupplierId = product.SupplierId
-            };
+                return Unauthorized();
+            }
 
-            model.CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", product.CategoryId);
+            var product = await _context.Products.FindAsync(id);
             
-            var supplierObj = await _context.Suppliers.FindAsync(product.SupplierId);
-            model.SupplierList = supplierObj != null ? new SelectList(new[] { supplierObj }, "Id", "CompanyName", product.SupplierId) : null;
-            
-            return View(model);
+            if (product == null || product.SupplierId != supplierId || product.IsDeleted)
+            {
+                return NotFound();
+            }
+
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", product.CategoryId);
+            return View(product);
         }
 
         // POST: Product/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, SCM_System.Models.ViewModels.ProductViewModel model)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ProductName,CategoryId,BasePrice,Description,Unit,Quantity,SKU,ImageUrl,CreatedAt")] Product product, IFormFile imageFile)
         {
-            if (id != model.Id) return NotFound();
+            if (id != product.Id)
+            {
+                return NotFound();
+            }
 
             var supplierId = await GetCurrentSupplierIdAsync();
-            if (supplierId == null) return Unauthorized();
+            if (supplierId == null)
+            {
+                return Unauthorized();
+            }
 
-            var existingProduct = await _context.Products
-                .Include(p => p.AttributeValues)
-                .FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
-                
-            if (existingProduct == null || existingProduct.IsDeleted) return NotFound();
+            // Ensure the user owns this product
+            var existingProduct = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
+            if (existingProduct == null || existingProduct.IsDeleted)
+            {
+                return NotFound();
+            }
 
-            ModelState.Remove("CategoryList");
-            ModelState.Remove("SupplierList");
-            ModelState.Remove("ImageFile");
+            product.SupplierId = supplierId.Value;
+
             ModelState.Remove("SupplierId");
+            ModelState.Remove("Supplier");
+            ModelState.Remove("Category");
+            ModelState.Remove("Inventory");
+            ModelState.Remove("AttributeValues");
+            ModelState.Remove("PurchaseOrderItems");
+            ModelState.Remove("OrderItems");
+
+            // Server-side Category Check
+            var isCategoryValid = await _context.SupplierCategories
+                .AnyAsync(sc => sc.SupplierId == supplierId && sc.CategoryId == product.CategoryId);
+
+            if (!isCategoryValid)
+            {
+                ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    existingProduct.ProductName = model.ProductName;
-                    existingProduct.CategoryId = model.CategoryId;
-                    existingProduct.BasePrice = model.BasePrice;
-                    existingProduct.CostPrice = model.CostPrice;
-                    existingProduct.WholesalePrice = model.WholesalePrice;
-                    existingProduct.DiscountPercentage = model.DiscountPercentage;
-                    existingProduct.TaxRate = model.TaxRate;
-                    existingProduct.Quantity = model.StockQuantity;
-                    existingProduct.MinimumOrderQuantity = model.MinimumOrderQuantity;
-                    existingProduct.MaximumStockLevel = model.MaximumStockLevel;
-                    existingProduct.ReorderLevel = model.ReorderLevel;
-                    existingProduct.ReorderQuantity = model.ReorderQuantity;
-                    existingProduct.LeadTimeDays = model.LeadTimeDays;
-                    existingProduct.Unit = model.Unit;
-                    existingProduct.Description = model.Description;
-                    existingProduct.SKU = model.SKU;
-                    existingProduct.IsAvailable = model.IsActive;
-                    existingProduct.IsFeatured = model.IsFeatured;
-                    existingProduct.Brand = model.Brand;
-                    existingProduct.ShortDescription = model.ShortDescription;
-                    existingProduct.Tags = model.Tags;
-                    existingProduct.ShippingWeight = model.ShippingWeight;
-                    existingProduct.ShippingLength = model.ShippingLength;
-                    existingProduct.ShippingWidth = model.ShippingWidth;
-                    existingProduct.ShippingHeight = model.ShippingHeight;
-                    existingProduct.HSCode = model.HSCode;
-                    existingProduct.IsHazardous = model.IsHazardous;
-                    existingProduct.MetaTitle = model.MetaTitle;
-                    existingProduct.MetaDescription = model.MetaDescription;
-                    existingProduct.MetaKeywords = model.MetaKeywords;
-                    existingProduct.Slug = model.Slug ?? model.ProductName?.ToLower().Replace(" ", "-");
-
                     // Handle Image Upload
-                    if (model.ImageFile != null && model.ImageFile.Length > 0)
+                    if (imageFile != null && imageFile.Length > 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
-                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                        string safeFileName = model.ImageFile.FileName.Replace(",", "_");
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + safeFileName;
-                        using (var fileStream = new FileStream(Path.Combine(uploadsFolder, uniqueFileName), FileMode.Create))
+                        string webRootPath = _webHostEnvironment.WebRootPath;
+                        if (string.IsNullOrEmpty(webRootPath))
                         {
-                            await model.ImageFile.CopyToAsync(fileStream);
+                            webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                         }
+
+                        string uploadsFolder = Path.Combine(webRootPath, "images", "products");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+                        product.ImageUrl = "/images/products/" + uniqueFileName;
                         
                         // Delete old image if exists
                         if (!string.IsNullOrEmpty(existingProduct.ImageUrl))
                         {
                             var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, existingProduct.ImageUrl.TrimStart('/'));
-                            if (System.IO.File.Exists(oldImagePath)) System.IO.File.Delete(oldImagePath);
+                            if (System.IO.File.Exists(oldImagePath))
+                            {
+                                System.IO.File.Delete(oldImagePath);
+                            }
                         }
-                        existingProduct.ImageUrl = "/images/products/" + uniqueFileName;
+                    }
+                    else
+                    {
+                        // Keep existing image
+                        product.ImageUrl = existingProduct.ImageUrl;
                     }
 
-                    // Handle dynamic attribute saving
-                    // Remove all old dynamically generated traits to replace with new state
-                    _context.ProductAttributeValues.RemoveRange(existingProduct.AttributeValues);
-                    
-                    if (model.DynamicAttributes != null && model.DynamicAttributes.Any())
-                    {
-                        foreach (var attr in model.DynamicAttributes)
-                        {
-                            if (!string.IsNullOrEmpty(attr.Value))
-                            {
-                                _context.ProductAttributeValues.Add(new SCM_System.Models.Entities.ProductAttributeValue
-                                {
-                                    ProductId = existingProduct.Id,
-                                    AttributeId = attr.Key,
-                                    Value = attr.Value
-                                });
-                            }
-                        }
-                    }
-                    
-                    // Handle new crowdsourced attributes generated by supplier
-                    if (model.NewAttributes != null && model.NewAttributes.Any())
-                    {
-                        foreach (var newAttr in model.NewAttributes)
-                        {
-                            if (string.IsNullOrWhiteSpace(newAttr.Name) || string.IsNullOrWhiteSpace(newAttr.Value)) continue;
-                            
-                            var existingDef = await _context.ProductAttributeDefinitions
-                                .FirstOrDefaultAsync(d => d.CategoryId == model.CategoryId && d.AttributeName.ToLower() == newAttr.Name.ToLower());
-                                
-                            int defId;
-                            if (existingDef != null)
-                            {
-                                defId = existingDef.Id;
-                            }
-                            else
-                            {
-                                var newDef = new SCM_System.Models.Entities.ProductAttributeDefinition
-                                {
-                                    CategoryId = model.CategoryId,
-                                    AttributeName = newAttr.Name,
-                                    DataType = decimal.TryParse(newAttr.Value, out _) ? "Number" : "Text",
-                                    Unit = newAttr.Unit ?? string.Empty,
-                                    IsRequired = false
-                                };
-                                _context.ProductAttributeDefinitions.Add(newDef);
-                                await _context.SaveChangesAsync();
-                                defId = newDef.Id;
-                            }
-                            
-                            _context.ProductAttributeValues.Add(new SCM_System.Models.Entities.ProductAttributeValue
-                            {
-                                ProductId = existingProduct.Id,
-                                AttributeId = defId,
-                                Value = newAttr.Value
-                            });
-                        }
-                    }
+                    // Availability is now determined by sum of all inventories
+                    var totalStock = await _context.Inventories
+                        .Where(inv => inv.ProductId == product.Id)
+                        .SumAsync(inv => inv.QuantityOnHand - inv.QuantityReserved);
 
-                    _context.Update(existingProduct);
+                    product.IsAvailable = totalStock > 0;
+
+                    _context.Update(product);
                     await _context.SaveChangesAsync();
-
+                    
                     TempData["SuccessMessage"] = "Product updated successfully!";
-                    return RedirectToAction(nameof(MyProducts));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ProductExists(product.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
                 catch (Exception ex)
                 {
                     TempData["ErrorMessage"] = "Error updating product: " + ex.Message;
-                    model.CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", model.CategoryId);
-                    var suppObj = await _context.Suppliers.FindAsync(existingProduct.SupplierId);
-                    model.SupplierList = suppObj != null ? new SelectList(new[] { suppObj }, "Id", "CompanyName", existingProduct.SupplierId) : null;
-                    return View(model);
+                    ViewBag.Categories = new SelectList(_context.ProductCategories, "Id", "CategoryName", product.CategoryId);
+                    return View(product);
                 }
+                return RedirectToAction(nameof(MyProducts));
             }
+            
+            var supplierCategories = await _context.SupplierCategories
+                .Where(sc => sc.SupplierId == supplierId)
+                .Select(sc => sc.Category)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
 
-            model.CategoryList = new SelectList(await _context.ProductCategories.ToListAsync(), "Id", "CategoryName", model.CategoryId);
-            var fallbackSupp = await _context.Suppliers.FindAsync(model.SupplierId);
-            model.SupplierList = fallbackSupp != null ? new SelectList(new[] { fallbackSupp }, "Id", "CompanyName", model.SupplierId) : null;
-            return View(model);
+            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", product.CategoryId);
+            return View(product);
         }
 
         // GET: Product/Details/5
@@ -497,8 +483,6 @@ namespace SCM_System.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.AttributeValues)
-                    .ThenInclude(av => av.AttributeDefinition)
                 .FirstOrDefaultAsync(m => m.Id == id && m.SupplierId == supplierId && !m.IsDeleted);
                 
             if (product == null)
@@ -509,48 +493,150 @@ namespace SCM_System.Controllers
             return View(product);
         }
 
-        // POST: Product/UpdateStock
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStock(int id, int stockChange, string action)
+        // GET: Product/AddStock/5
+        public async Task<IActionResult> AddStock(int id)
         {
             var supplierId = await GetCurrentSupplierIdAsync();
-            if (supplierId == null)
-            {
-                return Unauthorized();
-            }
+            if (supplierId == null) return Unauthorized();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Inventories)
+                .FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
+
+            if (product == null) return NotFound();
+
+            var warehouses = await _context.Warehouses
+                .Where(w => w.SupplierId == supplierId && w.Status == SCM_System.Models.Enums.WarehouseStatus.Active)
+                .ToListAsync();
+
+            ViewBag.Warehouses = new SelectList(warehouses, "Id", "Name");
+            ViewBag.ProductName = product.ProductName;
+            ViewBag.Unit = product.Unit;
+
+            return View();
+        }
+
+        // POST: Product/AddStock/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStock(int id, int warehouseId, int quantity)
+        {
+            var supplierId = await GetCurrentSupplierIdAsync();
+            if (supplierId == null) return Unauthorized();
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
-            
-            if (product == null || product.IsDeleted)
+            if (product == null) return NotFound();
+
+            var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == id && i.WarehouseId == warehouseId);
+
+            if (inventory == null)
             {
-                return NotFound();
+                inventory = new Inventory
+                {
+                    ProductId = id,
+                    WarehouseId = warehouseId,
+                    QuantityOnHand = quantity,
+                    QuantityReserved = 0,
+                    WarehouseLocation = "Main Section", // Default or user input
+                    LastUpdated = DateTime.Now
+                };
+                _context.Inventories.Add(inventory);
             }
+            else
+            {
+                inventory.QuantityOnHand += quantity;
+                inventory.LastUpdated = DateTime.Now;
+                _context.Update(inventory);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Refresh product availability
+            var totalStock = await _context.Inventories.Where(i => i.ProductId == id).SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
+            product.IsAvailable = totalStock > 0;
+            _context.Update(product);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Stock added successfully! Total available: {totalStock}";
+            return RedirectToAction(nameof(MyProducts));
+        }
+
+        // POST: Product/UpdateStock (Refactored for Inventory)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStock(int id, int warehouseId, int stockChange, string action)
+        {
+            var supplierId = await GetCurrentSupplierIdAsync();
+            if (supplierId == null) return Unauthorized();
+
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
+            if (product == null || product.IsDeleted) return NotFound();
+
+            var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == id && i.WarehouseId == warehouseId);
 
             try
             {
-                if (action == "increase")
+                if (inventory == null)
                 {
-                    product.Quantity += stockChange;
+                    // If inventory record doesn't exist, only allow increase or set
+                    if (action == "increase" || action == "set")
+                    {
+                        inventory = new Inventory
+                        {
+                            ProductId = id,
+                            WarehouseId = warehouseId,
+                            QuantityOnHand = 0,
+                            QuantityReserved = 0,
+                            WarehouseLocation = "Main Section",
+                            LastUpdated = DateTime.Now
+                        };
+                        _context.Inventories.Add(inventory);
+                        
+                        // Apply stock change to the newly created record (starting from 0)
+                        inventory.QuantityOnHand = stockChange;
+                    }
+                    else
+                    {
+                        // For 'decrease', if it doesn't exist, we reject it
+                        TempData["ErrorMessage"] = "Cannot decrease stock: No inventory record exists for this warehouse.";
+                        return RedirectToAction(nameof(MyProducts));
+                    }
                 }
-                else if (action == "decrease")
+                else
                 {
-                    product.Quantity -= stockChange;
-                    if (product.Quantity < 0) product.Quantity = 0;
+                    if (action == "increase")
+                    {
+                        inventory.QuantityOnHand += stockChange;
+                    }
+                    else if (action == "decrease")
+                    {
+                        if (inventory.QuantityOnHand < stockChange)
+                        {
+                            TempData["ErrorMessage"] = "Cannot decrease stock below zero.";
+                            return RedirectToAction(nameof(MyProducts));
+                        }
+                        inventory.QuantityOnHand -= stockChange;
+                    }
+                    else if (action == "set")
+                    {
+                        inventory.QuantityOnHand = stockChange;
+                    }
+
+                    if (inventory.QuantityOnHand < 0) inventory.QuantityOnHand = 0;
+                    inventory.LastUpdated = DateTime.Now;
+                    _context.Update(inventory);
                 }
-                else if (action == "set")
-                {
-                    product.Quantity = stockChange;
-                    if (product.Quantity < 0) product.Quantity = 0;
-                }
+
+                await _context.SaveChangesAsync();
 
                 // Auto update availability
-                product.IsAvailable = product.Quantity > 0;
-
+                var totalStock = await _context.Inventories.Where(inv => inv.ProductId == id).SumAsync(inv => inv.QuantityOnHand - inv.QuantityReserved);
+                product.IsAvailable = totalStock > 0;
                 _context.Update(product);
                 await _context.SaveChangesAsync();
                 
-                TempData["SuccessMessage"] = $"Stock updated successfully. New quantity: {product.Quantity}";
+                TempData["SuccessMessage"] = $"Stock updated successfully. New warehouse quantity: {inventory.QuantityOnHand}";
             }
             catch (Exception ex)
             {

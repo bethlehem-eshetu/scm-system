@@ -1,0 +1,125 @@
+@model SCM_System.Models.Entities.Vehicle
+@{
+    ViewData["Title"] = "Register New Asset";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Vehicles">Fleet Management</a></li>
+                    <li class="breadcrumb-item active">Register Asset</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-primary mb-0"><i class="fas fa-plus-circle me-2"></i>Register New Asset</h2>
+        </div>
+        <a asp-action="Vehicles" class="btn btn-outline-secondary rounded-pill px-4 border shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Fleet
+        </a>
+    </div>
+
+    <form asp-action="CreateVehicle" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 border-0 shadow-sm mb-4"></div>
+
+        <div class="row g-4">
+            <!-- Left: Technical Specs -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-cogs me-2 text-primary"></i>Technical Specifications</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="LicensePlate" class="form-label text-muted small fw-bold text-uppercase">License Plate <span class="text-danger">*</span></label>
+                                <input asp-for="LicensePlate" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" placeholder="e.g. AA 3-B12345" required>
+                                <span asp-validation-for="LicensePlate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="VehicleType" class="form-label text-muted small fw-bold text-uppercase">Vehicle Type</label>
+                                <select asp-for="VehicleType" class="form-select border-0 bg-light p-3 rounded-3 shadow-none" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.VehicleType>()"></select>
+                                <span asp-validation-for="VehicleType" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MaxLoadCapacity" class="form-label text-muted small fw-bold text-uppercase">Max Load Capacity</label>
+                                <div class="input-group">
+                                    <input asp-for="MaxLoadCapacity" class="form-control p-3 bg-light border-0 rounded-start shadow-none" type="number" step="0.01" min="1" required>
+                                    <span class="input-group-text bg-light border-0 text-muted small">KG</span>
+                                </div>
+                                <span asp-validation-for="MaxLoadCapacity" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="VolumeCapacity" class="form-label text-muted small fw-bold text-uppercase">Internal Volume</label>
+                                <div class="input-group">
+                                    <input asp-for="VolumeCapacity" class="form-control p-3 bg-light border-0 rounded-start shadow-none" type="number" step="0.01" min="0">
+                                    <span class="input-group-text bg-light border-0 text-muted small">M³</span>
+                                </div>
+                                <span asp-validation-for="VolumeCapacity" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-4 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <div class="fw-bold small text-dark">Temperature Controlled Environment</div>
+                                        <div class="extra-small text-muted">Enable for perishable or pharmaceutical goods</div>
+                                    </div>
+                                    <div class="form-check form-switch fs-4">
+                                        <input asp-for="HasTemperatureControl" class="form-check-input" type="checkbox" role="switch">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Operational Setup -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-clipboard-check me-2 text-primary"></i>Operational Insights</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="mb-4">
+                            <label asp-for="Status" class="form-label text-muted small fw-bold text-uppercase">Initial Status</label>
+                            <select asp-for="Status" class="form-select border-0 bg-light p-3 rounded-3 shadow-none" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.VehicleStatus>()"></select>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
+
+                        <div class="alert alert-info border-0 rounded-4 p-4 shadow-sm bg-info bg-opacity-10 text-info">
+                            <div class="d-flex gap-3">
+                                <i class="fas fa-truck-loading fa-2x opacity-50"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Logistics Ready</h6>
+                                    <p class="small mb-0">Once registered, this vehicle can be assigned to a **Delivery Agent** to start accepting shipment tasks.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-lg">
+                                <i class="fas fa-plus-circle me-2"></i> Register Asset to Fleet
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .extra-small { font-size: 0.75rem; }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.05);
+        border: 1px solid rgba(13, 110, 253, 0.2) !important;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

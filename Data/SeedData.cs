@@ -15,19 +15,169 @@ namespace SCM_System.Data
                 // Seed Product Categories
                 if (!context.ProductCategories.Any())
                 {
+                    var categories = new List<ProductCategory>
+                    {
+                        // Clothing
+                        new ProductCategory { CategoryName = "Clothing", Description = "Apparel and garments", Level = 1 },
+                        // Electronics
+                        new ProductCategory { CategoryName = "Electronics", Description = "Electronic devices and gadgets", Level = 1 },
+                        // Food & Beverage
+                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods and drinks", Level = 1 },
+                        // Furniture
+                        new ProductCategory { CategoryName = "Furniture", Description = "Home and office furniture", Level = 1 },
+                        // Raw Materials
+                        new ProductCategory { CategoryName = "Raw Materials", Description = "Inputs for manufacturing", Level = 1 },
+                        // Construction Materials
+                        new ProductCategory { CategoryName = "Construction Materials", Description = "Building supplies", Level = 1 },
+                        // Pharmaceuticals
+                        new ProductCategory { CategoryName = "Pharmaceuticals", Description = "Medicine and medical gear", Level = 1 },
+                        // Office Supplies
+                        new ProductCategory { CategoryName = "Office Supplies", Description = "Business operation essentials", Level = 1 },
+                        // Automotive Parts
+                        new ProductCategory { CategoryName = "Automotive Parts", Description = "Vehicle maintenance parts", Level = 1 },
+                        // Agricultural Products
+                        new ProductCategory { CategoryName = "Agricultural Products", Description = "Farming inputs and produce", Level = 1 },
+                        // Beauty & Personal Care
+                        new ProductCategory { CategoryName = "Beauty & Personal Care", Description = "Cosmetics and hygiene", Level = 1 },
+                        // Home & Kitchen
+                        new ProductCategory { CategoryName = "Home & Kitchen", Description = "Domestic appliances and decor", Level = 1 }
+                    };
+
+                    context.ProductCategories.AddRange(categories);
+                    context.SaveChanges();
+
+                    // Subcategories for Clothing
+                    var clothing = categories.First(c => c.CategoryName == "Clothing");
                     context.ProductCategories.AddRange(
-                        new ProductCategory { CategoryName = "Electronics & Gadgets", Description = "Electronic devices and accessories" },
-                        new ProductCategory { CategoryName = "Clothing & Apparel", Description = "Apparel and garments" },
-                        new ProductCategory { CategoryName = "Food & Beverage", Description = "Consumable goods and drinks" },
-                        new ProductCategory { CategoryName = "Home & Garden", Description = "Furniture and home accessories" },
-                        new ProductCategory { CategoryName = "Health & Beauty", Description = "Personal care products" },
-                        new ProductCategory { CategoryName = "Industrial Tools", Description = "Industrial and manufacturing equipment" },
-                        new ProductCategory { CategoryName = "Agriculture", Description = "Farming and agricultural supplies" },
-                        new ProductCategory { CategoryName = "Raw Materials", Description = "Basic materials for manufacturing" }
+                        new ProductCategory { CategoryName = "Men's Clothing", ParentCategoryId = clothing.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Women's Clothing", ParentCategoryId = clothing.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Children's Clothing", ParentCategoryId = clothing.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Traditional Ethiopian Clothing", ParentCategoryId = clothing.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Sportswear", ParentCategoryId = clothing.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Uniforms", ParentCategoryId = clothing.Id, Level = 2 }
                     );
+
+                    // Subcategories for Electronics
+                    var electronics = categories.First(c => c.CategoryName == "Electronics");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Mobile Phones", ParentCategoryId = electronics.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Computers & Laptops", ParentCategoryId = electronics.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Tablets", ParentCategoryId = electronics.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "TVs & Home Theater", ParentCategoryId = electronics.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Audio Equipment", ParentCategoryId = electronics.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Accessories", ParentCategoryId = electronics.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Food & Beverage
+                    var food = categories.First(c => c.CategoryName == "Food & Beverage");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Fresh Produce", ParentCategoryId = food.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Dairy Products", ParentCategoryId = food.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Meat & Poultry", ParentCategoryId = food.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Packaged Foods", ParentCategoryId = food.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Beverages", ParentCategoryId = food.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Coffee & Tea", ParentCategoryId = food.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Spices & Seasonings", ParentCategoryId = food.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Furniture
+                    var furniture = categories.First(c => c.CategoryName == "Furniture");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Living Room Furniture", ParentCategoryId = furniture.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Bedroom Furniture", ParentCategoryId = furniture.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Office Furniture", ParentCategoryId = furniture.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Kitchen Furniture", ParentCategoryId = furniture.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Outdoor Furniture", ParentCategoryId = furniture.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Custom Furniture", ParentCategoryId = furniture.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Raw Materials
+                    var raw = categories.First(c => c.CategoryName == "Raw Materials");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Textile Materials", ParentCategoryId = raw.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Wood & Lumber", ParentCategoryId = raw.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Metal & Steel", ParentCategoryId = raw.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Plastic Materials", ParentCategoryId = raw.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Chemicals", ParentCategoryId = raw.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Packaging Materials", ParentCategoryId = raw.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Construction
+                    var construction = categories.First(c => c.CategoryName == "Construction Materials");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Cement & Concrete", ParentCategoryId = construction.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Bricks & Blocks", ParentCategoryId = construction.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Paints & Coatings", ParentCategoryId = construction.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Plumbing Materials", ParentCategoryId = construction.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Electrical Materials", ParentCategoryId = construction.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Tiles & Flooring", ParentCategoryId = construction.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Roofing Materials", ParentCategoryId = construction.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Pharmaceuticals
+                    var pharma = categories.First(c => c.CategoryName == "Pharmaceuticals");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Prescription Drugs", ParentCategoryId = pharma.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Over-the-Counter Medications", ParentCategoryId = pharma.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Medical Supplies", ParentCategoryId = pharma.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Laboratory Equipment", ParentCategoryId = pharma.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "PPE & Safety Equipment", ParentCategoryId = pharma.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Office Supplies
+                    var office = categories.First(c => c.CategoryName == "Office Supplies");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Stationery", ParentCategoryId = office.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Printer Cartridges", ParentCategoryId = office.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Paper Products", ParentCategoryId = office.Id, Level = 2 },
+                        // Office Furniture already in Furniture? I'll add it here too if specifically requested
+                        new ProductCategory { CategoryName = "Computer Accessories", ParentCategoryId = office.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Automotive
+                    var auto = categories.First(c => c.CategoryName == "Automotive Parts");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Engine Parts", ParentCategoryId = auto.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Brake Systems", ParentCategoryId = auto.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Tires & Wheels", ParentCategoryId = auto.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Batteries", ParentCategoryId = auto.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Lubricants & Oils", ParentCategoryId = auto.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Spare Parts", ParentCategoryId = auto.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Agricultural Products
+                    var agri = categories.First(c => c.CategoryName == "Agricultural Products");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Seeds & Fertilizers", ParentCategoryId = agri.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Farming Equipment", ParentCategoryId = agri.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Livestock Feed", ParentCategoryId = agri.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Pesticides", ParentCategoryId = agri.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Irrigation Supplies", ParentCategoryId = agri.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Beauty & Personal Care
+                    var beauty = categories.First(c => c.CategoryName == "Beauty & Personal Care");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Cosmetics", ParentCategoryId = beauty.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Skincare", ParentCategoryId = beauty.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Haircare", ParentCategoryId = beauty.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fragrances", ParentCategoryId = beauty.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Grooming Products", ParentCategoryId = beauty.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Home & Kitchen
+                    var home = categories.First(c => c.CategoryName == "Home & Kitchen");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Kitchen Appliances", ParentCategoryId = home.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Cookware", ParentCategoryId = home.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Home Decor", ParentCategoryId = home.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Bedding & Linens", ParentCategoryId = home.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Storage & Organization", ParentCategoryId = home.Id, Level = 2 }
+                    );
+
                     context.SaveChanges();
                     Console.WriteLine("=================================");
-                    Console.WriteLine("Product Categories seeded!");
+                    Console.WriteLine("Hierarchical Product Categories seeded!");
                     Console.WriteLine("=================================");
                 }
 
@@ -165,7 +315,6 @@ namespace SCM_System.Data
                             ProductName = "Sample Smartphone Pro",
                             Description = "A high-end smartphone for testing direct purchase.",
                             BasePrice = 35000.00m,
-                            Quantity = 50,
                             Unit = "Pcs",
                             IsAvailable = true,
                             SKU = "RE-ELEC-001",
@@ -178,7 +327,6 @@ namespace SCM_System.Data
                             ProductName = "Premium Coffee Beans 1Kg",
                             Description = "Locally sourced organic premium coffee beans.",
                             BasePrice = 850.00m,
-                            Quantity = 200,
                             Unit = "Kg",
                             IsAvailable = true,
                             SKU = "RE-FOOD-001",
@@ -188,6 +336,7 @@ namespace SCM_System.Data
                     context.Products.AddRange(products);
                     context.SaveChanges();
                 }
+
             }
         }
 

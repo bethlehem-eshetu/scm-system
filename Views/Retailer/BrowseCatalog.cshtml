@@ -1,0 +1,155 @@
+@model IEnumerable<SCM_System.Models.Entities.Product>
+
+@{
+    ViewData["Title"] = "Supplier Catalog";
+    Layout = "_DashboardLayout";
+    var categories = ViewData["Categories"] as IEnumerable<SCM_System.Models.Entities.ProductCategory>;
+    var cities = ViewData["Cities"] as IEnumerable<string>;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="glass-card mb-4 p-4 border-0">
+        <h3 class="fw-bold mb-1 text-primary">Supplier Catalog</h3>
+        <p class="text-muted mb-3">Browse and discover products from our verified suppliers.</p>
+
+        <form asp-action="BrowseCatalog" method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="searchTerm" class="form-control rounded-pill" placeholder="Search products..." value="@Context.Request.Query["searchTerm"]" />
+            </div>
+            <div class="col-md-2">
+                <select name="categoryId" class="form-select rounded-pill">
+                    <option value="">All Categories</option>
+                    @if (categories != null)
+                    {
+                        foreach (var cat in categories)
+                        {
+                            <option value="@cat.Id" selected="@(Context.Request.Query["categoryId"] == cat.Id.ToString())">@cat.CategoryName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="number" step="0.01" name="minPrice" class="form-control rounded-pill" placeholder="Min Price..." value="@Context.Request.Query["minPrice"]" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" step="0.01" name="maxPrice" class="form-control rounded-pill" placeholder="Max Price..." value="@Context.Request.Query["maxPrice"]" />
+            </div>
+            <div class="col-md-2">
+                <select name="supplierCity" class="form-select rounded-pill">
+                    <option value="">All Locations</option>
+                    @if (cities != null)
+                    {
+                        foreach (var city in cities)
+                        {
+                            <option value="@city" selected="@(Context.Request.Query["supplierCity"] == city)">@city</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12">
+                <div class="glass-card p-5 text-center">
+                    <div class="text-muted opacity-50 mb-3">
+                        <i class="fas fa-box-open fa-4x"></i>
+                    </div>
+                    <h5 class="fw-bold">No Products Found</h5>
+                    <p class="text-muted">Try adjusting your filters or search terms.</p>
+                    <a asp-action="BrowseCatalog" class="btn btn-outline-primary rounded-pill px-4">Clear All Filters</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            foreach (var product in Model)
+            {
+                <div class="col">
+                    <div class="glass-card h-100 border-0 shadow-sm product-card">
+                        <div class="position-relative overflow-hidden" style="height: 200px; border-radius: 12px 12px 0 0;">
+                            @if (!string.IsNullOrEmpty(product.ImageUrl))
+                            {
+                                <img src="@product.ImageUrl" class="w-100 h-100" style="object-fit: cover;" alt="@product.ProductName">
+                            }
+                            else
+                            {
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                                    <i class="fas fa-image fa-3x opacity-25"></i>
+                                </div>
+                            }
+                            <div class="position-absolute top-0 end-0 p-2">
+                                <span class="badge bg-primary rounded-pill">@product.Category?.CategoryName</span>
+                            </div>
+                        </div>
+                        <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
+                            <h6 class="fw-bold mb-1 text-truncate" title="@product.ProductName">@product.ProductName</h6>
+                            <div class="d-flex align-items-baseline mb-2">
+                                <span class="h5 fw-bold text-primary mb-0">@product.BasePrice.ToString("C")</span>
+                                <span class="text-muted small ms-2">/ @product.Unit</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1">
+                                    <i class="fas fa-store me-1"></i> @product.Supplier?.CompanyName
+                                </div>
+                                <div class="small text-muted mb-1">
+                                    <i class="fas fa-map-marker-alt me-1"></i> @product.Supplier?.City
+                                </div>
+                                @{
+                                    var availableStock = product.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
+                                }
+                                @if (availableStock < 10)
+                                {
+                                    <div class="small text-danger fw-bold">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Low Stock: @availableStock
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="small text-success">
+                                        <i class="fas fa-check-circle me-1"></i> In Stock: @availableStock
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="mt-auto pt-2 border-top">
+                                <a asp-action="ProductDetails" asp-route-id="@product.Id" class="btn btn-outline-secondary btn-sm rounded-pill w-100 mb-2">View Details</a>
+                                <form action="/Retailer/AddToCart" method="post" class="ajax-add-to-cart">
+                                    <input type="hidden" name="productId" value="@product.Id" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100" @(availableStock <= 0 ? "disabled" : "")>
+                                        <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<style>
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .form-control:focus, .form-select:focus {
+        box-shadow: none;
+        border-color: #dee2e6;
+    }
+</style>

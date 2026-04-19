@@ -11,9 +11,12 @@ namespace SCM_System.Models.Entities
         [StringLength(50)]
         public string OrderNumber { get; set; }
 
-        [Required]
-        public int PurchaseOrderId { get; set; }
-        public PurchaseOrder PurchaseOrder { get; set; }
+
+
+        [StringLength(255)]
+        public string DeliveryAddress { get; set; }
+
+        public DateTime? ExpectedDeliveryDate { get; set; }
 
         [Required]
         public int SupplierId { get; set; }
@@ -29,7 +32,7 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(20)]
-        public string OrderStatus { get; set; } = "Processing"; // Processing, Packed, Shipped, Delivered, Cancelled
+        public string OrderStatus { get; set; } = "Pending"; // Pending, Accepted, Partially Processing, Partially Delivered, Completed, Rejected, Cancelled, Partially Failed
 
         [Required]
         [StringLength(20)]
@@ -37,9 +40,20 @@ namespace SCM_System.Models.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        [StringLength(500)]
+        public string? RejectionReason { get; set; }
+
+        public DateTime? RejectedAt { get; set; }
+
         // Navigation
         public ICollection<OrderItem> OrderItems { get; set; }
         public ICollection<OrderStatusHistory> StatusHistory { get; set; }
+        public ICollection<PurchaseOrder> PurchaseOrders { get; set; }
         public Delivery Delivery { get; set; }
+
+        public ICollection<ReturnRequest> ReturnRequests { get; set; }
+
+        [StringLength(200)]
+        public string? QRCodeValue { get; set; }
     }
 }

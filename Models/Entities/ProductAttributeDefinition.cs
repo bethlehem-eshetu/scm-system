@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -21,7 +21,7 @@ namespace SCM_System.Models.Entities
         public string DataType { get; set; } // Number, Text, Boolean, Date
 
         [StringLength(20)]
-        public string Unit { get; set; } // kg, volt, GB, etc.
+        public string? Unit { get; set; } // kg, volt, GB, etc.
 
         public bool IsRequired { get; set; } = false;
     }

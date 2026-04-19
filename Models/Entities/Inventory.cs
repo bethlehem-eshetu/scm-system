@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -15,7 +15,7 @@ namespace SCM_System.Models.Entities
 
         public int QuantityReserved { get; set; }
 
-        public int QuantityAvailable { get; set; }
+        public int QuantityAvailable => QuantityOnHand - QuantityReserved;
 
         [StringLength(100)]
         public string WarehouseLocation { get; set; }

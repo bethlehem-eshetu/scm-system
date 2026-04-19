@@ -1,0 +1,113 @@
+@model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
+@using SCM_System.Models.Constants
+@{
+    ViewData["Title"] = "Orders to Pick";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Orders to Pick</h2>
+            <p class="text-muted mb-0">Step 1: Verify inventory and start picking items from the shelves.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2 border border-warning border-opacity-25">
+                <i class="fas fa-clock me-2"></i> @Model.Count() Pending Pick
+            </span>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 py-5 text-center">
+            <div class="opacity-25 mb-3">
+                <i class="fas fa-clipboard-check fa-4x text-muted"></i>
+            </div>
+            <h5 class="text-muted">All clear! No orders are currently awaiting picking.</h5>
+            <p class="small text-secondary">New orders will appear here automatically when accepted by the supplier.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var po in Model)
+            {
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+                        <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold text-primary">PO #@po.PONumber</span>
+                                <span class="mx-2 text-muted">|</span>
+                                <span class="small fw-bold text-dark">@po.Retailer?.BusinessName</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-muted smaller">Issued: @po.CreatedAt.ToString("MMM dd, HH:mm")</span>
+                                <span class="badge bg-light text-primary border rounded-pill">@po.Status</span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="bg-light smaller text-muted">
+                                        <tr>
+                                            <th class="ps-4">PRODUCT ITEM</th>
+                                            <th>SKU</th>
+                                            <th>REQUIRED QTY</th>
+                                            <th>AVAILABILITY</th>
+                                            <th class="text-end pe-4">ACTION</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in po.PurchaseOrderItems)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 py-3">
+                                                    <div class="fw-bold text-dark">@item.Product?.ProductName</div>
+                                                </td>
+                                                <td><span class="text-muted small">@item.Product?.Id.ToString("D5")</span></td>
+                                                <td><span class="fw-bold">@item.Quantity @item.Product?.Unit</span></td>
+                                                <td>
+                                                    <span class="badge bg-success-soft text-success rounded-pill px-2">
+                                                        <i class="fas fa-check-circle me-1"></i> Stock Reserved
+                                                    </span>
+                                                </td>
+                                                <td class="text-end pe-4">
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                                        <label class="form-check-label small text-muted">Verified</label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light bg-opacity-50 border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                            <div class="text-muted smaller">
+                                <i class="fas fa-info-circle me-1"></i> Confirming "Picked" will move this order to <strong>Packing</strong>.
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3">View PO</a>
+                                <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@po.Id" />
+                                    <input type="hidden" name="status" value="@POStatus.Picked" />
+                                    <input type="hidden" name="returnAction" value="OrdersToPick" />
+                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                                        <i class="fas fa-check-double me-2"></i> Confirm All Picked
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>

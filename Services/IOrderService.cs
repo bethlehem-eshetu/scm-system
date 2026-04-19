@@ -10,5 +10,9 @@ namespace SCM_System.Services
         Task<Order> CreateOrderFromPurchaseOrderAsync(int purchaseOrderId);
         Task<Order> UpdateOrderStatusAsync(int orderId, string status, string comments, int changedByUserId);
         Task<IEnumerable<OrderStatusHistory>> GetOrderStatusHistoryAsync(int orderId);
+        Task<bool> CancelOrderAsync(int orderId);
+        Task<bool> AcceptOrderAsync(int orderId, int? warehouseId = null);
+        Task<bool> RejectOrderAsync(int orderId, string reason);
+        Task<int> CreateMissingCommissionsForDeliveredOrders();
     }
 }
