@@ -1,27 +1,118 @@
 @{
-    ViewData["Title"] = "Enterprise Agreement & Terms of Service";
+    ViewData["Title"] = "Enterprise Agreement";
 }
 
-<div class="container py-5">
+<!-- Hero Section -->
+<div class="policy-hero bg-primary text-white position-relative overflow-hidden py-5 mb-5 rounded-bottom-5">
+    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: radial-gradient(circle at 90% 80%, #cba052 0%, transparent 40%);"></div>
+    <div class="container position-relative z-index-2 py-4 text-center">
+        <div class="badge bg-white bg-opacity-25 text-white rounded-pill px-4 py-2 mb-4 fs-6" data-aos="fade-down" style="backdrop-filter: blur(5px);">
+            <i class="fas fa-file-signature me-2 text-warning"></i> Official Terms of Service
+        </div>
+        <h1 class="display-4 fw-bolder mb-3 text-shadow-sm" data-aos="fade-up">EthioChain Enterprise Agreement</h1>
+        <p class="lead text-white text-opacity-75 mb-0 fw-light" data-aos="fade-up" data-aos-delay="100">Governing procurement, trade, and logistics across Ethiopia.</p>
+        <p class="small text-white text-opacity-50 mt-3 letter-spacing-1 text-uppercase fw-bold" data-aos="fade-up" data-aos-delay="200">Effective: April 2026</p>
+    </div>
+</div>
+
+<div class="container mb-5 pb-5">
     <div class="row justify-content-center">
-        <div class="col-lg-10 bg-white p-5 rounded-4 shadow-sm border border-light">
-            <h1 class="fw-bold mb-4 text-primary"><i class="fas fa-file-signature me-3"></i>EthioChain Enterprise Agreement</h1>
-            <p class="text-muted mb-5 border-bottom pb-4">Effective Date: April 2026</p>
+        <div class="col-lg-10">
+            <div class="row g-4">
 
-            <h4 class="fw-bold mt-4"><i class="fas fa-check-circle text-success me-2"></i> 1. Acceptance of Terms</h4>
-            <p class="text-secondary lh-lg mb-4">By registering for an account on the EthioChain Supply Chain Management System, you agree to these Terms of Service. This platform facilitates B2B procurement, inventory management, and logistics synchronization across the Federal Democratic Republic of Ethiopia.</p>
+                <!-- Section 1 -->
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift policy-card">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="icon-wrapper bg-success bg-opacity-10 text-success rounded-circle mb-4 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                <i class="fas fa-check-circle fs-3"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3 text-dark">Acceptance of Terms</h4>
+                            <p class="text-muted lh-lg mb-0 text-justify">By registering for an account on the EthioChain Supply Chain Management System, you agree to these Terms of Service. This platform facilitates B2B procurement, inventory management, and logistics synchronization across the Federal Democratic Republic of Ethiopia.</p>
+                        </div>
+                    </div>
+                </div>
 
-            <h4 class="fw-bold mt-4"><i class="fas fa-id-card text-success me-2"></i> 2. Digital Identity & Fayda Integration</h4>
-            <p class="text-secondary lh-lg mb-4">All enterprise operators must verify their identity using the National Digital ID (Fayda) system. You agree that the phone number and demographic data retrieved from Fayda is strictly utilized for anti-fraud protocols, ensuring marketplace integrity for Ethiopian suppliers and retailers.</p>
+                <!-- Section 2 -->
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift policy-card">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="icon-wrapper bg-info bg-opacity-10 text-info rounded-circle mb-4 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                <i class="fas fa-id-card fs-3"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3 text-dark">Identity Integration</h4>
+                            <p class="text-muted lh-lg mb-0 text-justify">All enterprise operators must verify their identity using the National Digital ID (Fayda) system. You agree that the demographic data retrieved from Fayda is strictly utilized for anti-fraud protocols, ensuring marketplace integrity for Ethiopian suppliers and retailers.</p>
+                        </div>
+                    </div>
+                </div>
 
-            <h4 class="fw-bold mt-4"><i class="fas fa-file-invoice-dollar text-success me-2"></i> 3. Trading Compliance</h4>
-            <p class="text-secondary lh-lg mb-4">Vendors and procurement agents are obligated to comply with Ethiopian tax regulations, including standard VAT obligations and TIN (Tax Identification Number) verification. All digital transactions executed via integrated partners (e.g., Chapa, Telebirr, or CBE Birr) are subject to Ethiopian financial laws and National Bank of Ethiopia (NBE) directives.</p>
+                <!-- Section 3 -->
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift policy-card">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="icon-wrapper bg-warning bg-opacity-10 text-warning rounded-circle mb-4 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                <i class="fas fa-file-invoice-dollar fs-3"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3 text-dark">Trading Compliance</h4>
+                            <p class="text-muted lh-lg mb-0 text-justify">Vendors and procurement agents are obligated to comply with Ethiopian tax regulations, including standard VAT obligations and TIN (Tax Identification Number) verification. All digital transactions are subject to Ethiopian financial laws and NBE directives.</p>
+                        </div>
+                    </div>
+                </div>
 
-            <h4 class="fw-bold mt-4"><i class="fas fa-balance-scale text-success me-2"></i> 4. Dispute Resolution</h4>
-            <p class="text-secondary lh-lg mb-4">In the event of a logistics or payment dispute between a verified Supplier and Retailer on EthioChain, parties agree to first seek arbitration within the jurisdiction of the Addis Ababa Chamber of Commerce and Sectoral Associations before pursuing formal litigation under Ethiopian commercial law.</p>
+                <!-- Section 4 -->
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift policy-card">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="icon-wrapper bg-primary bg-opacity-10 text-primary rounded-circle mb-4 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                <i class="fas fa-balance-scale fs-3"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3 text-dark">Dispute Resolution</h4>
+                            <p class="text-muted lh-lg mb-0 text-justify">In the event of a logistics or payment dispute between a verified Supplier and Retailer on EthioChain, parties agree to first seek arbitration within the jurisdiction of the Addis Ababa Chamber of Commerce and Sectoral Associations before pursuing formal litigation.</p>
+                        </div>
+                    </div>
+                </div>
 
-            <hr class="my-5" />
-            <p class="small text-muted text-center">© 2026 EthioChain SCM. For assistance, contact our Addis Ababa support center.</p>
+            </div>
+
+            <div class="text-center mt-5 pt-4" data-aos="zoom-in" data-aos-delay="500">
+                <hr class="border-secondary opacity-10 mb-4" />
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <img src="~/images/ethiochain-logo.jpg" alt="Logo" class="rounded-3 shadow-sm" style="width: 32px; height: 32px;" />
+                </div>
+                <p class="small text-muted fw-bold">© 2026 EthioChain SCM. Enterprise Legal Framework.</p>
+            </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        .policy-hero {
+            background: linear-gradient(135deg, #0b3d60 0%, #07253b 100%);
+            box-shadow: 0 10px 30px rgba(11, 61, 96, 0.4);
+        }
+        .text-shadow-sm { text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .letter-spacing-1 { letter-spacing: 1px; }
+        .hover-lift {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1) !important;
+        }
+        .policy-card {
+            border-top: 4px solid transparent !important;
+            transition: all 0.3s;
+            background-color: #ffffff;
+        }
+        .policy-card:hover { border-top-color: #cba052 !important; }
+        .text-justify { text-align: justify; }
+        p { font-size: 0.95rem; }
+        .z-index-2 { z-index: 2; }
+    </style>
+}
+@section Scripts {
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init({ duration: 800, once: true });</script>
+}
