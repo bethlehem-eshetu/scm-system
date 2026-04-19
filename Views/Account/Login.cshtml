@@ -82,16 +82,16 @@
                 <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
                     <div class="card-body p-4 p-sm-5">
                         <form asp-action="Login" method="post" class="needs-validation auth-form">
-                            <div class="form-floating mb-4 form-group-custom">
-                                <input asp-for="Email" class="form-control px-4 fw-semibold border-0 bg-light" placeholder="name@company.com" required autocomplete="email" />
-                                <label asp-for="Email" class="ps-4 text-muted"><i class="fas fa-envelope me-2"></i>Corporate Email</label>
+                            <div class="mb-4">
+                                <label asp-for="Email" class="form-label small fw-bold text-muted text-uppercase tracking-wide"><i class="fas fa-envelope me-2"></i>Corporate Email</label>
+                                <input asp-for="Email" class="form-control px-4 fw-semibold border-0 bg-light form-input-custom" placeholder="name@company.com" required autocomplete="email" />
                                 <span asp-validation-for="Email" class="text-danger extra-small mt-1 d-block fw-semibold"></span>
                             </div>
 
-                            <div class="form-floating mb-4 form-group-custom position-relative">
-                                <input asp-for="Password" id="authPassword" type="password" class="form-control px-4 fw-semibold border-0 bg-light pe-5" placeholder="Password" required autocomplete="current-password" />
-                                <label asp-for="Password" class="ps-4 text-muted"><i class="fas fa-lock me-2"></i>Secure Password</label>
-                                <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="togglePassword">
+                            <div class="mb-4 position-relative">
+                                <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase tracking-wide"><i class="fas fa-lock me-2"></i>Secure Password</label>
+                                <input asp-for="Password" id="authPassword" type="password" class="form-control px-4 fw-semibold border-0 bg-light pe-5 form-input-custom" placeholder="••••••••" required autocomplete="current-password" />
+                                <button type="button" class="btn border-0 shadow-none position-absolute bottom-0 end-0 text-muted px-3 d-flex align-items-center justify-content-center" id="togglePassword" style="height: 3.5rem;">
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 <span asp-validation-for="Password" class="text-danger extra-small mt-1 d-block fw-semibold"></span>
@@ -223,25 +223,17 @@
         }
 
         /* Form Controls */
-        .form-group-custom .form-control {
-            height: calc(3.5rem + 2px);
+        .form-input-custom {
+            height: 3.5rem;
             border-radius: 12px;
             transition: all 0.3s ease;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
             color: var(--ethio-blue-dark);
         }
         
-        .form-group-custom .form-control:focus {
+        .form-input-custom:focus {
             background-color: #fff !important;
             box-shadow: 0 0 0 4px rgba(11, 61, 96, 0.1);
-        }
-
-        .form-floating > .form-control:focus ~ label,
-        .form-floating > .form-control:not(:placeholder-shown) ~ label {
-            opacity: 0.8;
-            transform: scale(0.85) translateY(-0.8rem) translateX(0.15rem);
-            color: var(--ethio-blue);
-            font-weight: 700;
         }
 
         /* Buttons */
