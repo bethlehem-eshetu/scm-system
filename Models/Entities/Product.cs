@@ -44,9 +44,6 @@ namespace SCM_System.Models.Entities
         public bool IsDeleted { get; set; } = false;
 
         // New professional fields
-        [StringLength(100)]
-        public string? Barcode { get; set; }
-        
         public int? SubCategoryId { get; set; }
         
         [StringLength(100)]

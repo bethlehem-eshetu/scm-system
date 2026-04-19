@@ -75,12 +75,61 @@
                                 <i class="bi bi-calendar3 me-1"></i> @Model.CreatedAt.ToString("MMM dd, yyyy")
                             </div>
                         </div>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Brand))
+                        {
+                            <div class="col-sm-4 pt-2 border-top">
+                                <div class="text-muted small fw-bold text-uppercase mb-1">Brand</div>
+                                <div class="fs-6 text-dark fw-bold">@Model.Brand</div>
+                            </div>
+                        }
+                        
+                        @if (Model.MinimumOrderQuantity > 1)
+                        {
+                            <div class="col-sm-4 pt-2 border-top">
+                                <div class="text-muted small fw-bold text-uppercase mb-1">Min Order</div>
+                                <div class="fs-6 text-dark fw-bold">@Model.MinimumOrderQuantity @Model.Unit</div>
+                            </div>
+                        }
+
+                        @if (Model.ShippingWeight.HasValue)
+                        {
+                            <div class="col-sm-4 pt-2 border-top">
+                                <div class="text-muted small fw-bold text-uppercase mb-1">Shipping Weight</div>
+                                <div class="fs-6 text-dark fw-bold">@Model.ShippingWeight kg</div>
+                            </div>
+                        }
+                        
+                        @if (Model.IsHazardous)
+                        {
+                            <div class="col-sm-12 pt-2 border-top">
+                                <div class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill"><i class="bi bi-exclamation-triangle-fill me-2"></i> Hazardous Material</div>
+                            </div>
+                        }
                     </div>
 
                     <h5 class="fw-bold mb-3 border-bottom pb-2">Description</h5>
                     <div class="bg-white rounded p-3 mb-4" style="min-height: 120px; font-size: 1.05rem; line-height: 1.6; color: #495057; white-space: pre-wrap;">
                         @(string.IsNullOrEmpty(Model.Description) ? "No description provided." : Model.Description)
                     </div>
+
+                    @if (Model.AttributeValues != null && Model.AttributeValues.Any())
+                    {
+                        <h5 class="fw-bold mb-3 border-bottom pb-2 mt-4">Specifications</h5>
+                        <div class="table-responsive mb-4 shadow-sm rounded">
+                            <table class="table table-hover table-bordered mb-0">
+                                <tbody>
+                                    @foreach (var attr in Model.AttributeValues)
+                                    {
+                                        <tr>
+                                            <th class="bg-light text-muted w-50 py-2 ps-3">@attr.AttributeDefinition.AttributeName</th>
+                                            <td class="text-dark fw-bold py-2 ps-3">@attr.Value @attr.AttributeDefinition.Unit</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
 
                     <div class="d-flex gap-2 pt-3 border-top mt-auto">
                         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary px-4 py-2 fw-bold text-uppercase" style="letter-spacing: 0.5px;">

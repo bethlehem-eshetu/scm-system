@@ -28,7 +28,6 @@ namespace SCM_System.Models.ViewModels
         public string? Description { get; set; }
 
         // New professional fields
-        public string? Barcode { get; set; }
         public int? SubCategoryId { get; set; }
         public string? Brand { get; set; }
         public string? ShortDescription { get; set; }
@@ -61,6 +60,9 @@ namespace SCM_System.Models.ViewModels
         // Dynamic attributes for the EAV model
         public Dictionary<int, string>? DynamicAttributes { get; set; } = new Dictionary<int, string>();
         
+        // Crowdsourced new specifications mapping
+        public List<NewAttributeViewModel>? NewAttributes { get; set; } = new List<NewAttributeViewModel>();
+        
         // Shipping fields
         public decimal? ShippingWeight { get; set; }
         public decimal? ShippingLength { get; set; }
@@ -79,5 +81,12 @@ namespace SCM_System.Models.ViewModels
         public IFormFile? ImageFile { get; set; }
         public string? ExistingImageUrl { get; set; }
         public List<IFormFile>? GalleryImages { get; set; }
+    }
+
+    public class NewAttributeViewModel
+    {
+        public string Name { get; set; }
+        public string? Value { get; set; }
+        public string? Unit { get; set; }
     }
 }

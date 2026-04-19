@@ -37,9 +37,13 @@
                             <ul class="mb-0 mt-2">
                                 @foreach (var modelStateKey in ViewData.ModelState.Keys)
                                 {
-                                    foreach (var error in ViewData.ModelState[modelStateKey].Errors)
+                                    var state = ViewData.ModelState[modelStateKey];
+                                    if (state != null)
                                     {
-                                        <li>@error.ErrorMessage</li>
+                                        foreach (var error in state.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
                                     }
                                 }
                             </ul>

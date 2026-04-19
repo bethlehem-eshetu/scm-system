@@ -39,7 +39,7 @@ namespace SCM_System.Controllers
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                query = query.Where(p => p.ProductName.Contains(searchString) || p.Description.Contains(searchString));
+                query = query.Where(p => p.ProductName.Contains(searchString) || (p.Description != null && p.Description.Contains(searchString)));
             }
 
             if (categoryId.HasValue && categoryId.Value > 0)

@@ -81,13 +81,7 @@
                                         <span asp-validation-for="SKU" class="text-danger small"></span>
                                     </div>
                                     
-                                    <div class="col-md-3">
-                                        <label asp-for="Barcode" class="form-label fw-bold">
-                                            Barcode / UPC
-                                        </label>
-                                        <input asp-for="Barcode" class="form-control" placeholder="EAN-13 / UPC-A" />
-                                        <small class="text-muted">Optional for POS scanning</small>
-                                    </div>
+
                                     
                                     <div class="col-md-6">
                                         <label asp-for="CategoryId" class="form-label fw-bold">
@@ -310,6 +304,20 @@
                                     <div class="col-12 text-center py-4 text-muted">
                                         <i class="fas fa-info-circle mb-2 fa-2x"></i>
                                         <p>Please select a Category first to load relevant specifications.</p>
+                                    </div>
+                                </div>
+                                
+                                <hr class="my-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-primary"><i class="fas fa-plus-square me-2"></i>Custom Additional Specifications</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addCustomAttribute()">
+                                        <i class="fas fa-plus me-1"></i>Add Attribute
+                                    </button>
+                                </div>
+                                <div id="customAttributesContainer" class="row g-3">
+                                    <!-- Custom attributes will be added here dynamically -->
+                                    <div class="col-12 text-center py-3 text-muted" id="noCustomAttrMsg">
+                                        <small>No custom attributes added yet. Click to add your own.</small>
                                     </div>
                                 </div>
                             </div>
@@ -568,5 +576,50 @@
                     container.innerHTML = '<div class="col-12 text-danger">Error loading specifications.</div>';
                 });
         });
+        let customAttrIndex = 0;
+        
+        function addCustomAttribute() {
+            document.getElementById('noCustomAttrMsg').style.display = 'none';
+            var container = document.getElementById('customAttributesContainer');
+            
+            var html = `
+                <div class="col-md-6 custom-attr-row" id="customAttr_${customAttrIndex}">
+                    <div class="card border-0 bg-light shadow-sm rounded-3">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <label class="form-label fw-bold small text-primary mb-0">New Attribute</label>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeCustomAttribute(${customAttrIndex})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-5">
+                                    <input type="text" name="NewAttributes[${customAttrIndex}].Name" class="form-control form-control-sm" placeholder="e.g. Color, RAM" required />
+                                </div>
+                                <div class="col-5">
+                                    <input type="text" name="NewAttributes[${customAttrIndex}].Value" class="form-control form-control-sm" placeholder="e.g. Red, 16GB" required />
+                                </div>
+                                <div class="col-2">
+                                    <input type="text" name="NewAttributes[${customAttrIndex}].Unit" class="form-control form-control-sm" placeholder="Unit" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', html);
+            customAttrIndex++;
+        }
+        
+        function removeCustomAttribute(index) {
+            var el = document.getElementById('customAttr_' + index);
+            if (el) el.remove();
+            
+            var container = document.getElementById('customAttributesContainer');
+            if (container.querySelectorAll('.custom-attr-row').length === 0) {
+                document.getElementById('noCustomAttrMsg').style.display = 'block';
+            }
+        }
     </script>
 }
