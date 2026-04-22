@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SCM_System.Data;
 
@@ -11,9 +12,11 @@ using SCM_System.Data;
 namespace SCM_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260421082023_AddAdminSettingsFields")]
+    partial class AddAdminSettingsFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2126,10 +2129,6 @@ namespace SCM_System.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<string>("TwoFactorSecret")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("VerifiedFullName")
                         .HasColumnType("nvarchar(max)");
 
@@ -2146,46 +2145,6 @@ namespace SCM_System.Migrations
                         .HasFilter("[FAN] IS NOT NULL");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("SCM_System.Models.Entities.UserSession", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(45)
-                        .HasColumnType("nvarchar(45)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastActivityTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("LoginTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SessionToken")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserSessions");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Vehicle", b =>
@@ -2979,17 +2938,6 @@ namespace SCM_System.Migrations
                     b.Navigation("FaydaVerification");
                 });
 
-            modelBuilder.Entity("SCM_System.Models.Entities.UserSession", b =>
-                {
-                    b.HasOne("SCM_System.Models.Entities.User", "User")
-                        .WithMany("UserSessions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("SCM_System.Models.Entities.Vehicle", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
@@ -3153,8 +3101,6 @@ namespace SCM_System.Migrations
 
                     b.Navigation("SupplierEmployee")
                         .IsRequired();
-
-                    b.Navigation("UserSessions");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Vehicle", b =>
