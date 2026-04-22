@@ -58,7 +58,7 @@ namespace SCM_System.Controllers
         {
             ViewBag.Categories = await _context.ProductCategories
                 .Include(c => c.SubCategories)
-                .Where(c => c.Level == 1)
+                .Where(c => c.ParentCategoryId == null)
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
             return View();
@@ -223,7 +223,7 @@ namespace SCM_System.Controllers
                     // Load hierarchical categories for the view
                     ViewBag.Categories = await _context.ProductCategories
                         .Include(c => c.SubCategories)
-                        .Where(c => c.Level == 1)
+                        .Where(c => c.ParentCategoryId == null)
                         .OrderBy(c => c.CategoryName)
                         .ToListAsync();
                     return View(model);

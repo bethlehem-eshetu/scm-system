@@ -1,315 +1,277 @@
 @{
-    ViewData["Title"] = "EthioChain SCM - Next Gen Logistics";
+    ViewData["Title"] = "EthioChain SCM - The Central Nervous System of African Trade";
 }
 
 @section Styles {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         :root {
-            --brand-primary: #0d6efd;
-            --brand-secondary: #6366f1;
-            --brand-gradient: linear-gradient(135deg, #0d6efd 0%, #6366f1 100%);
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.4);
+            --ethio-blue: #0b3d60;
+            --ethio-blue-dark: #07253b;
+            --ethio-gold: #cba052;
+            --ethio-gold-light: #e6c587;
+            --bg-surface: #f8f9fc;
         }
 
         /* Fullscreen Video Background */
         .video-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -2;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2;
         }
-
         .video-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(7, 37, 59, 0.85) 0%, rgba(11, 61, 96, 0.70) 50%, rgba(7, 37, 59, 0.95) 100%);
             z-index: -1;
         }
 
-        /* Hero Section - Overlay on video */
+        /* Hero Section */
         .hero-section {
-            position: relative;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 120px 0 80px;
+            position: relative; min-height: 100vh; display: flex; align-items: center; padding: 120px 0 80px; z-index: 1;
+        }
+        .hero-title { font-size: 4rem; line-height: 1.1; letter-spacing: -0.02em; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        @@media (max-width: 991.98px) { .hero-title { font-size: 3rem; } }
+        
+        .text-gradient-gold {
+            background: linear-gradient(90deg, var(--ethio-gold-light) 0%, var(--ethio-gold) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Buttons */
+        .btn-brand {
+            background: linear-gradient(135deg, var(--ethio-gold) 0%, #a67c33 100%);
+            color: #fff !important; border: none; font-weight: 700;
+            padding: 1rem 2.5rem; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(203, 160, 82, 0.3);
+        }
+        .btn-brand:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(203, 160, 82, 0.5); }
+        
+        .btn-outline-glass {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff !important; font-weight: 700; padding: 1rem 2.5rem; border-radius: 50px;
+            text-transform: uppercase; letter-spacing: 1px;  backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .btn-outline-glass:hover { background: rgba(255,255,255,1); color: var(--ethio-blue-dark) !important; transform: translateY(-3px); }
+
+        /* Trust Badges */
+        .trust-badge-group { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 2rem; margin-top: 4rem; }
+        .trust-element { filter: grayscale(1) brightness(2); opacity: 0.6; transition: all 0.3s; font-family: monospace; font-size: 1.5rem; }
+        .trust-element:hover { filter: grayscale(0) brightness(1); opacity: 1; transform: scale(1.05); }
+
+        /* Sections */
+        .bg-light-surface { background-color: var(--bg-surface); position: relative; z-index: 2; padding: 100px 0; }
+        .bg-white-pure { background-color: #ffffff; position: relative; z-index: 2; padding: 100px 0; }
+
+        /* Feature Cards */
+        .premium-card {
+            background: #fff; border-radius: 20px; border: none; padding: 3rem 2rem;
+            box-shadow: 0 20px 40px -10px rgba(11, 61, 96, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .premium-card:hover { transform: translateY(-10px); box-shadow: 0 30px 60px -15px rgba(11, 61, 96, 0.15); }
+        .icon-circle {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(11, 61, 96, 0.05) 0%, rgba(11, 61, 96, 0.15) 100%);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;
+            color: var(--ethio-blue); font-size: 2rem;
+        }
+
+        /* Timeline / Pipeline */
+        .timeline-step { text-align: center; position: relative; z-index: 2; }
+        .timeline-icon {
+            width: 70px; height: 70px; margin: 0 auto 1.5rem; border-radius: 50%;
+            background: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: var(--ethio-gold); border: 2px solid var(--ethio-gold);
+            position: relative; z-index: 2; transition: all 0.3s ease;
+        }
+        .timeline-step:hover .timeline-icon { background: var(--ethio-gold); color: #fff; transform: scale(1.1); }
+        .timeline-line {
+            position: absolute; top: 35px; left: 50%; width: 100%; height: 2px;
+            background: linear-gradient(90deg, var(--ethio-gold) 0%, rgba(203, 160, 82, 0.2) 100%);
             z-index: 1;
         }
 
-        .hero-title {
-            font-size: 3.5rem;
-            line-height: 1.1;
-            letter-spacing: -0.02em;
+        /* CTA */
+        .cta-box {
+            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
+            border-radius: 30px; padding: 4rem; position: relative; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(11, 61, 96, 0.5);
         }
-
-        .text-gradient {
-            background: var(--brand-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .cta-bg-motif {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(203, 160, 82, 0.1) 0%, transparent 60%); z-index: 0;
+            animation: rotateSlow 30s linear infinite;
         }
-
-        /* Glass cards with better contrast */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-        }
-
-            .glass-card:hover {
-                transform: translateY(-5px);
-                background: rgba(255, 255, 255, 0.95);
-            }
-
-        .feature-icon-box {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 16px;
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-        }
-
-        .how-it-works-step {
-            position: relative;
-            text-align: center;
-        }
-
-        .step-number {
-            width: 40px;
-            height: 40px;
-            background: var(--brand-primary);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin: 0 auto 1rem;
-            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
-        }
-
-        .step-line {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            width: 100%;
-            height: 2px;
-            background: #dee2e6;
-            z-index: -1;
-        }
-
-        .btn-premium {
-            padding: 1rem 2.5rem;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-            .btn-premium:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 15px 30px rgba(13, 110, 253, 0.2);
-            }
-
-        .trust-badge {
-            filter: grayscale(1);
-            opacity: 0.7;
-            transition: all 0.3s;
-            color: white !important;
-        }
-
-            .trust-badge:hover {
-                filter: grayscale(0);
-                opacity: 1;
-            }
-
-        /* Light sections - still visible over video background */
-        .bg-light-section {
-            background: #f8f9fa;
-            position: relative;
-            z-index: 2;
-        }
-
-        .text-white-custom {
-            color: white !important;
-        }
-
-        .text-white-80 {
-            color: rgba(255, 255, 255, 0.8) !important;
-        }
+        @@keyframes rotateSlow { 100% { transform: rotate(360deg); } }
     </style>
 }
 
 <!-- Fullscreen Video Background -->
 <video class="video-background" autoplay muted loop playsinline>
     <source src="~/videos/HOME.mp4" type="video/mp4">
-    </video>
-    <div class="video-overlay"></div>
+</video>
+<div class="video-overlay"></div>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-7" data-aos="fade-right">
-                    <div class="badge bg-white bg-opacity-25 text-white px-3 py-2 rounded-pill mb-3 fw-bold border border-white border-opacity-25 d-inline-block">
-                        <i class="fas fa-shield-check me-2"></i> Verified Supply Chain Network
-                    </div>
-                    <h1 class="fw-bolder hero-title text-white mb-4">
-                        The Pulse of <br />
-                        <span class="text-gradient">Modern Commerce</span> <br />
-                        in Ethiopia
-                    </h1>
-                    <p class="lead text-white-80 mb-5" style="max-width: 600px;">
-                        Empowering retailers and suppliers with high-fidelity tracking,
-                        intelligent tender management, and automated warehouse fulfillment.
-                    </p>
-                    <div class="d-flex flex-wrap gap-3">
-                        @if (Context.Session.GetInt32("UserId") == null)
-                        {
-                            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-premium">
-                                <i class="fas fa-rocket me-2"></i> Get Started Free
-                            </a>
-                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-premium">
-                                <i class="fas fa-sign-in-alt me-2"></i> Member Login
-                            </a>
-                        }
-                        else
-                        {
-                            <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-primary btn-premium">
-                                <i class="fas fa-columns me-2"></i> Enter Command Center
-                            </a>
-                        }
-                    </div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container position-relative z-index-2">
+        <div class="row align-items-center">
+            <div class="col-lg-8" data-aos="fade-up" data-aos-duration="1000">
+                <div class="badge bg-white bg-opacity-10 text-white px-4 py-2 rounded-pill mb-4 border border-white border-opacity-25" style="backdrop-filter: blur(5px);">
+                    <i class="fas fa-shield-alt me-2 text-warning"></i> National Supply Chain Network
+                </div>
+                <h1 class="fw-bolder hero-title text-white mb-4">
+                    The Central Nervous System of <br />
+                    <span class="text-gradient-gold">African Trade.</span>
+                </h1>
+                <p class="lead text-white text-opacity-75 mb-5 fw-light" style="max-width: 650px; font-size: 1.25rem;">
+                    Empowering retailers and suppliers across Ethiopia with high-fidelity milestone tracking, intelligent procurement deployment, and automated logistics validation.
+                </p>
+                <div class="d-flex flex-wrap gap-4">
+                    @if (Context.Session.GetInt32("UserId") == null)
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-brand">
+                            <i class="fas fa-building me-2"></i> Onboard Now
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-glass">
+                            <i class="fas fa-desktop me-2"></i> Command Center
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-brand">
+                            <i class="fas fa-columns me-2"></i> Access Dashboard
+                        </a>
+                    }
+                </div>
                 
-                    <div class="mt-5 pt-4 border-top border-white border-opacity-25">
-                        <p class="smaller fw-bold text-white-80 text-uppercase mb-3">Trusted by regional leaders</p>
-                        <div class="d-flex gap-4">
-                            <span class="fw-bold fs-5 trust-badge">ETHIO TELECOM</span>
-                            <span class="fw-bold fs-5 trust-badge">CHAPA</span>
-                            <span class="fw-bold fs-5 trust-badge">EFDA</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-5" data-aos="zoom-in" data-aos-delay="200">
-                    <!-- Empty column for spacing, or you can add something here later -->
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Grid - Light background section -->
-    <section class="py-5 bg-light-section">
-        <div class="container py-5">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <h2 class="fw-bold h1 mb-3">Enterprise Core Features</h2>
-                <p class="text-muted lead mx-auto" style="max-width: 600px;">Experience a seamlessly integrated ecosystem designed for speed and transparency.</p>
-            </div>
-            <div class="row g-4">
-                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-                    <div class="card h-100 p-4 glass-card border-0">
-                        <div class="feature-icon-box bg-primary bg-opacity-10 text-primary">
-                            <i class="fas fa-gavel"></i>
-                        </div>
-                        <h4 class="fw-bold">Smart Bidding</h4>
-                        <p class="text-muted mb-0">Post tenders and receive competitive bids with algorithmic evaluation of supplier performance.</p>
-                    </div>
-                </div>
-                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-                    <div class="card h-100 p-4 glass-card border-0">
-                        <div class="feature-icon-box bg-success bg-opacity-10 text-success">
-                            <i class="fas fa-warehouse"></i>
-                        </div>
-                        <h4 class="fw-bold">Warehouse Hub</h4>
-                        <p class="text-muted mb-0">Multi-warehouse management with real-time stock allocation and picking/packing control.</p>
-                    </div>
-                </div>
-                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-                    <div class="card h-100 p-4 glass-card border-0">
-                        <div class="feature-icon-box bg-info bg-opacity-10 text-info">
-                            <i class="fas fa-truck-container"></i>
-                        </div>
-                        <h4 class="fw-bold">Logistics Pulse</h4>
-                        <p class="text-muted mb-0">End-to-end delivery tracking with agent assignments, vehicle telemetry, and status polling.</p>
+                <div class="trust-badge-group">
+                    <p class="small fw-bold text-white text-opacity-50 text-uppercase letter-spacing-1 mb-4">Integrated with core infrastructures</p>
+                    <div class="d-flex align-items-center flex-wrap gap-4 gap-md-5">
+                        <div class="trust-element text-white fw-bold"><i class="fas fa-university me-2"></i>NBE</div>
+                        <div class="trust-element text-white fw-bold"><i class="fas fa-file-invoice-dollar me-2"></i>ERCA</div>
+                        <div class="trust-element text-white fw-bold"><i class="fas fa-id-card me-2"></i>FAYDA</div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- How It Works Section -->
-    <section class="py-5 bg-light-section">
-        <div class="container py-5">
-            <h2 class="fw-bold h1 text-center mb-5" data-aos="fade-up">The Fulfillment Pipeline</h2>
-            <div class="row g-4 justify-content-center">
-                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="how-it-works-step">
-                        <div class="step-line d-none d-lg-block"></div>
-                        <div class="step-number">1</div>
-                        <h6 class="fw-bold">Order</h6>
-                        <p class="extra-small text-muted">Retailer places bulk orders</p>
+<!-- Features Grid -->
+<section class="bg-light-surface">
+    <div class="container">
+        <div class="text-center mb-5 pb-4" data-aos="fade-up">
+            <h2 class="display-5 fw-bolder text-dark-blue mb-3">System Core Capabilities</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 700px;">Experience a seamlessly integrated digital ecosystem engineered for unprecedented operational speed and end-to-end transparency.</p>
+        </div>
+        <div class="row g-5">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-handshake"></i>
                     </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Smart Bidding</h4>
+                    <p class="text-muted mb-0">Broadcast procurement tenders instantly and receive competitive bids with algorithmic tracking of performance.</p>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="how-it-works-step">
-                        <div class="step-line d-none d-lg-block"></div>
-                        <div class="step-number">2</div>
-                        <h6 class="fw-bold">Accept</h6>
-                        <p class="extra-small text-muted">Supplier accepts and generates POs</p>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-warehouse"></i>
                     </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Network Hub</h4>
+                    <p class="text-muted mb-0">Total multi-facility visibility. Manage complex stock allocations, digital manifests, and strictly controlled routing.</p>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="how-it-works-step">
-                        <div class="step-line d-none d-lg-block"></div>
-                        <div class="step-number">3</div>
-                        <h6 class="fw-bold">Pick/Pack</h6>
-                        <p class="extra-small text-muted">Warehouse prepares shipment</p>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-route"></i>
                     </div>
-                </div>
-                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="400">
-                    <div class="how-it-works-step">
-                        <div class="step-line d-none d-lg-block"></div>
-                        <div class="step-number">4</div>
-                        <h6 class="fw-bold">Dispatch</h6>
-                        <p class="extra-small text-muted">Agent pairs with vehicle</p>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="500">
-                    <div class="how-it-works-step">
-                        <div class="step-number">5</div>
-                        <h6 class="fw-bold">Track</h6>
-                        <p class="extra-small text-muted">Real-time status updates</p>
-                    </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Logistics Pulse</h4>
+                    <p class="text-muted mb-0">Zero-blindspot delivery records. Deploy agents, monitor milestone checklists, and execute electronic handshakes.</p>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Final CTA -->
-    <section class="py-6 position-relative text-center overflow-hidden bg-light-section">
-        <div class="container py-5 z-index-1 position-relative">
-            <div class="glass-card p-5 rounded-4 shadow-premium border-0 max-w-2xl mx-auto" data-aos="flip-up">
-                <h2 class="fw-bold mb-3">Ready to join the network?</h2>
-                <p class="text-muted mb-5">Join 500+ enterprises optimizing their operations today.</p>
-                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-premium px-5">Launch Your Profile</a>
+<!-- How It Works Section -->
+<section class="bg-white-pure">
+    <div class="container">
+        <div class="text-center mb-5 pb-5" data-aos="fade-up">
+            <h2 class="display-5 fw-bolder text-dark-blue mb-3">The Fulfillment Pipeline</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 600px;">The definitive standard protocol for converting operational friction into automated delivery.</p>
+        </div>
+        <div class="row g-4 justify-content-center px-4">
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-file-contract fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">1. Initiate</h5>
+                    <p class="small text-muted">Submit secure B2B request.</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-clipboard-check fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">2. Approve</h5>
+                    <p class="small text-muted">Issue PO verification.</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-box-open fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">3. Stage</h5>
+                    <p class="small text-muted">Warehouse pack & manifest.</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="400">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-truck-loading fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">4. Dispatch</h5>
+                    <p class="small text-muted">Secure transit verification.</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="500">
+                <div class="timeline-step">
+                    <div class="timeline-icon"><i class="fas fa-satellite-dish fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">5. Monitor</h5>
+                    <p class="small text-muted">Live synchronization.</p>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    @section Scripts {
-        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-        <script>
-            AOS.init({ duration: 1000, once: true });
-        </script>
-    }
+<!-- Final CTA -->
+<section class="bg-light-surface">
+    <div class="container" data-aos="zoom-in">
+        <div class="cta-box text-center text-white">
+            <div class="cta-bg-motif"></div>
+            <div class="position-relative z-index-2">
+                <h2 class="display-5 fw-bolder mb-4">Digitize your supply chain.</h2>
+                <p class="lead text-white text-opacity-75 mb-5 mx-auto" style="max-width: 600px;">
+                    Integrate your enterprise into Ethiopia's most secure and expansive B2B logistics network today.
+                </p>
+                <div class="d-flex justify-content-center gap-4">
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-brand btn-lg">
+                        Execute Onboarding
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: true });
+    </script>
+}
