@@ -822,11 +822,12 @@ namespace SCM_System.Controllers
                 var adminId = HttpContext.Session.GetInt32("UserId") ?? 0;
                 var audit = new AuditLog
                 {
-                    UserId = targetUserId,
-                    Action = action,
-                    PerformedBy = adminId,
-                    Reason = reason,
-                    Timestamp = DateTime.UtcNow,
+                    EntityType = "User",
+                    EntityId = targetUserId.ToString(),
+                    ActionType = action,
+                    PerformedByUserId = adminId,
+                    Notes = reason,
+                    PerformedAtUtc = DateTime.UtcNow,
                     IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                     UserAgent = Request.Headers["User-Agent"].ToString()
                 };
@@ -1603,9 +1604,8 @@ namespace SCM_System.Controllers
             try
             {
                 var logs = await _context.AuditLogs
-                    .Include(l => l.User)
-                    .Include(l => l.PerformedByAdmin)
-                    .OrderByDescending(l => l.Timestamp)
+                    .Include(l => l.PerformedByUser)
+                    .OrderByDescending(l => l.PerformedAtUtc)
                     .Take(100)
                     .ToListAsync();
                 
@@ -1792,6 +1792,56 @@ namespace SCM_System.Controllers
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"Bulk category assignment completed for {userIds.Count} users.";
             return RedirectToAction("Dashboard");
+        }
+
+        // NEW ROUTES for Admin Modernization
+        // GET: /Admin/CommissionOverview
+        public async Task<IActionResult> CommissionOverview()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            
+            var commissions = await _context.Commissions
+                .Include(c => c.Supplier)
+                .Include(c => c.Order)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.TotalCommissions = commissions.Sum(c => c.CommissionAmount);
+            ViewBag.PendingCommissions = commissions.Where(c => c.Status == "Pending").Sum(c => c.CommissionAmount);
+            ViewBag.PaidCommissions = commissions.Where(c => c.Status == "Paid").Sum(c => c.CommissionAmount);
+
+            return View(commissions);
+        }
+
+        // GET: /Admin/Transactions
+        public async Task<IActionResult> Transactions()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            var transactions = await _context.Commissions
+                .Include(c => c.Retailer)
+                .Include(c => c.Supplier)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+            return View(transactions);
+        }
+
+        // GET: /Admin/Payouts
+        public async Task<IActionResult> Payouts()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            var payouts = await _context.Commissions
+                .Include(c => c.Supplier)
+                .Where(c => c.PaymentType == "SupplierPayout")
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+            return View(payouts);
+        }
+
+        // GET: /Admin/FinancialReports
+        public IActionResult FinancialReports()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            return View();
         }
     }
 }

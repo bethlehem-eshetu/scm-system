@@ -11,5 +11,7 @@ namespace SCM_System.Services
         Task<IEnumerable<Commission>> GetSupplierCommissionsAsync(int supplierId);
         Task<Commission> GetCommissionByIdAsync(int commissionId);
         Task<bool> UpdateCommissionPaymentStatusAsync(int commissionId, string chapaId, string status, string verificationData);
+        Task<List<Vehicle>> GetSmartDispatchSuggestionsAsync(int warehouseId);
+        Task<List<SupplierEmployee>> GetSmartDriverSuggestionsAsync(int warehouseId);
     }
 }

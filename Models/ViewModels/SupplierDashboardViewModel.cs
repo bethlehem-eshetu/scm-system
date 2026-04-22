@@ -14,6 +14,17 @@ namespace SCM_System.Models.ViewModels
         public bool IsFaydaVerified { get; set; }
         public string FaydaStatus { get; set; } = "Pending";
 
+        // Logistics 2.0 KPIs
+        public int ActiveVehiclesCount { get; set; }
+        public int ReadyVehicles { get; set; }
+        public double HubUtilizationPercent { get; set; }
+        public int TotalPersonnelCount { get; set; }
+        public int OnDutyCount { get; set; }
+
+        // Investor-Grade KPIs
+        public double GrowthPercent { get; set; }
+        public int DelayedShipmentsCount { get; set; }
+
         // Status Counts
         public Dictionary<string, int> StatusCounts { get; set; }
 

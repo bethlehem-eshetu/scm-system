@@ -9,25 +9,31 @@ namespace SCM_System.Models.Entities
         [Key]
         public int Id { get; set; }
 
-        public int UserId { get; set; } // The user being acted upon
+        // The entity being acted upon
+        [Required]
+        [StringLength(50)]
+        public string EntityType { get; set; } = string.Empty; // e.g., "SupplierEmployee", "Vehicle", "Warehouse"
+        
+        [Required]
+        public string EntityId { get; set; } = string.Empty; // Store as string for flexibility
 
         [Required]
-        public string Action { get; set; } = string.Empty; // e.g., "Approved", "Rejected"
+        [StringLength(50)]
+        public string ActionType { get; set; } = string.Empty; // e.g., "Create", "Update", "Delete", "Reassign", "Restore"
 
-        public int PerformedBy { get; set; } // The Admin ID who performed the action
+        public string? OldValueJson { get; set; } // State before change
+        public string? NewValueJson { get; set; } // State after change
+
+        public int? PerformedByUserId { get; set; } // The ID of the user who performed the action
         
-        [ForeignKey("UserId")]
-        public virtual User? User { get; set; }
+        [ForeignKey("PerformedByUserId")]
+        public virtual User? PerformedByUser { get; set; }
 
-        [ForeignKey("PerformedBy")]
-        public virtual User? PerformedByAdmin { get; set; }
-
-        public string? Reason { get; set; }
-
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-
-        // Enhanced tracking
+        public string? Notes { get; set; }
+        
         public string? IpAddress { get; set; }
         public string? UserAgent { get; set; }
+
+        public DateTime PerformedAtUtc { get; set; } = DateTime.UtcNow;
     }
 }

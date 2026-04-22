@@ -50,40 +50,41 @@
                             {
                                 <tr>
                                     <td class="px-4 py-3 small">
-                                        <div class="fw-bold">@log.Timestamp.ToLocalTime().ToString("MMM dd, yyyy")</div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">@log.Timestamp.ToLocalTime().ToString("HH:mm:ss")</div>
+                                        <div class="fw-bold">@log.PerformedAtUtc.ToLocalTime().ToString("MMM dd, yyyy")</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">@log.PerformedAtUtc.ToLocalTime().ToString("HH:mm:ss")</div>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.7rem;">
-                                                @(log.PerformedByAdmin?.FullName?.Substring(0, 1) ?? "A")
+                                                @(log.PerformedByUser?.FullName?.Substring(0, 1) ?? "A")
                                             </div>
                                             <div>
-                                                <div class="fw-bold small">@(log.PerformedByAdmin?.FullName ?? "System")</div>
-                                                <div class="text-muted extra-small">ID: @log.PerformedBy</div>
+                                                <div class="fw-bold small">@(log.PerformedByUser?.FullName ?? "System")</div>
+                                                <div class="text-muted extra-small">ID: @log.PerformedByUserId</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         @{
-                                            var badgeClass = log.Action switch
+                                            var badgeClass = log.ActionType switch
                                             {
                                                 "Approved" => "bg-success",
                                                 "Rejected" => "bg-danger",
                                                 "Verified" => "bg-info",
+                                                "Restore" => "bg-warning",
                                                 _ => "bg-secondary"
                                             };
                                         }
-                                        <span class="badge @badgeClass rounded-pill px-3" style="font-size: 0.7rem;">@log.Action</span>
+                                        <span class="badge @badgeClass rounded-pill px-3" style="font-size: 0.7rem;">@log.ActionType</span>
                                     </td>
                                     <td>
-                                        <div class="fw-bold small">@(log.User?.FullName ?? "N/A")</div>
-                                        <div class="text-muted extra-small">@(log.User?.Email ?? "N/A")</div>
+                                        <div class="fw-bold small">@log.EntityType</div>
+                                        <div class="text-muted extra-small">ID: @log.EntityId</div>
                                     </td>
                                     <td>
-                                        @if (!string.IsNullOrEmpty(log.Reason))
+                                        @if (!string.IsNullOrEmpty(log.Notes))
                                         {
-                                            <span class="text-muted small text-truncate d-inline-block" style="max-width: 200px;" title="@log.Reason">@log.Reason</span>
+                                            <span class="text-muted small text-truncate d-inline-block" style="max-width: 200px;" title="@log.Notes">@log.Notes</span>
                                         }
                                         else
                                         {

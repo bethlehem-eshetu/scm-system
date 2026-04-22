@@ -30,8 +30,14 @@ namespace SCM_System.Services
                 .ToListAsync();
 
             var last30Days = DateTime.Now.AddDays(-30);
+            var prev30Days = DateTime.Now.AddDays(-60);
             
             var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.Id == supplierId);
+
+            // Revenue Trends & Growth
+            var currentMonthRevenue = orders.Where(o => o.CreatedAt >= last30Days && o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
+            var prevMonthRevenue = orders.Where(o => o.CreatedAt >= prev30Days && o.CreatedAt < last30Days && o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
+            double growthPercent = prevMonthRevenue > 0 ? (double)((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 : 0;
 
             var viewModel = new SupplierDashboardViewModel
             {
@@ -42,6 +48,24 @@ namespace SCM_System.Services
                 OrdersInDelivery = orders.Count(o => o.OrderStatus == "In Transit"),
                 LowStockItems = products.Count(p => p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved) < (p.ReorderLevel ?? 10)),
                 CompletionRate = orders.Any() ? (double)orders.Count(o => o.OrderStatus == "Completed") / orders.Count * 100 : 0,
+
+                // Investor-Grade KPIs
+                GrowthPercent = growthPercent,
+                DelayedShipmentsCount = orders.Count(o => (o.OrderStatus == "In Transit" || o.OrderStatus == "Processing") && o.CreatedAt.AddDays(2) < DateTime.Now), // Mocked ETA 2 days
+                
+                // Logistics 2.0 KPIs
+                ActiveVehiclesCount = await _context.Vehicles.CountAsync(v => v.SupplierId == supplierId && !v.IsDeleted && v.IsActive),
+                ReadyVehicles = await _context.Vehicles.CountAsync(v => v.SupplierId == supplierId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available && !v.IsDeleted && v.IsActive),
+                
+                HubUtilizationPercent = (await _context.Warehouses
+                    .Where(w => w.SupplierId == supplierId && !w.IsDeleted && w.IsActive && w.MaxCapacity > 0)
+                    .Select(w => new { w.CapacityUsed, w.MaxCapacity })
+                    .ToListAsync())
+                    .DefaultIfEmpty(new { CapacityUsed = (int?)0, MaxCapacity = 1 })
+                    .Average(w => (double)(w.CapacityUsed ?? 0) * 100.0 / w.MaxCapacity),
+
+                TotalPersonnelCount = await _context.SupplierEmployees.CountAsync(se => se.SupplierId == supplierId && !se.IsDeleted),
+                OnDutyCount = await _context.SupplierEmployees.CountAsync(se => se.SupplierId == supplierId && se.Status == SCM_System.Models.Enums.EmployeeStatus.Active && !se.IsDeleted),
 
                 StatusCounts = orders.GroupBy(o => o.OrderStatus)
                     .ToDictionary(g => g.Key, g => g.Count()),
@@ -59,28 +83,64 @@ namespace SCM_System.Services
                     .ToList(),
 
                 WarehousePerformance = await _context.Warehouses
-                    .Where(w => w.SupplierId == supplierId)
+                    .Where(w => w.SupplierId == supplierId && !w.IsDeleted)
                     .Select(w => new ChartDataPoint { 
                         Label = w.Name, 
                         Value = _context.PurchaseOrders.Count(po => po.WarehouseId == w.Id) 
                     })
                     .ToListAsync(),
 
-                RecentActivity = await _context.Notifications
-                    .Where(n => n.UserId == _context.Suppliers.First(s => s.Id == supplierId).UserId)
-                    .OrderByDescending(n => n.CreatedAt)
-                    .Take(5)
-                    .Select(n => new SupplierActivityItem {
-                        Title = n.Title,
-                        Description = n.Message,
-                        Time = n.CreatedAt,
-                        Type = n.Type,
-                        ActionUrl = n.ActionUrl
+                RecentActivity = (await _context.AuditLogs
+                    .Where(l => l.PerformedByUserId == supplier.UserId || l.EntityType == "Supplier")
+                    .OrderByDescending(l => l.PerformedAtUtc)
+                    .Take(10)
+                    .Select(l => new { l.ActionType, l.EntityType, l.EntityId, l.Notes, l.PerformedAtUtc })
+                    .ToListAsync())
+                    .Select(l => new SupplierActivityItem
+                    {
+                        Title = l.ActionType,
+                        Description = $"{l.EntityType} #{l.EntityId}: {l.Notes ?? "No details"}",
+                        Time = l.PerformedAtUtc,
+                        Type = "Info"
                     })
-                    .ToListAsync()
+                    .DefaultIfEmpty(new SupplierActivityItem { Title = "No Activity", Description = "System is running normally", Time = DateTime.Now })
+                    .ToList()
             };
 
             return viewModel;
+        }
+
+        public async Task<List<Vehicle>> GetSmartDispatchSuggestionsAsync(int warehouseId)
+        {
+            var warehouse = await _context.Warehouses.FindAsync(warehouseId);
+            if (warehouse == null) return new List<Vehicle>();
+
+            var availableVehicles = await _context.Vehicles
+                .Include(v => v.PrimaryDriver)
+                    .ThenInclude(d => d.User)
+                .Where(v => v.WarehouseId == warehouseId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available && !v.IsDeleted && v.IsActive)
+                .ToListAsync();
+
+            // Scoring Formula logic
+            // Dispatch Score = Zone Match (40) + Capacity Fit (30) + Availability (10) + Rating (20)
+            return availableVehicles
+                .OrderByDescending(v => {
+                    int score = 0;
+                    // Mocked scoring factors
+                    if (v.TemperatureControlled) score += 20; // Specialized capability
+                    if (v.MaxLoadCapacity > 1000) score += 15; // Capacity fit
+                    if (v.PrimaryDriver != null) score += 25; // Has assigned driver
+                    return score;
+                })
+                .ToList();
+        }
+
+        public async Task<List<SupplierEmployee>> GetSmartDriverSuggestionsAsync(int warehouseId)
+        {
+            return await _context.SupplierEmployees
+                .Include(e => e.User)
+                .Where(e => e.WarehouseId == warehouseId && e.EmployeeRole == "DeliveryAgent" && e.Status == SCM_System.Models.Enums.EmployeeStatus.Active && !e.IsDeleted)
+                .ToListAsync();
         }
 
         public async Task<SupplierReportsViewModel> GetSupplierReportsAsync(int supplierId)

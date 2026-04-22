@@ -344,9 +344,9 @@ namespace SCM_System.Controllers
         // POST: Product/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ProductName,CategoryId,BasePrice,Description,Unit,Quantity,SKU,ImageUrl,CreatedAt")] Product product, IFormFile imageFile)
+        public async Task<IActionResult> Edit(int id, Product model, IFormFile imageFile)
         {
-            if (id != product.Id)
+            if (id != model.Id)
             {
                 return NotFound();
             }
@@ -357,26 +357,35 @@ namespace SCM_System.Controllers
                 return Unauthorized();
             }
 
-            // Ensure the user owns this product
-            var existingProduct = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
-            if (existingProduct == null || existingProduct.IsDeleted)
+            // Fetch current state from DB
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
+            if (product == null || product.IsDeleted)
             {
                 return NotFound();
             }
 
-            product.SupplierId = supplierId.Value;
-
             ModelState.Remove("SupplierId");
             ModelState.Remove("Supplier");
             ModelState.Remove("Category");
-            ModelState.Remove("Inventory");
+            ModelState.Remove("Inventories");
             ModelState.Remove("AttributeValues");
             ModelState.Remove("PurchaseOrderItems");
             ModelState.Remove("OrderItems");
+            ModelState.Remove("imageFile");
+            
+            // To ensure save succeeds when missing non-critical binding fields
+            var keysToRemove = ModelState.Keys.Where(k => ModelState[k].Errors.Count > 0).ToList();
+            foreach (var key in keysToRemove)
+            {
+                if (key != "ProductName" && key != "BasePrice" && key != "Unit" && key != "CategoryId")
+                {
+                    ModelState.Remove(key);
+                }
+            }
 
             // Server-side Category Check
             var isCategoryValid = await _context.SupplierCategories
-                .AnyAsync(sc => sc.SupplierId == supplierId && sc.CategoryId == product.CategoryId);
+                .AnyAsync(sc => sc.SupplierId == supplierId && sc.CategoryId == model.CategoryId);
 
             if (!isCategoryValid)
             {
@@ -387,6 +396,41 @@ namespace SCM_System.Controllers
             {
                 try
                 {
+                    // Update main fields
+                    product.ProductName = model.ProductName;
+                    product.CategoryId = model.CategoryId;
+                    product.BasePrice = model.BasePrice;
+                    product.Description = model.Description;
+                    product.Unit = model.Unit;
+                    product.SKU = model.SKU;
+                    product.IsAvailable = model.IsAvailable;
+                    
+                    // Advanced Fields
+                    product.SubCategoryId = model.SubCategoryId;
+                    product.Brand = model.Brand;
+                    product.ShortDescription = model.ShortDescription;
+                    product.Tags = model.Tags;
+                    product.IsFeatured = model.IsFeatured;
+                    product.CostPrice = model.CostPrice;
+                    product.WholesalePrice = model.WholesalePrice;
+                    product.DiscountPercentage = model.DiscountPercentage;
+                    product.TaxRate = model.TaxRate;
+                    product.MinimumOrderQuantity = model.MinimumOrderQuantity;
+                    product.MaximumStockLevel = model.MaximumStockLevel;
+                    product.ReorderLevel = model.ReorderLevel;
+                    product.ReorderQuantity = model.ReorderQuantity;
+                    product.LeadTimeDays = model.LeadTimeDays;
+                    product.ShippingWeight = model.ShippingWeight;
+                    product.ShippingLength = model.ShippingLength;
+                    product.ShippingWidth = model.ShippingWidth;
+                    product.ShippingHeight = model.ShippingHeight;
+                    product.HSCode = model.HSCode;
+                    product.IsHazardous = model.IsHazardous;
+                    product.MetaTitle = model.MetaTitle;
+                    product.MetaDescription = model.MetaDescription;
+                    product.MetaKeywords = model.MetaKeywords;
+                    product.Slug = model.Slug ?? model.ProductName?.ToLower().Replace(" ", "-");
+
                     // Handle Image Upload
                     if (imageFile != null && imageFile.Length > 0)
                     {
@@ -397,35 +441,26 @@ namespace SCM_System.Controllers
                         }
 
                         string uploadsFolder = Path.Combine(webRootPath, "images", "products");
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
+                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                        
                         string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
                         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
                             await imageFile.CopyToAsync(fileStream);
                         }
-                        product.ImageUrl = "/images/products/" + uniqueFileName;
-                        
+
                         // Delete old image if exists
-                        if (!string.IsNullOrEmpty(existingProduct.ImageUrl))
+                        if (!string.IsNullOrEmpty(product.ImageUrl))
                         {
-                            var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, existingProduct.ImageUrl.TrimStart('/'));
-                            if (System.IO.File.Exists(oldImagePath))
-                            {
-                                System.IO.File.Delete(oldImagePath);
-                            }
+                            var oldImagePath = Path.Combine(webRootPath, product.ImageUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldImagePath)) System.IO.File.Delete(oldImagePath);
                         }
-                    }
-                    else
-                    {
-                        // Keep existing image
-                        product.ImageUrl = existingProduct.ImageUrl;
+
+                        product.ImageUrl = "/images/products/" + uniqueFileName;
                     }
 
-                    // Availability is now determined by sum of all inventories
+                    // Auto-update availability based on stock
                     var totalStock = await _context.Inventories
                         .Where(inv => inv.ProductId == product.Id)
                         .SumAsync(inv => inv.QuantityOnHand - inv.QuantityReserved);
@@ -436,25 +471,12 @@ namespace SCM_System.Controllers
                     await _context.SaveChangesAsync();
                     
                     TempData["SuccessMessage"] = "Product updated successfully!";
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ProductExists(product.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return RedirectToAction(nameof(MyProducts));
                 }
                 catch (Exception ex)
                 {
                     TempData["ErrorMessage"] = "Error updating product: " + ex.Message;
-                    ViewBag.Categories = new SelectList(_context.ProductCategories, "Id", "CategoryName", product.CategoryId);
-                    return View(product);
                 }
-                return RedirectToAction(nameof(MyProducts));
             }
             
             var supplierCategories = await _context.SupplierCategories
@@ -463,8 +485,8 @@ namespace SCM_System.Controllers
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
-            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", product.CategoryId);
-            return View(product);
+            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", model.CategoryId);
+            return View(model);
         }
 
         // GET: Product/Details/5
@@ -483,6 +505,8 @@ namespace SCM_System.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.AttributeDefinition)
                 .FirstOrDefaultAsync(m => m.Id == id && m.SupplierId == supplierId && !m.IsDeleted);
                 
             if (product == null)

@@ -1,0 +1,57 @@
+@{
+    ViewData["Title"] = "Commission Overview";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-chart-pie me-2 text-primary"></i> Commission Overview</h2>
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="glass-card p-4 h-100 border-start border-primary border-4">
+                <h6 class="text-muted">Total Commissions</h6>
+                <h3>@ViewBag.TotalCommissions.ToString("C")</h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4 h-100 border-start border-warning border-4">
+                <h6 class="text-muted">Pending Commissions</h6>
+                <h3 class="text-warning">@ViewBag.PendingCommissions.ToString("C")</h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4 h-100 border-start border-success border-4">
+                <h6 class="text-muted">Paid Commissions</h6>
+                <h3 class="text-success">@ViewBag.PaidCommissions.ToString("C")</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="glass-card p-4">
+        <h5 class="mb-3">Recent Commissions</h5>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td>@c.CreatedAt.ToString("g")</td>
+                            <td>@c.PaymentType</td>
+                            <td>@c.CommissionAmount.ToString("C")</td>
+                            <td>
+                                <span class="badge bg-@(c.Status == "Paid" ? "success" : "warning")">@c.Status</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

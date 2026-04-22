@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 
@@ -54,7 +54,7 @@ namespace SCM_System.Services
                     "🔄 New Return Request",
                     $"A return request has been created for Order #{purchaseOrder.Order?.OrderNumber}",
                     "Warning",
-                    $"/Supplier/Returns"
+                    $"/Return/SupplierReturns"
                 );
             }
 
@@ -120,7 +120,7 @@ namespace SCM_System.Services
                 "✅ Return Request Approved",
                 $"Your return request #{returnRequest.ReturnNumber} has been approved. Please ship the items back.",
                 "Success",
-                $"/Retailer/ReturnDetails/{returnRequest.Id}"
+                $"/Return/MyReturns"
             );
 
             return returnRequest;
@@ -143,7 +143,7 @@ namespace SCM_System.Services
                 "❌ Return Request Rejected",
                 $"Your return request #{returnRequest.ReturnNumber} has been rejected. Reason: {rejectionReason}",
                 "Error",
-                $"/Retailer/ReturnDetails/{returnRequest.Id}"
+                $"/Return/MyReturns"
             );
 
             return returnRequest;
@@ -167,7 +167,7 @@ namespace SCM_System.Services
                 "📦 Return Items Shipped",
                 $"Items for return #{returnRequest.ReturnNumber} have been shipped. Tracking: {trackingNumber}",
                 "Info",
-                $"/Supplier/ReturnDetails/{returnRequest.Id}"
+                $"/Return/SupplierReturns"
             );
 
             return returnRequest;
@@ -204,7 +204,7 @@ namespace SCM_System.Services
                 "💰 Refund Processed",
                 $"Your refund of {returnRequest.RefundAmount:C} for return #{returnRequest.ReturnNumber} has been processed.",
                 "Success",
-                $"/Retailer/ReturnDetails/{returnRequest.Id}"
+                $"/Return/MyReturns"
             );
 
             return returnRequest;

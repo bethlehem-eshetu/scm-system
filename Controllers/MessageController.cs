@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
@@ -95,6 +95,12 @@ namespace SCM_System.Controllers
 
             // Find or create conversation
             var conversation = await GetOrCreateConversation(currentUserId, currentUserRole, id);
+
+            if (conversation == null)
+            {
+                TempData["ErrorMessage"] = "Cannot start conversation: Missing Retailer or Supplier profile for the involved users.";
+                return RedirectToAction("Inbox");
+            }
 
             // Get messages for this conversation
             var messages = await _context.Messages
@@ -352,6 +358,12 @@ namespace SCM_System.Controllers
             // Get or create conversation
             var conversation = await GetOrCreateConversation(currentUserId, currentUserRole, receiverId);
 
+            if (conversation == null)
+            {
+                TempData["ErrorMessage"] = "Cannot start conversation: Missing Retailer or Supplier profile for the involved users.";
+                return RedirectToAction("Inbox");
+            }
+
             // Get receiver info
             var receiver = await _context.Users.FindAsync(receiverId);
             if (receiver == null)
@@ -416,33 +428,46 @@ namespace SCM_System.Controllers
 
         private async Task<Conversation> GetOrCreateConversation(int currentUserId, string currentUserRole, int otherUserId)
         {
-            // Get the actual Supplier and Retailer IDs (not User IDs)
+            // Get the IDs of the entities involved
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == currentUserId);
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == currentUserId);
+
+            // If we can't find the current user's profile, try finding the other user's profile
+            var otherSupplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == otherUserId);
+            var otherRetailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == otherUserId);
+
             int supplierId = 0;
             int retailerId = 0;
 
-            if (currentUserRole == "Supplier")
+            if (supplier != null && otherRetailer != null)
             {
-                // Current user is Supplier, other user is Retailer
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == currentUserId);
-                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == otherUserId);
-
-                if (supplier == null || retailer == null)
-                    throw new Exception("Supplier or Retailer not found");
-
                 supplierId = supplier.Id;
-                retailerId = retailer.Id;
+                retailerId = otherRetailer.Id;
             }
-            else // Retailer
+            else if (retailer != null && otherSupplier != null)
             {
-                // Current user is Retailer, other user is Supplier
-                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == currentUserId);
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == otherUserId);
-
-                if (retailer == null || supplier == null)
-                    throw new Exception("Retailer or Supplier not found");
-
-                supplierId = supplier.Id;
                 retailerId = retailer.Id;
+                supplierId = otherSupplier.Id;
+            }
+            else
+            {
+                // Fallback to role-based lookup if one is missing but roles suggest intent
+                if (currentUserRole == "Supplier" && supplier != null)
+                {
+                    supplierId = supplier.Id;
+                    if (otherRetailer != null) retailerId = otherRetailer.Id;
+                }
+                else if (currentUserRole == "Retailer" && retailer != null)
+                {
+                    retailerId = retailer.Id;
+                    if (otherSupplier != null) supplierId = otherSupplier.Id;
+                }
+            }
+
+            if (supplierId == 0 || retailerId == 0)
+            {
+                // Return null instead of throwing an exception to prevent application crashes
+                return null;
             }
 
             var conversation = await _context.Conversations

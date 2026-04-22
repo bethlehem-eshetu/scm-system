@@ -23,25 +23,37 @@ namespace SCM_System.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (User.IsInRole("Retailer"))
-            {
-                var rId = await GetRetailerIdAsync();
-                var pos = await _poService.GetPurchaseOrdersByRetailerAsync(rId);
-                return View("RetailerIndex", pos);
-            }
-            else if (User.IsInRole("Supplier"))
-            {
-                var sId = await GetSupplierIdAsync();
-                var pos = await _poService.GetPurchaseOrdersBySupplierAsync(sId);
-                return View("SupplierIndex", pos);
-            }
-            else if (User.IsInRole("WarehouseManager"))
+            if (User.IsInRole("Retailer")) return RedirectToAction(nameof(RetailerIndex));
+            if (User.IsInRole("Supplier")) return RedirectToAction(nameof(SupplierIndex));
+            if (User.IsInRole("WarehouseManager")) return RedirectToAction(nameof(SupplierIndex));
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        public async Task<IActionResult> RetailerIndex()
+        {
+            if (!User.IsInRole("Retailer")) return Forbid();
+            var rId = await GetRetailerIdAsync();
+            var pos = await _poService.GetPurchaseOrdersByRetailerAsync(rId);
+            return View("RetailerIndex", pos);
+        }
+
+        public async Task<IActionResult> SupplierIndex()
+        {
+            if (!User.IsInRole("Supplier") && !User.IsInRole("WarehouseManager")) return Forbid();
+            
+            if (User.IsInRole("WarehouseManager"))
             {
                 var wId = await GetWarehouseIdAsync();
                 var pos = await _poService.GetPurchaseOrdersByWarehouseAsync(wId);
                 return View("SupplierIndex", pos);
             }
-            return RedirectToAction("Index", "Home");
+            else
+            {
+                var sId = await GetSupplierIdAsync();
+                var pos = await _poService.GetPurchaseOrdersBySupplierAsync(sId);
+                return View("SupplierIndex", pos);
+            }
         }
 
         public async Task<IActionResult> Details(int id)

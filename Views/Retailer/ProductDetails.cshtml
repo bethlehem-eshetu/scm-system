@@ -38,7 +38,14 @@
                     <div>
                         <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-2">@Model.Category?.CategoryName</span>
                         <h2 class="fw-bold text-dark mb-1">@Model.ProductName</h2>
-                        <div class="text-muted">SKU: @(string.IsNullOrEmpty(Model.SKU) ? "N/A" : Model.SKU)</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-muted small">SKU: @(string.IsNullOrEmpty(Model.SKU) ? "N/A" : Model.SKU)</div>
+                            <div class="text-warning small d-flex align-items-center">
+                                <i class="fas fa-star me-1"></i>
+                                <span class="fw-bold">@ViewBag.AverageRating</span>
+                                <span class="text-muted ms-1">(@ViewBag.RatingCount reviews)</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="text-end">
                         <div class="h2 fw-bold text-primary mb-0">@Model.BasePrice.ToString("C")</div>
@@ -46,61 +53,123 @@
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <h6 class="fw-bold mb-2">Availability</h6>
-                    @{
-                        var availableStock = Model.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
-                    }
-                    @if (availableStock > 0)
-                    {
-                        <div class="d-flex align-items-center text-success">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <span>In Stock (@availableStock @Model.Unit available)</span>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded-3 bg-light bg-opacity-50">
+                            <h6 class="small fw-bold text-muted mb-1">Availability</h6>
+                            @{
+                                var availableStock = Model.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
+                            }
+                            @if (availableStock > 0)
+                            {
+                                <div class="fw-bold text-success">
+                                    <i class="fas fa-check-circle me-1"></i> In Stock (@availableStock @Model.Unit)
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="fw-bold text-danger">
+                                    <i class="fas fa-times-circle me-1"></i> Out of Stock
+                                </div>
+                            }
                         </div>
-                    }
-                    else
-                    {
-                        <div class="d-flex align-items-center text-danger">
-                            <i class="fas fa-times-circle me-2"></i>
-                            <span>Out of Stock</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded-3 bg-light bg-opacity-50">
+                            <h6 class="small fw-bold text-muted mb-1">Supplier Performance</h6>
+                            <div class="fw-bold text-dark">
+                                <i class="fas fa-handshake me-1 text-primary"></i> @ViewBag.DealsCompleted Deals Completed
+                            </div>
                         </div>
-                    }
+                    </div>
                 </div>
 
                 <div class="mb-4">
                     <h6 class="fw-bold mb-2">Description</h6>
-                    <p class="text-muted lh-base">
+                    <p class="text-muted lh-base mb-0">
                         @(string.IsNullOrEmpty(Model.Description) ? "No description available for this product." : Model.Description)
                     </p>
                 </div>
+
+                @if (Model.ShippingWeight.HasValue || !string.IsNullOrEmpty(Model.Brand) || (Model.AttributeValues != null && Model.AttributeValues.Any()))
+                {
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Technical Specifications</h6>
+                        <div class="glass-card bg-light bg-opacity-25 border-0 p-0 overflow-hidden">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tbody>
+                                    @if (!string.IsNullOrEmpty(Model.Brand))
+                                    {
+                                        <tr>
+                                            <td class="ps-3 py-2 text-muted small" style="width: 40%;">Brand</td>
+                                            <td class="pe-3 py-2 fw-bold small">@Model.Brand</td>
+                                        </tr>
+                                    }
+                                    @if (Model.ShippingWeight.HasValue)
+                                    {
+                                        <tr>
+                                            <td class="ps-3 py-2 text-muted small" style="width: 40%;">Shipping Weight</td>
+                                            <td class="pe-3 py-2 fw-bold small">@Model.ShippingWeight kg</td>
+                                        </tr>
+                                    }
+                                    @if (Model.ShippingLength.HasValue)
+                                    {
+                                        <tr>
+                                            <td class="ps-3 py-2 text-muted small" style="width: 40%;">Dimensions (L×W×H)</td>
+                                            <td class="pe-3 py-2 fw-bold small">@Model.ShippingLength × @Model.ShippingWidth × @Model.ShippingHeight cm</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.HSCode))
+                                    {
+                                        <tr>
+                                            <td class="ps-3 py-2 text-muted small" style="width: 40%;">HS Code</td>
+                                            <td class="pe-3 py-2 fw-bold small">@Model.HSCode</td>
+                                        </tr>
+                                    }
+                                    @if (Model.AttributeValues != null)
+                                    {
+                                        @foreach (var attr in Model.AttributeValues)
+                                        {
+                                            <tr>
+                                                <td class="ps-3 py-2 text-muted small" style="width: 40%;">@attr.AttributeDefinition?.AttributeName</td>
+                                                <td class="pe-3 py-2 fw-bold small">@attr.Value @attr.AttributeDefinition?.Unit</td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
 
                 <hr class="my-4 opacity-50">
 
                 <!-- Supplier Info -->
                 <div class="mb-4">
-                    <h6 class="fw-bold mb-3">Supplier Information</h6>
-                    <div class="d-flex align-items-center p-3 rounded-3 bg-light bg-opacity-50">
-                        <div class="avatar me-3 bg-primary text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                    <div class="d-flex align-items-center p-3 rounded-3 bg-white border shadow-sm">
+                        <div class="avatar me-3 bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                             <i class="fas fa-store"></i>
                         </div>
-                        <div>
+                        <div class="flex-grow-1">
                             <div class="fw-bold text-dark">@Model.Supplier?.CompanyName</div>
                             <div class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i> @Model.Supplier?.City, @Model.Supplier?.Country</div>
+                        </div>
+                        <div class="text-end">
+                            <a asp-controller="Message" asp-action="Conversation" asp-route-id="@Model.Supplier?.UserId" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <i class="fas fa-envelope me-1"></i> Contact
+                            </a>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex mt-4">
-                    <form asp-controller="Retailer" asp-action="AddToCart" method="post" class="d-inline">
+                    <form asp-controller="Retailer" asp-action="AddToCart" method="post" class="flex-grow-1">
                         <input type="hidden" name="productId" value="@Model.Id" />
                         <input type="hidden" name="quantity" value="1" />
-                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 @(availableStock <= 0 ? "disabled" : "")">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill px-5 py-3 fw-bold shadow-sm @(availableStock <= 0 ? "disabled" : "")">
                             <i class="fas fa-cart-plus me-2"></i> Order Now
                         </button>
                     </form>
-                    <button class="btn btn-outline-secondary rounded-pill px-4 py-2">
-                        <i class="fas fa-envelope me-2"></i> Contact Supplier
-                    </button>
                 </div>
             </div>
         </div>

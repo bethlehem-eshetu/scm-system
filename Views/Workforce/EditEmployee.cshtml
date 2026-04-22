@@ -1,0 +1,352 @@
+@model SCM_System.Models.ViewModels.EmployeeViewModel
+@{
+    ViewData["Title"] = "Update Employee Profile";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Employees">Employees</a></li>
+                    <li class="breadcrumb-item active">Edit Profile</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-primary mb-0"><i class="fas fa-user-edit me-2"></i>Edit Employee Profile</h2>
+        </div>
+        <a asp-action="Employees" class="btn btn-outline-secondary rounded-pill px-4 border shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Directory
+        </a>
+    </div>
+
+    <form asp-action="EditEmployee" method="post" id="employeeForm" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 border-0 shadow-sm mb-4"></div>
+
+        <div class="row g-4">
+            <!-- Left Column: Personal & Employment -->
+            <div class="col-lg-8">
+                <!-- Personal Information -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                                <i class="fas fa-id-card fa-lg"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0 text-dark">Personal Information</h5>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="FullName" class="form-label text-muted small fw-bold text-uppercase">Legal Full Name <span class="text-danger">*</span></label>
+                                <input asp-for="FullName" class="form-control rounded-3 p-3 bg-light border-0" required>
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Gender" class="form-label text-muted small fw-bold text-uppercase">Gender</label>
+                                <select asp-for="Gender" class="form-select rounded-3 p-3 bg-light border-0">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="DateOfBirth" class="form-label text-muted small fw-bold text-uppercase">Date of Birth</label>
+                                <input asp-for="DateOfBirth" type="date" class="form-control rounded-3 p-3 bg-light border-0">
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="NationalID" class="form-label text-muted small fw-bold text-uppercase">National ID / Fayda</label>
+                                <input asp-for="NationalID" class="form-control rounded-3 p-3 bg-light border-0" placeholder="ID Number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact & Security -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3 text-info">
+                                <i class="fas fa-user-shield fa-lg"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0 text-dark">System Access & Security</h5>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label text-muted small fw-bold text-uppercase">Login Email <span class="text-danger">*</span></label>
+                                <input asp-for="Email" class="form-control rounded-3 p-3 bg-light border-0" required>
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label text-muted small fw-bold text-uppercase">Contact Phone</label>
+                                <input asp-for="PhoneNumber" class="form-control rounded-3 p-3 bg-light border-0">
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label text-muted small fw-bold text-uppercase">Reset Password</label>
+                                <input asp-for="Password" type="password" class="form-control rounded-3 p-3 bg-light border-0" placeholder="••••••••">
+                                <p class="smaller text-muted mt-1 mb-0">Leave blank to keep existing password.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label text-muted small fw-bold text-uppercase">Confirm Reset</label>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control rounded-3 p-3 bg-light border-0" placeholder="••••••••">
+                            </div>
+                            <div class="col-12 mt-3">
+                                <div class="form-check form-switch bg-light p-3 rounded-3 border-0">
+                                    <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="ForcePasswordChange">
+                                    <label class="form-check-label fw-bold text-dark" asp-for="ForcePasswordChange">Require password change on next sign-in</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employment Details -->
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 p-2 rounded-3 me-3 text-warning">
+                                <i class="fas fa-briefcase fa-lg"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0 text-dark">Employment & Status</h5>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Department" class="form-label text-muted small fw-bold text-uppercase">Department</label>
+                                <input asp-for="Department" class="form-control rounded-3 p-3 bg-light border-0">
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="JoinDate" class="form-label text-muted small fw-bold text-uppercase">Hire Date</label>
+                                <input asp-for="JoinDate" type="date" class="form-control rounded-3 p-3 bg-light border-0">
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="EmploymentType" class="form-label text-muted small fw-bold text-uppercase">Type</label>
+                                <select asp-for="EmploymentType" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.EmploymentType>()" class="form-select rounded-3 p-3 bg-light border-0"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Shift" class="form-label text-muted small fw-bold text-uppercase">Assigned Shift</label>
+                                <select asp-for="Shift" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.ShiftType>()" class="form-select rounded-3 p-3 bg-light border-0"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Status" class="form-label text-muted small fw-bold text-uppercase">Current Status</label>
+                                <select asp-for="Status" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.EmployeeStatus>()" class="form-select rounded-3 p-3 bg-light border-0"></select>
+                            </div>
+
+                            <div class="col-md-12 py-2 border-bottom mt-3">
+                                <h6 class="fw-bold mb-0 small text-uppercase text-primary">Financial & Emergency</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="MonthlySalary" class="form-label text-muted small fw-bold text-uppercase">Monthly Salary (ETB)</label>
+                                <input asp-for="MonthlySalary" class="form-control rounded-3 p-3 bg-light border-0" type="number" step="0.01">
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="EmergencyContactName" class="form-label text-muted small fw-bold text-uppercase">Emergency Contact Name</label>
+                                <input asp-for="EmergencyContactName" class="form-control rounded-3 p-3 bg-light border-0">
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="EmergencyContactPhone" class="form-label text-muted small fw-bold text-uppercase">Emergency Contact Phone</label>
+                                <input asp-for="EmergencyContactPhone" class="form-control rounded-3 p-3 bg-light border-0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Operations & Docs -->
+            <div class="col-lg-4">
+                <!-- Role Selection -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-tasks me-2 text-primary"></i>Operational Role</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="Role" id="roleManager" value="WarehouseManager" @(Model.Role == "WarehouseManager" ? "checked" : "") required>
+                                <label class="btn btn-outline-primary w-100 py-3 rounded-4 d-flex flex-column align-items-center" for="roleManager">
+                                    <i class="fas fa-warehouse mb-2 fs-5"></i>
+                                    <span class="small fw-bold">MANAGER</span>
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="Role" id="roleAgent" value="DeliveryAgent" @(Model.Role == "DeliveryAgent" ? "checked" : "")>
+                                <label class="btn btn-outline-success w-100 py-3 rounded-4 d-flex flex-column align-items-center" for="roleAgent">
+                                    <i class="fas fa-truck mb-2 fs-5"></i>
+                                    <span class="small fw-bold">DRIVER</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warehouse Assignment -->
+                <div id="warehouseSection" class="card border-0 shadow-sm rounded-4 mb-4" style="display:none;">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-building-circle-check me-2 text-primary"></i>Management Config</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="mb-4">
+                            <label asp-for="WarehouseId" class="form-label text-muted small fw-bold text-uppercase">Assigned Warehouse</label>
+                            <select asp-for="WarehouseId" asp-items="ViewBag.Warehouses" class="form-select border-0 bg-light p-3 rounded-3 shadow-none">
+                                <option value="">-- No Assignment --</option>
+                            </select>
+                        </div>
+                        <label class="form-label text-muted small fw-bold text-uppercase mb-3">Admin Permissions</label>
+                        <div class="d-grid gap-2">
+                            <div class="form-check form-switch bg-light p-2 px-3 rounded-3 border-0">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="CanApproveTransfers">
+                                <label class="form-check-label smaller" asp-for="CanApproveTransfers">Approve Transfers</label>
+                            </div>
+                            <div class="form-check form-switch bg-light p-2 px-3 rounded-3 border-0">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="CanManageInventory">
+                                <label class="form-check-label smaller" asp-for="CanManageInventory">Manage Stock</label>
+                            </div>
+                            <div class="form-check form-switch bg-light p-2 px-3 rounded-3 border-0">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="CanViewReports">
+                                <label class="form-check-label smaller" asp-for="CanViewReports">View Reports</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Driver Configuration -->
+                <div id="deliverySection" class="card border-0 shadow-sm rounded-4 mb-4" style="display:none;">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-route me-2 text-success"></i>Logistics Intelligence</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="mb-3">
+                            <label asp-for="VehicleId" class="form-label text-muted small fw-bold text-uppercase">Primary Vehicle</label>
+                            <select asp-for="VehicleId" asp-items="ViewBag.Vehicles" class="form-select border-0 bg-light p-3 rounded-3 shadow-none">
+                                <option value="">-- No Vehicle Assigned --</option>
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-12">
+                                <label asp-for="DrivingLicenseNumber" class="form-label text-muted small fw-bold text-uppercase">License ID</label>
+                                <input asp-for="DrivingLicenseNumber" class="form-control p-2 bg-light border-0 rounded-3">
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="LicenseType" class="form-label text-muted small fw-bold text-uppercase text-xs">License Type</label>
+                                <select asp-for="LicenseType" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.LicenseType>()" class="form-select p-2 bg-light border-0 rounded-3 text-xs"></select>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="LicenseExpiryDate" class="form-label text-muted small fw-bold text-uppercase text-xs">Expiry Date</label>
+                                <input asp-for="LicenseExpiryDate" class="form-control p-2 bg-light border-0 rounded-3 text-xs" type="date">
+                            </div>
+                        </div>
+                        <hr class="my-4 opacity-10">
+                        <div class="mb-3">
+                            <label asp-for="DeliveryRegion" class="form-label text-muted small fw-bold text-uppercase">Coverage Region</label>
+                            <input asp-for="DeliveryRegion" class="form-control p-3 bg-light border-0 rounded-3" placeholder="e.g. Addis Ababa">
+                        </div>
+                        <div class="mb-0">
+                            <label asp-for="CityCoverage" class="form-label text-muted small fw-bold text-uppercase">Specific Cities</label>
+                            <input asp-for="CityCoverage" class="form-control p-3 bg-light border-0 rounded-3" placeholder="e.g. Bole, Yeka, Lideta">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Uploads -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-file-upload me-2 text-primary"></i>Verified Documents</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Profile Photo</label>
+                            @if (!string.IsNullOrEmpty(Model.ProfilePhotoPath))
+                            {
+                                <div class="mb-2">
+                                    <img src="@Model.ProfilePhotoPath" class="img-thumbnail rounded-circle" style="width: 80px; height: 80px; object-fit: cover;" alt="Profile" />
+                                </div>
+                            }
+                            <input name="photoDoc" class="form-control bg-light border-3 border-dashed border-primary border-opacity-10 py-4 text-center rounded-4" type="file" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">ID & Contracts</label>
+                            <div class="d-flex gap-2 mb-2">
+                                @if (!string.IsNullOrEmpty(Model.IdDocumentUrl))
+                                {
+                                    <a href="@Model.IdDocumentUrl" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
+                                        <i class="fas fa-id-card me-1"></i> View ID
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.ContractDocumentUrl))
+                                {
+                                    <a href="@Model.ContractDocumentUrl" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
+                                        <i class="fas fa-file-contract me-1"></i> View Contract
+                                    </a>
+                                }
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input name="idDoc" class="form-control form-control-sm bg-light border-0 rounded-3" type="file" title="National ID">
+                                </div>
+                                <div class="col-6">
+                                    <input name="contractDoc" class="form-control form-control-sm bg-light border-0 rounded-3" type="file" title="Employment Contract">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-muted small fw-bold text-uppercase mt-2">Medical Certificate</label>
+                                    <input name="medicalDoc" class="form-control form-control-sm bg-light border-0 rounded-3" type="file">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow-lg animated slideInUp">
+                        <i class="fas fa-sync-alt me-2"></i> Update Enterprise Profile
+                    </button>
+                    <p class="text-center smaller text-muted mt-3">Employee UID: <span class="fw-bold">@Model.EmployeeDisplayId</span></p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.05);
+        border: 1px solid rgba(13, 110, 253, 0.2) !important;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            function toggleDesignationFields() {
+                var selectedRole = $('input[name="Role"]:checked').val();
+                if (selectedRole === "WarehouseManager") {
+                    $("#warehouseSection").slideDown();
+                    $("#deliverySection").slideUp();
+                } else if (selectedRole === "DeliveryAgent") {
+                    $("#deliverySection").slideDown();
+                    $("#warehouseSection").slideUp();
+                } else {
+                    $("#warehouseSection").hide();
+                    $("#deliverySection").hide();
+                }
+            }
+
+            $('input[name="Role"]').on('change', function() {
+                if ($(this).val() === "WarehouseManager") $("#VehicleId").val("");
+                if ($(this).val() === "DeliveryAgent") $("#WarehouseId").val("");
+                toggleDesignationFields();
+            });
+            
+            toggleDesignationFields(); // Initial check
+        });
+    </script>
+}

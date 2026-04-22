@@ -16,6 +16,12 @@ namespace SCM_System.Models.Entities
         [StringLength(255)]
         public string DeliveryAddress { get; set; }
 
+        [StringLength(100)]
+        public string? DeliveryCity { get; set; }
+
+        [StringLength(100)]
+        public string? DeliveryRegion { get; set; }
+
         public DateTime? ExpectedDeliveryDate { get; set; }
 
         [Required]

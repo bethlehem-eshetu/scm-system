@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
 {
@@ -14,36 +15,97 @@ namespace SCM_System.Models.Entities
         [StringLength(50)]
         public string LicensePlate { get; set; }
 
+        [StringLength(50)]
+        public string? AssetCode { get; set; }
+
         public SCM_System.Models.Enums.VehicleType VehicleType { get; set; } = SCM_System.Models.Enums.VehicleType.Truck;
 
+        [StringLength(100)]
+        public string? Brand { get; set; }
+        [StringLength(100)]
+        public string? Model { get; set; }
+        public int? ManufactureYear { get; set; }
+        [StringLength(50)]
+        public string? Color { get; set; }
+
+        // Tech Specs
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Max Load Capacity must be greater than 0")]
         public decimal MaxLoadCapacity { get; set; }
+        public decimal? InternalVolumeM3 { get; set; }
+        [StringLength(20)]
+        public string? FuelType { get; set; }
+        public decimal? FuelTankCapacity { get; set; }
+        public bool TemperatureControlled { get; set; }
 
-        public decimal? VolumeCapacity { get; set; }
+        public int? WarehouseId { get; set; }
+        [ForeignKey("WarehouseId")]
+        public Warehouse? Warehouse { get; set; }
 
-        public bool HasTemperatureControl { get; set; }
+        // Operations
+        public SCM_System.Models.Enums.VehicleStatus Status { get; set; } = SCM_System.Models.Enums.VehicleStatus.Available;
+        public decimal? Mileage { get; set; }
+        public decimal? CurrentMileage { get; set; }
+        public decimal? FuelEfficiency { get; set; }
 
-        [StringLength(50)]
-        public string? RegistrationNumber { get; set; }
-
-        [StringLength(50)]
-        public string? InsuranceStatus { get; set; } // Active, Expired
-
+        // Maintenance
+        public DateTime? LastServiceDate { get; set; }
+        public DateTime? NextServiceDueDate { get; set; }
+        public DateTime? TireChangeDue { get; set; }
         public DateTime? InsuranceExpiryDate { get; set; }
+        public DateTime? RegistrationExpiryDate { get; set; }
+        
+        // Documents & Compliance
+        public string? PhotoPath { get; set; }
+        public string? RegistrationCertificateUrl { get; set; }
+        public string? InsuranceCertificateUrl { get; set; }
+        public string? VehiclePhotosUrls { get; set; }
 
         [StringLength(100)]
-        public string? RoadworthinessStatus { get; set; }
+        public string? InsuranceProvider { get; set; }
+        [StringLength(50)]
+        public string? FuelCardNumber { get; set; }
 
-        public DateTime? LastMaintenanceDate { get; set; }
+        public decimal? TireChangeDueMileage { get; set; }
+        public int ServiceIntervalMonths { get; set; } = 6;
+        public string? AccidentHistoryNote { get; set; }
+        public string? DriverEligibilityType { get; set; } // Class A, B, Heavy, etc.
 
-        public SCM_System.Models.Enums.VehicleStatus Status { get; set; } = SCM_System.Models.Enums.VehicleStatus.Available;
+        // Finance
+        public DateTime? PurchaseDate { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? PurchaseCost { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? CurrentEstimatedValue { get; set; }
 
-        public DateTime? UpdatedAt { get; set; }
+        // Tracking
+        public bool GPSInstalled { get; set; }
 
+        // Audit
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public string? CreatedBy { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string? UpdatedBy { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
 
         // Navigation
-        public ICollection<SupplierEmployee> DeliveryAgents { get; set; }
+        public ICollection<VehicleAssignment> Assignments { get; set; } = new List<VehicleAssignment>();
+
+        public int? PrimaryDriverId { get; set; }
+        [ForeignKey("PrimaryDriverId")]
+        public SupplierEmployee? PrimaryDriver { get; set; }
+
+        // Navigation
+        public ICollection<SupplierEmployee> DeliveryAgents { get; set; } = new List<SupplierEmployee>();
+
+        // History & Tracking
+        public ICollection<VehicleDriverHistory> DriverHistories { get; set; } = new List<VehicleDriverHistory>();
+        public ICollection<VehicleDocument> Documents { get; set; } = new List<VehicleDocument>();
+        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
+        public ICollection<DispatchTask> AssetDispatches { get; set; } = new List<DispatchTask>();
+        public ICollection<IncidentReport> AssetIncidents { get; set; } = new List<IncidentReport>();
+        public ICollection<GPSLog> GPSLogs { get; set; } = new List<GPSLog>();
     }
 }

@@ -178,6 +178,21 @@ namespace SCM_System.Controllers
 
             // Update PO status
             po.Status = status;
+
+            // Reset Vehicle status to Available when delivery is complete
+            if (status == "Delivered" || status == "Completed")
+            {
+                if (po.VehicleId.HasValue)
+                {
+                    var vehicle = await _context.Vehicles.FindAsync(po.VehicleId.Value);
+                    if (vehicle != null)
+                    {
+                        vehicle.Status = SCM_System.Models.Enums.VehicleStatus.Available;
+                        vehicle.UpdatedAt = DateTime.Now;
+                    }
+                }
+            }
+            
             await _context.SaveChangesAsync();
 
             // SYNC ORDER STATUS FOR IN TRANSIT

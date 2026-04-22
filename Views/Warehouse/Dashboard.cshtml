@@ -11,19 +11,27 @@
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Warehouse Operational Hub</h2>
-            <p class="text-muted mb-0"><i class="fas fa-map-marker-alt me-2 text-primary"></i> @(warehouse?.Name ?? "Primary Facility") | @(warehouse?.City), @(warehouse?.Region)</p>
+            <h2 class="fw-bold text-dark mb-1">Operational Hub: @(warehouse?.Name ?? "Facility")</h2>
+            <div class="d-flex align-items-center gap-3">
+                <p class="text-muted mb-0"><i class="fas fa-map-marker-alt me-2 text-primary"></i> @(warehouse?.City), @(warehouse?.Region)</p>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill border py-2 px-3">
+                    <i class="fas fa-barcode me-1"></i> Hub Code: @warehouse?.WarehouseCode
+                </span>
+            </div>
         </div>
         <div class="d-flex gap-2">
+            @if (manager?.HubAccesses?.Count > 1)
+            {
+                <a asp-action="Dashboard" asp-route-warehouseId="" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-exchange-alt me-2"></i> Switch Hub
+                </a>
+            }
             <div class="bg-white border rounded-pill px-3 py-2 shadow-sm d-flex align-items-center">
                 <div class="avatar-xs bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
                     <i class="fas fa-user-shield" style="font-size: 0.7rem;"></i>
                 </div>
                 <span class="small fw-bold text-dark">@manager?.User?.FullName</span>
             </div>
-            <button class="btn btn-primary rounded-pill px-4 shadow-sm">
-                <i class="fas fa-plus me-2"></i> New Stock In
-            </button>
         </div>
     </div>
 
@@ -36,10 +44,10 @@
                         <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-3 p-3">
                             <i class="fas fa-clipboard-list fs-4"></i>
                         </div>
-                        <span class="badge bg-light text-primary border rounded-pill">Total Assigned</span>
+                        <span class="badge bg-light text-primary border rounded-pill">Hub Load</span>
                     </div>
                     <h2 class="fw-bold mb-1">@ViewBag.TotalOrders</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Active Purchase Orders</p>
+                    <p class="text-muted smaller mb-0 fw-bold">Assigned Purchase Orders</p>
                 </div>
             </div>
         </div>
@@ -50,10 +58,10 @@
                         <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-3 p-3">
                             <i class="fas fa-hourglass-half fs-4"></i>
                         </div>
-                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">Awaiting Prep</span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">Picking Depth</span>
                     </div>
                     <h2 class="fw-bold mb-1">@ViewBag.PendingPrep</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Needs Picking/Packing</p>
+                    <p class="text-muted smaller mb-0 fw-bold">Queue for Prep</p>
                 </div>
             </div>
         </div>
@@ -64,10 +72,10 @@
                         <div class="stat-icon bg-success bg-opacity-10 text-success rounded-3 p-3">
                             <i class="fas fa-box-check fs-4"></i>
                         </div>
-                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Ready for Pickup</span>
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Staging Area</span>
                     </div>
                     <h2 class="fw-bold mb-1">@ViewBag.ReadyForPickup</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Awaiting Courier</p>
+                    <p class="text-muted smaller mb-0 fw-bold">Packed & Awaiting Dispatch</p>
                 </div>
             </div>
         </div>
@@ -78,10 +86,10 @@
                         <div class="stat-icon bg-info bg-opacity-10 text-info rounded-3 p-3">
                             <i class="fas fa-truck-moving fs-4"></i>
                         </div>
-                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill">In Logistics</span>
+                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill">Outbound</span>
                     </div>
                     <h2 class="fw-bold mb-1">@ViewBag.InProgress</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">In Transit / Delivering</p>
+                    <p class="text-muted smaller mb-0 fw-bold">En Route to Retailer</p>
                 </div>
             </div>
         </div>
@@ -92,13 +100,13 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Assigned Orders Worklist</h5>
+                    <h5 class="fw-bold mb-0">Hub Worklist & SLA Tracking</h5>
                     <div class="d-flex gap-2">
-                        <div class="input-group input-group-sm" style="width: 250px;">
+                        <div class="input-group input-group-sm" style="width: 200px;">
                             <span class="input-group-text bg-light border-0"><i class="fas fa-search"></i></span>
-                            <input type="text" class="form-control bg-light border-0" placeholder="Search PO # or Retailer...">
+                            <input type="text" class="form-control bg-light border-0" placeholder="PO # or Retailer...">
                         </div>
-                        <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-primary rounded-pill px-3">View Full List</a>
+                        <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-primary rounded-pill px-3">Full List</a>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -106,27 +114,26 @@
                         <table class="table table-hover align-middle mb-0 border-0">
                             <thead class="bg-light text-muted fw-bold" style="font-size: 0.75rem;">
                                 <tr>
-                                    <th class="ps-4 py-3">PO NUMBER</th>
-                                    <th>RETAILER</th>
-                                    <th>LOCATION</th>
+                                    <th class="ps-4 py-3">PO DETAILS</th>
                                     <th>STATUS</th>
-                                    <th>DELIVERY DATE</th>
+                                    <th>SLA VELOCITY</th>
+                                    <th>RETAILER</th>
                                     <th class="text-end pe-4">ACTION</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var po in Model.OrderByDescending(p => p.CreatedAt).Take(8))
                                 {
+                                    var timeOpen = DateTime.Now - po.CreatedAt;
+                                    var minutesOpen = timeOpen.TotalMinutes;
+                                    var slaClass = minutesOpen > 120 ? "danger" : (minutesOpen > 30 ? "warning" : "success");
+                                    var slaLabel = minutesOpen < 60 ? $"{(int)minutesOpen}m" : $"{(timeOpen.TotalHours):F1}h";
+                                    
                                     <tr>
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">#@po.PONumber</div>
-                                            <div class="text-muted extra-small">@po.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                            <div class="text-muted extra-small">Received @po.CreatedAt.ToString("MMM dd, HH:mm")</div>
                                         </td>
-                                        <td>
-                                            <div class="fw-bold">@po.Retailer?.BusinessName</div>
-                                            <div class="text-muted extra-small">@po.PurchaseOrderItems.Count Items</div>
-                                        </td>
-                                        <td><div class="text-muted small">@po.Order?.DeliveryAddress?.Split(',')[0]</div></td>
                                         <td>
                                             @{
                                                 var (bg, txt) = po.Status switch {
@@ -141,7 +148,15 @@
                                             }
                                             <span class="badge @bg @txt rounded-pill px-3">@po.Status</span>
                                         </td>
-                                        <td><div class="small fw-bold">@po.Order?.ExpectedDeliveryDate?.ToString("MMM dd")</div></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-@slaClass me-2" style="width: 8px; height: 8px;" title="SLA Intensity"></div>
+                                                <div class="small fw-bold @(slaClass == "danger" ? "text-danger" : "")">@slaLabel</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold small">@po.Retailer?.BusinessName</div>
+                                        </td>
                                         <td class="text-end pe-4">
                                             <div class="d-flex justify-content-end gap-1">
                                                 <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-light rounded-circle shadow-sm" title="View Details">
@@ -172,85 +187,64 @@
         <!-- 3️⃣ Stock & Fleet Summary -->
         <div class="col-lg-4">
             <!-- Reserved Stock Summary -->
-            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
-                <div class="card-header bg-white border-0 py-4 px-4 border-start border-4 border-primary">
-                    <h6 class="fw-bold mb-0">Reserved Stock Summary</h6>
-                </div>
-                <div class="card-body p-4 pt-0">
-                    <div class="d-flex align-items-center justify-content-between mb-3 pt-3">
-                        <div class="text-muted small">Total Committed Items</div>
-                        <div class="fw-bold fs-5 text-primary">@ViewBag.TotalReserved</div>
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border-top border-4 border-primary">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Inventory Capacity</h6>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="text-muted small">Hub Utilization</div>
+                        <div class="fw-bold fs-5 text-primary">
+                            @{
+                                double capUsed = warehouse?.MaxCapacity > 0 ? (double)ViewBag.TotalOnHand / warehouse.MaxCapacity * 100 : 0;
+                            }
+                            @capUsed.ToString("F0")%
+                        </div>
                     </div>
                     <div class="progress mb-4" style="height: 10px; border-radius: 5px; background: rgba(0,0,0,0.05);">
-                        @{
-                            double reserveRatio = ViewBag.TotalOnHand > 0 ? (double)ViewBag.TotalReserved / ViewBag.TotalOnHand * 100 : 0;
-                        }
-                        <div class="progress-bar bg-primary" style="width: @(reserveRatio)%;"></div>
+                        <div class="progress-bar @(capUsed > 85 ? "bg-danger" : "bg-primary")" style="width: @capUsed%;"></div>
                     </div>
                     <div class="row text-center g-2 mb-4">
                         <div class="col-6 border-end">
                             <h4 class="fw-bold mb-0">@ViewBag.TotalOnHand</h4>
-                            <span class="text-muted smaller">On Hand</span>
+                            <span class="text-muted smaller">Units On Hand</span>
                         </div>
                         <div class="col-6">
                             <h4 class="fw-bold mb-0 @(ViewBag.LowStockCount > 0 ? "text-danger" : "text-success")">@ViewBag.LowStockCount</h4>
-                            <span class="text-muted smaller">Low Stock Alerts</span>
+                            <span class="text-muted smaller">Replenish Tags</span>
                         </div>
                     </div>
                     <a asp-action="Inventory" class="btn btn-outline-primary w-100 rounded-pill fw-bold small">Manage Inventory</a>
                 </div>
             </div>
 
-            <!-- Quick Stats: Fleet & Staff -->
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-body p-4">
-                    <h6 class="fw-bold mb-4">Logistics Resources</h6>
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-truck fa-sm"></i>
-                                </div>
-                                <span class="small fw-bold">Available Fleet</span>
-                            </div>
-                            <span class="badge bg-light text-dark rounded-pill border">@ViewBag.AvailableVehicles Units</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-user-tie fa-sm"></i>
-                                </div>
-                                <span class="small fw-bold">Active Agents</span>
-                            </div>
-                            <span class="badge bg-light text-dark rounded-pill border">@ViewBag.ActiveAgents Online</span>
-                        </div>
-                    </div>
-                    <div class="p-3 bg-light rounded-4 d-flex align-items-center">
-                        <div class="me-3 fs-3 text-primary opacity-50">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <div class="smaller text-muted fw-normal">
-                            All resources are currently synced with the supplier's main pool.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Notifications / Recent Updates -->
+            <!-- Hub Operational Log (Audit-Driven) -->
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-dark text-white border-0 py-3 px-4">
-                    <h6 class="fw-bold mb-0"><i class="fas fa-bell me-2"></i> Recent Activity</h6>
+                <div class="card-header bg-dark text-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-history me-2"></i> Hub Activity Log</h6>
+                    <span class="badge bg-primary">Live</span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @foreach (var alert in (ViewBag.RecentAlerts as List<SCM_System.Models.Entities.PurchaseOrder>))
+                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                        @if (ViewBag.RecentLogs != null && ((IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs).Any())
                         {
-                            <div class="list-group-item p-3 border-0 border-bottom">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span class="fw-bold small">PO #@alert.PONumber</span>
-                                    <span class="text-muted extra-small">@alert.UpdatedAt.ToString("HH:mm")</span>
+                            @foreach (var log in (IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs)
+                            {
+                                <div class="list-group-item p-3 border-0 border-bottom">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-bold small text-primary">@log.ActionType</span>
+                                        <span class="text-muted extra-small">@log.PerformedAtUtc.ToLocalTime().ToString("HH:mm")</span>
+                                    </div>
+                                    <p class="text-muted mb-0 extra-small">@log.Notes</p>
+                                    <div class="mt-1 extra-small text-info">
+                                        <i class="fas fa-check-double me-1"></i> Hub Verified
+                                    </div>
                                 </div>
-                                <p class="text-muted mb-0 extra-small">Status transitioned to <strong>@alert.Status</strong> for @alert.Retailer?.BusinessName</p>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-clipboard-list fa-2x mb-2 opacity-25"></i>
+                                <p class="small">No hub activity recorded yet.</p>
                             </div>
                         }
                     </div>
@@ -258,6 +252,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <style>

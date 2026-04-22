@@ -80,9 +80,22 @@
                                                 <option value="">-- Choose Agent --</option>
                                                 @foreach (var agent in agents)
                                                 {
-                                                    <option value="@agent.Id">@(agent.User?.FullName ?? "Staff") (@agent.Phone)</option>
+                                                    var suggestion = ((List<dynamic>)ViewBag.SuggestedDrivers)?.FirstOrDefault(s => s.DriverId == agent.Id);
+                                                    <option value="@agent.Id" data-vehicle-id="@agent.VehicleId">
+                                                        @(agent.User?.FullName ?? "Staff") (@agent.Phone)
+                                                        @if (suggestion != null && suggestion.Rank <= 3)
+                                                        {
+                                                            @: [AI RANK #@suggestion.Rank]
+                                                        }
+                                                    </option>
                                                 }
                                             </select>
+                                            @if (ViewBag.SuggestedDrivers != null && ((List<dynamic>)ViewBag.SuggestedDrivers).Any())
+                                            {
+                                                <div class="mt-1 extra-small text-primary">
+                                                    <i class="fas fa-magic me-1"></i> Smart ranking active based on zone & proximity.
+                                                </div>
+                                            }
                                         </div>
 
                                         <div class="mb-4">
@@ -91,7 +104,14 @@
                                                 <option value="">-- Choose Vehicle --</option>
                                                 @foreach (var vehicle in vehicles)
                                                 {
-                                                    <option value="@vehicle.Id">@vehicle.LicensePlate (@vehicle.VehicleType)</option>
+                                                    var suggestion = ((List<dynamic>)ViewBag.SuggestedVehicles)?.FirstOrDefault(s => s.VehicleId == vehicle.Id);
+                                                    <option value="@vehicle.Id">
+                                                        @vehicle.LicensePlate (@vehicle.VehicleType)
+                                                        @if (suggestion != null && suggestion.Rank <= 3)
+                                                        {
+                                                            @: (AI Rank #@suggestion.Rank)
+                                                        }
+                                                    </option>
                                                 }
                                             </select>
                                         </div>
@@ -110,6 +130,58 @@
     }
 </div>
 
-<style>
-    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-</style>
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('select[name="agentId"]').on('change', function() {
+                const employeeId = $(this).val();
+                const form = $(this).closest('form');
+                const vehicleSelect = form.find('select[name="vehicleId"]');
+                const infoDiv = form.find('.vehicle-info-container');
+                
+                if (!employeeId) {
+                    infoDiv.fadeOut();
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Supplier/GetDriverDetails',
+                    data: { employeeId: employeeId },
+                    success: function(data) {
+                        if (data.vehicleId) {
+                            vehicleSelect.val(data.vehicleId).trigger('change');
+                            
+                            infoDiv.html(`
+                                <div class="alert alert-info border-0 shadow-sm rounded-4 mt-3 mb-0 animated fadeIn">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                                            <i class="fas fa-truck fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <div class="small fw-bold text-dark">PRIMARY ASSIGNED VEHICLE</div>
+                                            <div class="smaller text-muted">${data.licensePlate} (${data.vehicleType})</div>
+                                            <div class="smaller text-muted">Load Capacity: <strong>${data.maxLoadCapacity} KG</strong></div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top border-info border-opacity-10 d-flex justify-content-between smaller text-muted">
+                                        <span>License: ${data.licenseNumber || 'Verified'}</span>
+                                        <span class="text-xs">Expiry: ${data.licenseExpiry || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            `).fadeIn();
+                        } else {
+                            infoDiv.html(`
+                                <div class="alert alert-warning border-0 rounded-4 mt-3 mb-0 smaller">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> Driver has no primary vehicle assigned.
+                                </div>
+                            `).fadeIn();
+                        }
+                    }
+                });
+            });
+
+            // Initial container for info divs if not present
+            $('select[name="vehicleId"]').after('<div class="vehicle-info-container" style="display:none;"></div>');
+        });
+    </script>
+}

@@ -59,6 +59,7 @@ builder.Services.AddScoped<SCM_System.Services.IOrderService, SCM_System.Service
 builder.Services.AddScoped<SCM_System.Services.ICartService, SCM_System.Services.CartService>();
 builder.Services.AddScoped<SCM_System.Services.ISupplierService, SCM_System.Services.SupplierService>();
 builder.Services.AddScoped<SCM_System.Services.IFaydaService, SCM_System.Services.FaydaService>();
+builder.Services.AddScoped<SCM_System.Services.IAuditLogService, SCM_System.Services.AuditLogService>();
 
 // Add Email Service
 builder.Services.Configure<SCM_System.Models.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));

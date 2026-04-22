@@ -15,7 +15,25 @@ namespace SCM_System.Data
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Retailer> Retailers { get; set; }
         public DbSet<SupplierEmployee> SupplierEmployees { get; set; }
+        public DbSet<DriverProfile> DriverProfiles { get; set; }
+        public DbSet<WarehouseProfile> WarehouseProfiles { get; set; }
+        public DbSet<WarehouseAssignment> WarehouseAssignments { get; set; }
+        public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
         public DbSet<Penalty> Penalties { get; set; }
+
+        // Logistics 2.0 Compliance & History
+        public DbSet<VehicleDocument> VehicleDocuments { get; set; }
+        public DbSet<EmployeeDocument> EmployeeDocuments { get; set; }
+        public DbSet<WarehouseManagerHistory> WarehouseManagerHistories { get; set; }
+        public DbSet<VehicleDriverHistory> VehicleDriverHistories { get; set; }
+        public DbSet<EmployeeWarehouseAccess> EmployeeWarehouseAccesses { get; set; }
+
+        // Logistics 2.0 Operational Intelligence
+        public DbSet<DispatchTask> DispatchTasks { get; set; }
+        public DbSet<GPSLog> GPSLogs { get; set; }
+        public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
+        public DbSet<IncidentReport> IncidentReports { get; set; }
+        public DbSet<InventoryTransfer> InventoryTransfers { get; set; }
         
         // Identity Verification Mock
         public DbSet<FaydaRegistry> FaydaRegistries { get; set; }
@@ -107,12 +125,50 @@ namespace SCM_System.Data
                 .HasForeignKey(se => se.WarehouseId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // SupplierEmployee - Vehicle (many-to-one)
+            // SupplierEmployee - Vehicle (many-to-one) (Maintaining for backward compatibility, assignments handle actual logic)
             modelBuilder.Entity<SupplierEmployee>()
                 .HasOne(se => se.Vehicle)
                 .WithMany(v => v.DeliveryAgents)
                 .HasForeignKey(se => se.VehicleId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Profiles Config
+            modelBuilder.Entity<SupplierEmployee>()
+                .HasOne(se => se.DriverProfile)
+                .WithOne(dp => dp.SupplierEmployee)
+                .HasForeignKey<DriverProfile>(dp => dp.SupplierEmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SupplierEmployee>()
+                .HasOne(se => se.WarehouseProfile)
+                .WithOne(wp => wp.SupplierEmployee)
+                .HasForeignKey<WarehouseProfile>(wp => wp.SupplierEmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Assignments Config
+            modelBuilder.Entity<WarehouseAssignment>()
+                .HasOne(wa => wa.Warehouse)
+                .WithMany(w => w.Assignments)
+                .HasForeignKey(wa => wa.WarehouseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WarehouseAssignment>()
+                .HasOne(wa => wa.SupplierEmployee)
+                .WithMany(se => se.WarehouseAssignments)
+                .HasForeignKey(wa => wa.SupplierEmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<VehicleAssignment>()
+                .HasOne(va => va.Vehicle)
+                .WithMany(v => v.Assignments)
+                .HasForeignKey(va => va.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<VehicleAssignment>()
+                .HasOne(va => va.SupplierEmployee)
+                .WithMany(se => se.VehicleAssignments)
+                .HasForeignKey(va => va.SupplierEmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // User - Penalty (one-to-many)
             modelBuilder.Entity<Penalty>()
@@ -310,18 +366,11 @@ namespace SCM_System.Data
 
             // ========== SYSTEM CONFIGURATIONS ==========
 
-            // AuditLog - User (target user)
+            // AuditLog Configuration
             modelBuilder.Entity<AuditLog>()
-                .HasOne(al => al.User)
+                .HasOne(al => al.PerformedByUser)
                 .WithMany()
-                .HasForeignKey(al => al.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // AuditLog - PerformedByAdmin (the admin)
-            modelBuilder.Entity<AuditLog>()
-                .HasOne(al => al.PerformedByAdmin)
-                .WithMany()
-                .HasForeignKey(al => al.PerformedBy)
+                .HasForeignKey(al => al.PerformedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Notification - User (many-to-one)
@@ -500,6 +549,83 @@ namespace SCM_System.Data
             modelBuilder.Entity<Delivery>()
                 .Property(d => d.DeliveryStatus)
                 .HasDefaultValue("Preparing");
+
+            // ========== LOGISTICS 2.0 GLOBAL FILTERS ==========
+            modelBuilder.Entity<Warehouse>().HasQueryFilter(w => !w.IsDeleted);
+            modelBuilder.Entity<Vehicle>().HasQueryFilter(v => !v.IsDeleted);
+            modelBuilder.Entity<SupplierEmployee>().HasQueryFilter(se => !se.IsDeleted);
+            modelBuilder.Entity<VehicleDocument>().HasQueryFilter(vd => vd.IsActive);
+            modelBuilder.Entity<EmployeeDocument>().HasQueryFilter(ed => ed.IsActive);
+
+            // ========== LOGISTICS 2.0 RELATIONSHIPS ==========
+
+            // Warehouse - Manager History
+            modelBuilder.Entity<WarehouseManagerHistory>()
+                .HasOne(wmh => wmh.Warehouse)
+                .WithMany(w => w.ManagerHistories)
+                .HasForeignKey(wmh => wmh.WarehouseId);
+
+            // Vehicle - Driver History
+            modelBuilder.Entity<VehicleDriverHistory>()
+                .HasOne(vdh => vdh.Vehicle)
+                .WithMany(v => v.DriverHistories)
+                .HasForeignKey(vdh => vdh.VehicleId);
+
+            // Employee Warehouse Access
+            modelBuilder.Entity<EmployeeWarehouseAccess>()
+                .HasOne(ewa => ewa.SupplierEmployee)
+                .WithMany(se => se.HubAccesses)
+                .HasForeignKey(ewa => ewa.SupplierEmployeeId);
+
+            modelBuilder.Entity<EmployeeWarehouseAccess>()
+                .HasOne(ewa => ewa.Warehouse)
+                .WithMany(w => w.StaffAccesses)
+                .HasForeignKey(ewa => ewa.WarehouseId);
+
+            // Dispatch Tasks
+            modelBuilder.Entity<DispatchTask>()
+                .HasOne(dt => dt.Order)
+                .WithMany()
+                .HasForeignKey(dt => dt.OrderId);
+
+            // Inventory Transfers
+            modelBuilder.Entity<InventoryTransfer>()
+                .HasOne(it => it.SourceWarehouse)
+                .WithMany(w => w.OutgoingTransfers)
+                .HasForeignKey(it => it.SourceWarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryTransfer>()
+                .HasOne(it => it.DestinationWarehouse)
+                .WithMany(w => w.IncomingTransfers)
+                .HasForeignKey(it => it.DestinationWarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryTransfer>()
+                .HasOne(it => it.RequestedBy)
+                .WithMany(se => se.RequestedTransfers)
+                .HasForeignKey(it => it.RequestedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryTransfer>()
+                .HasOne(it => it.ApprovedBy)
+                .WithMany(se => se.ApprovedTransfers)
+                .HasForeignKey(it => it.ApprovedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Incident Reports
+            modelBuilder.Entity<IncidentReport>()
+                .HasOne(ir => ir.ReportedBy)
+                .WithMany(se => se.ReportedIncidents)
+                .HasForeignKey(ir => ir.ReportedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Dispatch Tasks
+            modelBuilder.Entity<DispatchTask>()
+                .HasOne(dt => dt.DeliveryAgent)
+                .WithMany(se => se.AssignedTasks)
+                .HasForeignKey(dt => dt.DeliveryAgentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

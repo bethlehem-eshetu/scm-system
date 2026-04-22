@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Transactions";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-exchange-alt me-2 text-primary"></i> All Transactions</h2>
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table align-middle text-nowrap">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Entities</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+                            <td>@(string.IsNullOrEmpty(t.ChapaTransactionId) ? "N/A" : t.ChapaTransactionId)</td>
+                            <td>@t.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td>@t.PaymentType</td>
+                            <td>
+                                @if(t.Retailer != null) { <span>Retailer: @t.Retailer.BusinessName<br/></span> }
+                                @if(t.Supplier != null) { <span>Supplier: @t.Supplier.CompanyName</span> }
+                            </td>
+                            <td><strong>@t.CommissionAmount.ToString("C")</strong></td>
+                            <td>
+                                <span class="badge bg-@(t.Status == "Paid" ? "success" : t.Status == "Pending" ? "warning" : "danger")">
+                                    @t.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,132 @@
+@model IEnumerable<SCM_System.Models.Entities.InventoryTransfer>
+@{
+    ViewData["Title"] = "Inventory Transfers";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fas fa-exchange-alt me-2"></i>Inventory Transfers</h2>
+            <p class="text-muted mb-0">Inter-hub stock movement and fulfillment balancing</p>
+        </div>
+        <a asp-action="CreateTransfer" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+            <i class="fas fa-plus me-2"></i>Request Stock Movement
+        </a>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-2">
+            <ul class="nav nav-pills nav-fill gap-2">
+                <li class="nav-item">
+                    <a class="nav-link active rounded-pill fw-bold" href="#">All Movements</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill fw-bold text-muted" href="#">Pending Approval</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill fw-bold text-muted" href="#">In Transit</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill fw-bold text-muted" href="#">Completed</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Transfer List -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase fw-bold">
+                    <tr>
+                        <th class="px-4">ID & Date</th>
+                        <th>Product Details</th>
+                        <th>Movement Route</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th class="text-end px-4">Management</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="px-4">
+                                    <div class="fw-bold text-primary">#TRF-@item.Id.ToString("D4")</div>
+                                    <div class="small text-muted">@item.RequestedDate?.ToString("MMM dd, yyyy")</div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@item.Product?.ProductName</div>
+                                    <div class="small text-muted">SKU: @item.Product?.SKU</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="text-start">
+                                            <span class="badge bg-light text-dark border d-block mb-1">@item.SourceWarehouse?.Name</span>
+                                            <span class="small text-muted"><i class="fas fa-arrow-down me-1"></i> FROM</span>
+                                        </div>
+                                        <i class="fas fa-long-arrow-alt-right mx-3 text-muted fs-4"></i>
+                                        <div class="text-start">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border d-block mb-1">@item.DestinationWarehouse?.Name</span>
+                                            <span class="small text-muted"><i class="fas fa-arrow-up me-1"></i> TO</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="h5 fw-bold mb-0">@item.Quantity</div>
+                                    <div class="small text-muted">Units</div>
+                                </td>
+                                <td>
+                                    @{
+                                        var statusClass = item.Status switch
+                                        {
+                                            SCM_System.Models.Enums.TransferStatus.Requested => "bg-warning",
+                                            SCM_System.Models.Enums.TransferStatus.Approved => "bg-info",
+                                            SCM_System.Models.Enums.TransferStatus.InTransit => "bg-primary",
+                                            SCM_System.Models.Enums.TransferStatus.Received => "bg-success",
+                                            SCM_System.Models.Enums.TransferStatus.Cancelled => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                    }
+                                    <span class="badge @statusClass rounded-pill px-3 py-2">@item.Status</span>
+                                </td>
+                                <td class="text-end px-4">
+                                    @if (item.Status == SCM_System.Models.Enums.TransferStatus.Requested)
+                                    {
+                                        <form asp-action="ApproveTransfer" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                                                <i class="fas fa-check me-1"></i> Approve
+                                            </button>
+                                        </form>
+                                    }
+                                    <a href="#" class="btn btn-sm btn-outline-secondary rounded-pill px-3 ms-1">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <img src="/images/no-data.svg" alt="No data" class="mb-3 opacity-25" style="width: 120px; filter: grayscale(1);">
+                                <h5 class="text-muted">No stock transfers found</h5>
+                                <p class="text-muted small">Hub balance is currently optimized. Check back later.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
+    .table-hover tbody tr:hover { background-color: rgba(13, 110, 253, 0.02); }
+</style>

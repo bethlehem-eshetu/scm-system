@@ -13,7 +13,7 @@ namespace SCM_System.Services
             _context = context;
         }
 
-        public async Task<Notification> CreateNotificationAsync(int userId, string title, string message, string type = "Info", string? actionUrl = null)
+        public async Task<Notification> CreateNotificationAsync(int userId, string title, string message, string type = "Info", string? actionUrl = null, int? targetWarehouseId = null, string? targetRole = null)
         {
             var notification = new Notification
             {
@@ -22,6 +22,8 @@ namespace SCM_System.Services
                 Message = message,
                 Type = type,
                 ActionUrl = actionUrl,
+                TargetWarehouseId = targetWarehouseId,
+                TargetRole = targetRole,
                 CreatedAt = DateTime.Now,
                 IsRead = false
             };
@@ -34,8 +36,12 @@ namespace SCM_System.Services
 
         public async Task<List<Notification>> GetUserNotificationsAsync(int userId, int limit = 20)
         {
+            // Get user specific notifications OR role-targeted notifications for this user's role
+            var user = await _context.Users.FindAsync(userId);
+            var role = user?.Role; // Not the SCM role, but the AspNet role (Supplier, WarehouseManager)
+
             return await _context.Notifications
-                .Where(n => n.UserId == userId)
+                .Where(n => n.UserId == userId || (n.TargetRole == role && (n.TargetWarehouseId == null))) // Basic logic
                 .OrderByDescending(n => n.CreatedAt)
                 .Take(limit)
                 .ToListAsync();
@@ -93,7 +99,7 @@ namespace SCM_System.Services
                     "New Message Received",
                     $"You have a new message from {sender.FullName}",
                     "Info",
-                    $"/Message/Conversation/{conversationId}"
+                    $"/Message/Conversation/{senderId}"
                 );
             }
         }
@@ -133,7 +139,7 @@ namespace SCM_System.Services
                     userId,
                     "✅ Appeal Approved",
                     $"Your appeal for penalty #{penaltyId} has been approved. The penalty has been removed. Response: {response}",
-                    "Success",
+                    "Info",
                     "/Penalty"
                 );
             }
@@ -143,27 +149,40 @@ namespace SCM_System.Services
                     userId,
                     "❌ Appeal Denied",
                     $"Your appeal for penalty #{penaltyId} has been denied. Response: {response}",
-                    "Error",
+                    "Warning",
                     "/Penalty"
                 );
             }
         }
 
-        public async Task SendNotificationAsync(int userId, string title, string message, string type = "Info", string? actionUrl = null)
+        public async Task SendNotificationAsync(int userId, string title, string message, string type = "Info", string? actionUrl = null, int? targetWarehouseId = null, string? targetRole = null)
         {
+            await CreateNotificationAsync(userId, title, message, type, actionUrl, targetWarehouseId, targetRole);
+        }
+
+        public async Task SendRoleNotificationAsync(string role, string title, string message, string type = "Info", string? actionUrl = null, int? warehouseId = null)
+        {
+            // This could send to all users in a role or just create a role-targeted notification entry
             var notification = new Notification
             {
-                UserId = userId,
+                UserId = 0, // System notification
                 Title = title,
                 Message = message,
                 Type = type,
                 ActionUrl = actionUrl,
+                TargetRole = role,
+                TargetWarehouseId = warehouseId,
                 CreatedAt = DateTime.Now,
                 IsRead = false
             };
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task SendEscalatedNotificationAsync(int userId, string title, string message, string type = "Critical", string? actionUrl = null)
+        {
+            await CreateNotificationAsync(userId, title, message, type, actionUrl);
         }
     }
 }

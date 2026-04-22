@@ -85,6 +85,24 @@
                         @(string.IsNullOrEmpty(Model.Description) ? "No description provided." : Model.Description)
                     </div>
 
+                    @if (Model.AttributeValues != null && Model.AttributeValues.Any())
+                    {
+                        <h5 class="fw-bold mb-3 border-bottom pb-2">Technical Specifications</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered table-striped">
+                                <tbody>
+                                    @foreach (var attr in Model.AttributeValues)
+                                    {
+                                        <tr>
+                                            <th class="w-25 bg-light text-dark">@attr.AttributeDefinition?.AttributeName</th>
+                                            <td>@attr.Value @attr.AttributeDefinition?.Unit</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
                     <div class="d-flex gap-2 pt-3 border-top mt-auto">
                         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary px-4 py-2 fw-bold text-uppercase" style="letter-spacing: 0.5px;">
                             <i class="bi bi-pencil-square me-2"></i> Edit Product

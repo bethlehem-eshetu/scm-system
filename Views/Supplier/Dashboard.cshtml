@@ -72,6 +72,10 @@
         }
     </a>
     
+    <a asp-action="ArchivedAssets" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+        <i class="fas fa-shield-alt me-1"></i> Continuity Hub
+    </a>
+    
     <button class="btn btn-white btn-sm shadow-sm border rounded-pill px-3">
         <i class="fas fa-download me-1"></i> Export Data
     </button>
@@ -82,8 +86,9 @@
         </button>
         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
             <li><a class="dropdown-item" asp-controller="Product" asp-action="Create">Add New Product</a></li>
-            <li><a class="dropdown-item" asp-controller="Supplier" asp-action="AddEmployee">Register Employee</a></li>
-            <li><a class="dropdown-item" asp-controller="Supplier" asp-action="CreateWarehouse">Add Warehouse</a></li>
+            <li><a class="dropdown-item" asp-controller="Workforce" asp-action="AddEmployee">Register Employee</a></li>
+            <li><a class="dropdown-item" asp-controller="Hub" asp-action="CreateWarehouse">Add Warehouse</a></li>
+            <li><a class="dropdown-item" asp-controller="Fleet" asp-action="CreateVehicle">Register Vehicle</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" asp-controller="Supplier" asp-action="Reports">View All Reports</a></li>
             <li><hr class="dropdown-divider"></li>
@@ -102,75 +107,79 @@
     </div>
 
     <!-- Top KPI Cards -->
+    </div>
+
+    <!-- Logistics 2.0 Operational KPIs -->
     <div class="row g-4 mb-4">
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-3 p-3 me-3">
-                            <i class="fas fa-dollar-sign fs-4"></i>
-                        </div>
+            <div class="card h-100 border-0 shadow-sm rounded-4 bg-primary text-white overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <i class="fas fa-truck-loading fs-1 opacity-25 position-absolute end-0 bottom-0 mb-n3 me-n3"></i>
                         <div>
-                            <p class="text-muted small fw-bold text-uppercase mb-0">Total Revenue</p>
-                            <h3 class="fw-bold mb-0">@Model.TotalRevenue.ToString("C0")</h3>
+                            <p class="small fw-bold text-uppercase mb-0 opacity-75">Active Fleet</p>
+                            <h3 class="fw-bold mb-0">@Model.ActiveVehiclesCount</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-2">
+                            <i class="fas fa-truck"></i>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <span class="text-success small fw-bold"><i class="fas fa-arrow-up me-1"></i>12.5%</span>
-                        <span class="text-muted small ms-2">vs last month</span>
+                    <div class="small fw-medium">
+                        <i class="fas fa-arrow-up me-1"></i> @Model.GrowthPercent.ToString("F1")% Growth
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-info bg-opacity-10 text-info rounded-3 p-3 me-3">
-                            <i class="fas fa-shopping-bag fs-4"></i>
-                        </div>
+            <div class="card h-100 border-0 shadow-sm rounded-4 bg-info text-white overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <i class="fas fa-warehouse fs-1 opacity-25 position-absolute end-0 bottom-0 mb-n3 me-n3"></i>
                         <div>
-                            <p class="text-muted small fw-bold text-uppercase mb-0">Active Orders</p>
-                            <h3 class="fw-bold mb-0">@Model.ActiveOrders</h3>
+                            <p class="small fw-bold text-uppercase mb-0 opacity-75">Hub Utilization</p>
+                            <h3 class="fw-bold mb-0">@Model.HubUtilizationPercent%</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-2">
+                            <i class="fas fa-chart-pie"></i>
                         </div>
                     </div>
-                    <div class="progress" style="height: 6px;">
-                        <div class="progress-bar bg-info" style="width: 70%"></div>
+                    <div class="progress bg-white bg-opacity-25 mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: @Model.HubUtilizationPercent%"></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-warning bg-opacity-10 text-warning rounded-3 p-3 me-3">
-                            <i class="fas fa-truck fs-4"></i>
-                        </div>
+            <div class="card h-100 border-0 shadow-sm rounded-4 bg-warning text-white overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <i class="fas fa-clock fs-1 opacity-25 position-absolute end-0 bottom-0 mb-n3 me-n3"></i>
                         <div>
-                            <p class="text-muted small fw-bold text-uppercase mb-0">In Delivery</p>
-                            <h3 class="fw-bold mb-0">@Model.OrdersInDelivery</h3>
+                            <p class="small fw-bold text-uppercase mb-0 opacity-75">Delayed Shipments</p>
+                            <h3 class="fw-bold mb-0">@Model.DelayedShipmentsCount</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-2 text-dark">
+                            <i class="fas fa-exclamation-circle"></i>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-2 py-1 small">Critical Logistics</span>
-                    </div>
+                    <div class="small fw-medium text-dark">Impacts SLA Performance</div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-danger bg-opacity-10 text-danger rounded-3 p-3 me-3">
-                            <i class="fas fa-exclamation-triangle fs-4"></i>
-                        </div>
+            <div class="card h-100 border-0 shadow-sm rounded-4 bg-dark text-white overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <i class="fas fa-user-friends fs-1 opacity-25 position-absolute end-0 bottom-0 mb-n3 me-n3"></i>
                         <div>
-                            <p class="text-muted small fw-bold text-uppercase mb-0">Low Stock Issues</p>
-                            <h3 class="fw-bold mb-0">@Model.LowStockItems</h3>
+                            <p class="small fw-bold text-uppercase mb-0 opacity-75">Active Workforce</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalPersonnelCount</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-2">
+                            <i class="fas fa-user-check"></i>
                         </div>
                     </div>
-                    <a asp-controller="Supplier" asp-action="Reports" class="text-danger small fw-bold text-decoration-none">View Alerts <i class="fas fa-chevron-right ms-1"></i></a>
+                    <div class="small fw-medium">Across all logistics hubs</div>
                 </div>
             </div>
         </div>
@@ -214,112 +223,86 @@
     </div>
 
     <!-- Status Overview & Activity -->
-    <div class="row g-4">
+    <div class="row g-4 mb-4">
         <div class="col-xl-6">
+            <!-- Recent Conversations Section -->
             <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-transparent border-0 p-4">
-                    <h5 class="fw-bold mb-0">Order Status Summary</h5>
+                <div class="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-comments me-2 text-primary"></i>Recent Conversations
+                    </h5>
+                    <a href="@Url.Action("Inbox", "Message")" class="btn btn-sm btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
                 </div>
                 <div class="card-body p-4 pt-0">
-                    <div class="list-group list-group-flush border-top-0">
-                        @foreach (var status in new[] { "Pending", "Accepted", "Processing", "Packed", "In Transit", "Delivered", "Completed" })
-                        {
-                            int count = Model.StatusCounts.ContainsKey(status) ? Model.StatusCounts[status] : 0;
-                            <div class="list-group-item border-0 d-flex justify-content-between align-items-center px-0 py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="status-indicator me-3 @GetStatusClass(status)"></div>
-                                    <span class="fw-bold">@status</span>
-                                </div>
-                                <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">@count</span>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <!-- Recent Conversations Section -->
-<div class="row g-4 mt-2">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0">
-                    <i class="fas fa-comments me-2 text-primary"></i>Recent Conversations
-                </h5>
-                <a href="@Url.Action("Inbox", "Message")" class="btn btn-sm btn-outline-primary">
-                    View All <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div>
-            <div class="card-body p-4 pt-0">
-                @if (ViewBag.RecentConversations != null && ViewBag.RecentConversations.Count > 0)
-                {
-                    <div class="list-group list-group-flush">
-                        @foreach (var conv in ViewBag.RecentConversations)
-                        {
-                            <a href="@Url.Action("Conversation", "Message", new { id = conv.OtherUserId })" 
-                               class="list-group-item list-group-item-action border-0 px-0 py-3">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="mb-1">
-                                            <span class="fw-bold">@conv.OtherUserName</span>
-                                            <span class="badge bg-secondary ms-2 small">@conv.OtherUserRole</span>
-                                            @if (conv.UnreadCount > 0)
-                                            {
-                                                <span class="badge bg-primary ms-2">@conv.UnreadCount new</span>
-                                            }
+                    @if (ViewBag.RecentConversations != null && ((dynamic)ViewBag.RecentConversations).Count > 0)
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var conv in ViewBag.RecentConversations)
+                            {
+                                <a href="@Url.Action("Conversation", "Message", new { id = conv.OtherUserId })" 
+                                   class="list-group-item list-group-item-action border-0 px-0 py-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="mb-1">
+                                                <span class="fw-bold">@conv.OtherUserName</span>
+                                                <span class="badge bg-secondary ms-2 small">@conv.OtherUserRole</span>
+                                                @if (conv.UnreadCount > 0)
+                                                {
+                                                    <span class="badge bg-primary ms-2">@conv.UnreadCount new</span>
+                                                }
+                                            </div>
+                                            <p class="mb-0 small text-muted">@conv.LastMessage</p>
                                         </div>
-                                        <p class="mb-0 small text-muted">
-                                            @conv.LastMessage
-                                        </p>
+                                        <small class="text-muted">@conv.LastMessageAt.ToString("MMM dd")</small>
                                     </div>
-                                    <small class="text-muted">@conv.LastMessageAt.ToString("MMM dd")</small>
-                                </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments fa-3x text-muted mb-3 opacity-25"></i>
+                            <p class="text-muted mb-0">No conversations yet</p>
+                            <a href="@Url.Action("SelectRecipient", "Message")" class="btn btn-sm btn-primary mt-2">
+                                Start New Conversation
                             </a>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="text-center py-4">
-                        <i class="fas fa-comments fa-3x text-muted mb-3 opacity-25"></i>
-                        <p class="text-muted mb-0">No conversations yet</p>
-                        <a href="@Url.Action("SelectRecipient", "Message")" class="btn btn-sm btn-primary mt-2">
-                            Start New Conversation
-                        </a>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
         <div class="col-xl-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Recent Activity</h5>
-                    <a asp-action="Notifications" class="small text-decoration-none">View All</a>
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-history me-2 text-primary"></i>Audit Trail (Live)
+                    </h5>
+                    <a asp-action="Notifications" class="small text-decoration-none">Operational Log</a>
                 </div>
                 <div class="card-body p-4 pt-0">
                     <div class="timeline-container">
-                        @if (Model.RecentActivity.Any())
+                        @if (ViewBag.RecentLogs != null && ((IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs).Any())
                         {
-                            foreach (var activity in Model.RecentActivity)
+                            foreach (var log in (IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs)
                             {
                                 <div class="activity-item d-flex mb-4">
                                     <div class="activity-icon-container me-3">
-                                        <div class="activity-icon bg-@activity.Type.ToLower() bg-opacity-10 text-@activity.Type.ToLower() rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                            <i class="fas @GetActivityIcon(activity.Type)"></i>
+                                        <div class="activity-icon bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas @GetAuditIcon(log.ActionType)"></i>
                                         </div>
                                         <div class="activity-line"></div>
                                     </div>
-                                    <div>
-                                        <h6 class="mb-1 fw-bold">@activity.Title</h6>
-                                        <p class="text-muted small mb-1">@activity.Description</p>
-                                        <div class="d-flex align-items-center">
-                                            <span class="text-muted" style="font-size: 0.75rem;"><i class="far fa-clock me-1"></i>@activity.Time.ToString("MMM dd, HH:mm")</span>
-                                            @if (!string.IsNullOrEmpty(activity.ActionUrl))
-                                            {
-                                                <a href="@activity.ActionUrl" class="ms-3 text-primary fw-bold" style="font-size: 0.75rem;">Take Action</a>
-                                            }
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-1 fw-bold">@log.ActionType - @log.EntityType</h6>
+                                            <small class="text-muted">@log.PerformedAtUtc.ToLocalTime().ToString("HH:mm")</small>
+                                        </div>
+                                        <p class="text-muted small mb-0">@log.Notes</p>
+                                        <div class="small text-info mt-1">
+                                            <i class="fas fa-user-shield me-1"></i> System Verified
                                         </div>
                                     </div>
                                 </div>
@@ -328,8 +311,8 @@
                         else
                         {
                             <div class="text-center py-5 text-muted">
-                                <i class="fas fa-bell-slash fa-3x mb-3 opacity-25"></i>
-                                <p>No recent activity detected</p>
+                                <i class="fas fa-clipboard-list fa-3x mb-3 opacity-25"></i>
+                                <p>No audit records available</p>
                             </div>
                         }
                     </div>
@@ -352,6 +335,19 @@
             "Delivered" => "bg-success",
             "Completed" => "bg-dark",
             _ => "bg-secondary"
+        };
+    }
+
+    string GetAuditIcon(string action)
+    {
+        return action switch
+        {
+            "Create" => "fa-plus-circle",
+            "Update" => "fa-edit",
+            "Delete" => "fa-trash-alt",
+            "Dispatch" => "fa-shipping-fast",
+            "StatusUpdate" => "fa-sync",
+            _ => "fa-fingerprint"
         };
     }
 

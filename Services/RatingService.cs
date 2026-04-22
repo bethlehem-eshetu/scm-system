@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 
@@ -52,7 +52,7 @@ namespace SCM_System.Services
                     "⭐ New Rating Received",
                     $"You received a {ratingValue}-star rating for order #{purchaseOrder.PONumber}",
                     "Success",
-                    "/Supplier/Ratings"
+                    "/Rating/SupplierRatings"
                 );
             }
 
@@ -108,14 +108,18 @@ namespace SCM_System.Services
         public async Task<bool> CanRateAsync(int purchaseOrderId, int retailerId)
         {
             var purchaseOrder = await _context.PurchaseOrders
+                .Include(po => po.Order)
                 .FirstOrDefaultAsync(po => po.Id == purchaseOrderId && po.RetailerId == retailerId);
 
             if (purchaseOrder == null)
                 return false;
 
             // Check if order is delivered
-            if (purchaseOrder.Status != "Delivered" && purchaseOrder.Status != "Completed")
+            if (purchaseOrder.Status != "Delivered" && purchaseOrder.Status != "Completed" && 
+                (purchaseOrder.Order == null || (purchaseOrder.Order.OrderStatus != "Delivered" && purchaseOrder.Order.OrderStatus != "Completed")))
+            {
                 return false;
+            }
 
             // Check if already rated
             var existingRating = await _context.Ratings

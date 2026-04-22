@@ -1,0 +1,199 @@
+@{
+    ViewData["Title"] = "Business Continuity Hub";
+    Layout = "_DashboardLayout";
+    var employees = ViewBag.DeletedEmployees as IEnumerable<SCM_System.Models.Entities.SupplierEmployee>;
+    var warehouses = ViewBag.DeletedWarehouses as IEnumerable<SCM_System.Models.Entities.Warehouse>;
+    var vehicles = ViewBag.DeletedVehicles as IEnumerable<SCM_System.Models.Entities.Vehicle>;
+}
+
+<div class="container-fluid py-4">
+    <div class="glass-header p-4 mb-4 rounded-4 shadow-sm border border-warning border-opacity-25" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 193, 7, 0.02) 100%);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="text-warning fw-bold mb-1"><i class="fas fa-archive me-2"></i> Business Continuity Hub</h4>
+                <p class="text-muted mb-0">Manage archived assets and perform operational restorations. These records are preserved for historical audit integrity.</p>
+            </div>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4 gap-2" id="archiveTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4" id="staff-tab" data-bs-toggle="pill" data-bs-target="#staff" type="button" role="tab">
+                <i class="fas fa-users me-2"></i> Archived Staff (@employees.Count())
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4" id="warehouses-tab" data-bs-toggle="pill" data-bs-target="#warehouses" type="button" role="tab">
+                <i class="fas fa-warehouse me-2"></i> Archived Hubs (@warehouses.Count())
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4" id="vehicles-tab" data-bs-toggle="pill" data-bs-target="#vehicles" type="button" role="tab">
+                <i class="fas fa-truck me-2"></i> Retired Fleet (@vehicles.Count())
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="archiveTabsContent">
+        <!-- Staff Tab -->
+        <div class="tab-pane fade show active" id="staff" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted fw-bold">
+                                <tr>
+                                    <th class="ps-4 py-3">NAME & ID</th>
+                                    <th>ROLE</th>
+                                    <th>PREVIOUS HUB</th>
+                                    <th>CONTACT</th>
+                                    <th class="text-end pe-4">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!employees.Any())
+                                {
+                                    <tr><td colspan="5" class="py-5 text-center text-muted">No archived staff members found.</td></tr>
+                                }
+                                @foreach (var emp in employees)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">@emp.User?.FullName</div>
+                                            <div class="text-muted extra-small">ID: @emp.EmployeeDisplayId</div>
+                                        </td>
+                                        <td><span class="badge bg-secondary rounded-pill">@emp.EmployeeRole</span></td>
+                                        <td>@emp.Warehouse?.Name</td>
+                                        <td><div class="small">@emp.Phone</div></td>
+                                        <td class="text-end pe-4">
+                                            <form asp-action="RestoreAsset" method="post" class="d-inline">
+                                                <input type="hidden" name="type" value="Employee" />
+                                                <input type="hidden" name="id" value="@emp.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                                    <i class="fas fa-undo me-1"></i> Restore
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warehouses Tab -->
+        <div class="tab-pane fade" id="warehouses" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted fw-bold">
+                                <tr>
+                                    <th class="ps-4 py-3">FACILITY NAME</th>
+                                    <th>CODE</th>
+                                    <th>LOCATION</th>
+                                    <th>CAPACITY</th>
+                                    <th class="text-end pe-4">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!warehouses.Any())
+                                {
+                                    <tr><td colspan="5" class="py-5 text-center text-muted">No archived warehouse hubs found.</td></tr>
+                                }
+                                @foreach (var hub in warehouses)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">@hub.Name</div>
+                                        </td>
+                                        <td><code>@hub.WarehouseCode</code></td>
+                                        <td>@hub.City, @hub.Region</td>
+                                        <td>@hub.MaxCapacity.ToString("N0")</td>
+                                        <td class="text-end pe-4">
+                                            <form asp-action="RestoreAsset" method="post" class="d-inline">
+                                                <input type="hidden" name="type" value="Warehouse" />
+                                                <input type="hidden" name="id" value="@hub.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                                    <i class="fas fa-undo me-1"></i> Restore
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicles Tab -->
+        <div class="tab-pane fade" id="vehicles" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted fw-bold">
+                                <tr>
+                                    <th class="ps-4 py-3">LICENSE PLATE</th>
+                                    <th>TYPE</th>
+                                    <th>MAX LOAD</th>
+                                    <th>STATUS</th>
+                                    <th class="text-end pe-4">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!vehicles.Any())
+                                {
+                                    <tr><td colspan="5" class="py-5 text-center text-muted">No retired vehicles found.</td></tr>
+                                }
+                                @foreach (var vehicle in vehicles)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">@vehicle.LicensePlate</div>
+                                        </td>
+                                        <td>@vehicle.VehicleType</td>
+                                        <td>@vehicle.MaxLoadCapacity kg</td>
+                                        <td><span class="badge bg-danger rounded-pill">Retired</span></td>
+                                        <td class="text-end pe-4">
+                                            <form asp-action="RestoreAsset" method="post" class="d-inline">
+                                                <input type="hidden" name="type" value="Vehicle" />
+                                                <input type="hidden" name="id" value="@vehicle.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                                    <i class="fas fa-undo me-1"></i> Restore
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-pills .nav-link {
+        color: #6c757d;
+        background: #f8f9fa;
+        border: 1px solid rgba(0,0,0,0.05);
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .nav-pills .nav-link.active {
+        background-color: var(--bs-primary);
+        color: white;
+        box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
+    }
+    .extra-small { font-size: 0.7rem; }
+</style>

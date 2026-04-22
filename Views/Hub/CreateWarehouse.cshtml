@@ -1,0 +1,241 @@
+@model SCM_System.Models.Entities.Warehouse
+@{
+    ViewData["Title"] = "Establish New Hub";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Warehouses">Logistics Hubs</a></li>
+                    <li class="breadcrumb-item active">Establish New Hub</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-primary mb-0"><i class="fas fa-plus-circle me-2"></i>Establish New Hub</h2>
+        </div>
+        <a asp-action="Warehouses" class="btn btn-outline-secondary rounded-pill px-4 border shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Cancel & Return
+        </a>
+    </div>
+
+    <form asp-action="CreateWarehouse" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 border-0 shadow-sm mb-4"></div>
+
+        <div class="row g-4">
+            <!-- Left: Identity & Location -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Hub Identity & Location</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="Name" class="form-label text-muted small fw-bold text-uppercase">Commercial Hub Name <span class="text-danger">*</span></label>
+                                <input asp-for="Name" class="form-control p-3 bg-light border-0 rounded-3" placeholder="e.g. Addis Ababa Central Logistics" required>
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="HubType" class="form-label text-muted small fw-bold text-uppercase">Hub Type <span class="text-danger">*</span></label>
+                                <select asp-for="HubType" class="form-select p-3 bg-light border-0 rounded-3" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.HubType>()"></select>
+                                <span asp-validation-for="HubType" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="WarehouseCode" class="form-label text-muted small fw-bold text-uppercase">Registry Code</label>
+                                <input asp-for="WarehouseCode" class="form-control p-3 bg-light border-0 rounded-3" placeholder="Auto-generated" readonly>
+                                <span asp-validation-for="WarehouseCode" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Region" class="form-label text-muted small fw-bold text-uppercase">Region <span class="text-danger">*</span></label>
+                                <input asp-for="Region" class="form-control p-3 bg-light border-0 rounded-3" placeholder="Addis Ababa" required>
+                                <span asp-validation-for="Region" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="City" class="form-label text-muted small fw-bold text-uppercase">City <span class="text-danger">*</span></label>
+                                <input asp-for="City" class="form-control p-3 bg-light border-0 rounded-3" placeholder="Bole" required>
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="SubCityZone" class="form-label text-muted small fw-bold text-uppercase">Sub City / Zone</label>
+                                <input asp-for="SubCityZone" class="form-control p-3 bg-light border-0 rounded-3" placeholder="Bole Sub-city">
+                                <span asp-validation-for="SubCityZone" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-12">
+                                <label asp-for="Address" class="form-label text-muted small fw-bold text-uppercase">Detailed Physical Address <span class="text-danger">*</span></label>
+                                <textarea asp-for="Address" class="form-control p-3 bg-light border-0 rounded-3" rows="2" placeholder="Full street address, building..." required></textarea>
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-12">
+                                <label asp-for="Landmark" class="form-label text-muted small fw-bold text-uppercase">Landmark</label>
+                                <input asp-for="Landmark" class="form-control p-3 bg-light border-0 rounded-3" placeholder="Near Medhanialem Church">
+                                <span asp-validation-for="Landmark" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Latitude" class="form-label text-muted small fw-bold text-uppercase">Latitude</label>
+                                <input asp-for="Latitude" type="number" step="0.00000001" class="form-control p-3 bg-light border-0 rounded-3" placeholder="9.012345">
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Longitude" class="form-label text-muted small fw-bold text-uppercase">Longitude</label>
+                                <input asp-for="Longitude" type="number" step="0.00000001" class="form-control p-3 bg-light border-0 rounded-3" placeholder="38.123456">
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Capacity & Config -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white p-4 border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-cog me-2 text-primary"></i>Operation Settings</h5>
+                    </div>
+                    <div class="card-body p-4 pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="StorageArchitecture" class="form-label text-muted small fw-bold text-uppercase">Storage Architecture</label>
+                                <select asp-for="StorageArchitecture" class="form-select border-0 bg-light p-3 rounded-3 shadow-none" asp-items="Html.GetEnumSelectList<SCM_System.Models.Enums.StorageArchitecture>()"></select>
+                                <span asp-validation-for="StorageArchitecture" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MaxCapacity" class="form-label text-muted small fw-bold text-uppercase">Max Unit Capacity <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input asp-for="MaxCapacity" class="form-control p-3 bg-light border-0 rounded-start" type="number" min="1" required>
+                                    <span class="input-group-text bg-light border-0 text-muted small">Units</span>
+                                </div>
+                                <span asp-validation-for="MaxCapacity" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="AvgProcessingTimeHours" class="form-label text-muted small fw-bold text-uppercase">Avg Processing Time</label>
+                                <div class="input-group">
+                                    <input asp-for="AvgProcessingTimeHours" class="form-control p-3 bg-light border-0 rounded-start" type="number" min="0" value="24">
+                                    <span class="input-group-text bg-light border-0 text-muted small">Hours</span>
+                                </div>
+                                <span asp-validation-for="AvgProcessingTimeHours" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="OperatingHoursFrom" class="form-label text-muted small fw-bold text-uppercase">Opens At</label>
+                                <input asp-for="OperatingHoursFrom" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" type="time">
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="OperatingHoursTo" class="form-label text-muted small fw-bold text-uppercase">Closes At</label>
+                                <input asp-for="OperatingHoursTo" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" type="time">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Timezone" class="form-label text-muted small fw-bold text-uppercase">Timezone</label>
+                                <select asp-for="Timezone" class="form-select border-0 bg-light p-3 rounded-3 shadow-none">
+                                    <option value="EAT">East Africa Time (EAT)</option>
+                                    <option value="GMT">Greenwich Mean Time (GMT)</option>
+                                    <option value="CET">Central European Time (CET)</option>
+                                    <option value="EST">Eastern Standard Time (EST)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="WorkingDays" class="form-label text-muted small fw-bold text-uppercase">Working Days</label>
+                                <input asp-for="WorkingDays" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" placeholder="Mon - Fri">
+                            </div>
+
+                            <div class="col-md-12 py-2 border-bottom">
+                                <h6 class="fw-bold mb-0 small text-uppercase text-primary">Warehouse Floor Specs</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ReceivingAreaSizeM2" class="form-label text-muted small fw-bold text-uppercase">Receiving Area (M²)</label>
+                                <input asp-for="ReceivingAreaSizeM2" class="form-control p-3 bg-light border-0 rounded-3" type="number" placeholder="50">
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PackingStationsCount" class="form-label text-muted small fw-bold text-uppercase">Packing Stations</label>
+                                <input asp-for="PackingStationsCount" class="form-control p-3 bg-light border-0 rounded-3" type="number" value="1">
+                            </div>
+                        </div>
+
+                        <!-- Infrastructure Section -->
+                        <div class="row g-3 mt-3">
+                             <div class="col-12 py-2 border-bottom">
+                                <h6 class="fw-bold mb-0 small text-uppercase text-primary">Infrastructure & Safety</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LoadingBays" class="form-label text-muted small fw-bold text-uppercase">Loading Bays</label>
+                                <input asp-for="LoadingBays" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" type="number">
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ForkliftsAvailable" class="form-label text-muted small fw-bold text-uppercase">Forklifts</label>
+                                <input asp-for="ForkliftsAvailable" class="form-control p-3 bg-light border-0 rounded-3 shadow-none" type="number">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch card-body bg-light border-0 rounded-3 p-3">
+                                    <input asp-for="CCTVEnabled" class="form-check-input" type="checkbox">
+                                    <label asp-for="CCTVEnabled" class="form-check-label small fw-bold text-muted text-uppercase ms-2">CCTV Active</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch card-body bg-light border-0 rounded-3 p-3">
+                                    <input asp-for="FireSafetyInstalled" class="form-check-input" type="checkbox">
+                                    <label asp-for="FireSafetyInstalled" class="form-check-label small fw-bold text-muted text-uppercase ms-2">Fire Safety</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch card-body bg-light border-0 rounded-3 p-3">
+                                    <input asp-for="HasInternet" class="form-check-input" type="checkbox" checked>
+                                    <label asp-for="HasInternet" class="form-check-label small fw-bold text-muted text-uppercase ms-2">Internet</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch card-body bg-light border-0 rounded-3 p-3">
+                                    <input asp-for="HasBackupPower" class="form-check-input" type="checkbox">
+                                    <label asp-for="HasBackupPower" class="form-check-label small fw-bold text-muted text-uppercase ms-2">Backup Power</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch card-body bg-light border-0 rounded-3 p-3">
+                                    <input asp-for="SupportsDelivery" class="form-check-input" type="checkbox" checked>
+                                    <label asp-for="SupportsDelivery" class="form-check-label small fw-bold text-muted text-uppercase ms-2">Dispatch Capability</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch card-body bg-light border-0 rounded-3 p-3">
+                                    <input asp-for="HazardStorageAllowed" class="form-check-input" type="checkbox">
+                                    <label asp-for="HazardStorageAllowed" class="form-check-label small fw-bold text-muted text-uppercase ms-2">Hazard Grade</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-4 bg-primary bg-opacity-10 rounded-4 border border-primary border-opacity-10">
+                            <div class="d-flex gap-3 mb-3">
+                                <div class="icon-circle bg-primary text-white p-2 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-info fs-xs"></i>
+                                </div>
+                                <div class="small text-dark fw-bold">Registration Note</div>
+                            </div>
+                            <p class="small text-muted mb-0">Once established, you can assign a **Warehouse Manager** from the Employee Directory to start processing live orders from this hub.</p>
+                        </div>
+
+                        <div class="mt-4 pt-3">
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-lg">
+                                <i class="fas fa-check-circle me-2"></i> Establish & Verify Hub
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .fs-xs { font-size: 0.65rem; }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.05);
+        border: 1px solid rgba(13, 110, 253, 0.2) !important;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

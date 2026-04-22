@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Payouts";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-money-bill-wave me-2 text-success"></i> Supplier Payouts</h2>
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Supplier</th>
+                        <th>Amount</th>
+                        <th>Action/Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>@p.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>@(p.Supplier?.CompanyName ?? "Unknown")</td>
+                            <td class="text-success fw-bold">@p.CommissionAmount.ToString("C")</td>
+                            <td>
+                                @if (p.Status == "Pending")
+                                {
+                                    <button class="btn btn-sm btn-primary">Process Payout</button>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Paid</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -162,49 +162,18 @@ namespace SCM_System.Services
                             SupplierId = po.SupplierId,
                             RetailerId = order.RetailerId,
                             OrderAmount = po.TotalAmount,
-                            CommissionRate = 1.00m,
+                            CommissionRate = 1.00m, // It's an order payment, representing the full amount.
                             CommissionAmount = po.TotalAmount,
                             PaymentType = "OrderPayment",
                             Status = "Pending",
-                            PaymentRequestData = "",           // ✅ REQUIRED - MUST SET
-                            PaymentVerificationData = "",      // ✅ REQUIRED - MUST SET
+                            PaymentRequestData = "",
+                            PaymentVerificationData = "",
                             CreatedAt = DateTime.Now,
                             DueDate = DateTime.Now.AddDays(7),
                             Notes = $"Order payment for Purchase Order #{po.PONumber}"
                         };
 
                         _context.Commissions.Add(orderPayment);
-                    }
-
-                    // ✅ PLATFORM COMMISSION (Supplier → Platform)
-                    var existingPlatform = await _context.Commissions
-                        .FirstOrDefaultAsync(c =>
-                            c.PurchaseOrderId == po.Id &&
-                            c.PaymentType == "PlatformCommission");
-
-                    if (existingPlatform == null)
-                    {
-                        var commissionRate = 0.05m;
-
-                        // PLATFORM COMMISSION (Supplier → Platform)
-                        var platformCommission = new Commission
-                        {
-                            PurchaseOrderId = po.Id,
-                            OrderId = order.Id,
-                            SupplierId = po.SupplierId,
-                            OrderAmount = po.TotalAmount,
-                            CommissionRate = commissionRate,
-                            CommissionAmount = po.TotalAmount * commissionRate,
-                            PaymentType = "PlatformCommission",
-                            Status = "Pending",
-                            PaymentRequestData = "",           // ✅ REQUIRED - MUST SET
-                            PaymentVerificationData = "",      // ✅ REQUIRED - MUST SET
-                            CreatedAt = DateTime.Now,
-                            DueDate = DateTime.Now.AddDays(7),
-                            Notes = $"Platform commission for Purchase Order #{po.PONumber}"
-                        };
-
-                        _context.Commissions.Add(platformCommission);
                     }
                 }
             }
@@ -376,6 +345,7 @@ namespace SCM_System.Services
                     // Full allocation to ONE warehouse
                     poAllocations[singleWarehouseMatch.Id] = new List<PurchaseOrderItem>();
                     subtotalAllocations[singleWarehouseMatch.Id] = 0;
+                    singleWarehouseMatch.CurrentWorkload++; // Increment workload
 
                     foreach (var item in order.OrderItems)
                     {
@@ -403,12 +373,19 @@ namespace SCM_System.Services
                     {
                         int remainingQty = item.Quantity;
                         
-                        // Sort warehouses dynamically for each product: priority to default, then highest available stock
-                        var orderedWarehouses = warehouses.OrderByDescending(w => w.IsDefault).ThenByDescending(w => 
-                        {
-                            var inv = w.Inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                            return inv != null ? (inv.QuantityOnHand - inv.QuantityReserved) : 0;
-                        }).ToList();
+                        // Sort warehouses dynamically for each product: 
+                        // 1. Coverage Area match
+                        // 2. Lowest Workload
+                        // 3. Priority to default, then highest available stock
+                        var orderedWarehouses = warehouses
+                            .OrderByDescending(w => !string.IsNullOrEmpty(order.DeliveryCity) && w.CoverageRegions != null && w.CoverageRegions.Contains(order.DeliveryCity))
+                            .ThenBy(w => w.CurrentWorkload)
+                            .ThenByDescending(w => w.IsDefault)
+                            .ThenByDescending(w => 
+                            {
+                                var inv = w.Inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
+                                return inv != null ? (inv.QuantityOnHand - inv.QuantityReserved) : 0;
+                            }).ToList();
 
                         foreach (var w in orderedWarehouses)
                         {
@@ -431,6 +408,7 @@ namespace SCM_System.Services
                                 {
                                     poAllocations[w.Id] = new List<PurchaseOrderItem>();
                                     subtotalAllocations[w.Id] = 0;
+                                    w.CurrentWorkload++; // Increment workload for this warehouse for the first item added
                                 }
 
                                 poAllocations[w.Id].Add(new PurchaseOrderItem

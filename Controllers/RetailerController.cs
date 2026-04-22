@@ -57,8 +57,7 @@ namespace SCM_System.Controllers
 
             // Get unread message count
             ViewBag.UnreadMessagesCount = await _context.Messages
-                .Where(m => (m.Conversation.RetailerId == userId ||
-                            m.Conversation.SupplierId == userId) &&
+                .Where(m => m.Conversation.RetailerId == retailer.Id &&
                             m.SenderId != userId &&
                             !m.IsRead)
                 .CountAsync();
@@ -73,17 +72,15 @@ namespace SCM_System.Controllers
                     .ThenInclude(r => r.User)
                 .Include(c => c.Supplier)
                     .ThenInclude(s => s.User)
-                .Where(c => c.SupplierId == userId || c.RetailerId == userId)
+                .Where(c => c.RetailerId == retailer.Id)
                 .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
                 .Take(5)
                 .Select(c => new
                 {
                     Id = c.Id,
-                    OtherUserId = c.SupplierId == userId ? c.RetailerId : c.SupplierId,
-                    OtherUserName = c.SupplierId == userId ?
-                        (c.Retailer != null ? c.Retailer.User.FullName : "Retailer") :
-                        (c.Supplier != null ? c.Supplier.User.FullName : "Supplier"),
-                    OtherUserRole = c.SupplierId == userId ? "Retailer" : "Supplier",
+                    OtherUserId = c.SupplierId,
+                    OtherUserName = c.Supplier != null ? c.Supplier.User.FullName : "Supplier",
+                    OtherUserRole = "Supplier",
                     LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt)
                         .Select(m => m.MessageText.Length > 60 ? m.MessageText.Substring(0, 60) + "..." : m.MessageText)
                         .FirstOrDefault() ?? "No messages yet",
@@ -187,22 +184,12 @@ namespace SCM_System.Controllers
             return View(order);
         }
 
-        // GET: /Retailer/MyPurchaseOrders - NEW ACTION for purchase orders with payment
+        // GET: /Retailer/MyPurchaseOrders - Redirects to proper purchase orders
         public async Task<IActionResult> MyPurchaseOrders()
         {
             if (!IsRetailer()) return RedirectToAction("Login", "Account");
 
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-
-            var purchaseOrders = await _context.PurchaseOrders
-                .Include(po => po.Supplier)
-                .Include(po => po.Commission)  // ✅ Include commission for payment status
-                .Where(po => po.RetailerId == retailer.Id)
-                .OrderByDescending(po => po.CreatedAt)
-                .ToListAsync();
-
-            return View(purchaseOrders);
+            return RedirectToAction("RetailerIndex", "PurchaseOrder");
         }
 
         // GET: /Retailer/Notifications
@@ -279,10 +266,24 @@ namespace SCM_System.Controllers
             var product = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
+                    .ThenInclude(s => s.ReceivedRatings)
                 .Include(p => p.Inventories)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.AttributeDefinition)
                 .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
             if (product == null) return NotFound();
+
+            // Calculate Metrics
+            if (product.Supplier != null)
+            {
+                var ratings = product.Supplier.ReceivedRatings;
+                ViewBag.AverageRating = ratings.Any() ? Math.Round(ratings.Average(r => r.RatingValue), 1) : 0;
+                ViewBag.RatingCount = ratings.Count();
+                
+                ViewBag.DealsCompleted = await _context.Orders
+                    .CountAsync(o => o.SupplierId == product.SupplierId && (o.OrderStatus == "Completed" || o.OrderStatus == "Delivered"));
+            }
 
             return View(product);
         }
@@ -291,16 +292,28 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> AddToCart([FromForm] int productId, [FromForm] int quantity = 1)
         {
-            if (!IsRetailer()) return Json(new { success = false, message = "Not authenticated" });
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            if (retailer == null) return Json(new { success = false, message = "Retailer not found" });
+            if (retailer == null) return NotFound();
 
             await _cartService.AddToCartAsync(retailer.Id, productId, quantity);
-            var count = await _cartService.GetCartItemCountAsync(retailer.Id);
+            
+            TempData["SuccessMessage"] = "Product added to cart!";
+            return RedirectToAction(nameof(Cart));
+        }
 
-            return Json(new { success = true, cartItemCount = count });
+        [HttpGet]
+        public async Task<IActionResult> Cart()
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            
+            var cart = await _cartService.GetCartAsync(retailer.Id);
+            return View(cart);
         }
 
         [HttpGet]

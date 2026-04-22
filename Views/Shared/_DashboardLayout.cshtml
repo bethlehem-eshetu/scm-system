@@ -288,6 +288,34 @@
                     <li>
                         <a asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users"></i> All Users</a>
                     </li>
+                    
+                    <li class="menu-label">Communication</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope-open-text"></i> Message Monitoring</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="BlockedMessages"><i class="fas fa-ban"></i> Blocked Messages</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Penalties"><i class="fas fa-gavel"></i> Penalties</a>
+                    </li>
+
+                    <li class="menu-label">Finance</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-pie"></i> Commission Overview</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-exchange-alt"></i> Transactions</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Payouts"><i class="fas fa-money-bill-wave"></i> Payouts</a>
+                    </li>
+
+                    <li class="menu-label">Report</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-file-invoice-dollar"></i> Financial Reports</a>
+                    </li>
+
                     <li class="menu-label">System Admin</li>
                     <li>
                         <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-history"></i> Audit Logs</a>
@@ -301,6 +329,37 @@
                     <li>
                         <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
                     </li>
+                    
+                    <li class="menu-label">Workforce</li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees"><i class="fas fa-users"></i> All Employees</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees" asp-route-role="warehouse_manager"><i class="fas fa-user-tie"></i> Warehouse Managers</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees" asp-route-role="delivery_agent"><i class="fas fa-id-card"></i> Delivery Agents</a>
+                    </li>
+
+                    <li class="menu-label">Logistics Infrastructure</li>
+                    <li>
+                        <a asp-controller="Hub" asp-action="Warehouses"><i class="fas fa-warehouse"></i> Hubs & Warehouses</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Fleet" asp-action="Vehicles"><i class="fas fa-truck"></i> Fleet Management</a>
+                    </li>
+
+                    <li class="menu-label">Operations</li>
+                    <li>
+                        <a asp-controller="Logistics" asp-action="DispatchCenter"><i class="fas fa-shipping-fast"></i> Dispatch Center</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="OrderTracking"><i class="fas fa-map-marker-alt"></i> Route Visibility</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Logistics" asp-action="InventoryTransfers"><i class="fas fa-exchange-alt"></i> Stock Transfers</a>
+                    </li>
+
                     <li class="menu-label">Orders & Sales</li>
                     <li>
                         <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-basket"></i> Customer Orders</a>
@@ -311,49 +370,18 @@
                     <li>
                         <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-boxes"></i> Product Catalog</a>
                     </li>
-                    
-                    <li class="menu-label">Procurement & Bidding</li>
+
+                    <li class="menu-label">Insights & Reports</li>
                     <li>
-                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> Available Tenders</a>
+                        <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-line"></i> Supply Chain Analytics</a>
                     </li>
                     <li>
-                        <a asp-controller="Bid" asp-action="Index"><i class="fas fa-file-contract"></i> Submitted Bids</a>
+                        <a asp-controller="Rating" asp-action="SupplierRatings"><i class="fas fa-star"></i> Performance Reviews</a>
                     </li>
 
-                    <li class="menu-label">Operations & Logistics</li>
+                    <li class="menu-label">Administration</li>
                     <li>
-                        <a asp-controller="Supplier" asp-action="OrderTracking"><i class="fas fa-map-marker-alt"></i> Live Order Tracking</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Warehouses"><i class="fas fa-warehouse"></i> Warehouses</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Vehicles"><i class="fas fa-truck"></i> Fleet Management</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Employees"><i class="fas fa-users"></i> Personnel</a>
-                    </li>
-
-                   <li class="menu-label">Finance & Analytics</li>
-                   
-<li>
-    <a asp-controller="Commission" asp-action="MyCommissions"><i class="fas fa-hand-holding-usd"></i> Commission Payments</a>
-</li>
-<li>
-    <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-pie"></i> Business Insights</a>
-</li>
-<li class="menu-label">Feedback</li>
-<li>
-    <a asp-controller="Rating" asp-action="SupplierRatings"><i class="fas fa-star"></i> Customer Ratings</a>
-</li>
-
-<li class="menu-label">Customer Support</li>
-<li>
-    <a asp-controller="Return" asp-action="SupplierReturns"><i class="fas fa-undo-alt"></i> Return Requests</a>
-</li>
-                    <li class="menu-label">Settings</li>
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Notifications"><i class="fas fa-bell"></i> Notifications</a>
+                        <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Alerts & Notifications</a>
                     </li>
                     <li>
                         <a asp-controller="Supplier" asp-action="Profile"><i class="fas fa-cog"></i> Account Settings</a>
@@ -402,7 +430,7 @@
 </li>
                     <li class="menu-label">Settings</li>
                     <li>
-                        <a asp-controller="Retailer" asp-action="Notifications"><i class="fas fa-bell"></i> Notifications</a>
+                        <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Notifications</a>
                     </li>
                     <li>
                         <a asp-controller="Retailer" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>

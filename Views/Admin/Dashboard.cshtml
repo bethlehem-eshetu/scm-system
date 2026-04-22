@@ -156,6 +156,22 @@
     </div>
 
  
+    <!-- New Charts Section -->
+    <div class="row mb-5">
+        <div class="col-md-8">
+            <div class="glass-card p-4 h-100">
+                <h5 class="mb-4 fw-bold"><i class="fas fa-chart-line me-2 text-primary"></i>Platform Activity</h5>
+                <canvas id="platformActivityChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4 h-100">
+                <h5 class="mb-4 fw-bold"><i class="fas fa-list-alt me-2 text-success"></i>Top Categories</h5>
+                <canvas id="topCategoriesChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="row mb-5">
         <div class="col-12">
@@ -344,10 +360,46 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Auto-hide alerts after 5 seconds
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);
+
+        // Platform Activity Chart
+        const ctxActivity = document.getElementById('platformActivityChart').getContext('2d');
+        new Chart(ctxActivity, {
+            type: 'line',
+            data: {
+                labels: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [15, 20, 35, 40, 25, 52],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            }
+        });
+
+        // Top Categories Chart
+        const ctxCategories = document.getElementById('topCategoriesChart').getContext('2d');
+        new Chart(ctxCategories, {
+            type: 'doughnut',
+            data: {
+                labels: ['Electronics', 'Furniture', 'Clothing', 'Industrial'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: [
+                        '#4f46e5',
+                        '#10b981',
+                        '#f59e0b',
+                        '#ec4899'
+                    ]
+                }]
+            }
+        });
     </script>
 }

@@ -1,0 +1,235 @@
+@model IEnumerable<SCM_System.Models.Entities.DispatchTask>
+@{
+    ViewData["Title"] = "Logistics Dispatch Center";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Executive Header -->
+    <div class="glass-header p-4 mb-4 rounded-4 shadow-sm" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%); border: 1px solid rgba(33, 150, 243, 0.2);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold text-primary mb-1"><i class="fas fa-tower-broadcast me-2"></i>Dispatch Command Center</h2>
+                <p class="text-muted mb-0">Executive oversight of cross-hub logistical performance</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-plus me-2"></i>New Dispatch Task
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                            <i class="fas fa-box-open fs-4"></i>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill align-self-start py-2">Normal</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">@ViewBag.ReadyForDispatch</h3>
+                    <p class="text-muted small text-uppercase fw-bold mb-0">Ready for Dispatch</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-info bg-opacity-10 text-info rounded-3 p-3">
+                            <i class="fas fa-shipping-fast fs-4"></i>
+                        </div>
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill align-self-start py-2">12 Active</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">@ViewBag.ActiveDeliveries</h3>
+                    <p class="text-muted small text-uppercase fw-bold mb-0">In Transit</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
+                            <i class="fas fa-truck fs-4"></i>
+                        </div>
+                        <div class="text-success small fw-bold">85% Utilization</div>
+                    </div>
+                    <h3 class="fw-bold mb-1">@ViewBag.VehiclesAvailable</h3>
+                    <p class="text-muted small text-uppercase fw-bold mb-0">Fleet Readiness</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                            <i class="fas fa-user-clock fs-4"></i>
+                        </div>
+                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill align-self-start py-2">Critical</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">@ViewBag.DriverAvailability</h3>
+                    <p class="text-muted small text-uppercase fw-bold mb-0">Driver Availability</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Dispatch Queue -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Live Dispatch Queue</h5>
+                        <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
+                            <button class="btn btn-light active">All</button>
+                            <button class="btn btn-light">Pending</button>
+                            <button class="btn btn-light">Late</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase fw-bold">
+                            <tr>
+                                <th class="px-4">Order ID</th>
+                                <th>Assignment</th>
+                                <th>Hub</th>
+                                <th>SLA Status</th>
+                                <th>Priority</th>
+                                <th class="text-end px-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                @foreach (var task in Model)
+                                {
+                                    <tr>
+                                        <td class="px-4 fw-bold">#@task.Order?.OrderNumber</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                    <i class="fas fa-user small text-primary"></i>
+                                                </div>
+                                                <span class="small">@(task.DeliveryAgent?.User?.FullName ?? "Unassigned")</span>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border">HUB-01</span></td>
+                                        <td>
+                                            <span class="badge bg-success-soft text-success rounded-pill px-3">On Time</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">High</span>
+                                        </td>
+                                        <td class="text-end px-4">
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3">Edit</button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="fas fa-shipping-fast fs-1 mb-3 opacity-25"></i>
+                                        <p>No active dispatch tasks found.</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Insights -->
+        <div class="col-lg-4">
+            <!-- Bottlenecks -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom-0 p-4">
+                    <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-exclamation-circle me-2"></i>Operational Bottlenecks</h5>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="alert alert-warning border-0 rounded-4 shadow-sm mb-3">
+                        <div class="d-flex">
+                            <i class="fas fa-clock mt-1 me-3"></i>
+                            <div>
+                                <div class="fw-bold">Delayed Pickups (Hub-04)</div>
+                                <div class="small">5 orders waiting > 2 hours in South Zone.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-0">
+                        <div class="d-flex">
+                            <i class="fas fa-truck-alt mt-1 me-3"></i>
+                            <div>
+                                <div class="fw-bold">Vehicle Shortage</div>
+                                <div class="small">No available refrigerated trucks in Central Hub.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fleet Status -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-bottom-0 p-4">
+                    <h5 class="fw-bold mb-0">Fleet Readiness Hub</h5>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between small fw-bold text-uppercase text-muted mb-2">
+                            <span>Fuel Efficiency</span>
+                            <span>92%</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 92%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between small fw-bold text-uppercase text-muted mb-2">
+                            <span>Warehouse Capacity</span>
+                            <span>78%</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 8px;">
+                            <div class="progress-bar bg-info" style="width: 78%"></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="row text-center g-2">
+                            <div class="col-4 border-end">
+                                <div class="h5 fw-bold mb-0">14</div>
+                                <div class="small text-muted">Ready</div>
+                            </div>
+                            <div class="col-4 border-end">
+                                <div class="h5 fw-bold mb-0 text-warning">3</div>
+                                <div class="small text-muted">Late</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="h5 fw-bold mb-0 text-primary">45</div>
+                                <div class="small text-muted">Drivers</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft { background-color: rgba(40, 167, 69, 0.1); }
+    .animate-pulse { animation: pulse 2s infinite; }
+    @@keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>

@@ -105,15 +105,14 @@
                                 </div>
                             </div>
 
-                            <!-- Inventory Distribution Mini-View -->
-                            <div class="p-3 bg-light rounded-3">
+                            <!-- Simple Inventory View -->
+                            <div class="p-3 bg-light rounded-3 mt-2 border border-1">
                                 <div class="d-flex justify-content-between mb-1">
-                                    <span class="small text-muted">Reserved: @reservedStock @item.Unit</span>
-                                    <span class="small text-muted">@((double)availableStock/Math.Max(1,totalStock)*100).ToString("F0")% Health</span>
+                                    <span class="small text-muted fw-bold">Reserved: <span class="text-warning">@reservedStock units</span></span>
+                                    <span class="small text-muted fw-bold">Available: <span class="text-success">@availableStock units</span></span>
                                 </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-primary" style="width: @((double)availableStock/Math.Max(1,totalStock)*100)%"></div>
-                                    <div class="progress-bar bg-warning" style="width: @((double)reservedStock/Math.Max(1,totalStock)*100)%"></div>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted extra-small">@(isLowStock ? "⚠️ Restock Recommended" : "✅ Stock Levels Optimal")</small>
                                 </div>
                             </div>
                         </div>

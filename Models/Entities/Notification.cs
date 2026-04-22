@@ -19,10 +19,15 @@ namespace SCM_System.Models.Entities
         public string Message { get; set; } = string.Empty;
 
         [StringLength(20)]
-        public string Type { get; set; } = "Info"; // Success, Error, Warning, Info
+        public string Type { get; set; } = "Info"; // Critical, Warning, Info
+
+        public int? TargetWarehouseId { get; set; } // Targeted to a specific hub
+        
+        [StringLength(50)]
+        public string? TargetRole { get; set; } // Supplier, WarehouseManager, etc.
 
         [StringLength(200)]
-        public string? ActionUrl { get; set; } // Link to related page (e.g., /Message/Conversation/5)
+        public string? ActionUrl { get; set; } // Link to related page
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

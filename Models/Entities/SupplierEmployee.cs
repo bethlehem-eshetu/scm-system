@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
 {
@@ -15,17 +16,16 @@ namespace SCM_System.Models.Entities
         public Supplier Supplier { get; set; }
 
         public int? WarehouseId { get; set; }
-        public Warehouse Warehouse { get; set; }
+        public Warehouse? Warehouse { get; set; }
 
         public int? VehicleId { get; set; }
-        public Vehicle Vehicle { get; set; }
+        public Vehicle? Vehicle { get; set; }
+
+        [StringLength(50)]
+        public string? EmployeeDisplayId { get; set; } // EMP-001
 
         [StringLength(100)]
-        public string? DrivingLicenseNumber { get; set; }
-
-        public DateTime? LicenseExpiryDate { get; set; }
-
-        public bool IsLicenseVerified { get; set; } = false;
+        public string? Department { get; set; } = "Logistics";
 
         [Required]
         [StringLength(50)]
@@ -40,11 +40,78 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Employee Email")]
         public string Email { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        [StringLength(100)]
+        public string? EmergencyContactName { get; set; }
 
+        [StringLength(20)]
+        public string? EmergencyContactPhone { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? MonthlySalary { get; set; }
+
+        [StringLength(20)]
+        public string? SalaryGrade { get; set; }
+
+        [StringLength(10)]
+        public string? BloodGroup { get; set; }
+
+        public int? SupervisorId { get; set; }
+        [ForeignKey("SupervisorId")]
+        public SupplierEmployee? Supervisor { get; set; }
+
+        // Security & Roles
+        public string? RolePermissions { get; set; } // JSON list of fine-grained permissions
+        public string? DeviceAccessRestriction { get; set; } // Friendly name or ID of allowed device
+        public string? AllowedLoginZones { get; set; } // JSON or CSV of GeoZones
+
+        public bool RequireMFA { get; set; } = false;
+
+        [StringLength(20)]
+        public string? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        [StringLength(50)]
+        public string? NationalID { get; set; }
+        
+        // Documents
+        public string? ProfilePhotoPath { get; set; } // Renamed from PhotoUrl for enterprise consistency
+        public string? ContractDocumentUrl { get; set; }
+        public string? IdDocumentUrl { get; set; }
+        
+        public DateTime? JoinDate { get; set; }
+        public SCM_System.Models.Enums.EmploymentType EmploymentType { get; set; } = SCM_System.Models.Enums.EmploymentType.FullTime;
+        public SCM_System.Models.Enums.ShiftType Shift { get; set; } = SCM_System.Models.Enums.ShiftType.Day;
+        public SCM_System.Models.Enums.EmployeeStatus Status { get; set; } = SCM_System.Models.Enums.EmployeeStatus.Active;
+
+        public bool ForcePasswordChange { get; set; } = false;
+
+        // Audit
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public string? CreatedBy { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string? UpdatedBy { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+
+        // Profiles
+        public DriverProfile? DriverProfile { get; set; }
+        public WarehouseProfile? WarehouseProfile { get; set; }
+
+        // Assignments
+        public ICollection<WarehouseAssignment> WarehouseAssignments { get; set; } = new List<WarehouseAssignment>();
+        public ICollection<VehicleAssignment> VehicleAssignments { get; set; } = new List<VehicleAssignment>();
+
+        // History & Tracking
+        public ICollection<WarehouseManagerHistory> ManagerHistories { get; set; } = new List<WarehouseManagerHistory>();
+        public ICollection<VehicleDriverHistory> DriverHistories { get; set; } = new List<VehicleDriverHistory>();
+        public ICollection<EmployeeWarehouseAccess> HubAccesses { get; set; } = new List<EmployeeWarehouseAccess>();
+        public ICollection<EmployeeDocument> Documents { get; set; } = new List<EmployeeDocument>();
+        public ICollection<IncidentReport> ReportedIncidents { get; set; } = new List<IncidentReport>();
+        public ICollection<DispatchTask> AssignedTasks { get; set; } = new List<DispatchTask>();
+        public ICollection<InventoryTransfer> RequestedTransfers { get; set; } = new List<InventoryTransfer>();
+        public ICollection<InventoryTransfer> ApprovedTransfers { get; set; } = new List<InventoryTransfer>();
 
         // Navigation properties
-        public ICollection<Delivery> Deliveries { get; set; }
+        public ICollection<Delivery> Deliveries { get; set; } = new List<Delivery>();
     }
 }

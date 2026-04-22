@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SCM_System.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
@@ -194,6 +194,51 @@ namespace SCM_System.Controllers
                                 Console.WriteLine($"✅ PurchaseOrder {commission.PurchaseOrder.PONumber} PaymentStatus updated to Paid");
                             }
 
+                            // Populate Platform Commission and Supplier Payout upon successful payment
+                            if (commission.PaymentType == "OrderPayment")
+                            {
+                                var existingPlatform = await _context.Commissions
+                                    .AnyAsync(c => c.PurchaseOrderId == commission.PurchaseOrderId && c.PaymentType == "PlatformCommission");
+
+                                if (!existingPlatform)
+                                {
+                                    var platformComm = new Commission
+                                    {
+                                        PurchaseOrderId = commission.PurchaseOrderId,
+                                        OrderId = commission.OrderId,
+                                        SupplierId = commission.SupplierId,
+                                        RetailerId = commission.RetailerId,
+                                        OrderAmount = commission.OrderAmount,
+                                        CommissionRate = 0.05m,
+                                        CommissionAmount = commission.OrderAmount * 0.05m,
+                                        PaymentType = "PlatformCommission",
+                                        Status = "Paid",
+                                        CreatedAt = DateTime.Now,
+                                        DueDate = DateTime.Now,
+                                        PaidAt = DateTime.Now,
+                                        Notes = "Platform commission deducted from Order Payment"
+                                    };
+                                    _context.Commissions.Add(platformComm);
+
+                                    var supplierPayout = new Commission
+                                    {
+                                        PurchaseOrderId = commission.PurchaseOrderId,
+                                        OrderId = commission.OrderId,
+                                        SupplierId = commission.SupplierId,
+                                        RetailerId = commission.RetailerId,
+                                        OrderAmount = commission.OrderAmount,
+                                        CommissionRate = 0.95m,
+                                        CommissionAmount = commission.OrderAmount * 0.95m,
+                                        PaymentType = "SupplierPayout",
+                                        Status = "Pending",
+                                        CreatedAt = DateTime.Now,
+                                        DueDate = DateTime.Now.AddDays(7),
+                                        Notes = "Pending payout to supplier for Order Payment"
+                                    };
+                                    _context.Commissions.Add(supplierPayout);
+                                }
+                            }
+
                             await _context.SaveChangesAsync();
                             Console.WriteLine($"✅ Commission {commission.Id} updated to PAID");
                             TempData["SuccessMessage"] = $"Payment of {commission.CommissionAmount:C} completed successfully!";
@@ -271,6 +316,32 @@ namespace SCM_System.Controllers
         public IActionResult Result()
         {
             return View();
+        }
+
+        // GET: /Payment/SupplierEarnings
+        public async Task<IActionResult> SupplierEarnings()
+        {
+            int currentUserId = GetCurrentUserId();
+            if (currentUserId == 0)
+                return RedirectToAction("Login", "Account");
+
+            var user = await _context.Users.FindAsync(currentUserId);
+            if (user == null || user.Role != "Supplier") return RedirectToAction("Login", "Account");
+
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == currentUserId);
+            if (supplier == null) return NotFound();
+
+            var earnings = await _context.Commissions
+                .Include(c => c.PurchaseOrder)
+                .Where(c => c.SupplierId == supplier.Id && (c.PaymentType == "PlatformCommission" || c.PaymentType == "SupplierPayout"))
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.TotalCleared = earnings.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Paid").Sum(c => c.CommissionAmount);
+            ViewBag.TotalPending = earnings.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Pending").Sum(c => c.CommissionAmount);
+            ViewBag.TotalDeducted = earnings.Where(c => c.PaymentType == "PlatformCommission").Sum(c => c.CommissionAmount);
+
+            return View(earnings);
         }
     }
 }
