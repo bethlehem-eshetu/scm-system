@@ -55,6 +55,7 @@
                 }
 
                 <form asp-action="Login" method="post" class="needs-validation">
+                    <div asp-validation-summary="All" class="text-danger"></div>
                     <div class="form-floating mb-3">
                         <input asp-for="Email" class="form-control border-0 bg-light rounded-4 px-4 shadow-none" placeholder="name@example.com" required />
                         <label asp-for="Email" class="ps-4">Email address</label>

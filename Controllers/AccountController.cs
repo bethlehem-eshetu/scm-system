@@ -510,9 +510,10 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                try
+                Console.WriteLine($"[DEBUG] Login POST called for: {model.Email}");
+                if (ModelState.IsValid)
                 {
                     var user = await _context.Users
                         .FirstOrDefaultAsync(u => u.Email == model.Email);
@@ -583,6 +584,25 @@ namespace SCM_System.Controllers
                     HttpContext.Session.SetString("UserEmail", user.Email);
                     HttpContext.Session.SetString("UserRole", user.Role);
                     HttpContext.Session.SetString("UserName", user.FullName);
+                    HttpContext.Session.SetString("ProfileImg", user.ProfileImage ?? "");
+                    HttpContext.Session.SetString("ThemePreference", user.ThemePreference ?? "System");
+
+                    // Generate and store real session token
+                    string sessionToken = Guid.NewGuid().ToString();
+                    HttpContext.Session.SetString("SessionToken", sessionToken);
+
+                    var userSession = new UserSession
+                    {
+                        UserId = user.Id,
+                        SessionToken = sessionToken,
+                        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        UserAgent = Request.Headers["User-Agent"].ToString(),
+                        LoginTime = DateTime.Now,
+                        LastActivityTime = DateTime.Now,
+                        IsActive = true
+                    };
+                    _context.UserSessions.Add(userSession);
+                    await _context.SaveChangesAsync();
 
                     // Add proper identity claims authentication
                     var claims = new List<Claim>
@@ -590,13 +610,23 @@ namespace SCM_System.Controllers
                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                         new Claim(ClaimTypes.Name, user.FullName),
                         new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.Role, user.Role)
+                        new Claim(ClaimTypes.Role, user.Role),
+                        new Claim("SessionToken", sessionToken)
                     };
 
-                    // Add EmployeeId claim for warehouse managers and delivery agents
-                    if (user.Role == "Warehouse" || user.Role == "DeliveryAgent")
+                    // Add EmployeeId claim for all employee roles
+                    if (user.Role == "Warehouse" || user.Role == "WarehouseManager" || user.Role == "DeliveryAgent")
                     {
-                        var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == user.Id);
+                        SupplierEmployee employee = null;
+                        if (user.Role == "WarehouseManager")
+                        {
+                            employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.Email == user.Email);
+                        }
+                        else
+                        {
+                            employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == user.Id);
+                        }
+
                         if (employee != null)
                         {
                             claims.Add(new Claim("EmployeeId", employee.Id.ToString()));
@@ -633,9 +663,9 @@ namespace SCM_System.Controllers
                     {
                         return RedirectToAction("Dashboard", "Retailer");
                     }
-                    else if (user.Role == "Warehouse")
+                    else if (user.Role == "Warehouse" || user.Role == "WarehouseManager")
                     {
-                        return RedirectToAction("Dashboard", "Warehouse");
+                        return RedirectToAction("Index", "Warehouse");
                     }
                     else if (user.Role == "DeliveryAgent")
                     {
@@ -644,21 +674,32 @@ namespace SCM_System.Controllers
 
                     return RedirectToAction("Index", "Home");
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"❌ Login Error: {ex.Message}");
-                    ModelState.AddModelError("", "An error occurred during login. Please try again.");
-                    return View(model);
-                }
+                return View(model);
             }
-
-            return View(model);
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Login error: " + ex.Message);
+                return View(model);
+            }
         }
 
         // GET: /Account/Logout
         public async Task<IActionResult> Logout()
         {
             string userName = HttpContext.Session.GetString("UserName") ?? "User";
+            string sessionToken = HttpContext.Session.GetString("SessionToken");
+
+            if (!string.IsNullOrEmpty(sessionToken))
+            {
+                var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.SessionToken == sessionToken);
+                if (session != null)
+                {
+                    session.IsActive = false;
+                    session.LastActivityTime = DateTime.Now;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 

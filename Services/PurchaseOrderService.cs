@@ -191,6 +191,19 @@ namespace SCM_System.Services
                 if (status == POStatus.Packed) po.PackedAt = DateTime.Now;
                 if (status == POStatus.Delivered) po.DeliveredAt = DateTime.Now;
 
+                // 🆕 Auto-Accept logic
+                if (status == POStatus.Accepted)
+                {
+                    var manager = await _context.SupplierEmployees
+                        .FirstOrDefaultAsync(e => e.WarehouseId == po.WarehouseId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
+                    
+                    if (manager != null && manager.AutoAcceptPickTasks)
+                    {
+                        po.Status = POStatus.Processing;
+                        po.UpdatedAt = DateTime.Now;
+                    }
+                }
+
                 // Sync with parent Order if it exists
                 if (po.Order != null)
                 {
@@ -293,6 +306,24 @@ namespace SCM_System.Services
                         if (itemInv.QuantityOnHand < 0) itemInv.QuantityOnHand = 0; // Safety
                         
                         _context.Update(itemInv);
+
+                        // 🆕 Low Stock Notification Logic
+                        var manager = await _context.SupplierEmployees
+                            .FirstOrDefaultAsync(e => e.WarehouseId == po.WarehouseId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
+
+                        if (manager != null && manager.NotifyLowStock && itemInv.QuantityOnHand <= manager.LowStockThreshold)
+                        {
+                            _context.Notifications.Add(new Notification
+                            {
+                                UserId = manager.UserId,
+                                Title = "Low Stock Alert ⚠️",
+                                Message = $"Product {item.Product?.ProductName ?? "Unknown"} is below threshold ({itemInv.QuantityOnHand} remaining in {po.Warehouse?.Name}).",
+                                Type = "Warning",
+                                ActionUrl = "/Warehouse/Alerts",
+                                CreatedAt = DateTime.Now,
+                                IsRead = false
+                            });
+                        }
                     }
                 }
 

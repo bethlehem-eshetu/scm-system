@@ -1,0 +1,106 @@
+@model SCM_System.Models.ViewModels.AddStockViewModel
+@{
+    ViewData["Title"] = "New Stock Entry";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <!-- Header -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1"><i class="fas fa-plus-circle text-primary me-2"></i>New Stock Arrival</h2>
+                    <p class="text-muted mb-0">Record incoming shipments and update inventory levels.</p>
+                </div>
+                <a asp-action="Dashboard" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 py-4 px-4 border-start border-4 border-primary">
+                    <h5 class="fw-bold mb-0">Stock Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="AddStock" method="post" class="needs-validation">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 small mb-4"></div>
+
+                        <div class="row g-4">
+                            <!-- Product Selection -->
+                            <div class="col-md-12">
+                                <label asp-for="ProductId" class="form-label fw-bold text-dark small"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 rounded-start-4"><i class="fas fa-box text-muted"></i></span>
+                                    <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select bg-light border-start-0 rounded-end-4 py-3 px-4 shadow-none">
+                                        <option value="">-- Select Product From Your Catalog --</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="ProductId" class="text-danger extra-small"></span>
+                            </div>
+
+                            <!-- Quantity -->
+                            <div class="col-md-6">
+                                <label asp-for="QuantityToAdd" class="form-label fw-bold text-dark small"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 rounded-start-4"><i class="fas fa-layer-group text-muted"></i></span>
+                                    <input asp-for="QuantityToAdd" class="form-control bg-light border-start-0 rounded-end-4 py-3 px-4 shadow-none" placeholder="Enter amount..." />
+                                </div>
+                                <span asp-validation-for="QuantityToAdd" class="text-danger extra-small"></span>
+                            </div>
+
+                            <!-- Batch Number -->
+                            <div class="col-md-6">
+                                <label asp-for="BatchNumber" class="form-label fw-bold text-dark small"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 rounded-start-4"><i class="fas fa-tag text-muted"></i></span>
+                                    <input asp-for="BatchNumber" class="form-control bg-light border-start-0 rounded-end-4 py-3 px-4 shadow-none" placeholder="Lot / Batch #" />
+                                </div>
+                                <span asp-validation-for="BatchNumber" class="text-danger extra-small"></span>
+                            </div>
+
+                            <!-- Expiry Date -->
+                            <div class="col-md-6">
+                                <label asp-for="ExpiryDate" class="form-label fw-bold text-dark small"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 rounded-start-4"><i class="fas fa-calendar-times text-muted"></i></span>
+                                    <input asp-for="ExpiryDate" type="date" class="form-control bg-light border-start-0 rounded-end-4 py-3 px-4 shadow-none" />
+                                </div>
+                                <span asp-validation-for="ExpiryDate" class="text-danger extra-small"></span>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="col-md-12">
+                                <label asp-for="Notes" class="form-label fw-bold text-dark small">Optional Notes / Remarks</label>
+                                <textarea asp-for="Notes" class="form-control bg-light rounded-4 p-4 shadow-none" rows="3" placeholder="Additional details about this shipment..."></textarea>
+                                <span asp-validation-for="Notes" class="text-danger extra-small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-5 opacity-10">
+
+                        <div class="d-flex justify-content-end gap-3">
+                            <button type="reset" class="btn btn-light rounded-pill px-5 fw-bold text-muted">Reset Form</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="fas fa-save me-2"></i>Commit to Inventory
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-start-4 { border-top-left-radius: 12px !important; border-bottom-left-radius: 12px !important; }
+    .rounded-end-4 { border-top-right-radius: 12px !important; border-bottom-right-radius: 12px !important; }
+    .extra-small { font-size: 0.75rem; font-weight: 500; }
+    .input-group-text { border: none; }
+    .form-control, .form-select { border: none; }
+    .form-control:focus, .form-select:focus { background-color: #fff !important; box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1) !important; border: 1px solid #0d6efd !important; }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

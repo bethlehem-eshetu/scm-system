@@ -6,6 +6,40 @@ namespace SCM_System.Models.ViewModels
     {
         public int EmployeeId { get; set; }
 
+        [Display(Name = "Profile Picture")]
+        public IFormFile? ProfilePicture { get; set; }
+
+        public string? ExistingProfileImage { get; set; }
+
+        [Required]
+        [Display(Name = "Full Name")]
+        [StringLength(100)]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email Address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string Phone { get; set; } = string.Empty;
+
+        [Display(Name = "Current Password")]
+        [DataType(DataType.Password)]
+        public string? CurrentPassword { get; set; }
+
+        [Display(Name = "New Password")]
+        [DataType(DataType.Password)]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
+        public string? NewPassword { get; set; }
+
+        [Display(Name = "Confirm New Password")]
+        [DataType(DataType.Password)]
+        [Compare("NewPassword", ErrorMessage = "Passwords do not match")]
+        public string? ConfirmPassword { get; set; }
+
         [Display(Name = "Default Warehouse Location")]
         [StringLength(200)]
         public string? DefaultWarehouseLocation { get; set; }
