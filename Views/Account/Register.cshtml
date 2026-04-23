@@ -118,7 +118,7 @@
                                         <span id="expiryTimerDisplay" class="fw-bold">Expires in: 05:00</span>
                                     </label>
                                     <div class="input-group">
-                                        <input type="text" id="OTPInput" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none text-center fs-4 fw-bold" placeholder="••••••" maxlength="6" style="letter-spacing: 5px;" />
+                                        <input type="text" id="OTPInput" name="OTPInputDummy" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none text-center fs-4 fw-bold" placeholder="••••••" maxlength="6" style="letter-spacing: 5px;" />
                                         <button class="btn btn-success px-4 fw-bold" type="button" id="btnVerifyOtp">Verify OTP</button>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-2">
@@ -168,7 +168,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted text-uppercase">Register As</label>
-                                    <select id="RoleSelect" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none" required>
+                                    <select id="RoleSelect" name="RoleSelectDummy" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none" required>
                                         <option value="">-- Select Model --</option>
                                         <option value="Supplier">Supplier (Sell Products)</option>
                                         <option value="Retailer">Retailer (Buy Products)</option>
@@ -345,7 +345,7 @@
 
                         <div class="p-4 bg-light bg-opacity-50 rounded-4 border-dashed border-2 text-center mb-5">
                             <div class="form-check d-inline-block">
-                                <input class="form-check-input" type="checkbox" required id="agreeTerms">
+                                <input class="form-check-input" type="checkbox" name="agreeTermsDummy" required id="agreeTerms">
                                 <label class="form-check-label small text-muted ms-2" for="agreeTerms">
                                     I verify all information is accurate and agree to the <a asp-controller="Home" asp-action="Terms" class="text-primary fw-bold" target="_blank">Terms of Service</a>.
                                 </label>
@@ -370,7 +370,6 @@
 </div>
 
 @section Styles {
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         .extra-small { font-size: 0.75rem; }
         
@@ -441,11 +440,19 @@
 }
 
 @section Scripts {
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ duration: 800, once: true });
-        
         $(document).ready(function() {
+            $('#registerForm').on('submit', function(e) {
+                console.log("Form is being submitted!");
+                
+                // Log all form data
+                var formData = new FormData(this);
+                for (var pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+                
+                return true;
+            });
             var expiryTimer = null;
             var resendTimer = null;
             var expiryCountdown = 300; // 5 minutes
@@ -456,22 +463,31 @@
             var savedRole = "@Model?.Role";
             
             if (hasErrors) {
-                // If there are errors, we need to show the business details step
-                // because that's where the final submission happens.
-                // Step 2 is also possible if identity was verified but account essentials failed.
+                var currentStep = 1;
                 
-                // If FullName or PhoneNumber is present, they likely passed Step 1
-                if ($('#VerifiedFullName').val()) {
-                    showStep(2);
+                // Determine which step to show based on what data is present
+                if ($('#VerifiedFullName').val() && $('#VerifiedFullName').val().trim() !== "") {
+                    // Step 1 completed (Fayda verified)
+                    currentStep = 2;
+                    
+                    // Check if business info is partially filled (meaning they were on step 3)
+                    if (savedRole === "Supplier" && $('#CompanyName').val() && $('#CompanyName').val().trim() !== "") {
+                        currentStep = 3;
+                    } else if (savedRole === "Retailer" && $('#BusinessName').val() && $('#BusinessName').val().trim() !== "") {
+                        currentStep = 3;
+                    }
+                }
+                
+                showStep(currentStep);
+                
+                if ($('#VerifiedFullName').val() && $('#VerifiedFullName').val().trim() !== "") {
                     $('#nameBadge').show();
                     $('#phoneBadge').show();
                     $('#dobBadge').show();
-                    
-                    // If Role is also selected, they likely failed at Step 3
-                    if (savedRole) {
-                        showStep(3);
-                        $('#RoleSelect').val(savedRole).trigger('change');
-                    }
+                }
+                
+                if (savedRole) {
+                    $('#RoleSelect').val(savedRole).trigger('change');
                 }
             }
 

@@ -67,7 +67,7 @@ namespace SCM_System.Controllers
         // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model, List<int> SelectedCategoryIds)
         {
             Console.WriteLine("========== REGISTER METHOD STARTED ==========");
             Console.WriteLine($"Role: {model.Role}");
@@ -151,7 +151,8 @@ namespace SCM_System.Controllers
                 {
                     ModelState.AddModelError("DateOfBirth", "Date of birth is required.");
                 }
-                else if (model.Role == "Retailer")
+
+                if (model.Role == "Retailer")
                 {
                     if (string.IsNullOrEmpty(model.BusinessName))
                         ModelState.AddModelError("BusinessName", "Business name is required");
@@ -190,7 +191,7 @@ namespace SCM_System.Controllers
                         }
                     }
 
-                    if (model.SelectedCategoryIds == null || !model.SelectedCategoryIds.Any())
+                    if (SelectedCategoryIds == null || !SelectedCategoryIds.Any())
                     {
                         ModelState.AddModelError("SelectedCategoryIds", "Please select at least one business category.");
                     }
@@ -357,9 +358,9 @@ namespace SCM_System.Controllers
                         Console.WriteLine("Supplier record added to context");
 
                         // Add Business Categories
-                        if (model.SelectedCategoryIds != null && model.SelectedCategoryIds.Any())
+                        if (SelectedCategoryIds != null && SelectedCategoryIds.Any())
                         {
-                            foreach (var categoryId in model.SelectedCategoryIds)
+                            foreach (var categoryId in SelectedCategoryIds)
                             {
                                 _context.SupplierCategories.Add(new SupplierCategory
                                 {
@@ -368,7 +369,7 @@ namespace SCM_System.Controllers
                                 });
                             }
                             await _context.SaveChangesAsync();
-                            Console.WriteLine($"{model.SelectedCategoryIds.Count} categories associated with supplier");
+                            Console.WriteLine($"{SelectedCategoryIds.Count} categories associated with supplier");
                         }
 
                         // Create notification for admin about new supplier
