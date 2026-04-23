@@ -1,0 +1,304 @@
+@model SCM_System.Models.ViewModels.DeliverySettingsViewModel
+@{
+    ViewData["Title"] = "Account Settings";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a asp-action="Dashboard" class="text-decoration-none text-muted">Dashboard</a></li>
+                    <li class="breadcrumb-item active fw-bold text-primary">Settings</li>
+                </ol>
+            </nav>
+            <h2 class="mb-4 fw-bold text-dark">Account Settings</h2>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form asp-action="Settings" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <!-- Left Column: Identity & Performance -->
+            <div class="col-lg-4">
+                <!-- Identity Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body text-center p-4">
+                        <div class="position-relative d-inline-block mb-3">
+                            <img id="profilePreview" src="@(string.IsNullOrEmpty(Model.ProfilePicture) ? "/images/default-profile.png" : Model.ProfilePicture)" 
+                                 class="rounded-circle shadow-sm border border-3 border-white" style="width: 120px; height: 120px; object-fit: cover;" />
+                            <label for="profilePictureFile" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle p-2 shadow-sm" style="cursor: pointer;">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" id="profilePictureFile" name="profilePictureFile" class="d-none" accept="image/*" onchange="previewImage(this)" />
+                        </div>
+                        <h4 class="mb-1 fw-bold text-dark">@Model.FullName</h4>
+                        <p class="text-muted small mb-3">Delivery Professional</p>
+                        
+                        <div class="text-start mt-4">
+                            <div class="mb-3">
+                                <label asp-for="FullName" class="form-label small fw-bold text-uppercase text-muted"></label>
+                                <input asp-for="FullName" class="form-control shadow-none border-light-subtle" placeholder="Enter your full name" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label small fw-bold text-uppercase text-muted"></label>
+                                <input asp-for="Email" class="form-control shadow-none border-light-subtle" placeholder="Email address" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Phone" class="form-label small fw-bold text-uppercase text-muted"></label>
+                                <input asp-for="Phone" class="form-control shadow-none border-light-subtle" placeholder="Phone number" />
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Card -->
+                <div class="card border-0 shadow-sm mb-4 bg-primary text-white overflow-hidden" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
+                    <div class="card-body p-4 position-relative">
+                        <div style="position: absolute; top: -10px; right: -10px; opacity: 0.15; font-size: 5rem;">
+                            <i class="fas fa-chart-line text-white"></i>
+                        </div>
+                        <h5 class="card-title fw-bold mb-4">Monthly Performance</h5>
+                        <div class="row g-3">
+                            <div class="col-6 text-center">
+                                <div class="p-3 rounded bg-white bg-opacity-10 border border-white border-opacity-10">
+                                    <h3 class="mb-0 fw-bold">@Model.TotalDeliveriesMonth</h3>
+                                    <small class="text-white text-opacity-75">Deliveries</small>
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="p-3 rounded bg-white bg-opacity-10 border border-white border-opacity-10">
+                                    <h3 class="mb-0 fw-bold">@Model.AverageRating <i class="fas fa-star text-warning fs-6"></i></h3>
+                                    <small class="text-white text-opacity-75">Avg. Rating</small>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 rounded bg-white bg-opacity-10 border border-white border-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small class="text-white text-opacity-75">On-Time Rate</small>
+                                        <span class="fw-bold">@Model.OnTimePercentage%</span>
+                                    </div>
+                                    <div class="progress shadow-sm" style="height: 8px; background-color: rgba(255,255,255,0.2);">
+                                        <div class="progress-bar bg-success shadow-sm" role="progressbar" style="width: @Model.OnTimePercentage%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Settings Sections -->
+            <div class="col-lg-8">
+                <!-- Vehicle & Availability -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title fw-bold mb-0">
+                            <i class="fas fa-truck-moving text-primary me-2"></i> Vehicle & Availability
+                        </h5>
+                        <div class="form-check form-switch custom-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="IsOnDuty" id="isOnDutySwitch">
+                            <label class="form-check-label fw-bold text-dark" for="isOnDutySwitch">On Duty</label>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 pt-2">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="VehicleId" class="form-label fw-bold small text-muted text-uppercase"></label>
+                                <select asp-for="VehicleId" class="form-select shadow-none border-light-subtle">
+                                    <option value="">-- No Vehicle Assigned --</option>
+                                    @if (ViewBag.Vehicles != null)
+                                    {
+                                        foreach (var vehicle in ViewBag.Vehicles)
+                                        {
+                                            <option value="@vehicle.Id">@vehicle.Make @vehicle.Model (@vehicle.LicensePlate)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="WorkingHoursStart" class="form-label fw-bold small text-muted text-uppercase"></label>
+                                <input asp-for="WorkingHoursStart" type="time" class="form-control shadow-none border-light-subtle" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="WorkingHoursEnd" class="form-label fw-bold small text-muted text-uppercase"></label>
+                                <input asp-for="WorkingHoursEnd" type="time" class="form-control shadow-none border-light-subtle" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Preferences -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4">
+                        <h5 class="card-title fw-bold mb-0 text-success">
+                            <i class="fas fa-tasks me-2"></i> Delivery Preferences
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 pt-2">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label asp-for="MaxDailyDeliveries" class="form-label fw-bold small text-muted text-uppercase"></label>
+                                    <input asp-for="MaxDailyDeliveries" type="number" class="form-control shadow-none border-light-subtle" min="1" max="100" />
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="AutoAcceptAssignments">
+                                    <label class="form-check-label fw-semibold" asp-for="AutoAcceptAssignments"></label>
+                                    <p class="form-text small mb-0">Automatically accept new delivery requests.</p>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="AllowNightDeliveries">
+                                    <label class="form-check-label fw-semibold" asp-for="AllowNightDeliveries"></label>
+                                    <p class="form-text small mb-0">Enable delivery assignments after 8 PM.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-4">
+                                    <input class="form-check-input" type="checkbox" asp-for="RequireProofPhoto">
+                                    <label class="form-check-label fw-semibold" asp-for="RequireProofPhoto"></label>
+                                    <p class="form-text small mb-0">Prompt for photo upon arrival.</p>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="RequireSignature">
+                                    <label class="form-check-label fw-semibold" asp-for="RequireSignature"></label>
+                                    <p class="form-text small mb-0">Require customer signature on device.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4">
+                        <h5 class="card-title fw-bold mb-0 text-warning">
+                            <i class="fas fa-bell me-2"></i> Notification Settings
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 pt-2">
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" asp-for="NotifyNewAssignment">
+                            <label class="form-check-label fw-semibold" asp-for="NotifyNewAssignment"></label>
+                            <p class="form-text small mb-0">Receive push/email alerts for new jobs.</p>
+                        </div>
+                        <div class="mb-0">
+                            <label asp-for="SmsNotificationNumber" class="form-label fw-bold small text-muted text-uppercase"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="fas fa-sms text-muted"></i></span>
+                                <input asp-for="SmsNotificationNumber" class="form-control shadow-none border-light-subtle" placeholder="+251..." />
+                            </div>
+                            <p class="form-text small mt-2">Secondary SMS number for emergency updates.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div class="card border-0 shadow-sm mb-4 border-start border-4 border-info">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4">
+                        <h5 class="card-title fw-bold mb-0 text-info">
+                            <i class="fas fa-shield-alt me-2"></i> Security & Password
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 pt-2">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="CurrentPassword" class="form-label fw-bold small text-muted text-uppercase"></label>
+                                <input asp-for="CurrentPassword" type="password" class="form-control shadow-none border-light-subtle" />
+                                <div class="form-text small text-danger">Required only if changing password.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="NewPassword" class="form-label fw-bold small text-muted text-uppercase"></label>
+                                <input asp-for="NewPassword" type="password" class="form-control shadow-none border-light-subtle" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label fw-bold small text-muted text-uppercase"></label>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control shadow-none border-light-subtle" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="card border-0 shadow-sm mb-4 border-start border-4 border-danger">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-danger mb-1">Deactivate Account</h5>
+                            <p class="text-muted small mb-0">Temporarily hide your profile from new assignments.</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm px-4 fw-bold">Deactivate</button>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mb-5">
+                    <a asp-action="Dashboard" class="btn btn-light px-4 fw-bold">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-5 fw-bold shadow">
+                        <i class="fas fa-save me-2"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('profilePreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .card {
+        border-radius: 0.75rem;
+        transition: transform 0.2s ease-in-out;
+    }
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+        padding: 0.6rem 1rem;
+    }
+    .form-check-input {
+        cursor: pointer;
+    }
+    .custom-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+    }
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "\f054";
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        font-size: 0.6rem;
+        color: #adb5bd;
+    }
+</style>

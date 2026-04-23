@@ -111,6 +111,18 @@ namespace SCM_System.Models.Entities
         public ICollection<InventoryTransfer> RequestedTransfers { get; set; } = new List<InventoryTransfer>();
         public ICollection<InventoryTransfer> ApprovedTransfers { get; set; } = new List<InventoryTransfer>();
 
+        // Delivery Agent Settings
+        public bool IsOnDuty { get; set; } = true;
+        public TimeSpan? WorkingHoursStart { get; set; }
+        public TimeSpan? WorkingHoursEnd { get; set; }
+        public int MaxDailyDeliveries { get; set; } = 10;
+        public bool RequireProofPhoto { get; set; } = true;
+        public bool RequireSignature { get; set; } = true;
+        public bool AutoAcceptAssignments { get; set; } = false;
+        public bool AllowNightDeliveries { get; set; } = false;
+        public bool NotifyNewAssignment { get; set; } = true;
+        public string? SmsNotificationNumber { get; set; }
+
         // Navigation properties
         public ICollection<Delivery> Deliveries { get; set; } = new List<Delivery>();
     }
