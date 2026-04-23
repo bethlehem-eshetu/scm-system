@@ -1,9 +1,236 @@
-@model SCM_System.Models.ViewModels.RegisterViewModel
-@{
-    ViewData["Title"] = "Enterprise Registration";
-    Layout = "_Layout";
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enterprise Registration - SCM System</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/site.css?v=rnjWEWN_zfziyXF9cmvdRDKlbfxMkaFSlHgOZbHjkIQ" />
 
+    <style>
+        .navbar {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: 500;
+            margin: 0 0.5rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            background-color: var(--primary-color);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        .footer {
+            background: transparent;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            color: var(--text-secondary);
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: var(--primary-color);
+        }
+
+        main {
+            min-height: calc(100vh - 180px);
+            padding: 2rem 0;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37,99,235,0.3);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37,99,235,0.2);
+        }
+    </style>
+
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        .extra-small { font-size: 0.75rem; }
+        
+        /* Premium Core Styling (Ported from Login) */
+        :root {
+            --ethio-blue: #0b3d60;
+            --ethio-blue-dark: #07253b;
+            --ethio-gold: #cba052;
+            --bg-surface: #f8f9fc;
+        }
+
+        .bg-light-surface { background-color: var(--bg-surface); }
+        .text-dark-blue { color: var(--ethio-blue-dark) !important; }
+        .tracking-wide { letter-spacing: 0.05em; }
+        .letter-spacing-1 { letter-spacing: 1px; }
+
+        .brand-section {
+            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
+        }
+        .brand-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(203, 160, 82, 0.15) 0%, transparent 50%);
+            z-index: 1;
+        }
+        .motif-pattern {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.03;
+            background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 30px 30px; z-index: 1;
+        }
+        .z-index-2 { z-index: 2; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-brand {
+            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
+            color: white; border: none;
+        }
+
+        .animate-slide-up { animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .border-dashed { border: 2px dashed #dee2e6 !important; }
+
+        /* General form override to match new aesthetics */
+        .form-control, .form-select { border: 1px solid rgba(0,0,0,0.05) !important; }
+        .form-control:focus, .form-select:focus { box-shadow: 0 0 0 4px rgba(11, 61, 96, 0.1) !important; background-color: #fff !important; }
+
+        /* Stepper Styles */
+        .step-item { text-align: center; z-index: 2; background: var(--bg-surface); padding: 0 10px; }
+        .step-number { width: 35px; height: 35px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 auto 5px; border: 2px solid #e9ecef; transition: all 0.3s ease; }
+        .step-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #6c757d; transition: all 0.3s ease; }
+        .step-item.active .step-number { background: var(--ethio-blue); color: white; border-color: var(--ethio-blue); box-shadow: 0 0 10px rgba(11,61,96,0.3); }
+        .step-item.active .step-label { color: var(--ethio-blue); }
+        .step-item.completed .step-number { background: #198754; color: white; border-color: #198754; }
+        .step-item.completed .step-label { color: #198754; }
+        .step-connector { position: absolute; top: 17px; left: 0; right: 0; height: 2px; background: #e9ecef; z-index: 1; }
+        .transition { transition: all 0.2s ease-in-out; }
+        .hover-shadow:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); transform: translateY(-2px); border-color: var(--ethio-blue) !important; }
+        .category-group { border-radius: 12px; }
+    </style>
+
+</head>
+<body>
+    <header b-ig5y7mvy0d>
+        <nav b-ig5y7mvy0d class="navbar navbar-expand-lg">
+            <div b-ig5y7mvy0d class="container">
+                <a class="navbar-brand" href="/">
+                    <img src="/images/ethiochain-logo.jpg" alt="EthioChain Logo" style="height: 32px; width: 32px; border-radius: 8px;" />
+                    EthioChain SCM
+                </a>
+                <button b-ig5y7mvy0d class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span b-ig5y7mvy0d class="navbar-toggler-icon"></span>
+                </button>
+                <div b-ig5y7mvy0d class="collapse navbar-collapse" id="navbarNav">
+                    <ul b-ig5y7mvy0d class="navbar-nav ms-auto">
+                        <li b-ig5y7mvy0d class="nav-item">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <li b-ig5y7mvy0d class="nav-item">
+                            <a b-ig5y7mvy0d class="nav-link" href="#">About</a>
+                        </li>
+                        <li b-ig5y7mvy0d class="nav-item">
+                            <a b-ig5y7mvy0d class="nav-link" href="#">Contact</a>
+                        </li>
+
+
+                        
+
+
+
+                            <li b-ig5y7mvy0d class="nav-item">
+                                <a class="nav-link" href="/Account/Login">Login</a>
+                            </li>
+                            <li b-ig5y7mvy0d class="nav-item">
+                                <a class="btn btn-primary btn-sm" href="/Account/Register">Register</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main b-ig5y7mvy0d>
+
+
+        
 <div class="container-fluid p-0 overflow-hidden">
     <div class="row g-0 min-vh-100">
         <!-- Left Column: Value Props & Sticky Branding -->
@@ -61,12 +288,9 @@
                     <p class="text-muted">Fill in your details to get started with the EthioChain network.</p>
                 </div>
 
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
-                        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
-                    </div>
-                }
+
+                
+
                 <div id="registrationStepper" class="mb-4">
                     <div class="d-flex justify-content-between position-relative">
                         <div class="step-item active" id="step-1-indicator">
@@ -85,9 +309,9 @@
                     </div>
                 </div>
 
-                <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm" class="needs-validation">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="Role" id="RoleHidden" />
+                <form method="post" enctype="multipart/form-data" id="registerForm" class="needs-validation" action="/Account/Register">
+                    
+                    <input type="hidden" id="RoleHidden" data-val="true" data-val-required="Please select a role" name="Role" value="" />
 
                     <!-- Step 1: Fayda Identity Verification -->
                     <div id="step-1" class="registration-step">
@@ -98,14 +322,14 @@
                             </div>
                             <div class="row g-3">
                                 <div class="col-12 mb-3">
-                                    <label asp-for="Email" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Email Address (For OTP)</label>
-                                    <input asp-for="Email" id="EmailInput" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="email" placeholder="john@company.com" />
-                                    <span asp-validation-for="Email" class="text-danger extra-small"></span>
+                                    <label class="form-label small fw-bold text-muted text-uppercase tracking-wide" for="Email">Email Address (For OTP)</label>
+                                    <input id="EmailInput" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="email" placeholder="john@company.com" data-val="true" data-val-email="Invalid email address" data-val-required="Email is required" name="Email" value="" />
+                                    <span class="text-danger extra-small field-validation-valid" data-valmsg-for="Email" data-valmsg-replace="true"></span>
                                 </div>
                                 <div class="col-12" id="fanSection">
                                     <label class="form-label small fw-bold text-muted text-uppercase">Fayda Account Number (FAN)</label>
                                     <div class="input-group">
-                                        <input asp-for="FAN" id="FANInput" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none" placeholder="16-digit number" maxlength="16" />
+                                        <input id="FANInput" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none" placeholder="16-digit number" maxlength="16" type="text" data-val="true" data-val-regex="FAN must be a valid 16-digit number." data-val-regex-pattern="^\d{16}$" data-val-required="Fayda Account Number (FAN) is required" name="FAN" value="" />
                                         <button class="btn btn-primary px-4 fw-bold" type="button" id="btnRequestOtp">Request OTP</button>
                                     </div>
                                     <span id="fanError" class="text-danger extra-small"></span>
@@ -118,7 +342,7 @@
                                         <span id="expiryTimerDisplay" class="fw-bold">Expires in: 05:00</span>
                                     </label>
                                     <div class="input-group">
-                                        <input type="text" id="OTPInput" name="OTPInputDummy" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none text-center fs-4 fw-bold" placeholder="••••••" maxlength="6" style="letter-spacing: 5px;" />
+                                        <input type="text" id="OTPInput" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none text-center fs-4 fw-bold" placeholder="••••••" maxlength="6" style="letter-spacing: 5px;" />
                                         <button class="btn btn-success px-4 fw-bold" type="button" id="btnVerifyOtp">Verify OTP</button>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-2">
@@ -149,48 +373,48 @@
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label asp-for="FullName" class="form-label small fw-bold text-muted text-uppercase d-block">
+                                    <label class="form-label small fw-bold text-muted text-uppercase d-block" for="FullName">
                                         Verified Name
                                         <span id="nameBadge" style="display:none" class="badge bg-success float-end"><i class="fas fa-check-circle"></i> Fayda Verified</span>
                                     </label>
-                                    <input asp-for="FullName" id="VerifiedFullName" class="form-control bg-white border-0 rounded-3 py-2 px-3 shadow-none fw-bold" readonly />
+                                    <input id="VerifiedFullName" class="form-control bg-white border-0 rounded-3 py-2 px-3 shadow-none fw-bold" readonly type="text" data-val="true" data-val-required="Full name is required" name="FullName" value="" />
                                     <small id="fullNameHelpText" class="form-text text-muted"></small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label asp-for="PhoneNumber" class="form-label small fw-bold text-muted text-uppercase d-block">
+                                    <label class="form-label small fw-bold text-muted text-uppercase d-block" for="PhoneNumber">
                                         Phone Number *
                                         <span id="phoneBadge" style="display:none" class="badge bg-info float-end"><i class="fas fa-check-circle"></i> Fayda Verified</span>
                                     </label>
-                                    <input asp-for="PhoneNumber" id="VerifiedPhone" class="form-control bg-white border-0 rounded-3 py-2 px-3 shadow-none fw-bold" placeholder="Enter your phone number" />
+                                    <input id="VerifiedPhone" class="form-control bg-white border-0 rounded-3 py-2 px-3 shadow-none fw-bold" placeholder="Enter your phone number" type="tel" data-val="true" data-val-phone="Invalid phone number" data-val-required="Phone number is required" name="PhoneNumber" value="" />
                                     <small id="phoneHelpText" class="form-text text-muted">
                                         If Fayda provides a phone number, it will be pre-filled. You can change it if needed.
                                     </small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted text-uppercase">Register As</label>
-                                    <select id="RoleSelect" name="RoleSelectDummy" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none" required>
+                                    <select id="RoleSelect" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
                                         <option value="">-- Select Model --</option>
                                         <option value="Supplier">Supplier (Sell Products)</option>
                                         <option value="Retailer">Retailer (Buy Products)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase">Secure Password</label>
-                                    <input asp-for="Password" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" />
-                                    <span asp-validation-for="Password" class="text-danger extra-small"></span>
+                                    <label class="form-label small fw-bold text-muted text-uppercase" for="Password">Secure Password</label>
+                                    <input class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" data-val="true" data-val-minlength="Password must be at least 6 characters" data-val-minlength-min="6" data-val-required="Password is required" id="Password" name="Password" />
+                                    <span class="text-danger extra-small field-validation-valid" data-valmsg-for="Password" data-valmsg-replace="true"></span>
                                 </div>
                                 <div class="col-md-6">
-                                    <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
-                                    <input asp-for="ConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" />
-                                    <span asp-validation-for="ConfirmPassword" class="text-danger extra-small"></span>
+                                    <label class="form-label small fw-bold text-muted text-uppercase" for="ConfirmPassword">Confirm Password</label>
+                                    <input class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" data-val="true" data-val-equalto="Passwords do not match" data-val-equalto-other="*.Password" data-val-required="Please confirm your password" id="ConfirmPassword" name="ConfirmPassword" />
+                                    <span class="text-danger extra-small field-validation-valid" data-valmsg-for="ConfirmPassword" data-valmsg-replace="true"></span>
                                 </div>
                                 <div class="col-md-12">
-                                    <label asp-for="DateOfBirth" class="form-label small fw-bold text-muted text-uppercase d-block">
+                                    <label class="form-label small fw-bold text-muted text-uppercase d-block" for="DateOfBirth">
                                         Date of Birth
                                         <span id="dobBadge" style="display:none" class="badge bg-success float-end"><i class="fas fa-check-circle"></i> Fayda Verified</span>
                                     </label>
-                                    <input asp-for="DateOfBirth" type="date" id="DateOfBirth" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                    <span asp-validation-for="DateOfBirth" class="text-danger extra-small"></span>
+                                    <input type="date" id="DateOfBirth" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" data-val="true" data-val-required="Date of Birth is required" name="DateOfBirth" value="" /><input name="__Invariant" type="hidden" value="DateOfBirth" />
+                                    <span class="text-danger extra-small field-validation-valid" data-valmsg-for="DateOfBirth" data-valmsg-replace="true"></span>
                                     <small id="dobHelpText" class="form-text text-muted"></small>
                                 </div>
                             </div>
@@ -212,46 +436,79 @@
                             <div id="SupplierFields" style="display: none;">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label asp-for="CompanyName" class="form-label small fw-bold text-muted text-uppercase">Legal Company Name</label>
-                                        <input asp-for="CompanyName" id="CompanyName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="CompanyName" class="text-danger extra-small"></span>
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="CompanyName">Legal Company Name</label>
+                                        <input id="CompanyName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="text" name="CompanyName" value="" />
+                                        <span class="text-danger extra-small field-validation-valid" data-valmsg-for="CompanyName" data-valmsg-replace="true"></span>
                                     </div>
-@* Removed Industry Focus as per refinement plan *@
 
                                     <div class="col-12">
                                         <label class="form-label small fw-bold text-muted text-uppercase">Business Categories / What do you supply? *</label>
                                         <div class="card border-0 bg-light rounded-4 p-3 mb-2" style="max-height: 400px; overflow-y: auto;">
                                             <div class="category-hierarchy">
-                                                @if (ViewBag.Categories != null)
-                                                {
-                                                    @foreach (var category in (IEnumerable<SCM_System.Models.Entities.ProductCategory>)ViewBag.Categories)
-                                                    {
                                                         <div class="category-group mb-3">
                                                             <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
-                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="@category.Id" id="cat_@category.Id" @(Model?.SelectedCategoryIds != null && Model.SelectedCategoryIds.Contains(category.Id) ? "checked" : "")>
-                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_@category.Id">
-                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> @category.CategoryName
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="7" id="cat_7" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_7">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Agriculture
                                                                 </label>
                                                             </div>
-                                                            @if (category.SubCategories != null && category.SubCategories.Any())
-                                                            {
-                                                                <div class="ms-4 ps-2 border-start border-2 border-primary border-opacity-25 row g-2">
-                                                                    @foreach (var sub in category.SubCategories)
-                                                                    {
-                                                                        <div class="col-md-4">
-                                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white h-100 d-flex align-items-center hover-shadow transition">
-                                                                                <input class="form-check-input ms-0 me-3 sub-category" type="checkbox" name="SelectedCategoryIds" value="@sub.Id" id="cat_@sub.Id" data-parent="cat_@category.Id" @(Model?.SelectedCategoryIds != null && Model.SelectedCategoryIds.Contains(sub.Id) ? "checked" : "")>
-                                                                                <label class="form-check-label small mb-0 text-muted" for="cat_@sub.Id">
-                                                                                    @sub.CategoryName
-                                                                                </label>
-                                                                            </div>
-                                                                        </div>
-                                                                    }
-                                                                </div>
-                                                            }
                                                         </div>
-                                                    }
-                                                }
+                                                        <div class="category-group mb-3">
+                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="2" id="cat_2" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_2">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Clothing &amp; Apparel
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="category-group mb-3">
+                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="1" id="cat_1" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_1">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Electronics &amp; Gadgets
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="category-group mb-3">
+                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="3" id="cat_3" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_3">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Food &amp; Beverage
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="category-group mb-3">
+                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="5" id="cat_5" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_5">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Health &amp; Beauty
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="category-group mb-3">
+                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="4" id="cat_4" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_4">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Home &amp; Garden
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="category-group mb-3">
+                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="6" id="cat_6" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_6">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Industrial Tools
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="category-group mb-3">
+                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="8" id="cat_8" >
+                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_8">
+                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> Raw Materials
+                                                                </label>
+                                                            </div>
+                                                        </div>
                                             </div>
                                         </div>
                                         <div class="alert alert-info py-2 px-3 rounded-3 small mb-0 border-0 shadow-sm mt-3">
@@ -261,23 +518,24 @@
                                         <span id="categoryError" class="text-danger extra-small d-block mt-2"></span>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="LicenseNumber" class="form-label small fw-bold text-muted text-uppercase">Business License #</label>
-                                        <input asp-for="LicenseNumber" id="LicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="LicenseNumber" class="text-danger extra-small"></span>
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="LicenseNumber">Business License #</label>
+                                        <input id="LicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="text" name="LicenseNumber" value="" />
+                                        <span class="text-danger extra-small field-validation-valid" data-valmsg-for="LicenseNumber" data-valmsg-replace="true"></span>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="TaxIdentificationNumber" class="form-label small fw-bold text-muted text-uppercase">TIN</label>
-                                        <input asp-for="TaxIdentificationNumber" id="TaxIdentificationNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="TaxIdentificationNumber" class="text-danger extra-small"></span>
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="TaxIdentificationNumber">TIN</label>
+                                        <input id="TaxIdentificationNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="text" name="TaxIdentificationNumber" value="" />
+                                        <span class="text-danger extra-small field-validation-valid" data-valmsg-for="TaxIdentificationNumber" data-valmsg-replace="true"></span>
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG)</label>
-                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="LicenseFile">Legal Verification (PDF/IMG)</label>
+                                        <input id="LicenseFile" type="file" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" name="LicenseFile" />
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="CompanyAddress" class="form-label small fw-bold text-muted text-uppercase">Headquarters Address</label>
-                                        <textarea asp-for="CompanyAddress" id="CompanyAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2"></textarea>
-                                        <span asp-validation-for="CompanyAddress" class="text-danger extra-small"></span>
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="CompanyAddress">Headquarters Address</label>
+                                        <textarea id="CompanyAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2" name="CompanyAddress">
+</textarea>
+                                        <span class="text-danger extra-small field-validation-valid" data-valmsg-for="CompanyAddress" data-valmsg-replace="true"></span>
                                     </div>
                                 </div>
                             </div>
@@ -286,13 +544,13 @@
                             <div id="RetailerFields" style="display: none;">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label asp-for="BusinessName" class="form-label small fw-bold text-muted text-uppercase">Retail Business Name</label>
-                                        <input asp-for="BusinessName" id="BusinessName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="BusinessName" class="text-danger extra-small"></span>
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="BusinessName">Retail Business Name</label>
+                                        <input id="BusinessName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="text" name="BusinessName" value="" />
+                                        <span class="text-danger extra-small field-validation-valid" data-valmsg-for="BusinessName" data-valmsg-replace="true"></span>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="RetailerBusinessType" class="form-label small fw-bold text-muted text-uppercase">Retail Model</label>
-                                        <select asp-for="RetailerBusinessType" id="RetailerBusinessType" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="RetailerBusinessType">Retail Model</label>
+                                        <select id="RetailerBusinessType" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none" name="RetailerBusinessType">
                                             <option value="Retail Shop">Retail Shop</option>
                                             <option value="Supermarket">Supermarket</option>
                                             <option value="Restaurant">Restaurant</option>
@@ -304,22 +562,23 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="StoreSize" class="form-label small fw-bold text-muted text-uppercase">Operational Scale</label>
-                                        <select asp-for="StoreSize" id="StoreSize" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="StoreSize">Operational Scale</label>
+                                        <select id="StoreSize" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none" name="StoreSize">
                                             <option value="Small">Small-Scale</option>
                                             <option value="Medium">Medium-Scale</option>
                                             <option value="Large">Large-Scale</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="RetailerLicenseNumber" class="form-label small fw-bold text-muted text-uppercase">License Number</label>
-                                        <input asp-for="RetailerLicenseNumber" id="RetailerLicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="RetailerLicenseNumber" class="text-danger extra-small"></span>
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="RetailerLicenseNumber">License Number</label>
+                                        <input id="RetailerLicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="text" name="RetailerLicenseNumber" value="" />
+                                        <span class="text-danger extra-small field-validation-valid" data-valmsg-for="RetailerLicenseNumber" data-valmsg-replace="true"></span>
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="BusinessAddress" class="form-label small fw-bold text-muted text-uppercase">Main Store Location</label>
-                                        <textarea asp-for="BusinessAddress" id="BusinessAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2"></textarea>
-                                        <span asp-validation-for="BusinessAddress" class="text-danger extra-small"></span>
+                                        <label class="form-label small fw-bold text-muted text-uppercase" for="BusinessAddress">Main Store Location</label>
+                                        <textarea id="BusinessAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2" name="BusinessAddress">
+</textarea>
+                                        <span class="text-danger extra-small field-validation-valid" data-valmsg-for="BusinessAddress" data-valmsg-replace="true"></span>
                                     </div>
                                 </div>
                             </div>
@@ -332,9 +591,9 @@
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label asp-for="City" class="form-label small fw-bold text-muted text-uppercase">Operational City</label>
-                                    <input asp-for="City" id="CityField" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" required />
-                                    <span asp-validation-for="City" class="text-danger extra-small"></span>
+                                    <label class="form-label small fw-bold text-muted text-uppercase" for="City">Operational City</label>
+                                    <input id="CityField" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" required type="text" name="City" value="" />
+                                    <span class="text-danger extra-small field-validation-valid" data-valmsg-for="City" data-valmsg-replace="true"></span>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted text-uppercase">Country</label>
@@ -345,9 +604,9 @@
 
                         <div class="p-4 bg-light bg-opacity-50 rounded-4 border-dashed border-2 text-center mb-5">
                             <div class="form-check d-inline-block">
-                                <input class="form-check-input" type="checkbox" name="agreeTermsDummy" required id="agreeTerms">
+                                <input class="form-check-input" type="checkbox" required id="agreeTerms">
                                 <label class="form-check-label small text-muted ms-2" for="agreeTerms">
-                                    I verify all information is accurate and agree to the <a asp-controller="Home" asp-action="Terms" class="text-primary fw-bold" target="_blank">Terms of Service</a>.
+                                    I verify all information is accurate and agree to the <a class="text-primary fw-bold" target="_blank" href="/Home/Terms">Terms of Service</a>.
                                 </label>
                             </div>
                         </div>
@@ -360,134 +619,75 @@
                     <div class="text-center mt-3">
                         <p class="text-muted small">
                             Already part of the network? 
-                            <a asp-action="Login" class="text-primary fw-bold text-decoration-none ms-1">Sign In instead</a>
+                            <a class="text-primary fw-bold text-decoration-none ms-1" href="/Account/Login">Sign In instead</a>
                         </p>
                     </div>
-                </form>
+                <input name="__RequestVerificationToken" type="hidden" value="CfDJ8N5O0fSWFXpPnNHavwXOHyk2VsM_YscFyYwCXGE7-9oWQZFPgeAJz-IfKGOLw4Q9g3okzqgxnBxOYGMrJrXBY_CQ5QmW3KTb5Eiokickkr2XaMrgUAmnlGCCTLc2N5hYiU2vthbKHa99PPD4bCpVr-w" /></form>
             </div>
         </div>
     </div>
 </div>
 
-@section Styles {
-    <style>
-        .extra-small { font-size: 0.75rem; }
-        
-        /* Premium Core Styling (Ported from Login) */
-        :root {
-            --ethio-blue: #0b3d60;
-            --ethio-blue-dark: #07253b;
-            --ethio-gold: #cba052;
-            --bg-surface: #f8f9fc;
-        }
 
-        .bg-light-surface { background-color: var(--bg-surface); }
-        .text-dark-blue { color: var(--ethio-blue-dark) !important; }
-        .tracking-wide { letter-spacing: 0.05em; }
-        .letter-spacing-1 { letter-spacing: 1px; }
 
-        .brand-section {
-            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
-        }
-        .brand-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 20% 80%, rgba(203, 160, 82, 0.15) 0%, transparent 50%);
-            z-index: 1;
-        }
-        .motif-pattern {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.03;
-            background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 30px 30px; z-index: 1;
-        }
-        .z-index-2 { z-index: 2; }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: transform 0.3s ease, background 0.3s ease;
-        }
-        .glass-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.1);
-        }
+    </main>
 
-        .btn-brand {
-            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
-            color: white; border: none;
-        }
+    <footer b-ig5y7mvy0d class="footer">
+        <div b-ig5y7mvy0d class="container">
+            <div b-ig5y7mvy0d class="row align-items-center">
+                <div b-ig5y7mvy0d class="col-md-6">
+                    <p b-ig5y7mvy0d class="mb-2 mb-md-0">
+                        <img src="/images/ethiochain-logo.jpg" alt="Logo" style="height: 20px; width: 20px; border-radius: 4px;" class="me-2" />
+                        © 2026 EthioChain SCM. All rights reserved.
+                    </p>
+                </div>
+                <div b-ig5y7mvy0d class="col-md-6 text-md-end">
+                    <a class="me-3" href="/Home/Privacy">Privacy</a>
+                    <a class="me-3" href="/Home/Terms">Terms</a>
+                    <a b-ig5y7mvy0d href="#">
+                        <i b-ig5y7mvy0d class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-        .animate-slide-up { animation: slideUp 0.4s ease-out; }
-        @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .border-dashed { border: 2px dashed #dee2e6 !important; }
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js?v=hRQyftXiu1lLX2P9Ly9xa4gHJgLeR1uGN5qegUobtGo"></script>
 
-        /* General form override to match new aesthetics */
-        .form-control, .form-select { border: 1px solid rgba(0,0,0,0.05) !important; }
-        .form-control:focus, .form-select:focus { box-shadow: 0 0 0 4px rgba(11, 61, 96, 0.1) !important; background-color: #fff !important; }
-
-        /* Stepper Styles */
-        .step-item { text-align: center; z-index: 2; background: var(--bg-surface); padding: 0 10px; }
-        .step-number { width: 35px; height: 35px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 auto 5px; border: 2px solid #e9ecef; transition: all 0.3s ease; }
-        .step-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #6c757d; transition: all 0.3s ease; }
-        .step-item.active .step-number { background: var(--ethio-blue); color: white; border-color: var(--ethio-blue); box-shadow: 0 0 10px rgba(11,61,96,0.3); }
-        .step-item.active .step-label { color: var(--ethio-blue); }
-        .step-item.completed .step-number { background: #198754; color: white; border-color: #198754; }
-        .step-item.completed .step-label { color: #198754; }
-        .step-connector { position: absolute; top: 17px; left: 0; right: 0; height: 2px; background: #e9ecef; z-index: 1; }
-        .transition { transition: all 0.2s ease-in-out; }
-        .hover-shadow:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); transform: translateY(-2px); border-color: var(--ethio-blue) !important; }
-        .category-group { border-radius: 12px; }
-    </style>
-}
-
-@section Scripts {
+    
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
+        AOS.init({ duration: 800, once: true });
+        
         $(document).ready(function() {
-            $('#registerForm').on('submit', function(e) {
-                console.log("Form is being submitted!");
-                
-                // Log all form data
-                var formData = new FormData(this);
-                for (var pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
-                }
-                
-                return true;
-            });
             var expiryTimer = null;
             var resendTimer = null;
             var expiryCountdown = 300; // 5 minutes
             var resendCountdown = 60; // 60 seconds
 
             // Auto-recovery for server-side validation errors
-            var hasErrors = @(ViewData.ModelState.IsValid ? "false" : "true");
-            var savedRole = "@Model?.Role";
+            var hasErrors = false;
+            var savedRole = "";
             
             if (hasErrors) {
-                var currentStep = 1;
+                // If there are errors, we need to show the business details step
+                // because that's where the final submission happens.
+                // Step 2 is also possible if identity was verified but account essentials failed.
                 
-                // Determine which step to show based on what data is present
-                if ($('#VerifiedFullName').val() && $('#VerifiedFullName').val().trim() !== "") {
-                    // Step 1 completed (Fayda verified)
-                    currentStep = 2;
-                    
-                    // Check if business info is partially filled (meaning they were on step 3)
-                    if (savedRole === "Supplier" && $('#CompanyName').val() && $('#CompanyName').val().trim() !== "") {
-                        currentStep = 3;
-                    } else if (savedRole === "Retailer" && $('#BusinessName').val() && $('#BusinessName').val().trim() !== "") {
-                        currentStep = 3;
-                    }
-                }
-                
-                showStep(currentStep);
-                
-                if ($('#VerifiedFullName').val() && $('#VerifiedFullName').val().trim() !== "") {
+                // If FullName or PhoneNumber is present, they likely passed Step 1
+                if ($('#VerifiedFullName').val()) {
+                    showStep(2);
                     $('#nameBadge').show();
                     $('#phoneBadge').show();
                     $('#dobBadge').show();
-                }
-                
-                if (savedRole) {
-                    $('#RoleSelect').val(savedRole).trigger('change');
+                    
+                    // If Role is also selected, they likely failed at Step 3
+                    if (savedRole) {
+                        showStep(3);
+                        $('#RoleSelect').val(savedRole).trigger('change');
+                    }
                 }
             }
 
@@ -792,5 +992,9 @@
             });
         });
     </script>
-    <partial name="_ValidationScriptsPartial" />
-}
+    <script src="/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+
+
+</body>
+</html>

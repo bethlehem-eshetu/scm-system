@@ -240,6 +240,11 @@ namespace SCM_System.Controllers
                 {
                     Console.WriteLine("Email already exists!");
                     ModelState.AddModelError("Email", "Email already registered");
+                    ViewBag.Categories = await _context.ProductCategories
+                        .Include(c => c.SubCategories)
+                        .Where(c => c.ParentCategoryId == null)
+                        .OrderBy(c => c.CategoryName)
+                        .ToListAsync();
                     return View(model);
                 }
 
@@ -290,6 +295,11 @@ namespace SCM_System.Controllers
                         {
                             await transaction.RollbackAsync();
                             ModelState.AddModelError("LicenseFile", "File size cannot exceed 5MB");
+                            ViewBag.Categories = await _context.ProductCategories
+                                .Include(c => c.SubCategories)
+                                .Where(c => c.ParentCategoryId == null)
+                                .OrderBy(c => c.CategoryName)
+                                .ToListAsync();
                             return View(model);
                         }
 
@@ -301,6 +311,11 @@ namespace SCM_System.Controllers
                         {
                             await transaction.RollbackAsync();
                             ModelState.AddModelError("LicenseFile", "Only PDF, JPG, JPEG, and PNG files are allowed");
+                            ViewBag.Categories = await _context.ProductCategories
+                                .Include(c => c.SubCategories)
+                                .Where(c => c.ParentCategoryId == null)
+                                .OrderBy(c => c.CategoryName)
+                                .ToListAsync();
                             return View(model);
                         }
 
@@ -485,6 +500,12 @@ namespace SCM_System.Controllers
                 }
                 
                 try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", errorMsg); } catch {}
+
+                ViewBag.Categories = await _context.ProductCategories
+                    .Include(c => c.SubCategories)
+                    .Where(c => c.ParentCategoryId == null)
+                    .OrderBy(c => c.CategoryName)
+                    .ToListAsync();
 
                 TempData["ErrorMessage"] = "An error occurred during registration. Please try again. " + ex.Message;
                 return View(model);
