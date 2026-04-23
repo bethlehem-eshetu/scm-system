@@ -1,0 +1,479 @@
+@model SCM_System.Models.ViewModels.AdminSettingsViewModel
+@{
+    ViewData["Title"] = "Admin Account Settings";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-5">
+    <div class="row mb-4">
+        <div class="col-12 text-center text-lg-start">
+            <h2 class="fw-bold text-dark mb-1"><i class="fas fa-user-cog me-2 text-primary"></i> Admin Control Center</h2>
+            <p class="text-muted">Refine your administrative profile, security protocols, and system preferences.</p>
+        </div>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-lg me-3"></i>
+                <div>
+                    <h6 class="fw-bold mb-0">Validation Errors</h6>
+                    <div asp-validation-summary="All" class="small"></div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <form asp-action="Settings" method="post" enctype="multipart/form-data" id="settingsForm">
+        <div class="row g-4">
+            <!-- Left Column: Identity & Security -->
+            <div class="col-lg-4">
+                <!-- Identity Card -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 glass-card border-top border-primary border-5">
+                    <div class="card-body p-4 text-center">
+                        <div class="profile-upload-wrapper position-relative d-inline-block mb-3">
+                            <div class="profile-preview-circle shadow-sm border border-3 border-white overflow-hidden rounded-circle mx-auto" id="profileImagePreview" style="width: 120px; height: 120px; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                @if (!string.IsNullOrEmpty(Model.ExistingProfileImage))
+                                {
+                                    <img src="@Model.ExistingProfileImage" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
+                                }
+                                else
+                                {
+                                    <i class="fas fa-user-shield fa-3x text-muted"></i>
+                                }
+                            </div>
+                            <label for="ProfilePicture" class="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0 shadow p-2" style="width: 32px; height: 32px;" data-bs-toggle="tooltip" title="Change Photo">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" asp-for="ProfilePicture" class="d-none" accept="image/*" onchange="previewImage(this)" />
+                        </div>
+                        <h5 class="fw-bold mb-1">@Model.FullName</h5>
+                        <p class="text-muted small mb-3"><i class="fas fa-crown text-warning me-1"></i> System Administrator</p>
+                        
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label asp-for="FullName" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Full Name</label>
+                                <input asp-for="FullName" class="form-control form-control-sm bg-light border-0" />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Email Address</label>
+                                <input asp-for="Email" class="form-control form-control-sm bg-light border-0" />
+                            </div>
+                            <div class="mb-0">
+                                <label asp-for="Phone" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Phone Number</label>
+                                <input asp-for="Phone" class="form-control form-control-sm bg-light border-0" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Card -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden glass-card border-top border-success border-5">
+                    <div class="card-header bg-white py-3 border-bottom border-light">
+                        <h6 class="fw-bold mb-0 text-success"><i class="fas fa-shield-alt me-2"></i> Password & Access</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label asp-for="CurrentPassword" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Current Password</label>
+                            <input asp-for="CurrentPassword" type="password" class="form-control form-control-sm bg-light border-0" placeholder="Required for changes" />
+                        </div>
+                        <hr class="my-3 opacity-10" />
+                        <div class="mb-3">
+                            <label asp-for="NewPassword" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">New Password</label>
+                            <input asp-for="NewPassword" type="password" class="form-control form-control-sm bg-light border-0" id="newPasswordInput" />
+                            <div class="mt-2" id="passwordStrengthWrapper" style="display:none;">
+                                <div class="progress" style="height: 4px;">
+                                    <div id="strengthMeter" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label asp-for="ConfirmPassword" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Confirm New Password</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control form-control-sm bg-light border-0" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Column: Advanced Security & Preferences -->
+            <div class="col-lg-4">
+                <!-- 2FA Card -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 glass-card border-top border-info border-5">
+                    <div class="card-header bg-white py-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-info"><i class="fas fa-key me-2"></i> Two-Factor Auth</h6>
+                        <div class="form-check form-switch custom-switch">
+                            <input asp-for="TwoFactorEnabled" class="form-check-input" type="checkbox" id="2faSwitch">
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="2faSetupUI" style="@(Model.TwoFactorEnabled ? "display:none;" : "")">
+                            <div class="text-center mb-3">
+                                <div class="bg-white p-3 d-inline-block rounded-3 border">
+                                    <img src="@ViewBag.QrCodeImageUrl" alt="QR Code" class="img-fluid" />
+                                </div>
+                                <p class="extra-small text-muted mt-2">Scan this QR with Google Authenticator or Authy</p>
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text bg-light border-0"><i class="fas fa-lock"></i></span>
+                                <input type="text" class="form-control bg-light border-0" value="@ViewBag.ManualSetupKey" readonly>
+                                <button class="btn btn-outline-secondary border-0" type="button" onclick="navigator.clipboard.writeText('@ViewBag.ManualSetupKey')" data-bs-toggle="tooltip" title="Copy Secret"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <form asp-action="Verify2FA" method="post" class="d-flex gap-2">
+                                <input type="text" name="pin" class="form-control form-control-sm bg-light border-0" placeholder="Enter 6-digit PIN" required maxlength="6" pattern="\d{6}" />
+                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Verify</button>
+                            </form>
+                        </div>
+                        @if (Model.TwoFactorEnabled)
+                        {
+                            <div class="text-center py-3">
+                                <div class="icon-box bg-success-soft text-success mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-check-shield fa-2x"></i>
+                                </div>
+                                <h6 class="fw-bold text-success mb-1">2FA is Enabled</h6>
+                                <p class="extra-small text-muted mb-0">Your account is protected with 2FA.</p>
+                            </div>
+                        }
+                        <div id="2faDisabledMessage" style="@(Model.TwoFactorEnabled ? "display:none;" : "")">
+                            <div class="alert alert-soft-warning border-0 small mb-0">
+                                <i class="fas fa-exclamation-circle me-2"></i> 2FA adds an extra layer of security. We highly recommend enabling it.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appearance & Localization -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 glass-card border-top border-warning border-5">
+                    <div class="card-header bg-white py-3 border-bottom border-light">
+                        <h6 class="fw-bold mb-0 text-warning"><i class="fas fa-palette me-2"></i> Look & Feel</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label asp-for="ThemePreference" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Theme</label>
+                            <select asp-for="ThemePreference" class="form-select form-select-sm bg-light border-0" id="themeSelector">
+                                <option value="Light">Light Mode</option>
+                                <option value="Dark">Dark Mode</option>
+                                <option value="System">System Default</option>
+                            </select>
+                        </div>
+                        <div class="mb-0">
+                            <label asp-for="LanguagePreference" class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Language</label>
+                            <select asp-for="LanguagePreference" class="form-select form-select-sm bg-light border-0">
+                                <option value="English">English (US)</option>
+                                <option value="Amharic">Amharic (Ethiopia)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Prefs -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden glass-card border-top border-secondary border-5">
+                    <div class="card-header bg-white py-3 border-bottom border-light">
+                        <h6 class="fw-bold mb-0 text-secondary"><i class="fas fa-bell me-2"></i> Notifications</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="AlertNewRegistration" class="form-check-input" type="checkbox">
+                            <label class="form-check-label small" asp-for="AlertNewRegistration">New Registrations</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="AlertSystemError" class="form-check-input" type="checkbox">
+                            <label class="form-check-label small" asp-for="AlertSystemError">System Errors</label>
+                        </div>
+                        <div class="form-check form-switch mb-0">
+                            <input asp-for="AlertDailySummary" class="form-check-input" type="checkbox">
+                            <label class="form-check-label small" asp-for="AlertDailySummary">Daily Activity Summary</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: History & Actions -->
+            <div class="col-lg-4">
+                <!-- Login History -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 glass-card">
+                    <div class="card-header bg-white py-3 border-bottom border-light">
+                        <h6 class="fw-bold mb-0"><i class="fas fa-history me-2 text-primary"></i> Recent Logins</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-borderless mb-0 align-middle">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="extra-small text-muted text-uppercase px-4">Time</th>
+                                        <th class="extra-small text-muted text-uppercase">IP Address</th>
+                                        <th class="extra-small text-muted text-uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (ViewBag.LoginHistory != null)
+                                    {
+                                        foreach (var log in (IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.LoginHistory)
+                                        {
+                                            <tr>
+                                                <td class="px-4">
+                                                    <div class="small fw-bold">@log.PerformedAtUtc.ToLocalTime().ToString("MMM dd")</div>
+                                                    <div class="extra-small text-muted">@log.PerformedAtUtc.ToLocalTime().ToString("HH:mm")</div>
+                                                </td>
+                                                <td class="small text-muted">@log.IpAddress</td>
+                                                <td><span class="badge bg-success-soft text-success extra-small rounded-pill">Success</span></td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr><td colspan="3" class="text-center py-3 text-muted small">No recent logs</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Sessions -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 glass-card">
+                    <div class="card-header bg-white py-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-desktop me-2 text-info"></i> Active Sessions</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (ViewBag.ActiveSessions != null)
+                        {
+                            var currentToken = Context.Session.GetString("SessionToken");
+                            foreach (var session in (IEnumerable<SCM_System.Models.Entities.UserSession>)ViewBag.ActiveSessions)
+                            {
+                                <div class="d-flex align-items-center @(session != ((IEnumerable<SCM_System.Models.Entities.UserSession>)ViewBag.ActiveSessions).Last() ? "mb-3" : "")">
+                                    <div class="bg-light text-muted rounded-3 p-2 me-3">
+                                        @if (session.UserAgent?.Contains("Mobile") == true)
+                                        {
+                                            <i class="fas fa-mobile-alt fa-lg"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-desktop fa-lg"></i>
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="small fw-bold">
+                                            @session.IpAddress 
+                                            @if (session.SessionToken == currentToken)
+                                            {
+                                                <span class="badge bg-primary extra-small ms-1">Current</span>
+                                            }
+                                        </div>
+                                        <div class="extra-small text-muted" title="@session.UserAgent">
+                                            Last active: @session.LastActivityTime.ToString("MMM dd, HH:mm")
+                                        </div>
+                                    </div>
+                                    @if (session.SessionToken != currentToken)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-light border-0 rounded-circle text-danger revoke-session-btn" data-id="@session.Id">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-center text-muted small mb-0">No active sessions found.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Data & Danger Zone -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden glass-card border-top border-danger border-5">
+                    <div class="card-header bg-white py-3 border-bottom border-light">
+                        <h6 class="fw-bold mb-0 text-danger"><i class="fas fa-exclamation-triangle me-2"></i> Account Control</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <h6 class="small fw-bold mb-1">Data Export</h6>
+                            <p class="extra-small text-muted mb-3">Download a full history of your administrative actions in CSV format.</p>
+                            <a asp-action="ExportAuditLogs" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+                                <i class="fas fa-download me-2"></i> Export Activity Logs
+                            </a>
+                        </div>
+                        
+                        <hr class="my-4 opacity-10" />
+                        
+                        <div>
+                            <h6 class="small fw-bold mb-1 text-danger">Danger Zone</h6>
+                            <p class="extra-small text-muted mb-3">Deactivating your account will revoke all permissions and mark it for removal.</p>
+                            <button type="button" class="btn btn-danger btn-sm w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                <i class="fas fa-trash-alt me-2"></i> Deactivate Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg hvr-grow">
+                    <i class="fas fa-save me-2"></i> Save All Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">Dangerous Action!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="DeleteAccount" method="post">
+                <div class="modal-body py-4">
+                    <p class="text-muted small mb-4">Are you absolutely sure you want to deactivate your admin account? This action cannot be easily undone.</p>
+                    <div class="mb-0">
+                        <label class="form-label extra-small fw-bold text-uppercase text-muted ls-1">Confirm with Password</label>
+                        <input type="password" name="confirmPassword" class="form-control bg-light border-0" required placeholder="Enter your password to confirm" />
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Confirm Deactivation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <style>
+        .profile-preview-circle { transition: transform 0.3s ease; }
+        .profile-upload-wrapper:hover .profile-preview-circle { transform: scale(1.02); }
+        .bg-primary-soft { background-color: rgba(13, 110, 253, 0.08); }
+        .bg-success-soft { background-color: rgba(25, 135, 84, 0.08); }
+        .bg-warning-soft { background-color: rgba(255, 193, 7, 0.08); }
+        .extra-small { font-size: 0.72rem; }
+        .custom-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; margin-top: 0; }
+        .form-control:focus, .form-select:focus { background-color: #fff !important; border: 1px solid var(--bs-primary) !important; box-shadow: 0 0 0 5px rgba(13, 110, 253, 0.05) !important; }
+        .hvr-grow { transition: transform .2s ease-in-out; }
+        .hvr-grow:hover { transform: scale(1.05); }
+        .glass-card { background: rgba(255, 255, 255, 0.8) !important; backdrop-filter: blur(10px); }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(t => new bootstrap.Tooltip(t));
+
+        // Image Preview
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profileImagePreview').html(`<img src="${e.target.result}" class="img-fluid h-100 w-100 object-fit-cover" />`);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Password Strength
+        $('#newPasswordInput').on('input', function() {
+            const val = $(this).val();
+            const wrapper = $('#passwordStrengthWrapper');
+            if (val.length === 0) {
+                wrapper.hide();
+                return;
+            }
+            wrapper.show();
+
+            const strength = calculateStrength(val);
+            const meter = $('#strengthMeter');
+            const text = $('#strengthText');
+
+            meter.css('width', strength.percent + '%');
+            meter.removeClass('bg-danger bg-warning bg-success').addClass(strength.class);
+            text.text(strength.label).removeClass('text-danger text-warning text-success').addClass('text-' + strength.class.replace('bg-', ''));
+        });
+
+        function calculateStrength(p) {
+            let score = 0;
+            if (p.length >= 6) score++;
+            if (p.length >= 10) score++;
+            if (/[A-Z]/.test(p)) score++;
+            if (/[0-9]/.test(p)) score++;
+            if (/[^A-Za-z0-9]/.test(p)) score++;
+
+            if (score <= 2) return { percent: 33, class: 'bg-danger', label: 'Basic' };
+            if (score <= 4) return { percent: 66, class: 'bg-warning', label: 'Strong' };
+            return { percent: 100, class: 'bg-success', label: 'Extreme' };
+        }
+
+        // Unsaved Changes Warning
+        let isDirty = false;
+        $('#settingsForm input, #settingsForm select').on('change input', function() {
+            isDirty = true;
+        });
+
+        $(window).on('beforeunload', function() {
+            if (isDirty) return "You have unsaved changes!";
+        });
+
+        $('#settingsForm').on('submit', function() {
+            isDirty = false;
+        });
+
+        // 2FA Toggle Logic
+        $('#2faSwitch').on('change', function() {
+            if (this.checked) {
+                $('#2faSetupUI').slideDown();
+                $('#2faDisabledMessage').slideUp();
+            } else {
+                $('#2faSetupUI').slideUp();
+                $('#2faDisabledMessage').slideDown();
+            }
+        });
+
+        // Live Theme Switching
+        $('#themeSelector').on('change', function() {
+            const theme = $(this).val().toLowerCase();
+            $('html').attr('data-theme', theme);
+            isDirty = true;
+        });
+
+        // Revoke Session AJAX
+        $('.revoke-session-btn').on('click', function() {
+            const btn = $(this);
+            const sessionId = btn.data('id');
+            const token = $('input[name="__RequestVerificationToken"]').val();
+
+            if (confirm('Revoke this session? The user will be logged out on their next action.')) {
+                btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                
+                $.post('/Admin/RevokeSession', { sessionId: sessionId, __RequestVerificationToken: token }, function(res) {
+                    if (res.success) {
+                        toastr.success(res.message);
+                        btn.closest('.d-flex').fadeOut();
+                    } else {
+                        toastr.error(res.message);
+                        btn.html('<i class="fas fa-times"></i>').prop('disabled', false);
+                    }
+                });
+            }
+        });
+
+        // Toastr
+        toastr.options = { "closeButton": true, "progressBar": true, "positionClass": "toast-top-right", "timeOut": "5000" };
+        
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>toastr.success('@TempData["SuccessMessage"]');</text>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>toastr.error('@TempData["ErrorMessage"]');</text>
+        }
+    </script>
+}

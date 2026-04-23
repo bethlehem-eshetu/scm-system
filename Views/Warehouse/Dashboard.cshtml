@@ -11,9 +11,11 @@
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Operational Hub: @(warehouse?.Name ?? "Facility")</h2>
+            <h2 class="fw-bold text-dark mb-1 fs-3">Operational Hub: @(warehouse?.Name ?? "Facility")</h2>
             <div class="d-flex align-items-center gap-3">
-                <p class="text-muted mb-0"><i class="fas fa-map-marker-alt me-2 text-primary"></i> @(warehouse?.City), @(warehouse?.Region)</p>
+                <p class="text-muted small mb-0 fw-medium">
+                    <i class="fas fa-map-marker-alt text-primary me-1"></i> @(ViewBag.WarehouseLocation ?? $"{warehouse?.City}, {warehouse?.Region}")
+                </p>
                 <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill border py-2 px-3">
                     <i class="fas fa-barcode me-1"></i> Hub Code: @warehouse?.WarehouseCode
                 </span>
@@ -32,6 +34,9 @@
                 </div>
                 <span class="small fw-bold text-dark">@manager?.User?.FullName</span>
             </div>
+            <a asp-action="AddStock" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="fas fa-plus me-2"></i> New Stock In
+            </a>
         </div>
     </div>
 
@@ -46,8 +51,8 @@
                         </div>
                         <span class="badge bg-light text-primary border rounded-pill">Hub Load</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.TotalOrders</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Assigned Purchase Orders</p>
+                    <h2 class="fw-bold mb-1">@(ViewBag.TotalOrders ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">Active Purchase Orders</p>
                 </div>
             </div>
         </div>
@@ -60,8 +65,8 @@
                         </div>
                         <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">Picking Depth</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.PendingPrep</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Queue for Prep</p>
+                    <h2 class="fw-bold mb-1">@(ViewBag.PendingPrep ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">Needs Picking/Packing</p>
                 </div>
             </div>
         </div>
@@ -74,8 +79,8 @@
                         </div>
                         <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Staging Area</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.ReadyForPickup</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Packed & Awaiting Dispatch</p>
+                    <h2 class="fw-bold mb-1">@(ViewBag.ReadyForPickup ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">Packed & Awaiting Courier</p>
                 </div>
             </div>
         </div>
@@ -88,8 +93,8 @@
                         </div>
                         <span class="badge bg-info bg-opacity-10 text-info rounded-pill">Outbound</span>
                     </div>
-                    <h2 class="fw-bold mb-1">@ViewBag.InProgress</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">En Route to Retailer</p>
+                    <h2 class="fw-bold mb-1">@(ViewBag.InProgress ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">In Transit / Delivering</p>
                 </div>
             </div>
         </div>
@@ -188,31 +193,72 @@
         <div class="col-lg-4">
             <!-- Reserved Stock Summary -->
             <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border-top border-4 border-primary">
-                <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3">Inventory Capacity</h6>
-                    <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="card-header bg-white border-0 py-4 px-4 border-start border-4 border-primary">
+                    <h6 class="fw-bold mb-0">Inventory Capacity & Reserved Stock</h6>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="d-flex align-items-center justify-content-between mb-2 pt-3">
                         <div class="text-muted small">Hub Utilization</div>
                         <div class="fw-bold fs-5 text-primary">
                             @{
-                                double capUsed = warehouse?.MaxCapacity > 0 ? (double)ViewBag.TotalOnHand / warehouse.MaxCapacity * 100 : 0;
+                                double capUsed = warehouse?.MaxCapacity > 0 ? (double)(ViewBag.TotalOnHand ?? 0) / warehouse.MaxCapacity * 100 : 0;
                             }
                             @capUsed.ToString("F0")%
                         </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="text-muted small">Total Committed Items</div>
+                        <div class="fw-bold fs-5 text-primary">@(ViewBag.TotalReserved ?? 0)</div>
                     </div>
                     <div class="progress mb-4" style="height: 10px; border-radius: 5px; background: rgba(0,0,0,0.05);">
                         <div class="progress-bar @(capUsed > 85 ? "bg-danger" : "bg-primary")" style="width: @capUsed%;"></div>
                     </div>
                     <div class="row text-center g-2 mb-4">
                         <div class="col-6 border-end">
-                            <h4 class="fw-bold mb-0">@ViewBag.TotalOnHand</h4>
+                            <h4 class="fw-bold mb-0">@(ViewBag.TotalOnHand ?? 0)</h4>
                             <span class="text-muted smaller">Units On Hand</span>
                         </div>
                         <div class="col-6">
-                            <h4 class="fw-bold mb-0 @(ViewBag.LowStockCount > 0 ? "text-danger" : "text-success")">@ViewBag.LowStockCount</h4>
-                            <span class="text-muted smaller">Replenish Tags</span>
+                            <h4 class="fw-bold mb-0 @((ViewBag.LowStockAlertCount ?? 0) > 0 ? "text-danger" : "text-success")">@(ViewBag.LowStockAlertCount ?? 0)</h4>
+                            <span class="text-muted smaller">Replenish Alerts</span>
                         </div>
                     </div>
                     <a asp-action="Inventory" class="btn btn-outline-primary w-100 rounded-pill fw-bold small">Manage Inventory</a>
+                </div>
+            </div>
+
+            <!-- Quick Stats: Fleet & Staff -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-4">Logistics Resources</h6>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-truck fa-sm"></i>
+                                </div>
+                                <span class="small fw-bold">Available Fleet</span>
+                            </div>
+                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.AvailableVehicles ?? 0) Units</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user-tie fa-sm"></i>
+                                </div>
+                                <span class="small fw-bold">Active Agents</span>
+                            </div>
+                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.ActiveAgents ?? 0) Online</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-light rounded-4 d-flex align-items-center">
+                        <div class="me-3 fs-3 text-primary opacity-50">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="smaller text-muted fw-normal">
+                            All resources are currently synced with the supplier's main pool.
+                        </div>
+                    </div>
                 </div>
             </div>
 

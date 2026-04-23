@@ -25,6 +25,10 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; }
 
+        [StringLength(255)]
+        [Display(Name = "Profile Image")]
+        public string? ProfileImage { get; set; }
+
         [Required]
         [StringLength(20)]
         public string Role { get; set; } // "Admin", "Supplier", "Retailer", "SupplierEmployee"
@@ -74,6 +78,21 @@ namespace SCM_System.Models.Entities
         public string? ApprovalStatusMessage { get; set; }
         public string? ApprovalStatusType { get; set; } // "Approved" or "Rejected"
 
+        // Admin/User Preferences
+        public string? DefaultDashboardView { get; set; }
+        public string? SecondaryNotificationEmail { get; set; }
+        public bool ReceiveSystemAlerts { get; set; }
+        
+        public bool TwoFactorEnabled { get; set; } = false;
+        public string? ThemePreference { get; set; } = "System"; // Light, Dark, System
+        public string? LanguagePreference { get; set; } = "English"; // English, Amharic
+        public bool AlertNewRegistration { get; set; } = true;
+        public bool AlertSystemError { get; set; } = true;
+        public bool AlertDailySummary { get; set; } = false;
+
+        [StringLength(100)]
+        public string? TwoFactorSecret { get; set; }
+
         [ForeignKey("FAN")]
         public virtual FaydaVerification? FaydaVerification { get; set; }
 
@@ -84,5 +103,6 @@ namespace SCM_System.Models.Entities
         public ICollection<Notification> Notifications { get; set; }
         public ICollection<Message> SentMessages { get; set; }
         public ICollection<Penalty> Penalties { get; set; }
+        public virtual ICollection<UserSession> UserSessions { get; set; }
     }
 }

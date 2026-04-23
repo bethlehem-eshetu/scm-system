@@ -82,6 +82,7 @@
                 <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
                     <div class="card-body p-4 p-sm-5">
                         <form asp-action="Login" method="post" class="needs-validation auth-form">
+                            <div asp-validation-summary="All" class="text-danger mb-3"></div>
                             <div class="mb-4">
                                 <label asp-for="Email" class="form-label small fw-bold text-muted text-uppercase tracking-wide"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 <input asp-for="Email" class="form-control px-4 fw-semibold border-0 bg-light form-input-custom" placeholder="name@example.com" required autocomplete="email" />

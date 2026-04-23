@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
@@ -6,9 +7,14 @@ using SCM_System.Models.ViewModels;
 using SCM_System.Services;
 using System.Security.Cryptography;
 using System.Text;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Google.Authenticator;
 
 namespace SCM_System.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -724,11 +730,33 @@ namespace SCM_System.Controllers
 
             user.IsApproved = true;
             user.IsFaydaVerified = true; // Critical Fix: Ensure user can log in
+            user.FaydaStatus = "Verified";
             user.AccountStatus = "Active";
             user.ApprovedAt = DateTime.Now;
             user.ApprovalStatus = "Approved";
             user.ApprovalStatusType = "Approved";
             user.ApprovalStatusMessage = "Your account has been approved! You can now access all platform features.";
+
+            // Sync with FaydaVerification table if record exists
+            if (user.FaydaVerification != null)
+            {
+                user.FaydaVerification.IsVerified = true;
+                user.FaydaVerification.VerifiedName = user.FullName;
+            }
+            else if (!string.IsNullOrEmpty(user.FAN))
+            {
+                // Optionally create missing verification record
+                var newVerification = new FaydaVerification
+                {
+                    FAN = user.FAN,
+                    UserEmail = user.Email,
+                    IsVerified = true,
+                    VerifiedName = user.FullName,
+                    VerifiedPhone = user.PhoneNumber,
+                    TransactionId = "ADMIN_APPROVAL_" + Guid.NewGuid().ToString().Substring(0, 8)
+                };
+                _context.FaydaVerifications.Add(newVerification);
+            }
 
             // Update associated roles
             if (user.Role == "Supplier")
@@ -1171,82 +1199,6 @@ namespace SCM_System.Controllers
             }
         }
 
-        // GET: /Admin/Settings
-        public IActionResult Settings()
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var user = _context.Users.Find(userId);
-
-            if (user != null)
-            {
-                ViewBag.UserName = user.FullName;
-                ViewBag.UserEmail = user.Email;
-            }
-
-            return View();
-        }
-
-        // POST: /Admin/ChangePassword
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            try
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                var user = await _context.Users.FindAsync(userId);
-
-                if (user == null)
-                {
-                    return NotFound();
-                }
-
-                // Verify current password
-                if (user.PasswordHash != HashPassword(currentPassword))
-                {
-                    TempData["ErrorMessage"] = "❌ Current password is incorrect.";
-                    return RedirectToAction("Settings");
-                }
-
-                // Verify new password matches confirm
-                if (newPassword != confirmPassword)
-                {
-                    TempData["ErrorMessage"] = "❌ New password and confirm password do not match.";
-                    return RedirectToAction("Settings");
-                }
-
-                // Validate password strength
-                if (newPassword.Length < 6)
-                {
-                    TempData["ErrorMessage"] = "❌ Password must be at least 6 characters long.";
-                    return RedirectToAction("Settings");
-                }
-
-                // Update password
-                user.PasswordHash = HashPassword(newPassword);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "✅ Password changed successfully.";
-                Console.WriteLine($"✅ Password changed for admin user {user.Email}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ ChangePassword Error: {ex.Message}");
-                TempData["ErrorMessage"] = "❌ An error occurred while changing password.";
-            }
-
-            return RedirectToAction("Settings");
-        }
 
         // GET: /Admin/Reports
         public IActionResult Reports()
@@ -1842,6 +1794,268 @@ namespace SCM_System.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
             return View();
+        }
+
+        // GET: /Admin/Settings
+        public async Task<IActionResult> Settings()
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return NotFound();
+
+            var viewModel = new AdminSettingsViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                ExistingProfileImage = user.ProfileImage,
+                DefaultDashboardView = user.DefaultDashboardView,
+                SecondaryNotificationEmail = user.SecondaryNotificationEmail,
+                ReceiveSystemAlerts = user.ReceiveSystemAlerts,
+                // New Advanced Preferences
+                TwoFactorEnabled = user.TwoFactorEnabled,
+                ThemePreference = user.ThemePreference ?? "System",
+                LanguagePreference = user.LanguagePreference ?? "English",
+                AlertNewRegistration = user.AlertNewRegistration,
+                AlertSystemError = user.AlertSystemError,
+                AlertDailySummary = user.AlertDailySummary
+            };
+
+            // Load Login History from AuditLog
+            ViewBag.LoginHistory = await _context.AuditLogs
+                .Where(l => l.PerformedByUserId == userId && l.ActionType == "Login")
+                .OrderByDescending(l => l.PerformedAtUtc)
+                .Take(5)
+                .ToListAsync();
+
+            // Load Real Active Sessions
+            ViewBag.ActiveSessions = await _context.UserSessions
+                .Where(s => s.UserId == userId && s.IsActive)
+                .OrderByDescending(s => s.LastActivityTime)
+                .ToListAsync();
+
+            // 2FA Setup
+            if (!user.TwoFactorEnabled)
+            {
+                if (string.IsNullOrEmpty(user.TwoFactorSecret))
+                {
+                    user.TwoFactorSecret = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
+                    await _context.SaveChangesAsync();
+                }
+
+                TwoFactorAuthenticator tfa = new TwoFactorAuthenticator();
+                var setupInfo = tfa.GenerateSetupCode("EthioChain SCM", user.Email, user.TwoFactorSecret, false, 3);
+                ViewBag.QrCodeImageUrl = setupInfo.QrCodeSetupImageUrl;
+                ViewBag.ManualSetupKey = setupInfo.ManualEntryKey;
+            }
+
+            return View(viewModel);
+        }
+
+        // POST: /Admin/Settings
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Settings(AdminSettingsViewModel model)
+        {
+            if (!ModelState.IsValid) 
+            {
+                // Reload login history if returning to view due to errors
+                var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(currentUserId, out int uid))
+                {
+                    ViewBag.LoginHistory = await _context.AuditLogs
+                        .Where(l => l.PerformedByUserId == uid && l.ActionType == "Login")
+                        .OrderByDescending(l => l.PerformedAtUtc)
+                        .Take(5)
+                        .ToListAsync();
+                }
+                return View(model);
+            }
+
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return NotFound();
+
+            // 1. Update Profile Info
+            user.FullName = model.FullName;
+            user.Email = model.Email;
+            user.PhoneNumber = model.Phone;
+            user.DefaultDashboardView = model.DefaultDashboardView;
+            user.SecondaryNotificationEmail = model.SecondaryNotificationEmail;
+            user.ReceiveSystemAlerts = model.ReceiveSystemAlerts;
+
+            // Update New Advanced Preferences
+            user.TwoFactorEnabled = model.TwoFactorEnabled;
+            user.ThemePreference = model.ThemePreference;
+            user.LanguagePreference = model.LanguagePreference;
+            user.AlertNewRegistration = model.AlertNewRegistration;
+            user.AlertSystemError = model.AlertSystemError;
+            user.AlertDailySummary = model.AlertDailySummary;
+
+            // 2. Handle Password Change
+            if (!string.IsNullOrEmpty(model.NewPassword))
+            {
+                if (string.IsNullOrEmpty(model.CurrentPassword))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Current password is required to set a new one.");
+                    return View(model);
+                }
+
+                if (!VerifyPasswordHash(model.CurrentPassword, user.PasswordHash))
+                {
+                    ModelState.AddModelError("CurrentPassword", "The current password provided is incorrect.");
+                    return View(model);
+                }
+
+                user.PasswordHash = HashPassword(model.NewPassword);
+            }
+
+            // 3. Handle Profile Image Upload
+            if (model.ProfilePicture != null)
+            {
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "profiles");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                // Delete old image if it exists
+                if (!string.IsNullOrEmpty(user.ProfileImage))
+                {
+                    string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, user.ProfileImage.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                }
+
+                string uniqueFileName = $"admin_{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.ProfilePicture.FileName)}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ProfilePicture.CopyToAsync(fileStream);
+                }
+
+                user.ProfileImage = $"/uploads/profiles/{uniqueFileName}";
+            }
+
+            // 4. Update Session (optional but improves UX)
+            HttpContext.Session.SetString("UserName", model.FullName);
+            HttpContext.Session.SetString("UserEmail", model.Email);
+            HttpContext.Session.SetString("ProfileImg", user.ProfileImage ?? "");
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Admin account settings updated successfully.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        // GET: /Admin/ExportAuditLogs
+        public async Task<IActionResult> ExportAuditLogs()
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var logs = await _context.AuditLogs
+                .Where(l => l.PerformedByUserId == userId)
+                .OrderByDescending(l => l.PerformedAtUtc)
+                .ToListAsync();
+
+            var csv = new StringBuilder();
+            csv.AppendLine("Timestamp,Action,IpAddress,UserAgent,Notes");
+
+            foreach (var log in logs)
+            {
+                csv.AppendLine($"{log.PerformedAtUtc:yyyy-MM-dd HH:mm:ss},{log.ActionType},{log.IpAddress},\"{log.UserAgent}\",\"{log.Notes}\"");
+            }
+
+            byte[] buffer = Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"AdminActivityLog_{DateTime.Now:yyyyMMdd}.csv");
+        }
+
+        // POST: /Admin/DeleteAccount
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAccount(string confirmPassword)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            if (string.IsNullOrEmpty(confirmPassword) || !VerifyPasswordHash(confirmPassword, user.PasswordHash))
+            {
+                TempData["ErrorMessage"] = "Invalid password. Account deletion aborted.";
+                return RedirectToAction(nameof(Settings));
+            }
+
+            // Deactivate account instead of hard delete for audit purposes
+            user.AccountStatus = "Deleted";
+            user.IsApproved = false;
+            
+            await _context.SaveChangesAsync();
+
+            // Clear session and logout
+            HttpContext.Session.Clear();
+            TempData["SuccessMessage"] = "Your account has been deactivated and marked for deletion.";
+            return RedirectToAction("Login", "Account");
+        }
+
+        // POST: /Admin/Verify2FA
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Verify2FA(string pin)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            TwoFactorAuthenticator tfa = new TwoFactorAuthenticator();
+            bool isValid = tfa.ValidateTwoFactorPIN(user.TwoFactorSecret, pin);
+
+            if (isValid)
+            {
+                user.TwoFactorEnabled = true;
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Two-Factor Authentication has been enabled successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Invalid PIN. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Settings));
+        }
+
+        // POST: /Admin/RevokeSession
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RevokeSession(int sessionId)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId);
+            if (session != null)
+            {
+                session.IsActive = false;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Session revoked successfully." });
+            }
+
+            return Json(new { success = false, message = "Session not found or access denied." });
+        }
+
+        private bool VerifyPasswordHash(string password, string hash)
+        {
+            return HashPassword(password) == hash;
         }
     }
 }

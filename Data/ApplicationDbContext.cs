@@ -40,6 +40,7 @@ namespace SCM_System.Data
         public DbSet<FaydaVerification> FaydaVerifications { get; set; }
         public DbSet<EmailLog> EmailLogs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
 
 
         // Product Catalog Tables
@@ -51,6 +52,7 @@ namespace SCM_System.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
+        public DbSet<InventoryHistory> InventoryHistories { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
 
@@ -176,6 +178,13 @@ namespace SCM_System.Data
                 .WithMany(u => u.Penalties)
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // User - UserSession (one-to-many)
+            modelBuilder.Entity<UserSession>()
+                .HasOne(us => us.User)
+                .WithMany(u => u.UserSessions)
+                .HasForeignKey(us => us.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // ========== PRODUCT CATALOG CONFIGURATIONS ==========
 
@@ -625,6 +634,25 @@ namespace SCM_System.Data
                 .HasOne(dt => dt.DeliveryAgent)
                 .WithMany(se => se.AssignedTasks)
                 .HasForeignKey(dt => dt.DeliveryAgentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryHistory configurations
+            modelBuilder.Entity<InventoryHistory>()
+                .HasOne(ih => ih.Product)
+                .WithMany()
+                .HasForeignKey(ih => ih.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryHistory>()
+                .HasOne(ih => ih.Warehouse)
+                .WithMany()
+                .HasForeignKey(ih => ih.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryHistory>()
+                .HasOne(ih => ih.PerformedBy)
+                .WithMany()
+                .HasForeignKey(ih => ih.SupplierEmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

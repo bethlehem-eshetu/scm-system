@@ -1,6 +1,6 @@
 @using SCM_System.Models.Entities
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="@(Context.Session.GetString("ThemePreference")?.ToLower() ?? "system")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -323,6 +323,9 @@
                     <li>
                         <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-envelope-open-text"></i> Email Logs</a>
                     </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
+                    </li>
                 }
                 else if (role == "Supplier")
                 {
@@ -470,6 +473,9 @@
 
                     <li class="menu-label">Management</li>
                     <li>
+                        <a asp-controller="Warehouse" asp-action="Settings"><i class="fas fa-cog"></i> Operational Settings</a>
+                    </li>
+                    <li>
                         <a asp-controller="Warehouse" asp-action="Reports"><i class="fas fa-chart-line"></i> Performance Reports</a>
                     </li>
                     <li>
@@ -495,10 +501,18 @@
 
             <div class="sidebar-user">
                 <div class="user-info">
-                    <div class="avatar">
+                    <div class="avatar shadow-sm border border-2 border-white border-opacity-10 overflow-hidden">
                         @{
                             var name = Context.Session.GetString("UserName") ?? "U";
-                            @name.Substring(0, 1).ToUpper()
+                            var pImg = Context.Session.GetString("ProfileImg");
+                            if (!string.IsNullOrEmpty(pImg))
+                            {
+                                <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
+                            }
+                            else
+                            {
+                                @name.Substring(0, 1).ToUpper()
+                            }
                         }
                     </div>
                     <div>
