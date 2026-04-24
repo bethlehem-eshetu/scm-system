@@ -88,6 +88,14 @@
                 <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm" class="needs-validation">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Role" id="RoleHidden" />
+                    
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</h6>
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
 
                     <!-- Step 1: Fayda Identity Verification -->
                     <div id="step-1" class="registration-step">
@@ -272,8 +280,10 @@
                                         <span asp-validation-for="TaxIdentificationNumber" class="text-danger extra-small"></span>
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG)</label>
+                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG) *</label>
                                         <input asp-for="LicenseFile" id="LicenseFile" type="file" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                        <span asp-validation-for="LicenseFile" class="text-danger extra-small"></span>
+                                        <small class="text-muted d-block mt-1">Please re-select your file if you encounter any errors.</small>
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="CompanyAddress" class="form-label small fw-bold text-muted text-uppercase">Headquarters Address</label>
