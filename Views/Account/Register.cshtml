@@ -184,12 +184,12 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase">Secure Password</label>
-                                    <input asp-for="Password" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" />
+                                    <input asp-for="Password" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" value="@Model?.Password" />
                                     <span asp-validation-for="Password" class="text-danger extra-small"></span>
                                 </div>
                                 <div class="col-md-6">
                                     <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
-                                    <input asp-for="ConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" />
+                                    <input asp-for="ConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" value="@Model?.ConfirmPassword" />
                                     <span asp-validation-for="ConfirmPassword" class="text-danger extra-small"></span>
                                 </div>
                                 <div class="col-md-12">
