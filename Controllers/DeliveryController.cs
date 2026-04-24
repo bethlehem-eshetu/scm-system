@@ -68,10 +68,10 @@ namespace SCM_System.Controllers
 
             var model = new SCM_System.Models.ViewModels.DeliverySettingsViewModel
             {
-                FullName = employee.User.FullName,
-                Email = employee.User.Email,
-                Phone = employee.User.PhoneNumber,
-                ProfilePicture = employee.ProfilePhotoPath,
+                FullName = employee.User.FullName ?? "",
+                Email = employee.User.Email ?? "",
+                Phone = employee.User.PhoneNumber ?? employee.Phone ?? "",
+                ExistingProfilePicture = employee.ProfilePhotoPath,
                 VehicleId = employee.VehicleId,
                 IsOnDuty = employee.IsOnDuty,
                 WorkingHoursStart = employee.WorkingHoursStart,
@@ -89,7 +89,7 @@ namespace SCM_System.Controllers
             };
 
             ViewBag.Vehicles = await _context.Vehicles
-                .Where(v => v.SupplierId == employee.SupplierId)
+                .Where(v => v.SupplierId == employee.SupplierId && v.IsActive && !v.IsDeleted)
                 .ToListAsync();
 
             return View(model);
@@ -98,7 +98,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         [Authorize(Roles = "DeliveryAgent")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Settings(SCM_System.Models.ViewModels.DeliverySettingsViewModel model, IFormFile? profilePictureFile)
+        public async Task<IActionResult> Settings(SCM_System.Models.ViewModels.DeliverySettingsViewModel model)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
@@ -112,7 +112,7 @@ namespace SCM_System.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.Vehicles = await _context.Vehicles
-                    .Where(v => v.SupplierId == employee.SupplierId)
+                    .Where(v => v.SupplierId == employee.SupplierId && v.IsActive && !v.IsDeleted)
                     .ToListAsync();
                 return View(model);
             }
@@ -123,16 +123,16 @@ namespace SCM_System.Controllers
             employee.User.PhoneNumber = model.Phone;
 
             // Handle Profile Picture
-            if (profilePictureFile != null && profilePictureFile.Length > 0)
+            if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
             {
-                var fileName = $"profile_{userId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(profilePictureFile.FileName)}";
+                var fileName = $"profile_{userId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.ProfilePicture.FileName)}";
                 var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "profiles");
                 if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
                 
                 var filePath = Path.Combine(uploadPath, fileName);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await profilePictureFile.CopyToAsync(stream);
+                    await model.ProfilePicture.CopyToAsync(stream);
                 }
                 employee.ProfilePhotoPath = $"/uploads/profiles/{fileName}";
             }
@@ -140,18 +140,18 @@ namespace SCM_System.Controllers
             // Update Password if requested
             if (!string.IsNullOrEmpty(model.NewPassword))
             {
-                if (employee.User.PasswordHash != HashPassword(model.CurrentPassword ?? ""))
+                if (string.IsNullOrEmpty(model.CurrentPassword) || employee.User.PasswordHash != HashPassword(model.CurrentPassword))
                 {
                     ModelState.AddModelError("CurrentPassword", "Current password is incorrect.");
                     ViewBag.Vehicles = await _context.Vehicles
-                        .Where(v => v.SupplierId == employee.SupplierId)
+                        .Where(v => v.SupplierId == employee.SupplierId && v.IsActive && !v.IsDeleted)
                         .ToListAsync();
                     return View(model);
                 }
                 employee.User.PasswordHash = HashPassword(model.NewPassword);
             }
 
-            // Update Delivery Preferences
+            // Update Delivery Preferences & Availability
             employee.VehicleId = model.VehicleId;
             employee.IsOnDuty = model.IsOnDuty;
             employee.WorkingHoursStart = model.WorkingHoursStart;
@@ -165,7 +165,7 @@ namespace SCM_System.Controllers
             employee.SmsNotificationNumber = model.SmsNotificationNumber;
 
             employee.UpdatedAt = DateTime.Now;
-            employee.UpdatedBy = employee.User.FullName;
+            employee.UpdatedBy = User.Identity?.Name ?? "System";
 
             await _context.SaveChangesAsync();
 

@@ -21,6 +21,8 @@ namespace SCM_System.Models.Entities
         public SCM_System.Models.Enums.VehicleType VehicleType { get; set; } = SCM_System.Models.Enums.VehicleType.Truck;
 
         [StringLength(100)]
+        public string? Make { get; set; }
+        [StringLength(100)]
         public string? Brand { get; set; }
         [StringLength(100)]
         public string? Model { get; set; }

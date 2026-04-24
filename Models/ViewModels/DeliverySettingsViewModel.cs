@@ -1,4 +1,6 @@
+using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace SCM_System.Models.ViewModels
 {
@@ -7,70 +9,52 @@ namespace SCM_System.Models.ViewModels
         // Profile Info
         [Required]
         [Display(Name = "Full Name")]
-        public string FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
+        [Required]
         [Phone]
-        public string Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
 
-        [Display(Name = "Profile Picture")]
-        public string? ProfilePicture { get; set; }
+        public IFormFile? ProfilePicture { get; set; }
+        public string? ExistingProfilePicture { get; set; }
 
-        // Security
+        // Password Change
         [DataType(DataType.Password)]
-        [Display(Name = "Current Password")]
         public string? CurrentPassword { get; set; }
 
         [DataType(DataType.Password)]
-        [Display(Name = "New Password")]
+        [MinLength(6)]
         public string? NewPassword { get; set; }
 
         [DataType(DataType.Password)]
-        [Display(Name = "Confirm New Password")]
-        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        [Compare("NewPassword")]
         public string? ConfirmPassword { get; set; }
 
         // Vehicle & Availability
-        [Display(Name = "Current Vehicle")]
         public int? VehicleId { get; set; }
-
-        [Display(Name = "On Duty Status")]
         public bool IsOnDuty { get; set; }
 
-        [Display(Name = "Working Hours Start")]
         public TimeSpan? WorkingHoursStart { get; set; }
-
-        [Display(Name = "Working Hours End")]
         public TimeSpan? WorkingHoursEnd { get; set; }
 
-        // Delivery Preferences
         [Range(1, 100)]
-        [Display(Name = "Max Daily Deliveries")]
         public int MaxDailyDeliveries { get; set; }
 
-        [Display(Name = "Require Proof Photo")]
-        public bool RequireProofPhoto { get; set; }
-
-        [Display(Name = "Require Signature")]
-        public bool RequireSignature { get; set; }
-
-        [Display(Name = "Auto Accept Assignments")]
+        // Delivery Preferences
         public bool AutoAcceptAssignments { get; set; }
-
-        [Display(Name = "Allow Night Deliveries")]
+        public bool RequireProofPhoto { get; set; }
+        public bool RequireSignature { get; set; }
         public bool AllowNightDeliveries { get; set; }
 
         // Notifications
-        [Display(Name = "Notify on New Assignment")]
         public bool NotifyNewAssignment { get; set; }
-
-        [Display(Name = "SMS Notification Number")]
         public string? SmsNotificationNumber { get; set; }
 
-        // Performance (Read-only)
+        // Performance Stats (Read-only for View)
         public int TotalDeliveriesMonth { get; set; }
         public double AverageRating { get; set; }
         public double OnTimePercentage { get; set; }
