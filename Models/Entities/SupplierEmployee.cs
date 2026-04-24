@@ -27,6 +27,16 @@ namespace SCM_System.Models.Entities
         [StringLength(100)]
         public string? Department { get; set; } = "Logistics";
 
+        [NotMapped]
+        public string FullName { get; set; }
+
+        [NotMapped]
+        public string Role 
+        {
+            get => EmployeeRole;
+            set => EmployeeRole = value;
+        }
+
         [Required]
         [StringLength(50)]
         [Display(Name = "Employee Role")]

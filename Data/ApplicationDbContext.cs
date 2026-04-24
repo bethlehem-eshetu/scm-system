@@ -39,6 +39,7 @@ namespace SCM_System.Data
         public DbSet<FaydaRegistry> FaydaRegistries { get; set; }
         public DbSet<FaydaVerification> FaydaVerifications { get; set; }
         public DbSet<EmailLog> EmailLogs { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
 

@@ -756,5 +756,149 @@
             });
         </script>
     }
+
+    <!-- Floating Chatbot Widget -->
+    <div id="chatbot-widget" class="position-fixed shadow-lg rounded-4 d-flex flex-column" style="bottom: 80px; right: 20px; width: 350px; height: 450px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1050; display: none !important; border: 1px solid rgba(0,0,0,0.1); overflow: hidden; transform: scale(0.9); opacity: 0; transition: all 0.3s ease;">
+        <!-- Header -->
+        <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center rounded-top-4">
+            <div class="d-flex align-items-center">
+                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                    <i class="fas fa-robot text-primary"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">SCM Assistant</h6>
+                    <small class="text-white-50" style="font-size: 0.75rem;">Online</small>
+                </div>
+            </div>
+            <button class="btn btn-sm text-white border-0" id="close-chat"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="flex-grow-1 p-3 overflow-auto" id="chat-body" style="background: #f8fafc;">
+            <!-- Initial Message -->
+            <div class="mb-3 d-flex">
+                <div class="bg-white p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; border-bottom-left-radius: 0 !important;">
+                    👋 Hello! I'm your SCM Assistant. How can I help you today?
+                </div>
+            </div>
+
+            <!-- Quick FAQ Options -->
+            <div class="mb-3 d-flex flex-wrap gap-2" id="chat-faq-options">
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I post a tender?" data-answer="To post a tender, navigate to the 'Sourcing' menu on the left and click 'Create Tender'. Fill in your required products and wait for suppliers to bid.">Post a Tender</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I track my order?" data-answer="You can track your order in real-time by going to 'Order Tracking' under the My Purchases menu.">Track Order</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I update inventory?" data-answer="Warehouse Managers can update inventory from the 'Inventory Control' section in the Dashboard.">Update Inventory</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="I have a problem" data-answer="Please use the text box below to describe your issue, and it will be submitted as a support ticket to our admins.">Submit a Ticket</button>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-2 border-top bg-white">
+            <form id="chat-form" class="d-flex gap-2">
+                <input type="text" id="chat-input" class="form-control form-control-sm rounded-pill" placeholder="Type feedback or a question..." required>
+                <button type="submit" class="btn btn-primary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Chat Button -->
+    <button id="chatbot-toggle" class="btn btn-primary position-fixed rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1040; transition: transform 0.2s;">
+        <i class="fas fa-comment-dots fs-3"></i>
+    </button>
+
+    <script>
+        $(document).ready(function () {
+            // Toggle Chatbot
+            $('#chatbot-toggle').click(function () {
+                var widget = $('#chatbot-widget');
+                if (widget.css('display') === 'none') {
+                    widget.css('display', 'flex').hide().fadeIn(200, function() {
+                        $(this).css({ 'transform': 'scale(1)', 'opacity': '1' });
+                    });
+                    $(this).css('transform', 'scale(0.8)');
+                } else {
+                    $('#close-chat').click();
+                }
+            });
+
+            // Close Chatbot
+            $('#close-chat').click(function () {
+                $('#chatbot-widget').css({ 'transform': 'scale(0.9)', 'opacity': '0' });
+                setTimeout(() => {
+                    $('#chatbot-widget').fadeOut(200);
+                }, 200);
+                $('#chatbot-toggle').css('transform', 'scale(1)');
+            });
+
+            // Scroll to bottom helper
+            function scrollToBottom() {
+                var body = $('#chat-body');
+                body.scrollTop(body[0].scrollHeight);
+            }
+
+            // Append Message helper
+            function appendMessage(text, isUser = false) {
+                var align = isUser ? 'justify-content-end' : 'justify-content-start';
+                var bg = isUser ? 'bg-primary text-white' : 'bg-white text-dark';
+                var radius = isUser ? 'border-bottom-right-radius: 0 !important;' : 'border-bottom-left-radius: 0 !important;';
+                
+                var msgHtml = `
+                    <div class="mb-3 d-flex ${align}">
+                        <div class="${bg} p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; ${radius}">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+                $('#chat-body').append(msgHtml);
+                scrollToBottom();
+            }
+
+            // FAQ Button Click
+            $('.btn-faq').click(function () {
+                var q = $(this).data('question');
+                var a = $(this).data('answer');
+                
+                appendMessage(q, true);
+                setTimeout(() => {
+                    appendMessage(a, false);
+                }, 500);
+            });
+
+            // Submit Support Ticket / Feedback
+            $('#chat-form').submit(function (e) {
+                e.preventDefault();
+                var msg = $('#chat-input').val().trim();
+                if (!msg) return;
+
+                appendMessage(msg, true);
+                $('#chat-input').val('');
+
+                // Show typing indicator
+                var typingId = 'typing-' + Date.now();
+                $('#chat-body').append(`
+                    <div id="${typingId}" class="mb-3 d-flex justify-content-start">
+                        <div class="bg-light text-muted p-2 rounded-3 shadow-sm" style="font-size: 0.8rem;">
+                            <i class="fas fa-ellipsis-h fa-fade"></i> Sending ticket...
+                        </div>
+                    </div>
+                `);
+                scrollToBottom();
+
+                // Send to backend SupportController
+                $.post('/Support/SubmitFeedback', { subject: "Chatbot Ticket", message: msg }, function(res) {
+                    $('#' + typingId).remove();
+                    if (res.success) {
+                        appendMessage("<i class='fas fa-check-circle text-success me-1'></i> " + res.message, false);
+                    } else {
+                        appendMessage("<i class='fas fa-exclamation-circle text-danger me-1'></i> " + res.message, false);
+                    }
+                }).fail(function() {
+                    $('#' + typingId).remove();
+                    appendMessage("Sorry, there was an error submitting your ticket.", false);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
