@@ -449,14 +449,30 @@
     <script>
         $(document).ready(function() {
             $('#registerForm').on('submit', function(e) {
-                console.log("Form is being submitted!");
-                
-                // Log all form data
-                var formData = new FormData(this);
-                for (var pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
+                var role = $('#RoleHidden').val() || $('#RoleSelect').val();
+                var isFormValid = true;
+
+                if (role === 'Supplier') {
+                    if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
+                        $('#categoryError').text('Please select at least one business category.');
+                        isFormValid = false;
+                    } else {
+                        $('#categoryError').text('');
+                    }
+                } else if (role === 'Retailer') {
+                    if ($('input[name="SelectedRetailerCategoryIds"]:checked').length === 0) {
+                        $('#retailerCategoryError').text('Please select at least one category.');
+                        isFormValid = false;
+                    } else {
+                        $('#retailerCategoryError').text('');
+                    }
                 }
-                
+
+                if (!isFormValid) {
+                    e.preventDefault();
+                    return false;
+                }
+
                 return true;
             });
             var expiryTimer = null;
@@ -476,10 +492,8 @@
                     // Step 1 completed (Fayda verified)
                     currentStep = 2;
                     
-                    // Check if business info is partially filled (meaning they were on step 3)
-                    if (savedRole === "Supplier" && $('#CompanyName').val() && $('#CompanyName').val().trim() !== "") {
-                        currentStep = 3;
-                    } else if (savedRole === "Retailer" && $('#BusinessName').val() && $('#BusinessName').val().trim() !== "") {
+                    // Check if business info is partially filled or Role was selected (meaning they passed step 2)
+                    if (savedRole && savedRole.trim() !== "") {
                         currentStep = 3;
                     }
                 }
@@ -707,25 +721,6 @@
                 if ($('#Password').val() && $('#Password').val() !== $('#ConfirmPassword').val()) {
                     $('#ConfirmPassword').addClass('is-invalid');
                     isValid = false;
-                }
-
-                if (isValid && $('#step-3').is(':visible')) {
-                    var role = $('#RoleSelect').val();
-                    if (role === 'Supplier') {
-                        if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
-                            $('#categoryError').text('Please select at least one business category.');
-                            isValid = false;
-                        } else {
-                            $('#categoryError').text('');
-                        }
-                    } else if (role === 'Retailer') {
-                        if ($('input[name="SelectedRetailerCategoryIds"]:checked').length === 0) {
-                            $('#retailerCategoryError').text('Please select at least one category.');
-                            isValid = false;
-                        } else {
-                            $('#retailerCategoryError').text('');
-                        }
-                    }
                 }
 
                 if (isValid) {
