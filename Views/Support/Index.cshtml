@@ -1,0 +1,90 @@
+@model IEnumerable<SCM_System.Models.Entities.SupportTicket>
+@{
+    ViewData["Title"] = "Support Tickets";
+    Layout = "_DashboardLayout";
+    var userRole = Context.Session.GetString("UserRole");
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Support Tickets</h2>
+            <p class="text-muted">@(userRole == "Admin" ? "Manage all user support tickets and feedback." : "View the status of your feedback and support requests.")</p>
+        </div>
+        @if (userRole != "Admin")
+        {
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="$('#chatbot-toggle').click()">
+                <i class="fas fa-plus me-2"></i>New Ticket
+            </button>
+        }
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr>
+                        <th class="ps-4">Ticket ID</th>
+                        @if (userRole == "Admin")
+                        {
+                            <th>User</th>
+                        }
+                        <th>Subject</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Date Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var ticket in Model)
+                        {
+                            var statusBadge = ticket.Status switch
+                            {
+                                "Open" => "bg-warning text-dark",
+                                "InProgress" => "bg-info text-dark",
+                                "Resolved" => "bg-success",
+                                "Closed" => "bg-secondary",
+                                _ => "bg-primary"
+                            };
+
+                            <tr>
+                                <td class="ps-4 fw-bold text-muted">#TKT-@ticket.Id.ToString("D4")</td>
+                                @if (userRole == "Admin")
+                                {
+                                    <td>
+                                        <div class="fw-bold">@ticket.User?.FullName</div>
+                                        <div class="small text-muted">@ticket.User?.Role</div>
+                                    </td>
+                                }
+                                <td class="fw-bold">@ticket.Subject</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 300px;" title="@ticket.Message">
+                                        @ticket.Message
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill @statusBadge px-3">@ticket.Status</span>
+                                </td>
+                                <td class="text-end pe-4 text-muted small">
+                                    @ticket.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="@(userRole == "Admin" ? "6" : "5")" class="text-center py-5">
+                                <i class="fas fa-ticket-alt fa-3x text-muted opacity-25 mb-3"></i>
+                                <h5 class="fw-bold text-muted">No Support Tickets</h5>
+                                <p class="text-muted mb-0">@(userRole == "Admin" ? "There are no open support tickets at this time." : "You haven't submitted any support tickets yet.")</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

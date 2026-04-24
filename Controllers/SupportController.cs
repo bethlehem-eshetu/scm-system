@@ -18,6 +18,28 @@ namespace SCM_System.Controllers
             _context = context;
         }
 
+        public async Task<IActionResult> Index()
+        {
+            var userIdString = HttpContext.Session.GetString("UserId");
+            var userRole = HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            IQueryable<SupportTicket> query = _context.SupportTickets.Include(t => t.User);
+
+            // Admins can see all tickets, normal users only see their own
+            if (userRole != "Admin")
+            {
+                query = query.Where(t => t.UserId == userId);
+            }
+
+            var tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+            return View(tickets);
+        }
+
         [HttpPost]
         public async Task<IActionResult> SubmitFeedback(string subject, string message)
         {
