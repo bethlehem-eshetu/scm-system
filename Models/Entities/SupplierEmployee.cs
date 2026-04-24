@@ -151,6 +151,30 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Notify on Low Stock")]
         public bool NotifyLowStock { get; set; } = true;
 
+        [Display(Name = "Enable Task Alerts")]
+        public bool EnableTaskAlerts { get; set; } = true;
+
+        [Display(Name = "Enable Reminders")]
+        public bool EnableReminders { get; set; } = true;
+
+        // Advanced Warehouse Settings
+        [StringLength(50)]
+        [Display(Name = "Packing Priority")]
+        public string DefaultPackingPriority { get; set; } = "FIFO"; // FIFO, Expiry Date, Order Value
+
+        [Display(Name = "Daily Cut-off Time")]
+        public TimeSpan? DailyCutoffTime { get; set; }
+
+        [StringLength(50)]
+        [Display(Name = "Print Label Format")]
+        public string PrintLabelFormat { get; set; } = "Standard"; // Standard, QR, Barcode
+
+        [Display(Name = "Assigned Zones")]
+        public string? AssignedZones { get; set; } // JSON array of strings
+
+        [Display(Name = "Enable Voice Picking")]
+        public bool EnableVoicePicking { get; set; } = false;
+
         // Navigation properties
         public ICollection<Delivery> Deliveries { get; set; } = new List<Delivery>();
     }

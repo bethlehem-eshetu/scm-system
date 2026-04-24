@@ -10,6 +10,7 @@ using System.Security.Claims;
 using SCM_System.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Hosting;
+using System.Text.Json;
 
 namespace SCM_System.Controllers
 {
@@ -616,7 +617,14 @@ namespace SCM_System.Controllers
                 LowStockThreshold = manager.LowStockThreshold,
                 PicklistFormat = manager.PicklistFormat,
                 AutoAcceptPickTasks = manager.AutoAcceptPickTasks,
-                NotifyLowStock = manager.NotifyLowStock
+                NotifyLowStock = manager.NotifyLowStock,
+                DefaultPackingPriority = manager.DefaultPackingPriority,
+                DailyCutoffTime = manager.DailyCutoffTime,
+                PrintLabelFormat = manager.PrintLabelFormat,
+                EnableVoicePicking = manager.EnableVoicePicking,
+                AssignedZones = string.IsNullOrEmpty(manager.AssignedZones) 
+                    ? new List<string>() 
+                    : JsonSerializer.Deserialize<List<string>>(manager.AssignedZones) ?? new List<string>()
             };
 
             return View(viewModel);
@@ -634,6 +642,11 @@ namespace SCM_System.Controllers
             manager.PicklistFormat = model.PicklistFormat;
             manager.AutoAcceptPickTasks = model.AutoAcceptPickTasks;
             manager.NotifyLowStock = model.NotifyLowStock;
+            manager.DefaultPackingPriority = model.DefaultPackingPriority;
+            manager.DailyCutoffTime = model.DailyCutoffTime;
+            manager.PrintLabelFormat = model.PrintLabelFormat;
+            manager.EnableVoicePicking = model.EnableVoicePicking;
+            manager.AssignedZones = JsonSerializer.Serialize(model.AssignedZones ?? new List<string>());
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Operational preferences updated successfully.";
@@ -644,19 +657,22 @@ namespace SCM_System.Controllers
         public async Task<IActionResult> AccountSettings()
         {
             var manager = await GetCurrentManagerAsync();
-            if (manager == null) return Unauthorized();
+            if (manager == null || manager.User == null) return Unauthorized();
 
             var viewModel = new SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel
             {
                 EmployeeId = manager.Id,
-                FullName = manager.User?.FullName ?? "",
-                Email = manager.User?.Email ?? "",
-                Phone = manager.User?.PhoneNumber ?? "",
-                ExistingProfileImage = manager.User?.ProfileImage
+                FullName = manager.User.FullName,
+                Email = manager.User.Email,
+                Phone = manager.User.PhoneNumber ?? "",
+                ExistingProfileImage = manager.User.ProfileImage,
+                EnableTaskAlerts = manager.EnableTaskAlerts,
+                EnableReminders = manager.EnableReminders,
+                NotifyLowStock = manager.NotifyLowStock
             };
 
             // Security Details
-            ViewBag.TfaEnabled = manager.User?.TwoFactorEnabled ?? false;
+            ViewBag.TfaEnabled = manager.User.TwoFactorEnabled;
             
             // Active Sessions
             ViewBag.ActiveSessions = await _context.UserSessions
@@ -689,8 +705,13 @@ namespace SCM_System.Controllers
             manager.User.PhoneNumber = model.Phone;
             manager.FullName = model.FullName;
             manager.Phone = model.Phone;
+            
+            // 2. Notification Preferences
+            manager.EnableTaskAlerts = model.EnableTaskAlerts;
+            manager.EnableReminders = model.EnableReminders;
+            manager.NotifyLowStock = model.NotifyLowStock;
 
-            // 2. Profile Picture
+            // 3. Profile Picture
             if (model.ProfilePicture != null)
             {
                 string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
@@ -708,7 +729,7 @@ namespace SCM_System.Controllers
                 manager.ProfilePhotoPath = manager.User.ProfileImage;
             }
 
-            // 3. Password Security
+            // 4. Password Security
             if (!string.IsNullOrEmpty(model.NewPassword))
             {
                 if (string.IsNullOrEmpty(model.CurrentPassword))
@@ -745,25 +766,29 @@ namespace SCM_System.Controllers
                 return Json(new { success = true });
             }
 
-            // Generate Secret
+            // Generate Secret using GoogleAuthenticator
             string secret = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10).ToUpper();
             manager.User.TwoFactorSecret = secret;
             await _context.SaveChangesAsync();
 
-            // Mock QR Code (In real app, use a library to generate actual QR URI)
-            string qrUri = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/SCM:{manager.User.Email}?secret={secret}%26issuer=SCM_System";
+            // Using Google.Authenticator library
+            var tfa = new Google.Authenticator.TwoFactorAuthenticator();
+            var setupInfo = tfa.GenerateSetupCode("SCM System", manager.User.Email, secret, false, 3);
             
-            return Json(new { success = true, qrCodeUri = qrUri });
+            return Json(new { success = true, qrCodeUri = setupInfo.QrCodeSetupImageUrl, manualEntryKey = setupInfo.ManualEntryKey });
         }
 
         [HttpPost("Verify2FA")]
         public async Task<IActionResult> Verify2FA(string code)
         {
             var manager = await GetCurrentManagerAsync();
-            if (manager == null || manager.User == null) return Json(new { success = false, message = "User not found." });
+            if (manager == null || manager.User == null || string.IsNullOrEmpty(manager.User.TwoFactorSecret)) 
+                return Json(new { success = false, message = "Invalid setup." });
 
-            // Mock verification (any 6 digit code works in this demo, or verify against secret)
-            if (code.Length == 6)
+            var tfa = new Google.Authenticator.TwoFactorAuthenticator();
+            bool isValid = tfa.ValidateTwoFactorPIN(manager.User.TwoFactorSecret, code);
+
+            if (isValid)
             {
                 manager.User.TwoFactorEnabled = true;
                 await _context.SaveChangesAsync();
@@ -797,11 +822,14 @@ namespace SCM_System.Controllers
                 return Json(new { success = false, message = "Incorrect password." });
             }
 
-            manager.User.AccountStatus = "Suspended";
+            manager.User.AccountStatus = "Inactive";
             manager.IsActive = false;
             await _context.SaveChangesAsync();
 
-            // Logout
+            // Audit
+            await _auditLogService.LogActionAsync("User", manager.UserId.ToString(), "Deactivate", notes: "Account self-deactivated by Warehouse Manager");
+
+            // Sign out
             HttpContext.Session.Clear();
             return Json(new { success = true });
         }

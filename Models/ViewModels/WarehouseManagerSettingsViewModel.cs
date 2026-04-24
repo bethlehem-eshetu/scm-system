@@ -58,5 +58,27 @@ namespace SCM_System.Models.ViewModels
 
         [Display(Name = "Notify on Low Stock")]
         public bool NotifyLowStock { get; set; } = true;
+
+        [Display(Name = "Enable Task Alerts")]
+        public bool EnableTaskAlerts { get; set; }
+
+        [Display(Name = "Enable Reminders")]
+        public bool EnableReminders { get; set; }
+
+        [Display(Name = "Packing Priority")]
+        public string DefaultPackingPriority { get; set; } = "FIFO";
+
+        [Display(Name = "Daily Cut-off Time")]
+        [DataType(DataType.Time)]
+        public TimeSpan? DailyCutoffTime { get; set; }
+
+        [Display(Name = "Label Format")]
+        public string PrintLabelFormat { get; set; } = "Standard";
+
+        [Display(Name = "Assigned Zones")]
+        public List<string> AssignedZones { get; set; } = new List<string>();
+
+        [Display(Name = "Enable Voice Picking")]
+        public bool EnableVoicePicking { get; set; }
     }
 }
