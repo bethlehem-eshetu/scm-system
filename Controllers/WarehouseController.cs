@@ -599,123 +599,211 @@ namespace SCM_System.Controllers
             TempData["SuccessMessage"] = $"Order #{po.PONumber} assigned to {agent.User?.FullName} and Vehicle {vehicle.LicensePlate}. Status: In Transit.";
             return RedirectToAction(nameof(History));
         }
-        [Route("Settings")]
-        public async Task<IActionResult> Settings()
+        [Route("OperationalSettings")]
+        public async Task<IActionResult> OperationalSettings()
         {
-            var employeeIdStr = User.FindFirstValue("EmployeeId");
-            if (!int.TryParse(employeeIdStr, out int employeeId))
-            {
-                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-                var emp = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == userId);
-                if (emp == null) return Unauthorized();
-                employeeId = emp.Id;
-            }
-
-            var employee = await _context.SupplierEmployees
-                .Include(e => e.User)
-                .FirstOrDefaultAsync(e => e.Id == employeeId);
-            
-            if (employee == null) return NotFound();
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
 
             var viewModel = new SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel
             {
-                EmployeeId = employee.Id,
-                FullName = employee.User?.FullName ?? "",
-                Email = employee.User?.Email ?? "",
-                Phone = employee.User?.PhoneNumber ?? "",
-                ExistingProfileImage = employee.User?.ProfileImage,
-                DefaultWarehouseLocation = employee.DefaultWarehouseLocation,
-                LowStockThreshold = employee.LowStockThreshold,
-                PicklistFormat = employee.PicklistFormat,
-                AutoAcceptPickTasks = employee.AutoAcceptPickTasks,
-                NotifyLowStock = employee.NotifyLowStock
+                EmployeeId = manager.Id,
+                FullName = manager.User?.FullName ?? "",
+                Email = manager.User?.Email ?? "",
+                Phone = manager.User?.PhoneNumber ?? "",
+                ExistingProfileImage = manager.User?.ProfileImage,
+                DefaultWarehouseLocation = manager.DefaultWarehouseLocation,
+                LowStockThreshold = manager.LowStockThreshold,
+                PicklistFormat = manager.PicklistFormat,
+                AutoAcceptPickTasks = manager.AutoAcceptPickTasks,
+                NotifyLowStock = manager.NotifyLowStock
             };
 
             return View(viewModel);
         }
 
-        [HttpPost("Settings")]
+        [HttpPost("OperationalSettings")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Settings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
+        public async Task<IActionResult> OperationalSettings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            var manager = await _context.SupplierEmployees.FindAsync(model.EmployeeId);
+            if (manager == null) return NotFound();
 
-            var employee = await _context.SupplierEmployees
+            manager.DefaultWarehouseLocation = model.DefaultWarehouseLocation;
+            manager.LowStockThreshold = model.LowStockThreshold;
+            manager.PicklistFormat = model.PicklistFormat;
+            manager.AutoAcceptPickTasks = model.AutoAcceptPickTasks;
+            manager.NotifyLowStock = model.NotifyLowStock;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Operational preferences updated successfully.";
+            return RedirectToAction(nameof(OperationalSettings));
+        }
+
+        [Route("AccountSettings")]
+        public async Task<IActionResult> AccountSettings()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            var viewModel = new SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel
+            {
+                EmployeeId = manager.Id,
+                FullName = manager.User?.FullName ?? "",
+                Email = manager.User?.Email ?? "",
+                Phone = manager.User?.PhoneNumber ?? "",
+                ExistingProfileImage = manager.User?.ProfileImage
+            };
+
+            // Security Details
+            ViewBag.TfaEnabled = manager.User?.TwoFactorEnabled ?? false;
+            
+            // Active Sessions
+            ViewBag.ActiveSessions = await _context.UserSessions
+                .Where(s => s.UserId == manager.UserId && s.IsActive)
+                .OrderByDescending(s => s.LastActivityTime)
+                .ToListAsync();
+
+            // Login History
+            ViewBag.LoginHistory = await _context.AuditLogs
+                .Where(l => l.PerformedByUserId == manager.UserId && l.ActionType == "Login")
+                .OrderByDescending(l => l.PerformedAtUtc)
+                .Take(10)
+                .ToListAsync();
+
+            return View(viewModel);
+        }
+
+        [HttpPost("AccountSettings")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AccountSettings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
+        {
+            var manager = await _context.SupplierEmployees
                 .Include(e => e.User)
                 .FirstOrDefaultAsync(e => e.Id == model.EmployeeId);
 
-            if (employee == null) return NotFound();
+            if (manager == null || manager.User == null) return NotFound();
 
-            // 1. Update Operational Settings
-            employee.DefaultWarehouseLocation = model.DefaultWarehouseLocation;
-            employee.LowStockThreshold = model.LowStockThreshold;
-            employee.PicklistFormat = model.PicklistFormat;
-            employee.AutoAcceptPickTasks = model.AutoAcceptPickTasks;
-            employee.NotifyLowStock = model.NotifyLowStock;
+            // 1. Update Identity
+            manager.User.FullName = model.FullName;
+            manager.User.PhoneNumber = model.Phone;
+            manager.FullName = model.FullName;
+            manager.Phone = model.Phone;
 
-            // 2. Update Personal Profile
-            if (employee.User != null)
+            // 2. Profile Picture
+            if (model.ProfilePicture != null)
             {
-                employee.User.FullName = model.FullName;
-                employee.User.Email = model.Email;
-                employee.User.PhoneNumber = model.Phone;
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-                // Sync email on the employee record if applicable
-                employee.Email = model.Email;
-
-                // Update Session variables (optional but good for UX)
-                HttpContext.Session.SetString("UserName", model.FullName);
-                HttpContext.Session.SetString("UserEmail", model.Email);
-
-                // 3. Security: Password Change
-                if (!string.IsNullOrEmpty(model.NewPassword))
+                string uniqueFileName = $"profile_{manager.UserId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.ProfilePicture.FileName)}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
-                    if (string.IsNullOrEmpty(model.CurrentPassword))
-                    {
-                        ModelState.AddModelError("CurrentPassword", "Current password is required to set a new one.");
-                        return View(model);
-                    }
-
-                    string currentHash = HashPassword(model.CurrentPassword);
-                    if (employee.User.PasswordHash != currentHash)
-                    {
-                        ModelState.AddModelError("CurrentPassword", "The current password provided is incorrect.");
-                        return View(model);
-                    }
-
-                    employee.User.PasswordHash = HashPassword(model.NewPassword);
+                    await model.ProfilePicture.CopyToAsync(fileStream);
                 }
 
-                // 4. Profile Picture Upload
-                if (model.ProfilePicture != null)
+                manager.User.ProfileImage = $"/uploads/profiles/{uniqueFileName}";
+                manager.ProfilePhotoPath = manager.User.ProfileImage;
+            }
+
+            // 3. Password Security
+            if (!string.IsNullOrEmpty(model.NewPassword))
+            {
+                if (string.IsNullOrEmpty(model.CurrentPassword))
                 {
-                    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
-                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                    // Delete old image if it exists
-                    if (!string.IsNullOrEmpty(employee.User.ProfileImage))
-                    {
-                        string oldPath = Path.Combine(_env.WebRootPath, employee.User.ProfileImage.TrimStart('/'));
-                        if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
-                    }
-
-                    string uniqueFileName = $"profile_{employee.User.Id}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.ProfilePicture.FileName)}";
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await model.ProfilePicture.CopyToAsync(fileStream);
-                    }
-
-                    employee.User.ProfileImage = $"/uploads/profiles/{uniqueFileName}";
+                    ModelState.AddModelError("CurrentPassword", "Current password is required.");
+                    return await AccountSettings();
                 }
+
+                if (manager.User.PasswordHash != HashPassword(model.CurrentPassword))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Incorrect current password.");
+                    return await AccountSettings();
+                }
+
+                manager.User.PasswordHash = HashPassword(model.NewPassword);
             }
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "All settings and profile details updated successfully.";
-            return RedirectToAction(nameof(Dashboard));
+            TempData["SuccessMessage"] = "Account security and profile updated successfully.";
+            return RedirectToAction(nameof(AccountSettings));
+        }
+
+        [HttpPost("Toggle2FA")]
+        public async Task<IActionResult> Toggle2FA(bool enable)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || manager.User == null) return Json(new { success = false, message = "User not found." });
+
+            if (!enable)
+            {
+                manager.User.TwoFactorEnabled = false;
+                manager.User.TwoFactorSecret = null;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+
+            // Generate Secret
+            string secret = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10).ToUpper();
+            manager.User.TwoFactorSecret = secret;
+            await _context.SaveChangesAsync();
+
+            // Mock QR Code (In real app, use a library to generate actual QR URI)
+            string qrUri = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/SCM:{manager.User.Email}?secret={secret}%26issuer=SCM_System";
+            
+            return Json(new { success = true, qrCodeUri = qrUri });
+        }
+
+        [HttpPost("Verify2FA")]
+        public async Task<IActionResult> Verify2FA(string code)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || manager.User == null) return Json(new { success = false, message = "User not found." });
+
+            // Mock verification (any 6 digit code works in this demo, or verify against secret)
+            if (code.Length == 6)
+            {
+                manager.User.TwoFactorEnabled = true;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false, message = "Invalid verification code." });
+        }
+
+        [HttpPost("RevokeSession")]
+        public async Task<IActionResult> RevokeSession(string sessionId)
+        {
+            var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.SessionToken == sessionId);
+            if (session != null)
+            {
+                session.IsActive = false;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false, message = "Session not found." });
+        }
+
+        [HttpPost("DeactivateAccount")]
+        public async Task<IActionResult> DeactivateAccount(string password)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || manager.User == null) return Json(new { success = false, message = "User not found." });
+
+            if (manager.User.PasswordHash != HashPassword(password))
+            {
+                return Json(new { success = false, message = "Incorrect password." });
+            }
+
+            manager.User.AccountStatus = "Suspended";
+            manager.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            // Logout
+            HttpContext.Session.Clear();
+            return Json(new { success = true });
         }
 
         private string HashPassword(string password)
@@ -731,5 +819,6 @@ namespace SCM_System.Controllers
                 return builder.ToString();
             }
         }
+
     }
 }
