@@ -64,6 +64,19 @@ namespace SCM_System.Models.Entities
 
         public bool IsDeleted { get; set; } = false;
 
+        public string? CompanyDescription { get; set; }
+        public string? WebsiteUrl { get; set; }
+        public string? PickupAddress { get; set; }
+        public string? CompanyLogo { get; set; }
+
+        // Notification Preferences
+        public bool NotifyOrderAlert { get; set; } = true;
+        public bool NotifyBidAlert { get; set; } = true;
+        public bool NotifyLowStockAlert { get; set; } = true;
+        public bool NotifyPaymentAlert { get; set; } = true;
+        public bool NotifyDisputeAlert { get; set; } = true;
+        public string NotifyChannel { get; set; } = "Both"; // Email, SMS, Both
+
         // Navigation properties
         public ICollection<Product> Products { get; set; } = new List<Product>();
         public ICollection<Tender> Tenders { get; set; } = new List<Tender>();
@@ -77,5 +90,6 @@ namespace SCM_System.Models.Entities
         public ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
         public ICollection<SupplierCategory> SupplierCategories { get; set; } = new List<SupplierCategory>();
+        public ICollection<BankAccount> BankAccounts { get; set; } = new List<BankAccount>();
     }
 }

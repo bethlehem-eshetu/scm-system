@@ -20,6 +20,7 @@ namespace SCM_System.Data
         public DbSet<WarehouseAssignment> WarehouseAssignments { get; set; }
         public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
         public DbSet<Penalty> Penalties { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
 
         // Logistics 2.0 Compliance & History
         public DbSet<VehicleDocument> VehicleDocuments { get; set; }
@@ -113,6 +114,13 @@ namespace SCM_System.Data
                 .WithMany(s => s.Employees)
                 .HasForeignKey(se => se.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Supplier - BankAccount (one-to-many)
+            modelBuilder.Entity<BankAccount>()
+                .HasOne(ba => ba.Supplier)
+                .WithMany(s => s.BankAccounts)
+                .HasForeignKey(ba => ba.SupplierId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // SupplierEmployee - Warehouse (many-to-one)
             modelBuilder.Entity<SupplierEmployee>()
