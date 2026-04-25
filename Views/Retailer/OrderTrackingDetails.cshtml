@@ -42,7 +42,15 @@
             <h2 class="fw-bold text-dark mb-1">Track Order #@Model.OrderNumber</h2>
             <p class="text-muted mb-0">Real-time logistics monitoring for your procurement</p>
         </div>
-        <div class="text-end">
+        <div class="text-end d-flex align-items-center gap-3">
+            @if (displayStatus != "Picked" && displayStatus != "Packed" && displayStatus != "Shipped" && displayStatus != "In Transit" && displayStatus != "Delivered" && displayStatus != "Completed" && displayStatus != "Cancelled")
+            {
+                <form asp-controller="Retailer" asp-action="CancelOrder" method="post" onsubmit="return confirm('Are you sure you want to cancel this order? Stock will be immediately returned to the supplier.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4 py-2 fs-6 fw-bold"><i class="fas fa-times-circle me-2"></i>Cancel Order</button>
+                </form>
+            }
             <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-4 py-2 fs-6 border border-primary border-opacity-10">@displayStatus</span>
         </div>
     </div>

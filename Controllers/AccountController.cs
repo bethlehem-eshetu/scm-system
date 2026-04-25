@@ -14,18 +14,16 @@ namespace SCM_System.Controllers
     public class OtpRequestModel { public string FAN { get; set; } public string Email { get; set; } }
     public class OtpVerifyModel { public string FAN { get; set; } public string OTP { get; set; } }
 
-    public class AccountController : Controller
+    public class AccountController(
+        ApplicationDbContext context, 
+        IWebHostEnvironment webHostEnvironment, 
+        SCM_System.Services.IFaydaService faydaService,
+        ILogger<AccountController> logger) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly SCM_System.Services.IFaydaService _faydaService;
-
-        public AccountController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, SCM_System.Services.IFaydaService faydaService)
-        {
-            _context = context;
-            _webHostEnvironment = webHostEnvironment;
-            _faydaService = faydaService;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
+        private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
+        private readonly ILogger<AccountController> _logger = logger;
 
         // POST: /Account/RequestFaydaOtp
         [HttpPost]
@@ -69,10 +67,10 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, List<int> SelectedCategoryIds)
         {
-            Console.WriteLine("========== REGISTER METHOD STARTED ==========");
-            Console.WriteLine($"Role: {model.Role}");
-            Console.WriteLine($"Email: {model.Email}");
-            Console.WriteLine($"City received: '{model.City}'");
+            _logger.LogInformation("========== REGISTER METHOD STARTED ==========");
+            _logger.LogInformation("Role: {Role}", model.Role);
+            _logger.LogInformation("Email: {Email}", model.Email);
+            _logger.LogInformation("City received: {City}", model.City);
 
             try
             {
@@ -476,15 +474,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ REGISTRATION ERROR: {ex.Message}");
-                string errorMsg = $"[{DateTime.Now}] ❌ REGISTRATION ERROR: {ex.Message}\nStack: {ex.StackTrace}\n";
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"   Inner: {ex.InnerException.Message}");
-                    errorMsg += $"   Inner: {ex.InnerException.Message}\nInner Stack: {ex.InnerException.StackTrace}\n";
-                }
-                
-                try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", errorMsg); } catch {}
+                _logger.LogError(ex, "REGISTRATION ERROR: {Message}", ex.Message);
 
                 TempData["ErrorMessage"] = "An error occurred during registration. Please try again. " + ex.Message;
                 return View(model);
@@ -551,6 +541,16 @@ namespace SCM_System.Controllers
 
                     // ADMIN & EMPLOYEE BYPASS: Admins and Supplier Employees (Warehouse/Delivery) bypass administrative/fayda approval checks
                     bool isSpecialAccount = user.Role == "Admin" || user.Role == "WarehouseManager" || user.Role == "DeliveryAgent";
+
+                    if (isSpecialAccount && user.Role != "Admin")
+                    {
+                        var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(se => se.UserId == user.Id);
+                        if (employee == null || !employee.IsActive || employee.IsDeleted)
+                        {
+                            TempData["ErrorMessage"] = "❌ Your employee account is inactive or has been deactivated. Please contact your manager.";
+                            return RedirectToAction("Login");
+                        }
+                    }
 
                     if (!isSpecialAccount)
                     {
@@ -644,7 +644,7 @@ namespace SCM_System.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Login Error: {ex.Message}");
+                    _logger.LogError(ex, "Login Error");
                     ModelState.AddModelError("", "An error occurred during login. Please try again.");
                     return View(model);
                 }

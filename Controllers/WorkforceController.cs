@@ -48,6 +48,20 @@ namespace SCM_System.Controllers
 
             return true;
         }
+
+        private async Task<bool> IsVehicleCompliantAsync(int vehicleId)
+        {
+            var vehicle = await _context.Vehicles.FindAsync(vehicleId);
+            if (vehicle == null || vehicle.IsDeleted || !vehicle.IsActive) return false;
+
+            // Block if service is overdue
+            if (vehicle.NextServiceDueDate.HasValue && vehicle.NextServiceDueDate.Value < DateTime.Now) return false;
+            
+            // Block if insurance is expired
+            if (vehicle.InsuranceExpiryDate.HasValue && vehicle.InsuranceExpiryDate.Value < DateTime.Now) return false;
+
+            return true;
+        }
         private async Task<List<int>> GetAccessibleWarehouseIdsAsync(int userId, int supplierId)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -188,8 +202,31 @@ namespace SCM_System.Controllers
                     {
                         ModelState.AddModelError("VehicleId", "This vehicle already has an active driver.");
                     }
+
+                    // Maintenance & Compliance Guard
+                    if (!await IsVehicleCompliantAsync(model.VehicleId.Value))
+                    {
+                        ModelState.AddModelError("VehicleId", "This vehicle cannot be assigned: Service is overdue or Insurance has expired.");
+                    }
                 }
                 model.WarehouseId = null;
+                
+                // Strict Document Validation for Delivery Agent
+                if (idDoc == null) ModelState.AddModelError("", "A valid Driving License or National ID document is required for Delivery Agents.");
+                if (contractDoc == null) ModelState.AddModelError("", "Employment Contract is required for Delivery Agents.");
+            }
+            
+            // Check file extensions and sizes limit (e.g. 5MB)
+            var maxFileSize = 5 * 1024 * 1024;
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+            foreach(var file in new[] {photoDoc, contractDoc, idDoc, Request.Form.Files.GetFile("medicalDoc")})
+            {
+                if (file != null && file.Length > 0)
+                {
+                    if (file.Length > maxFileSize) ModelState.AddModelError("", $"File {file.FileName} exceeds the max size of 5MB.");
+                    var ext = Path.GetExtension(file.FileName).ToLower();
+                    if (!allowedExtensions.Contains(ext)) ModelState.AddModelError("", $"File {file.FileName} extension {ext} not allowed.");
+                }
             }
 
             if (ModelState.IsValid)
@@ -619,6 +656,13 @@ namespace SCM_System.Controllers
 
                             if (model.VehicleId.HasValue) 
                             {
+                                // Maintenance & Compliance Guard
+                                if (!await IsVehicleCompliantAsync(model.VehicleId.Value))
+                                {
+                                    ModelState.AddModelError("VehicleId", "This vehicle cannot be assigned: Service is overdue or Insurance has expired.");
+                                    goto RePopulateAndReturn;
+                                }
+
                                 // 2. Deactivate other active drivers for the target vehicle
                                 var otherDrivers = await _context.VehicleAssignments
                                     .Where(va => va.VehicleId == model.VehicleId.Value && va.IsActive && va.SupplierEmployeeId != id)

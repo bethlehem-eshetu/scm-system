@@ -13,12 +13,14 @@ namespace SCM_System.Controllers
         private readonly IPurchaseOrderService _poService;
         private readonly IOrderService _orderService;
         private readonly ApplicationDbContext _context;
+        private readonly IInventoryService _inventoryService;
 
-        public PurchaseOrderController(IPurchaseOrderService poService, IOrderService orderService, ApplicationDbContext context)
+        public PurchaseOrderController(IPurchaseOrderService poService, IOrderService orderService, ApplicationDbContext context, IInventoryService inventoryService)
         {
             _poService = poService;
             _orderService = orderService;
             _context = context;
+            _inventoryService = inventoryService;
         }
 
         public async Task<IActionResult> Index()
@@ -91,7 +93,15 @@ namespace SCM_System.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
-                await _poService.UpdatePurchaseOrderStatusAsync(id, status, userId);
+                try
+                {
+                    await _poService.UpdatePurchaseOrderStatusAsync(id, status, userId);
+                    TempData["SuccessMessage"] = $"Purchase Order {id} status updated to {status}.";
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = ex.Message;
+                }
             }
             return RedirectToAction(nameof(Details), new { id });
         }

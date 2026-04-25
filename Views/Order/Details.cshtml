@@ -116,26 +116,41 @@
 
     <!-- Step Tracker -->
     <div class="glass-card p-4 mb-4">
-        <div class="step-tracker d-flex justify-content-between position-relative">
+        <div class="step-tracker d-flex justify-content-between position-relative overflow-auto pb-2">
             @{
-                var steps = new[] { 
-                    new { Name = "Ordered", Icon = "fa-shopping-basket", Active = true, Completed = Model.CreatedAt != default },
-                    new { Name = "Accepted", Icon = "fa-check-circle", Active = Model.OrderStatus != "Pending" && Model.OrderStatus != "Rejected", Completed = Model.OrderStatus != "Pending" && Model.OrderStatus != "Rejected" },
-                    new { Name = "Fulfillment", Icon = "fa-box-open", Active = Model.OrderStatus == "Processing" || Model.OrderStatus == "Completed", Completed = Model.OrderStatus == "Completed" || (Model.PurchaseOrders != null && Model.PurchaseOrders.Any(p => p.Status == "Packed" || p.Status == "Ready for Pickup")) },
-                    new { Name = "Delivery", Icon = "fa-truck", Active = Model.Delivery != null || (Model.PurchaseOrders != null && Model.PurchaseOrders.Any(p => p.Status == "In Transit")), Completed = Model.OrderStatus == "Completed" || (Model.Delivery != null && Model.Delivery.DeliveryStatus == "Delivered") },
-                    new { Name = "Delivered", Icon = "fa-home", Active = Model.OrderStatus == "Completed" || (Model.Delivery != null && Model.Delivery.DeliveryStatus == "Delivered"), Completed = Model.OrderStatus == "Completed" }
-                };
+                var statuses = new[] { "Pending", "Processing", "Picked", "Packed", "In Transit", "Delivered", "Completed" };
+                
+                // Logic to determine current step for UI
+                var totalPOs = Model.PurchaseOrders?.Count() ?? 0;
+                var deliveredPOs = Model.PurchaseOrders?.Count(po => po.Status == "Delivered" || po.Status == "Completed") ?? 0;
+                var inTransitPOs = Model.PurchaseOrders?.Count(po => po.Status == "In Transit") ?? 0;
+                
+                string displayStatus = Model.OrderStatus;
+                if (deliveredPOs == totalPOs && totalPOs > 0 && Model.OrderStatus != "Delivered" && Model.OrderStatus != "Completed") displayStatus = "Delivered";
+                else if (inTransitPOs > 0 && deliveredPOs < totalPOs && Model.OrderStatus != "In Transit") displayStatus = "In Transit";
+
+                int currentIdx = Array.IndexOf(statuses, displayStatus);
+                if (currentIdx == -1) {
+                   if (displayStatus == "Partially Processing" || displayStatus == "Accepted") currentIdx = 1;
+                   else if (displayStatus == "Partially Delivered") currentIdx = 5;
+                   else currentIdx = 0;
+                }
             }
-            <div class="progress position-absolute top-50 start-0 translate-middle-y w-100" style="height: 2px; z-index: 0; left: 0; margin-top: -10px;">
-                <div class="progress-bar" style="width: @(steps.Count(s => s.Completed) * 25 - 12.5)%;"></div>
+            <div class="progress position-absolute top-50 start-0 translate-middle-y w-100" style="height: 3px; z-index: 0; left: 0; margin-top: -15px;">
+                <div class="progress-bar" style="width: @(currentIdx * 16.66)%; transition: width 1s ease;"></div>
             </div>
-            @foreach (var step in steps)
+            @for (int i = 0; i < statuses.Length; i++)
             {
-                <div class="step-item text-center position-relative" style="z-index: 1; width: 20%;">
-                    <div class="step-icon mx-auto mb-2 @(step.Completed ? "bg-primary text-white" : (step.Active ? "bg-white text-primary border-primary" : "bg-light text-muted")) shadow-sm d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid @(step.Completed ? "transparent" : (step.Active ? "var(--bs-primary)" : "#e9ecef")); transition: all 0.3s ease;">
-                        <i class="fas @step.Icon"></i>
+                var icon = i switch { 0 => "fa-history", 1 => "fa-sync", 2 => "fa-hand-holding-box", 3 => "fa-box", 4 => "fa-truck-fast", 5 => "fa-home", _ => "fa-check-double" };
+                var isCompleted = i <= currentIdx;
+                var isActive = i == currentIdx;
+
+                <div class="step-item text-center position-relative" style="z-index: 1; width: 14%; min-width: 80px;">
+                    <div class="step-icon mx-auto mb-2 @(isCompleted ? "bg-primary text-white shadow" : "bg-white text-muted border-light") d-flex align-items-center justify-content-center rounded-circle" style="width: 40px; height: 40px; border: 2px solid @(isCompleted ? "transparent" : "#e9ecef"); transition: all 0.5s ease;">
+                        <i class="fas @icon"></i>
                     </div>
-                    <div class="step-label small fw-bold @(step.Active ? "text-dark" : "text-muted")">@step.Name</div>
+                    <div class="step-label smaller fw-bold @(isCompleted ? "text-dark" : "text-muted")" style="font-size: 0.65rem; text-transform: uppercase;">@statuses[i]</div>
+                    @if (i == 0) { <div class="extra-small text-muted" style="font-size: 0.6rem;">@Model.CreatedAt.ToString("MMM dd")</div> }
                 </div>
             }
         </div>
@@ -241,8 +256,19 @@
                         </tbody>
                         <tfoot class="bg-light bg-opacity-50 border-top-0">
                             <tr>
+                                <td colspan="@(isSupplier && Model.OrderStatus == "Pending" ? "4" : "3")" class="text-end text-muted small ps-4 border-0">Subtotal:</td>
+                                <td class="text-end pe-4 fw-bold text-dark border-0">@Model.OrderItems.Sum(i => i.Quantity * i.UnitPrice).ToString("C")</td>
+                            </tr>
+                            @if (Model.PurchaseOrders != null && Model.PurchaseOrders.Any())
+                            {
+                                <tr>
+                                    <td colspan="@(isSupplier && Model.OrderStatus == "Pending" ? "4" : "3")" class="text-end text-muted small ps-4 border-0">Tax & Commissions (Included):</td>
+                                    <td class="text-end pe-4 fw-bold text-dark border-0">@(Model.PurchaseOrders.Sum(p => p.VAT + p.Discount).ToString("C"))</td>
+                                </tr>
+                            }
+                            <tr>
                                 <td colspan="@(isSupplier && Model.OrderStatus == "Pending" ? "4" : "3")" class="text-end fw-bold ps-4 border-0">Grand Total:</td>
-                                <td class="text-end pe-4 fw-bold h5 text-primary border-0">@Model.TotalAmount.ToString("C")</td>
+                                <td class="text-end pe-4 fw-bold h4 text-primary border-0">@Model.TotalAmount.ToString("C")</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -291,13 +317,25 @@
                                         <td>@po.Warehouse?.Name</td>
                                         <td><span class="badge bg-light text-dark shadow-sm">@po.Status</span></td>
                                         <td>
-                                            @if (po.Status == "Delivered")
+                                            @if (po.Status == "Delivered" || po.Status == "Completed")
                                             {
                                                 <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>Delivered</span>
                                             }
-                                            else
+                                            else if (po.Status == "In Transit")
                                             {
                                                 <span class="text-primary small fw-bold"><i class="fas fa-shipping-fast me-1"></i>In Transit</span>
+                                            }
+                                            else if (po.Status == "Packed" || po.Status == "Ready for Pickup")
+                                            {
+                                                <span class="text-info small fw-bold"><i class="fas fa-box me-1"></i>Ready for Delivery</span>
+                                            }
+                                            else if (po.Status == "Picked")
+                                            {
+                                                <span class="text-info small fw-bold"><i class="fas fa-hand-holding-box me-1"></i>Picked</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small fw-bold"><i class="fas fa-sync fa-spin me-1"></i>Processing</span>
                                             }
                                         </td>
                                         <td class="text-end pe-4 fw-bold">@po.TotalAmount.ToString("C")</td>

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
+using SCM_System.Services;
 using System.Security.Claims;
 
 namespace SCM_System.Controllers
@@ -15,11 +16,13 @@ namespace SCM_System.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IInventoryService _inventoryService;
 
-        public ProductController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public ProductController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, IInventoryService inventoryService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _inventoryService = inventoryService;
         }
 
         // Helper method to get current SupplierId
@@ -128,6 +131,15 @@ namespace SCM_System.Controllers
             if (!isCategoryValid)
             {
                 ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
+
+            // Check for duplicate product name
+            bool isDuplicateName = await _context.Products
+                .AnyAsync(p => p.SupplierId == model.SupplierId && p.ProductName == model.ProductName);
+            
+            if (isDuplicateName)
+            {
+                ModelState.AddModelError("ProductName", "A product with this name already exists in your catalog.");
             }
 
             if (ModelState.IsValid)
@@ -392,6 +404,15 @@ namespace SCM_System.Controllers
                 ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
             }
 
+            // Check for duplicate product name
+            bool isDuplicateName = await _context.Products
+                .AnyAsync(p => p.SupplierId == supplierId && p.ProductName == model.ProductName && p.Id != id);
+            
+            if (isDuplicateName)
+            {
+                ModelState.AddModelError("ProductName", "Another product with this name already exists in your catalog.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -541,48 +562,45 @@ namespace SCM_System.Controllers
             return View();
         }
 
-        // POST: Product/AddStock/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddStock(int id, int warehouseId, int quantity)
         {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
             var supplierId = await GetCurrentSupplierIdAsync();
             if (supplierId == null) return Unauthorized();
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
             if (product == null) return NotFound();
 
-            var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == id && i.WarehouseId == warehouseId);
-
-            if (inventory == null)
+            var adjustment = new InventoryAdjustment
             {
-                inventory = new Inventory
-                {
-                    ProductId = id,
-                    WarehouseId = warehouseId,
-                    QuantityOnHand = quantity,
-                    QuantityReserved = 0,
-                    WarehouseLocation = "Main Section", // Default or user input
-                    LastUpdated = DateTime.Now
-                };
-                _context.Inventories.Add(inventory);
-            }
-            else
+                ProductId = id,
+                WarehouseId = warehouseId,
+                QuantityChange = quantity,
+                AdjustmentType = "Initial Load",
+                Reason = "Supplier added initial stock through product management.",
+                DocumentReference = $"INIT-{id}-{DateTime.Now:yyyyMMdd}",
+                PerformedById = userId,
+                CreatedAt = DateTime.Now
+            };
+
+            try
             {
-                inventory.QuantityOnHand += quantity;
-                inventory.LastUpdated = DateTime.Now;
-                _context.Update(inventory);
+                await _inventoryService.AdjustInventoryAsync(adjustment);
+                
+                // Consistency check: Recalculate if needed
+                await _inventoryService.RecalculateInventoryAsync(warehouseId, id);
+
+                TempData["SuccessMessage"] = $"Stock added successfully! quantity: {quantity}";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error adding stock: " + ex.Message;
             }
 
-            await _context.SaveChangesAsync();
-
-            // Refresh product availability
-            var totalStock = await _context.Inventories.Where(i => i.ProductId == id).SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
-            product.IsAvailable = totalStock > 0;
-            _context.Update(product);
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"Stock added successfully! Total available: {totalStock}";
             return RedirectToAction(nameof(MyProducts));
         }
 
@@ -601,66 +619,33 @@ namespace SCM_System.Controllers
 
             try
             {
-                if (inventory == null)
-                {
-                    // If inventory record doesn't exist, only allow increase or set
-                    if (action == "increase" || action == "set")
-                    {
-                        inventory = new Inventory
-                        {
-                            ProductId = id,
-                            WarehouseId = warehouseId,
-                            QuantityOnHand = 0,
-                            QuantityReserved = 0,
-                            WarehouseLocation = "Main Section",
-                            LastUpdated = DateTime.Now
-                        };
-                        _context.Inventories.Add(inventory);
-                        
-                        // Apply stock change to the newly created record (starting from 0)
-                        inventory.QuantityOnHand = stockChange;
-                    }
-                    else
-                    {
-                        // For 'decrease', if it doesn't exist, we reject it
-                        TempData["ErrorMessage"] = "Cannot decrease stock: No inventory record exists for this warehouse.";
-                        return RedirectToAction(nameof(MyProducts));
-                    }
-                }
-                else
-                {
-                    if (action == "increase")
-                    {
-                        inventory.QuantityOnHand += stockChange;
-                    }
-                    else if (action == "decrease")
-                    {
-                        if (inventory.QuantityOnHand < stockChange)
-                        {
-                            TempData["ErrorMessage"] = "Cannot decrease stock below zero.";
-                            return RedirectToAction(nameof(MyProducts));
-                        }
-                        inventory.QuantityOnHand -= stockChange;
-                    }
-                    else if (action == "set")
-                    {
-                        inventory.QuantityOnHand = stockChange;
-                    }
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
-                    if (inventory.QuantityOnHand < 0) inventory.QuantityOnHand = 0;
-                    inventory.LastUpdated = DateTime.Now;
-                    _context.Update(inventory);
+                var adjustment = new InventoryAdjustment
+                {
+                    ProductId = id,
+                    WarehouseId = warehouseId,
+                    QuantityChange = action == "increase" ? stockChange : (action == "decrease" ? -stockChange : 0),
+                    AdjustmentType = "Correction",
+                    Reason = $"Supplier manual stock update: {action} by {stockChange}",
+                    DocumentReference = $"MAN-{id}-{DateTime.Now:yyyyMMdd}",
+                    CreatedAt = DateTime.Now
+                };
+
+                // If 'set', we need to calculate the delta
+                if (action == "set")
+                {
+                    int currentQty = inventory?.QuantityOnHand ?? 0;
+                    adjustment.QuantityChange = stockChange - currentQty;
                 }
 
-                await _context.SaveChangesAsync();
-
-                // Auto update availability
-                var totalStock = await _context.Inventories.Where(inv => inv.ProductId == id).SumAsync(inv => inv.QuantityOnHand - inv.QuantityReserved);
-                product.IsAvailable = totalStock > 0;
-                _context.Update(product);
-                await _context.SaveChangesAsync();
+                await _inventoryService.AdjustInventoryAsync(adjustment);
                 
-                TempData["SuccessMessage"] = $"Stock updated successfully. New warehouse quantity: {inventory.QuantityOnHand}";
+                // Force sync aggregate availability
+                await _inventoryService.RecalculateInventoryAsync(warehouseId, id);
+                
+                TempData["SuccessMessage"] = $"Stock updated successfully. Action: {action}";
             }
             catch (Exception ex)
             {

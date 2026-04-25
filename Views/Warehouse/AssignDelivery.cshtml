@@ -4,6 +4,8 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
     var agents = ViewBag.Agents as IEnumerable<SCM_System.Models.Entities.SupplierEmployee>;
     var vehicles = ViewBag.Vehicles as IEnumerable<SCM_System.Models.Entities.Vehicle>;
+    var suggestedDrivers = ViewBag.SuggestedDrivers as IEnumerable<SCM_System.Models.ViewModels.DriverSuggestion>;
+    var suggestedVehicles = ViewBag.SuggestedVehicles as IEnumerable<SCM_System.Models.ViewModels.VehicleSuggestion>;
 }
 
 <div class="container-fluid px-4 py-3">
@@ -80,9 +82,9 @@
                                                 <option value="">-- Choose Agent --</option>
                                                 @foreach (var agent in agents)
                                                 {
-                                                    var suggestion = ((List<dynamic>)ViewBag.SuggestedDrivers)?.FirstOrDefault(s => s.DriverId == agent.Id);
+                                                    var suggestion = suggestedDrivers?.FirstOrDefault(s => s.DriverId == agent.Id);
                                                     <option value="@agent.Id" data-vehicle-id="@agent.VehicleId">
-                                                        @(agent.User?.FullName ?? "Staff") (@agent.Phone)
+                                                        @(agent.User?.FullName ?? "Staff") (@agent.Phone) - @agent.Status
                                                         @if (suggestion != null && suggestion.Rank <= 3)
                                                         {
                                                             @: [AI RANK #@suggestion.Rank]
@@ -90,7 +92,7 @@
                                                     </option>
                                                 }
                                             </select>
-                                            @if (ViewBag.SuggestedDrivers != null && ((List<dynamic>)ViewBag.SuggestedDrivers).Any())
+                                            @if (suggestedDrivers != null && suggestedDrivers.Any())
                                             {
                                                 <div class="mt-1 extra-small text-primary">
                                                     <i class="fas fa-magic me-1"></i> Smart ranking active based on zone & proximity.
@@ -104,7 +106,7 @@
                                                 <option value="">-- Choose Vehicle --</option>
                                                 @foreach (var vehicle in vehicles)
                                                 {
-                                                    var suggestion = ((List<dynamic>)ViewBag.SuggestedVehicles)?.FirstOrDefault(s => s.VehicleId == vehicle.Id);
+                                                    var suggestion = suggestedVehicles?.FirstOrDefault(s => s.VehicleId == vehicle.Id);
                                                     <option value="@vehicle.Id">
                                                         @vehicle.LicensePlate (@vehicle.VehicleType)
                                                         @if (suggestion != null && suggestion.Rank <= 3)
@@ -145,34 +147,43 @@
                 }
 
                 $.ajax({
-                    url: '/Supplier/GetDriverDetails',
-                    data: { employeeId: employeeId },
+                    url: '/Warehouse/GetVehicleByAgent',
+                    data: { agentId: employeeId },
                     success: function(data) {
-                        if (data.vehicleId) {
-                            vehicleSelect.val(data.vehicleId).trigger('change');
+                        if (data.vehicleId && data.vehicleId !== 0) {
+                            vehicleSelect.val(data.vehicleId);
                             
-                            infoDiv.html(`
-                                <div class="alert alert-info border-0 shadow-sm rounded-4 mt-3 mb-0 animated fadeIn">
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
-                                            <i class="fas fa-truck fa-lg"></i>
-                                        </div>
-                                        <div>
-                                            <div class="small fw-bold text-dark">PRIMARY ASSIGNED VEHICLE</div>
-                                            <div class="smaller text-muted">${data.licensePlate} (${data.vehicleType})</div>
-                                            <div class="smaller text-muted">Load Capacity: <strong>${data.maxLoadCapacity} KG</strong></div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2 pt-2 border-top border-info border-opacity-10 d-flex justify-content-between smaller text-muted">
-                                        <span>License: ${data.licenseNumber || 'Verified'}</span>
-                                        <span class="text-xs">Expiry: ${data.licenseExpiry || 'N/A'}</span>
-                                    </div>
-                                </div>
-                            `).fadeIn();
+                            // Trigger info update
+                            $.ajax({
+                                url: '/Supplier/GetDriverDetails',
+                                data: { employeeId: employeeId },
+                                success: function(driverData) {
+                                    if (driverData.vehicleId) {
+                                        infoDiv.html(`
+                                            <div class="alert alert-info border-0 shadow-sm rounded-4 mt-3 mb-0 animated fadeIn">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                                                        <i class="fas fa-truck fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="small fw-bold text-dark">PRIMARY ASSIGNED VEHICLE</div>
+                                                        <div class="smaller text-muted">${driverData.licensePlate} (${driverData.vehicleType})</div>
+                                                        <div class="smaller text-muted">Load Capacity: <strong>${driverData.maxLoadCapacity} KG</strong></div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 pt-2 border-top border-info border-opacity-10 d-flex justify-content-between smaller text-muted">
+                                                    <span>License: ${driverData.licenseNumber || 'Verified'}</span>
+                                                    <span class="text-xs">Expiry: ${driverData.licenseExpiry || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        `).fadeIn();
+                                    }
+                                }
+                            });
                         } else {
                             infoDiv.html(`
                                 <div class="alert alert-warning border-0 rounded-4 mt-3 mb-0 smaller">
-                                    <i class="fas fa-exclamation-triangle me-2"></i> Driver has no primary vehicle assigned.
+                                    <i class="fas fa-exclamation-triangle me-2"></i> No active vehicle assigned to this driver.
                                 </div>
                             `).fadeIn();
                         }

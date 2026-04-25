@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
@@ -240,6 +240,51 @@ namespace SCM_System.Controllers
             ViewBag.TotalPending = await _commissionService.GetPendingCommissionsTotalAsync();
 
             return View(commissions);
+        }
+
+        public async Task<IActionResult> Dashboard()
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == 0)
+                return RedirectToAction("Login", "Account");
+
+            var user = await _context.Users.FindAsync(currentUserId);
+            if (user?.Role != "Admin")
+                return RedirectToAction("AccessDenied", "Home");
+
+            var viewModel = new CommissionDashboardViewModel
+            {
+                TotalEarned = await _context.Commissions.Where(c => c.Status == "Paid" && c.PaymentType == "PlatformCommission").SumAsync(c => c.CommissionAmount),
+                TotalPending = await _context.Commissions.Where(c => c.Status == "Pending").SumAsync(c => c.CommissionAmount),
+                TotalSettled = await _context.Commissions.Where(c => c.Status == "Paid" && c.PaymentType == "SupplierPayout").SumAsync(c => c.CommissionAmount),
+                PendingCount = await _context.Commissions.CountAsync(c => c.Status == "Pending"),
+                ActiveSuppliersCount = await _context.Suppliers.CountAsync()
+            };
+
+            // Mock Chart Data for the last 7 days
+            for (int i = 6; i >= 0; i--)
+            {
+                var date = DateTime.Today.AddDays(-i);
+                viewModel.ChartLabels.Add(date.ToString("MMM dd"));
+                viewModel.ChartData.Add(await _context.Commissions
+                    .Where(c => c.PaidAt.HasValue && c.PaidAt.Value.Date == date.Date && c.Status == "Paid")
+                    .SumAsync(c => c.CommissionAmount));
+            }
+
+            // Tier Distribution
+            var distribution = await _context.Suppliers
+                .GroupBy(s => s.CommissionTier ?? "Bronze")
+                .Select(g => new { Tier = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            foreach (var item in distribution)
+            {
+                viewModel.TierLabels.Add(item.Tier);
+                viewModel.TierData.Add(item.Count);
+                viewModel.TierDistribution[item.Tier] = item.Count;
+            }
+
+            return View(viewModel);
         }
 
         [HttpPost]

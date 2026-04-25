@@ -9,11 +9,11 @@ namespace SCM_System.Models.Entities
 
         [Required]
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User User { get; set; } = null!;
 
         [Required]
         public int SupplierId { get; set; }
-        public Supplier Supplier { get; set; }
+        public Supplier Supplier { get; set; } = null!;
 
         public int? WarehouseId { get; set; }
         public Warehouse? Warehouse { get; set; }
@@ -30,15 +30,15 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(50)]
         [Display(Name = "Employee Role")]
-        public string EmployeeRole { get; set; } // warehouse_manager, delivery_person, sales_manager
+        public string EmployeeRole { get; set; } = "Staff"; // warehouse_manager, delivery_person, sales_manager
 
         [StringLength(20)]
         [Display(Name = "Employee Phone")]
-        public string Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
 
         [StringLength(100)]
         [Display(Name = "Employee Email")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [StringLength(100)]
         public string? EmergencyContactName { get; set; }
@@ -98,20 +98,20 @@ namespace SCM_System.Models.Entities
         public WarehouseProfile? WarehouseProfile { get; set; }
 
         // Assignments
-        public ICollection<WarehouseAssignment> WarehouseAssignments { get; set; } = new List<WarehouseAssignment>();
-        public ICollection<VehicleAssignment> VehicleAssignments { get; set; } = new List<VehicleAssignment>();
+        public ICollection<WarehouseAssignment> WarehouseAssignments { get; set; } = [];
+        public ICollection<VehicleAssignment> VehicleAssignments { get; set; } = [];
 
         // History & Tracking
-        public ICollection<WarehouseManagerHistory> ManagerHistories { get; set; } = new List<WarehouseManagerHistory>();
-        public ICollection<VehicleDriverHistory> DriverHistories { get; set; } = new List<VehicleDriverHistory>();
-        public ICollection<EmployeeWarehouseAccess> HubAccesses { get; set; } = new List<EmployeeWarehouseAccess>();
-        public ICollection<EmployeeDocument> Documents { get; set; } = new List<EmployeeDocument>();
-        public ICollection<IncidentReport> ReportedIncidents { get; set; } = new List<IncidentReport>();
-        public ICollection<DispatchTask> AssignedTasks { get; set; } = new List<DispatchTask>();
-        public ICollection<InventoryTransfer> RequestedTransfers { get; set; } = new List<InventoryTransfer>();
-        public ICollection<InventoryTransfer> ApprovedTransfers { get; set; } = new List<InventoryTransfer>();
+        public ICollection<WarehouseManagerHistory> ManagerHistories { get; set; } = [];
+        public ICollection<VehicleDriverHistory> DriverHistories { get; set; } = [];
+        public ICollection<EmployeeWarehouseAccess> HubAccesses { get; set; } = [];
+        public ICollection<EmployeeDocument> Documents { get; set; } = [];
+        public ICollection<IncidentReport> ReportedIncidents { get; set; } = [];
+        public ICollection<DispatchTask> AssignedTasks { get; set; } = [];
+        public ICollection<InventoryTransfer> RequestedTransfers { get; set; } = [];
+        public ICollection<InventoryTransfer> ApprovedTransfers { get; set; } = [];
 
         // Navigation properties
-        public ICollection<Delivery> Deliveries { get; set; } = new List<Delivery>();
+        public ICollection<Delivery> Deliveries { get; set; } = [];
     }
 }

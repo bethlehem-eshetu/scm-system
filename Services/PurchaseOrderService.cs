@@ -5,16 +5,16 @@ using SCM_System.Models.Constants;
 
 namespace SCM_System.Services
 {
-    public class PurchaseOrderService : IPurchaseOrderService
+    public class PurchaseOrderService(
+        ApplicationDbContext context, 
+        INotificationService notificationService, 
+        IInventoryService inventoryService,
+        ILogger<PurchaseOrderService> logger) : IPurchaseOrderService
     {
-        private readonly ApplicationDbContext _context;
-        private readonly INotificationService _notificationService;
-
-        public PurchaseOrderService(ApplicationDbContext context, INotificationService notificationService)
-        {
-            _context = context;
-            _notificationService = notificationService;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly INotificationService _notificationService = notificationService;
+        private readonly IInventoryService _inventoryService = inventoryService;
+        private readonly ILogger<PurchaseOrderService> _logger = logger;
 
         public async Task<IEnumerable<PurchaseOrder>> GetPurchaseOrdersByRetailerAsync(int retailerId)
         {
@@ -59,7 +59,7 @@ namespace SCM_System.Services
                     .ThenInclude(t => t.TenderItems)
                 .FirstOrDefaultAsync(b => b.Id == tenderBidId);
 
-            if (bid == null || bid.Status != "Accepted") return null;
+            if (bid == null || bid.Status != POStatus.Accepted) return null;
 
             // Automated Warehouse Assignment Logic
             var allocations = new Dictionary<int, List<PurchaseOrderItem>>(); // WarehouseId -> Items
@@ -96,8 +96,6 @@ namespace SCM_System.Services
                             UnitPrice = bid.UnitPrice
                         });
                         
-                        // Reserve Stock
-                        inv.QuantityReserved += allocate;
                         remainingToAllocate -= allocate;
                     }
                 }
@@ -124,6 +122,8 @@ namespace SCM_System.Services
 
             PurchaseOrder firstPo = null;
 
+            var createdPos = new List<PurchaseOrder>();
+
             foreach (var kvp in allocations)
             {
                 var warehouseId = kvp.Key;
@@ -147,11 +147,18 @@ namespace SCM_System.Services
                 };
 
                 _context.PurchaseOrders.Add(po);
-                if (firstPo == null) firstPo = po;
+                createdPos.Add(po);
             }
 
             await _context.SaveChangesAsync();
-            return firstPo;
+
+            // 🔥 NEW: Trigger immediate reservation for each PO created
+            foreach (var po in createdPos)
+            {
+                await _inventoryService.BulkReserveStockForPOAsync(po.Id, po.SupplierId, po.WarehouseId);
+            }
+
+            return createdPos.FirstOrDefault();
         }
 
         public async Task<PurchaseOrder> CreateDirectPurchaseOrderAsync(PurchaseOrder po, List<PurchaseOrderItem> items)
@@ -172,18 +179,44 @@ namespace SCM_System.Services
             }
             await _context.SaveChangesAsync();
 
+            // 🔥 NEW: Trigger immediate reservation for Direct POs
+            await _inventoryService.BulkReserveStockForPOAsync(po.Id, po.SupplierId, po.WarehouseId);
+
             return po;
         }
 
         public async Task<PurchaseOrder> UpdatePurchaseOrderStatusAsync(int id, string status, int userId)
         {
-            var po = await _context.PurchaseOrders
-                .Include(p => p.Order)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (po != null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
+                var po = await _context.PurchaseOrders
+                    .Include(p => p.Order)
+                    .Include(p => p.PurchaseOrderItems)
+                    .Include(p => p.Retailer)
+                    .Include(p => p.Warehouse)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (po == null) return null;
+
                 var oldStatus = po.Status;
+                
+                // 1. If transitioning OUT OF 'Issued' or into 'Accepted', trigger atomic reservation if not already done
+                var processingStatuses = new[] { POStatus.Accepted, POStatus.Processing, POStatus.Picked, POStatus.Packed, POStatus.Ready };
+                if (oldStatus == POStatus.Issued && processingStatuses.Contains(status))
+                {
+                    // BulkReserveStockForPOAsync is idempotent and handles its own internal transaction checks
+                    var success = await _inventoryService.BulkReserveStockForPOAsync(id, po.SupplierId, po.WarehouseId);
+                    if (!success) throw new InvalidOperationException("Failed to reserve stock. Items may be out of stock or warehouse at capacity.");
+                }
+
+                // 🔥 Auto-Complete Guard: If setting to Delivered but already Paid, move to Completed.
+                if (status == POStatus.Delivered && po.Order != null && po.Order.PaymentStatus == "Paid")
+                {
+                    status = POStatus.Completed;
+                    _logger.LogInformation("PO {PONumber} auto-transitioned from Delivered to Completed due to existing Paid status.", po.PONumber);
+                }
+
                 po.Status = status;
                 po.UpdatedAt = DateTime.Now;
 
@@ -194,7 +227,6 @@ namespace SCM_System.Services
                 // Sync with parent Order if it exists
                 if (po.Order != null)
                 {
-                    // Add to History
                     var history = new OrderStatusHistory
                     {
                         OrderId = po.OrderId,
@@ -203,36 +235,46 @@ namespace SCM_System.Services
                         ChangedByUserId = userId,
                         ChangedAt = DateTime.Now
                     };
-
                     _context.OrderStatusHistories.Add(history);
 
-                    // If all POs are Delivered, mark Order as Delivered (if applicable)
-                    // If all POs are Delivered, mark Order as Delivered (if applicable)
                     if (status == POStatus.Delivered)
                     {
                         var allOtherPos = await _context.PurchaseOrders
                             .Where(p => p.OrderId == po.OrderId && p.Id != po.Id)
                             .AllAsync(p => p.Status == POStatus.Delivered);
 
-                        if (allOtherPos)
-                        {
-                            po.Order.OrderStatus = POStatus.Delivered;
-                        }
-                        else
-                        {
-                            po.Order.OrderStatus = "Partially Delivered";
-                        }
+                        if (allOtherPos) po.Order.OrderStatus = POStatus.Delivered;
+                        else po.Order.OrderStatus = "Partially Delivered";
                     }
                     else if (status == POStatus.Picked || status == POStatus.Packed || status == POStatus.Ready || status == POStatus.InTransit)
                     {
-                        if (po.Order.OrderStatus == POStatus.Accepted) 
-                        {
-                             po.Order.OrderStatus = POStatus.Processing; 
-                        }
+                        if (po.Order.OrderStatus == POStatus.Accepted) po.Order.OrderStatus = POStatus.Processing; 
                     }
                 }
 
-                // Notify Retailer on specific milestones
+                // 2. Handle Stock Deduction Fallback (Safety Guard)
+                // If the order moves to any status beyond 'Processing' (Picked, Packed, In-Transit, etc.),
+                // ensure the physical stock has been deducted and reservations released.
+                var shippedStatuses = new[] { POStatus.Picked, POStatus.Packed, POStatus.Ready, POStatus.InTransit, POStatus.Delivered, POStatus.Completed };
+                if (shippedStatuses.Contains(status))
+                {
+                    // DeductStockOnPickAsync is idempotent and handles its own closure logic
+                    await _inventoryService.DeductStockOnPickAsync(id);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // 2. Reload full entity after commit to avoid detached/stale navigation properties
+                po = await _context.PurchaseOrders
+                    .Include(p => p.Retailer)
+                    .Include(p => p.Warehouse)
+                    .Include(p => p.Order)
+                    .Include(p => p.PurchaseOrderItems)
+                        .ThenInclude(i => i.Product)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                // 3. Post-transaction notifications
                 if (po.Retailer?.UserId != null)
                 {
                     string title = "";
@@ -268,37 +310,14 @@ namespace SCM_System.Services
                         );
                     }
                 }
-
-                // Handle Inventory Deduction on Delivery
-                if (status == POStatus.Delivered && oldStatus != POStatus.Delivered)
-                {
-                    // Refined logic: Loop through all items in the PO
-                    foreach (var item in po.PurchaseOrderItems)
-                    {
-                        var itemInv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == po.WarehouseId);
-                        
-                        if (itemInv == null)
-                        {
-                            throw new InvalidOperationException($"Inventory record missing for Product ID {item.ProductId} in Warehouse {po.WarehouseId}. Cannot complete delivery.");
-                        }
-
-                        if (itemInv.QuantityReserved < item.Quantity)
-                        {
-                            throw new InvalidOperationException($"Insufficient reserved stock for Product ID {item.ProductId}. Reserved: {itemInv.QuantityReserved}, Required: {item.Quantity}");
-                        }
-
-                        itemInv.QuantityReserved -= item.Quantity;
-                        itemInv.QuantityOnHand -= item.Quantity;
-                        
-                        if (itemInv.QuantityOnHand < 0) itemInv.QuantityOnHand = 0; // Safety
-                        
-                        _context.Update(itemInv);
-                    }
-                }
-
-                await _context.SaveChangesAsync();
+                
+                return po;
             }
-            return po;
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw; // Preserve error message for Controller
+            }
         }
     }
 }

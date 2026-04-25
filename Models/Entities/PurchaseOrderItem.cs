@@ -16,7 +16,7 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(100)]
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = string.Empty;
 
         public string? Description { get; set; }
 

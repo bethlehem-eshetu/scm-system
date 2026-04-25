@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 
@@ -32,14 +32,14 @@ namespace SCM_System.Services
             if (exists)
                 return null;
 
-            // Example: 10% commission
-            decimal commissionRate = 0.10m;
+            // Example: 5% commission standard
+            decimal commissionRate = 0.05m;
             decimal commissionAmount = orderAmount * commissionRate;
 
             var commission = new Commission
             {
                 OrderId = orderId,
-                PurchaseOrderId = purchaseOrderId, // ✅ IMPORTANT FIX
+                PurchaseOrderId = purchaseOrderId,
                 OrderAmount = orderAmount,
                 CommissionRate = commissionRate,
                 CommissionAmount = commissionAmount,
@@ -47,8 +47,6 @@ namespace SCM_System.Services
                 CreatedAt = DateTime.Now,
                 DueDate = DateTime.Now.AddDays(7)
             };
-            Console.WriteLine("🔥 Commission method HIT!");
-            Console.WriteLine($"💰 Creating commission for Order {orderId}, PO {purchaseOrderId}, Amount {orderAmount}");
             _context.Commissions.Add(commission);
             await _context.SaveChangesAsync();
 
@@ -112,29 +110,7 @@ namespace SCM_System.Services
 
             if (verification.Success && verification.Status == "success")
             {
-                commission.Status = "Paid";
-                commission.PaidAt = DateTime.Now;
-
-                // ✅ Update PurchaseOrder PaymentStatus
-                if (commission.PurchaseOrder != null)
-                {
-                    commission.PurchaseOrder.PaymentStatus = "Paid";
-                    _context.PurchaseOrders.Update(commission.PurchaseOrder);
-                }
-
-                // Notify supplier
-                if (commission.Supplier?.UserId != null)
-                {
-                    await _notificationService.SendNotificationAsync(
-                        commission.Supplier.UserId,
-                        "✅ Payment Successful",
-                        $"Your commission payment of {commission.CommissionAmount:C} for Order #{commission.Order?.OrderNumber} has been confirmed.",
-                        "Success",
-                        $"/Supplier/Payments"
-                    );
-                }
-
-                await _context.SaveChangesAsync();
+                await FinalizePaymentAsync(commissionId, commission.ChapaTransactionId, verification.Status);
             }
 
             return commission;
@@ -158,6 +134,137 @@ namespace SCM_System.Services
             return await _context.Commissions
                 .Where(c => c.Status == "Pending" && (c.DueDate == null || c.DueDate > DateTime.Now))
                 .SumAsync(c => c.CommissionAmount);
+        }
+
+        public async Task<bool> FinalizePaymentAsync(int commissionId, string transactionId, string verificationData)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var mainCommission = await _context.Commissions
+                    .Include(c => c.Order)
+                    .Include(c => c.PurchaseOrder)
+                    .Include(c => c.Supplier)
+                    .Include(c => c.Retailer)
+                    .FirstOrDefaultAsync(c => c.Id == commissionId);
+
+                if (mainCommission == null) return false;
+
+                // 1. Idempotency Check
+                if (mainCommission.Status == "Paid")
+                {
+                    await transaction.CommitAsync();
+                    return true;
+                }
+
+                // 2. Mark Master Commission as Paid
+                mainCommission.Status = "Paid";
+                mainCommission.PaidAt = DateTime.Now;
+                mainCommission.ChapaTransactionId = transactionId;
+                mainCommission.PaymentVerificationData = verificationData;
+
+                // 3. Update Order & PurchaseOrder Status
+                if (mainCommission.PurchaseOrder != null)
+                {
+                    mainCommission.PurchaseOrder.PaymentStatus = "Paid";
+                    if (mainCommission.PurchaseOrder.Status == "Delivered")
+                    {
+                        mainCommission.PurchaseOrder.Status = "Completed";
+                    }
+                }
+
+                if (mainCommission.Order != null)
+                {
+                    var otherPOs = await _context.PurchaseOrders
+                        .Where(p => p.OrderId == mainCommission.OrderId && p.Id != mainCommission.PurchaseOrderId)
+                        .ToListAsync();
+
+                    if (otherPOs.All(p => p.PaymentStatus == "Paid"))
+                    {
+                        mainCommission.Order.PaymentStatus = "Paid";
+                        if (mainCommission.Order.OrderStatus == "Delivered")
+                        {
+                            mainCommission.Order.OrderStatus = "Completed";
+                        }
+                    }
+                }
+
+                // 4. Automated Commission Split
+                if (mainCommission.PaymentType == "OrderPayment")
+                {
+                    var supplier = mainCommission.Supplier;
+                    decimal commissionRate = supplier != null 
+                        ? (supplier.CommissionRate > 0 ? supplier.CommissionRate : Supplier.GetRateByTier(supplier.CommissionTier)) 
+                        : 5.0m;
+
+                    var platformCommAmount = mainCommission.OrderAmount * (commissionRate / 100);
+
+                    // Prevents redudant splits in case of race between verify and webhook
+                    var splitExists = await _context.Commissions.AnyAsync(c => 
+                        c.PurchaseOrderId == mainCommission.PurchaseOrderId && 
+                        (c.PaymentType == "PlatformCommission" || c.PaymentType == "SupplierPayout"));
+
+                    if (!splitExists)
+                    {
+                        var platformComm = new Commission
+                        {
+                            PurchaseOrderId = mainCommission.PurchaseOrderId,
+                            OrderId = mainCommission.OrderId,
+                            SupplierId = mainCommission.SupplierId,
+                            RetailerId = mainCommission.RetailerId,
+                            OrderAmount = mainCommission.OrderAmount,
+                            CommissionRate = commissionRate / 100,
+                            CommissionAmount = platformCommAmount,
+                            PaymentType = "PlatformCommission",
+                            Status = "Paid",
+                            CreatedAt = DateTime.Now,
+                            PaidAt = DateTime.Now,
+                            Notes = $"Platform commission ({commissionRate}%) automatically deducted"
+                        };
+                        _context.Commissions.Add(platformComm);
+
+                        var payoutAmount = mainCommission.OrderAmount - platformCommAmount;
+                        var supplierPayout = new Commission
+                        {
+                            PurchaseOrderId = mainCommission.PurchaseOrderId,
+                            OrderId = mainCommission.OrderId,
+                            SupplierId = mainCommission.SupplierId,
+                            RetailerId = mainCommission.RetailerId,
+                            OrderAmount = mainCommission.OrderAmount,
+                            CommissionAmount = payoutAmount,
+                            PaymentType = "SupplierPayout",
+                            Status = "Pending",
+                            CreatedAt = DateTime.Now,
+                            DueDate = DateTime.Now.AddDays(7),
+                            SupplierPayoutAmount = payoutAmount,
+                            SupplierPayoutStatus = "Pending",
+                            Notes = $"Net earnings generated from Order #{mainCommission.Order?.OrderNumber}"
+                        };
+                        _context.Commissions.Add(supplierPayout);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                if (mainCommission.Retailer?.UserId != null)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        mainCommission.Retailer.UserId,
+                        "Payment Confirmed",
+                        $"Your payment for Order #{mainCommission.Order?.OrderNumber} was successful.",
+                        "Success",
+                        "/Retailer/OrderTracking"
+                    );
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return false;
+            }
         }
     }
 }

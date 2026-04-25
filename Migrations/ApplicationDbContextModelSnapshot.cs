@@ -141,6 +141,9 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("ChapaPaymentUrl")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -162,6 +165,9 @@ namespace SCM_System.Migrations
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsFullyPaid")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
@@ -190,6 +196,9 @@ namespace SCM_System.Migrations
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("RemainingBalance")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int?>("RetailerId")
                         .HasColumnType("int");
 
@@ -202,6 +211,16 @@ namespace SCM_System.Migrations
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("SupplierPayoutAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("SupplierPayoutDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SupplierPayoutStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -245,6 +264,33 @@ namespace SCM_System.Migrations
                         .IsUnique();
 
                     b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.DeadLetterWebhook", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DeadLetterWebhooks");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Delivery", b =>
@@ -753,6 +799,94 @@ namespace SCM_System.Migrations
                     b.ToTable("GPSLogs");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.InboundShipment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpectedArrival")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReceivedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ShipmentNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("InboundShipments");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InboundShipmentItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BatchNumber")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("DamagedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExpectedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InboundShipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReceivedQuantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InboundShipmentId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("InboundShipmentItems");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.IncidentReport", b =>
                 {
                     b.Property<int>("Id")
@@ -845,6 +979,12 @@ namespace SCM_System.Migrations
                     b.Property<int>("QuantityReserved")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int?>("WarehouseId")
                         .HasColumnType("int");
 
@@ -860,6 +1000,292 @@ namespace SCM_System.Migrations
                     b.HasIndex("WarehouseId");
 
                     b.ToTable("Inventories");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventoryAdjustment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdjustmentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DocumentReference")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("PerformedById")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityChange")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedById");
+
+                    b.HasIndex("PerformedById");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("InventoryAdjustments");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventoryMovement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AfterAvailableStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AfterReservedStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BeforeAvailableStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BeforeReservedStock")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("DocumentReference")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("MovementType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("PerformedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ReferenceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MovementType")
+                        .HasDatabaseName("IX_InventoryMovement_Type");
+
+                    b.HasIndex("PerformedBy");
+
+                    b.HasIndex("ReferenceNumber")
+                        .HasDatabaseName("IX_InventoryMovement_ReferenceNumber");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("ProductId", "CreatedAt")
+                        .HasDatabaseName("IX_InventoryMovement_Product_Date");
+
+                    b.ToTable("InventoryMovements");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventoryReservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PackedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PackedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PickedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PickedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReleasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ReservedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ShippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ShippedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_InventoryReservation_ExpiresAt");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("IX_InventoryReservation_OrderId");
+
+                    b.HasIndex("PurchaseOrderId")
+                        .HasDatabaseName("IX_InventoryReservation_PurchaseOrderId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("ProductId", "Status")
+                        .HasDatabaseName("IX_InventoryReservation_Product_Status");
+
+                    b.ToTable("InventoryReservations");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventorySnapshot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AvailableStock")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DamagedStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DispatchedStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InTransitStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReservedStock")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("SnapshotDate")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("InventorySnapshots");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.InventoryTransfer", b =>
@@ -1125,6 +1551,13 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -1339,6 +1772,9 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AvailableStock")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("decimal(18,2)");
 
@@ -1357,11 +1793,20 @@ namespace SCM_System.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<int>("DamagedStock")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("DiscountPercentage")
                         .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("DispatchedStock")
+                        .HasColumnType("int");
 
                     b.Property<string>("HSCode")
                         .HasMaxLength(50)
@@ -1370,6 +1815,9 @@ namespace SCM_System.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("InTransitStock")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
@@ -1382,6 +1830,9 @@ namespace SCM_System.Migrations
 
                     b.Property<bool>("IsHazardous")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastStockUpdate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("LeadTimeDays")
                         .HasColumnType("int");
@@ -1414,6 +1865,15 @@ namespace SCM_System.Migrations
 
                     b.Property<int?>("ReorderQuantity")
                         .HasColumnType("int");
+
+                    b.Property<int>("ReservedStock")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<string>("SKU")
                         .HasMaxLength(50)
@@ -1580,6 +2040,10 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1787,6 +2251,38 @@ namespace SCM_System.Migrations
                     b.ToTable("Ratings");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.Refund", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReturnId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Refunds");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Retailer", b =>
                 {
                     b.Property<int>("Id")
@@ -1975,6 +2471,72 @@ namespace SCM_System.Migrations
                     b.ToTable("ReturnRequests");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.StockTransfer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DestinationWarehouseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReceivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RequestedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ShippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SourceWarehouseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedById");
+
+                    b.HasIndex("DestinationWarehouseId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("RequestedById");
+
+                    b.HasIndex("SourceWarehouseId");
+
+                    b.ToTable("StockTransfers");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Supplier", b =>
                 {
                     b.Property<int>("Id")
@@ -1991,6 +2553,9 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("CommissionRate")
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("CommissionTier")
                         .IsRequired()
@@ -2225,6 +2790,12 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Phone")
+                        .IsUnique();
 
                     b.HasIndex("SupervisorId");
 
@@ -2795,6 +3366,9 @@ namespace SCM_System.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LicensePlate")
+                        .IsUnique();
+
                     b.HasIndex("PrimaryDriverId");
 
                     b.HasIndex("SupplierId");
@@ -3118,6 +3692,10 @@ namespace SCM_System.Migrations
                     b.HasIndex("PrimaryManagerId");
 
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseCode")
+                        .IsUnique()
+                        .HasFilter("[WarehouseCode] IS NOT NULL");
 
                     b.ToTable("Warehouses");
                 });
@@ -3444,6 +4022,44 @@ namespace SCM_System.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.InboundShipment", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
+                        .WithMany("InboundShipments")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany("InboundShipments")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InboundShipmentItem", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.InboundShipment", "InboundShipment")
+                        .WithMany("Items")
+                        .HasForeignKey("InboundShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("InboundShipment");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.IncidentReport", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.DispatchTask", "DispatchTask")
@@ -3493,6 +4109,119 @@ namespace SCM_System.Migrations
                         .WithMany("Inventories")
                         .HasForeignKey("WarehouseId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventoryAdjustment", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById");
+
+                    b.HasOne("SCM_System.Models.Entities.User", "PerformedBy")
+                        .WithMany()
+                        .HasForeignKey("PerformedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId");
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("PerformedBy");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventoryMovement", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.User", "PerformedByUser")
+                        .WithMany()
+                        .HasForeignKey("PerformedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PerformedByUser");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventoryReservation", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.InventorySnapshot", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Product");
 
@@ -3842,6 +4571,17 @@ namespace SCM_System.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.Refund", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Retailer", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.User", "User")
@@ -3905,6 +4645,47 @@ namespace SCM_System.Migrations
                     b.Navigation("Retailer");
 
                     b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.StockTransfer", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.SupplierEmployee", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "DestinationWarehouse")
+                        .WithMany()
+                        .HasForeignKey("DestinationWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.SupplierEmployee", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "SourceWarehouse")
+                        .WithMany()
+                        .HasForeignKey("SourceWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("DestinationWarehouse");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("RequestedBy");
+
+                    b.Navigation("SourceWarehouse");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Supplier", b =>
@@ -4199,6 +4980,11 @@ namespace SCM_System.Migrations
                     b.Navigation("TrackingHistory");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.InboundShipment", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Order", b =>
                 {
                     b.Navigation("Delivery")
@@ -4277,6 +5063,8 @@ namespace SCM_System.Migrations
                     b.Navigation("Conversations");
 
                     b.Navigation("Employees");
+
+                    b.Navigation("InboundShipments");
 
                     b.Navigation("Orders");
 
@@ -4379,6 +5167,8 @@ namespace SCM_System.Migrations
                     b.Navigation("HubDispatches");
 
                     b.Navigation("HubIncidents");
+
+                    b.Navigation("InboundShipments");
 
                     b.Navigation("IncomingTransfers");
 

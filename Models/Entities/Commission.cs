@@ -64,5 +64,21 @@ namespace SCM_System.Models.Entities
 
         [Column(TypeName = "nvarchar(max)")]
         public string? PaymentVerificationData { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal AmountPaid { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal RemainingBalance { get; set; }
+
+        public bool IsFullyPaid { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal SupplierPayoutAmount { get; set; }
+
+        public DateTime? SupplierPayoutDate { get; set; }
+
+        [StringLength(20)]
+        public string? SupplierPayoutStatus { get; set; } // Pending, Processed, Failed
     }
 }

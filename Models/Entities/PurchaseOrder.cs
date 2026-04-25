@@ -9,7 +9,7 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(50)]
-        public string PONumber { get; set; }
+        public string PONumber { get; set; } = string.Empty;
 
         [Required]
         public int RetailerId { get; set; }
@@ -38,11 +38,11 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Cancelled
+        public string Status { get; set; } = "Pending";
 
         [Required]
         [StringLength(255)]
-        public string DeliveryAddress { get; set; }
+        public string DeliveryAddress { get; set; } = string.Empty;
 
         [StringLength(100)]
         public string? DeliveryMethod { get; set; }
@@ -58,7 +58,7 @@ namespace SCM_System.Models.Entities
         public Vehicle Vehicle { get; set; }
 
         [StringLength(20)]
-        public string PaymentStatus { get; set; } = "Pending"; // Pending, Paid, Failed
+        public string PaymentStatus { get; set; } = "Pending";
 
         [StringLength(255)]
         public string? ProofOfDelivery { get; set; }
@@ -80,9 +80,13 @@ namespace SCM_System.Models.Entities
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
+        [StringLength(500)]
+        public string? CancellationReason { get; set; }
+
         // Navigation
-        public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; }
-        public ICollection<ReturnRequest> ReturnRequests { get; set; }
+        public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = [];
+        public ICollection<ReturnRequest> ReturnRequests { get; set; } = [];
+        public virtual ICollection<InventoryReservation> InventoryReservations { get; set; } = [];
 
         [Required]
         public int OrderId { get; set; }

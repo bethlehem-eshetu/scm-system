@@ -203,5 +203,47 @@ namespace SCM_System.Services
 
             await SendEmailInternalAsync(toEmail, subject, body, "OTP", "FaydaOTP");
         }
+
+        public async Task SendPaymentConfirmationEmailAsync(string toEmail, string userName, string orderNumber, decimal amount)
+        {
+            var subject = $"Payment Confirmed for Order {orderNumber}";
+            var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #28a745; text-align: center;'>Payment Successful!</h2>
+                <p>Hello {userName},</p>
+                <p>Your payment of <strong>{amount:C}</strong> for Order <strong>#{orderNumber}</strong> has been successfully processed.</p>
+                <p>The supplier has been notified and will proceed with fulfillment.</p>
+                <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>Regards,<br/>The EthioChain Team</p>
+            </div>";
+            await SendEmailInternalAsync(toEmail, subject, body, "PaymentConfirmation", orderNumber);
+        }
+
+        public async Task SendRefundInitiatedEmailAsync(string toEmail, string userName, string orderNumber, decimal amount)
+        {
+            var subject = $"Refund Initiated for Order {orderNumber}";
+            var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #17a2b8; text-align: center;'>Refund Initiated</h2>
+                <p>Hello {userName},</p>
+                <p>A refund of <strong>{amount:C}</strong> for Order <strong>#{orderNumber}</strong> has been initiated and is being processed via Chapa.</p>
+                <p>It may take a few business days to reflect in your account.</p>
+                <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>Regards,<br/>The EthioChain Team</p>
+            </div>";
+            await SendEmailInternalAsync(toEmail, subject, body, "RefundInitiated", orderNumber);
+        }
+
+        public async Task SendPaymentExpiryEmailAsync(string toEmail, string userName, string orderNumber)
+        {
+            var subject = $"Action Required: Payment Expired for Order {orderNumber}";
+            var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #dc3545; text-align: center;'>Payment Timeout</h2>
+                <p>Hello {userName},</p>
+                <p>The pending payment for Order <strong>#{orderNumber}</strong> has expired and the order has been cancelled.</p>
+                <p>If you still wish to proceed, please place a new order.</p>
+                <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>Regards,<br/>The EthioChain Team</p>
+            </div>";
+            await SendEmailInternalAsync(toEmail, subject, body, "PaymentExpiry", orderNumber);
+        }
     }
 }

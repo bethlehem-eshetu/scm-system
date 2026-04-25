@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
 {
@@ -13,7 +14,7 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(150)]
         [Display(Name = "Company Name")]
-        public string CompanyName { get; set; }
+        public string CompanyName { get; set; } = string.Empty;
 
         [StringLength(50)]
         [Display(Name = "Business Type")]
@@ -22,7 +23,7 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(100)]
         [Display(Name = "License Number")]
-        public string LicenseNumber { get; set; }
+        public string LicenseNumber { get; set; } = string.Empty;
 
         [StringLength(255)]
         [Display(Name = "License Document")]
@@ -35,11 +36,11 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(200)]
         [Display(Name = "Company Address")]
-        public string CompanyAddress { get; set; }
+        public string CompanyAddress { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
-        public string City { get; set; }
+        public string City { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
@@ -60,22 +61,34 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Commission Tier")]
         public string CommissionTier { get; set; } = "Bronze"; // Bronze, Silver, Gold, Platinum
 
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal CommissionRate { get; set; } = 5.0m; // Default to Bronze
+
+        public static decimal GetRateByTier(string tier) => tier switch
+        {
+            "Silver" => 4.0m,
+            "Gold" => 3.0m,
+            "Platinum" => 2.5m,
+            _ => 5.0m // Bronze or default
+        };
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public bool IsDeleted { get; set; } = false;
 
         // Navigation properties
-        public ICollection<Product> Products { get; set; } = new List<Product>();
-        public ICollection<Tender> Tenders { get; set; } = new List<Tender>();
-        public ICollection<TenderBid> TenderBids { get; set; } = new List<TenderBid>();
-        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
-        public ICollection<Order> Orders { get; set; } = new List<Order>();
-        public ICollection<SupplierEmployee> Employees { get; set; } = new List<SupplierEmployee>();
-        public ICollection<Commission> Commissions { get; set; } = new List<Commission>();
-        public ICollection<Rating> ReceivedRatings { get; set; } = new List<Rating>();
-        public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
-        public ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
-        public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
-        public ICollection<SupplierCategory> SupplierCategories { get; set; } = new List<SupplierCategory>();
+        public ICollection<Product> Products { get; set; } = [];
+        public ICollection<Tender> Tenders { get; set; } = [];
+        public ICollection<TenderBid> TenderBids { get; set; } = [];
+        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
+        public ICollection<Order> Orders { get; set; } = [];
+        public ICollection<SupplierEmployee> Employees { get; set; } = [];
+        public ICollection<Commission> Commissions { get; set; } = [];
+        public ICollection<Rating> ReceivedRatings { get; set; } = [];
+        public ICollection<Conversation> Conversations { get; set; } = [];
+        public ICollection<Warehouse> Warehouses { get; set; } = [];
+        public ICollection<Vehicle> Vehicles { get; set; } = [];
+        public ICollection<SupplierCategory> SupplierCategories { get; set; } = [];
+        public ICollection<InboundShipment> InboundShipments { get; set; } = [];
     }
 }

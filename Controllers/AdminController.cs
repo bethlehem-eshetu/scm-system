@@ -9,30 +9,20 @@ using System.Text;
 
 namespace SCM_System.Controllers
 {
-    public class AdminController : Controller
+    public class AdminController(
+        ApplicationDbContext context, 
+        IWebHostEnvironment webHostEnvironment, 
+        INotificationService notificationService,
+        SCM_System.Services.IFaydaService faydaService,
+        SCM_System.Services.IEmailService emailService,
+        ILogger<AdminController> logger) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly INotificationService _notificationService;
-        private readonly SCM_System.Services.IFaydaService _faydaService;
-        private readonly SCM_System.Services.IEmailService _emailService;
-        private readonly ILogger<AdminController> _logger;
-
-        public AdminController(
-            ApplicationDbContext context, 
-            IWebHostEnvironment webHostEnvironment, 
-            INotificationService notificationService,
-            SCM_System.Services.IFaydaService faydaService,
-            SCM_System.Services.IEmailService emailService,
-            ILogger<AdminController> logger)
-        {
-            _context = context;
-            _notificationService = notificationService;
-            _webHostEnvironment = webHostEnvironment;
-            _faydaService = faydaService;
-            _emailService = emailService;
-            _logger = logger;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
+        private readonly INotificationService _notificationService = notificationService;
+        private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
+        private readonly SCM_System.Services.IEmailService _emailService = emailService;
+        private readonly ILogger<AdminController> _logger = logger;
 
         // Helper method to check if user is admin
         private bool IsAdmin()
@@ -137,6 +127,20 @@ namespace SCM_System.Controllers
                 ViewBag.ActivePenaltiesCount = _context.Penalties.Count(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
                 ViewBag.TotalMessagesCount = _context.Messages.Count();
 
+                // Inventory Metrics
+                ViewBag.TotalInventoryValue = _context.Products
+                    .Include(p => p.Inventories)
+                    .AsEnumerable()
+                    .Sum(p => (decimal?)(p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved) * p.BasePrice)) ?? 0;
+                ViewBag.TotalReservedValue = _context.Products
+                    .Include(p => p.Inventories)
+                    .AsEnumerable()
+                    .Sum(p => (decimal?)(p.Inventories.Sum(i => i.QuantityReserved) * p.BasePrice)) ?? 0;
+                ViewBag.LowStockProductsCount = _context.Products
+                    .Include(p => p.Inventories)
+                    .AsEnumerable()
+                    .Count(p => p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved) < 20);
+
                 // Get recent blocked messages for dashboard display (optional)
                 ViewBag.RecentBlockedMessages = _context.MessageViolations
                     .Include(v => v.Message)
@@ -149,7 +153,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Dashboard Error: {ex.Message}");
+                _logger.LogError(ex, "Dashboard Error");
                 TempData["ErrorMessage"] = "Error loading dashboard data.";
             }
 
@@ -225,7 +229,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ PendingSuppliers Error: {ex.Message}");
+                _logger.LogError(ex, "PendingSuppliers Error");
                 TempData["ErrorMessage"] = "Error loading pending approvals.";
                 return View(new List<PendingSupplierViewModel>());
             }
@@ -272,7 +276,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ViewLicense Error: {ex.Message}");
+                _logger.LogError(ex, "ViewLicense Error");
                 return NotFound("Error loading license file.");
             }
         }
@@ -362,7 +366,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error approving supplier: {ex.Message}");
+                _logger.LogError(ex, "Error approving supplier {SupplierId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -457,7 +461,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error approving retailer: {ex.Message}");
+                _logger.LogError(ex, "Error approving retailer {RetailerId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -556,7 +560,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error rejecting supplier: {ex.Message}");
+                _logger.LogError(ex, "Error rejecting supplier {SupplierId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -669,7 +673,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error rejecting retailer: {ex.Message}");
+                _logger.LogError(ex, "Error rejecting retailer {RetailerId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -903,7 +907,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ VerifiedSuppliers Error: {ex.Message}");
+                _logger.LogError(ex, "VerifiedSuppliers Error");
                 TempData["ErrorMessage"] = "Error loading verified suppliers.";
                 return View(new List<Supplier>());
             }
@@ -929,7 +933,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ RejectedSuppliers Error: {ex.Message}");
+                _logger.LogError(ex, "RejectedSuppliers Error");
                 TempData["ErrorMessage"] = "Error loading rejected suppliers.";
                 return View(new List<Supplier>());
             }
@@ -954,7 +958,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ AllRetailers Error: {ex.Message}");
+                _logger.LogError(ex, "AllRetailers Error");
                 TempData["ErrorMessage"] = "Error loading retailers.";
                 return View(new List<Retailer>());
             }
@@ -979,7 +983,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ AllUsers Error: {ex.Message}");
+                _logger.LogError(ex, "AllUsers Error");
                 TempData["ErrorMessage"] = "Error loading users.";
                 return View(new List<User>());
             }
@@ -1073,7 +1077,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Notifications Error: {ex.Message}");
+                _logger.LogError(ex, "Notifications Error");
                 TempData["ErrorMessage"] = "Error loading notifications.";
                 return View(new List<Notification>());
             }
@@ -1102,7 +1106,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MarkNotificationRead Error: {ex.Message}");
+                _logger.LogError(ex, "MarkNotificationRead Error");
                 return Json(new { success = false, message = "Error marking notification as read" });
             }
         }
@@ -1138,7 +1142,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MarkAllNotificationsRead Error: {ex.Message}");
+                _logger.LogError(ex, "MarkAllNotificationsRead Error");
                 return Json(new { success = false, message = "Error marking notifications as read" });
             }
         }
@@ -1166,7 +1170,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ GetUnreadCount Error: {ex.Message}");
+                _logger.LogError(ex, "GetUnreadCount Error");
                 return Json(new { count = 0 });
             }
         }
@@ -1241,7 +1245,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ChangePassword Error: {ex.Message}");
+                _logger.LogError(ex, "ChangePassword Error");
                 TempData["ErrorMessage"] = "❌ An error occurred while changing password.";
             }
 
@@ -1286,7 +1290,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Reports Error: {ex.Message}");
+                _logger.LogError(ex, "Reports Error");
                 TempData["ErrorMessage"] = "Error loading report data.";
             }
 
@@ -1340,7 +1344,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MessageLog Error: {ex.Message}");
+                _logger.LogError(ex, "MessageLog Error");
                 TempData["ErrorMessage"] = "Error loading message logs.";
                 return View(new List<AdminMessageViewModel>());
             }
@@ -1385,7 +1389,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ BlockedMessages Error: {ex.Message}");
+                _logger.LogError(ex, "BlockedMessages Error");
                 TempData["ErrorMessage"] = "Error loading blocked messages.";
                 return View(new List<BlockedMessageViewModel>());
             }
@@ -1806,9 +1810,38 @@ namespace SCM_System.Controllers
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            ViewBag.TotalCommissions = commissions.Sum(c => c.CommissionAmount);
-            ViewBag.PendingCommissions = commissions.Where(c => c.Status == "Pending").Sum(c => c.CommissionAmount);
-            ViewBag.PaidCommissions = commissions.Where(c => c.Status == "Paid").Sum(c => c.CommissionAmount);
+            // High-Level KPIs
+            ViewBag.GrossSales = commissions.Where(c => c.PaymentType == "OrderPayment" && c.Status == "Paid").Sum(c => c.OrderAmount);
+            ViewBag.PlatformRevenue = commissions.Where(c => c.PaymentType == "PlatformCommission" && c.Status == "Paid").Sum(c => c.CommissionAmount);
+            ViewBag.SupplierPayables = commissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Pending").Sum(c => c.CommissionAmount);
+            ViewBag.FailedPayments = commissions.Where(c => c.Status == "Failed").Count();
+
+            // Chart Data: Status Breakdown
+            var statusGroups = commissions.GroupBy(c => c.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToList();
+            ViewBag.StatusLabels = statusGroups.Select(g => g.Status).ToArray();
+            ViewBag.StatusCounts = statusGroups.Select(g => g.Count).ToArray();
+
+            // Chart Data: Revenue Trend (Last 30 Days)
+            var thirtyDaysAgo = DateTime.Now.AddDays(-30);
+            var trendData = commissions
+                .Where(c => c.PaymentType == "PlatformCommission" && c.PaidAt >= thirtyDaysAgo)
+                .GroupBy(c => c.PaidAt.Value.Date)
+                .Select(g => new { Date = g.Key.ToString("MMM dd"), Amount = g.Sum(c => c.CommissionAmount) })
+                .OrderBy(g => g.Date)
+                .ToList();
+            ViewBag.TrendLabels = trendData.Select(g => g.Date).ToArray();
+            ViewBag.TrendAmounts = trendData.Select(g => g.Amount).ToArray();
+
+            // Top Suppliers
+            ViewBag.TopSuppliers = commissions
+                .Where(c => c.PaymentType == "PlatformCommission")
+                .GroupBy(c => c.Supplier?.CompanyName ?? "Unknown")
+                .Select(g => new { Name = g.Key, Revenue = g.Sum(c => c.CommissionAmount) })
+                .OrderByDescending(g => g.Revenue)
+                .Take(5)
+                .ToList();
 
             return View(commissions);
         }
@@ -1842,6 +1875,28 @@ namespace SCM_System.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
             return View();
+        }
+
+        // GET: /Admin/ExportAuditLogs
+        public async Task<IActionResult> ExportAuditLogs()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var logs = await _context.AuditLogs
+                .Include(a => a.PerformedByUser)
+                .OrderByDescending(a => a.PerformedAtUtc)
+                .ToListAsync();
+
+            var csv = new StringBuilder();
+            csv.AppendLine("Id,Timestamp,UserId,User,Action,Entity,EntityId,Notes");
+
+            foreach (var log in logs)
+            {
+                csv.AppendLine($"{log.Id},{log.PerformedAtUtc:yyyy-MM-dd HH:mm:ss},{log.PerformedByUserId},{log.PerformedByUser?.FullName ?? "N/A"},{log.ActionType},{log.EntityType},{log.EntityId},\"{log.Notes?.Replace("\"", "'")}\"");
+            }
+
+            var fileName = $"AuditLog_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
         }
     }
 }

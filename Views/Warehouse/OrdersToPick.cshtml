@@ -15,6 +15,12 @@
             <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2 border border-warning border-opacity-25">
                 <i class="fas fa-clock me-2"></i> @Model.Count() Pending Pick
             </span>
+            <form asp-action="ReconcileInventory" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('Recalculate all reserved quantities? This will sync Inventory with the Reservation ledger.')">
+                    <i class="fas fa-sync-alt me-1"></i> Reconcile
+                </button>
+            </form>
         </div>
     </div>
 
@@ -61,6 +67,9 @@
                                     <tbody>
                                         @foreach (var item in po.PurchaseOrderItems)
                                         {
+                                            var reservation = po.InventoryReservations?.FirstOrDefault(r => r.ProductId == item.ProductId);
+                                            var activeStatuses = new[] { ReservationStatus.Pending, ReservationStatus.Accepted, ReservationStatus.Confirmed, ReservationStatus.Picking };
+                                            var isReserved = reservation != null && activeStatuses.Contains(reservation.Status);
                                             <tr>
                                                 <td class="ps-4 py-3">
                                                     <div class="fw-bold text-dark">@item.Product?.ProductName</div>
@@ -68,13 +77,22 @@
                                                 <td><span class="text-muted small">@item.Product?.Id.ToString("D5")</span></td>
                                                 <td><span class="fw-bold">@item.Quantity @item.Product?.Unit</span></td>
                                                 <td>
-                                                    <span class="badge bg-success-soft text-success rounded-pill px-2">
-                                                        <i class="fas fa-check-circle me-1"></i> Stock Reserved
-                                                    </span>
+                                                    @if (isReserved)
+                                                    {
+                                                        <span class="badge bg-success-soft text-success rounded-pill px-2">
+                                                            <i class="fas fa-check-circle me-1"></i> Stock Reserved
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-danger-soft text-danger rounded-pill px-2">
+                                                            <i class="fas fa-exclamation-triangle me-1"></i> Not Reserved
+                                                        </span>
+                                                    }
                                                 </td>
                                                 <td class="text-end pe-4">
                                                     <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="checkbox" checked disabled>
+                                                        <input class="form-check-input" type="checkbox" @(isReserved ? "checked" : "") disabled>
                                                         <label class="form-check-label small text-muted">Verified</label>
                                                     </div>
                                                 </td>
@@ -109,5 +127,6 @@
 
 <style>
     .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
     .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 </style>

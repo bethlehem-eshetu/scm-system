@@ -184,5 +184,45 @@ namespace SCM_System.Services
         {
             await CreateNotificationAsync(userId, title, message, type, actionUrl);
         }
+
+        public async Task SendReservationExpiredNotification(InventoryReservation reservation)
+        {
+            var supplierUserId = await _context.Suppliers
+                .Where(s => s.Id == reservation.SupplierId)
+                .Select(s => s.UserId)
+                .FirstOrDefaultAsync();
+
+            int? retailerUserId = null;
+            if (reservation.PurchaseOrderId.HasValue)
+            {
+                var po = await _context.PurchaseOrders
+                    .Include(p => p.Retailer)
+                    .FirstOrDefaultAsync(p => p.Id == reservation.PurchaseOrderId);
+                retailerUserId = po?.Retailer?.UserId;
+            }
+
+            if (supplierUserId != 0)
+            {
+                await CreateNotificationAsync(
+                    supplierUserId,
+                    "Reservation Expired ⏳",
+                    $"Order reservation for product {reservation.ProductId} has expired. Stock has been released back to inventory.",
+                    "Warning",
+                    "/Supplier/Inventory" // assuming some inventory page
+                );
+            }
+
+            if (retailerUserId.HasValue && retailerUserId.Value != 0)
+            {
+                var poNumber = reservation.PurchaseOrderId.HasValue ? $"PO #{reservation.PurchaseOrderId}" : "your order";
+                await CreateNotificationAsync(
+                    retailerUserId.Value,
+                    "Order Cancelled ❌",
+                    $"Purchase Order {poNumber} has been automatically cancelled due to reservation expiry (24 hours).",
+                    "Error",
+                    "/Retailer/OrderTracking"
+                );
+            }
+        }
     }
 }

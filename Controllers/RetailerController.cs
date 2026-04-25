@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Services;
+using System.Security.Claims;
 
 namespace SCM_System.Controllers
 {
@@ -11,12 +12,14 @@ namespace SCM_System.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ICartService _cartService;
         private readonly INotificationService _notificationService;
+        private readonly IOrderService _orderService;
 
-        public RetailerController(ApplicationDbContext context, ICartService cartService, INotificationService notificationService)
+        public RetailerController(ApplicationDbContext context, ICartService cartService, INotificationService notificationService, IOrderService orderService)
         {
             _context = context;
             _cartService = cartService;
             _notificationService = notificationService;
+            _orderService = orderService;
         }
 
         // Helper method to check if user is retailer
@@ -27,6 +30,41 @@ namespace SCM_System.Controllers
 
             var user = _context.Users.Find(userId);
             return user != null && user.Role == "Retailer" && user.IsApproved && user.IsFaydaVerified;
+        }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+            
+            var rId = await GetRetailerIdInternalAsync();
+            var order = await _orderService.GetOrderByIdAsync(id);
+            
+            if (order == null || order.RetailerId != rId) return NotFound();
+            
+            bool success = await _orderService.CancelOrderAsync(id);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Order cancelled successfully. Stock has been returned.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to cancel order. It may have already been dispatched.";
+            }
+            
+            return RedirectToAction("OrderTrackingDetails", new { id });
+        }
+        
+        private async Task<int> GetRetailerIdInternalAsync()
+        {
+            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var r = await _context.Retailers.FirstOrDefaultAsync(x => x.UserId == userId);
+                return r?.Id ?? 0;
+            }
+            return 0;
         }
 
         // GET: /Retailer/Dashboard
@@ -292,16 +330,27 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> AddToCart([FromForm] int productId, [FromForm] int quantity = 1)
         {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+            if (!IsRetailer()) return Json(new { success = false, message = "Session expired. Please login again." });
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            if (retailer == null) return NotFound();
+            if (retailer == null) return Json(new { success = false, message = "Retailer profile not found" });
 
-            await _cartService.AddToCartAsync(retailer.Id, productId, quantity);
-            
-            TempData["SuccessMessage"] = "Product added to cart!";
-            return RedirectToAction(nameof(Cart));
+            try
+            {
+                await _cartService.AddToCartAsync(retailer.Id, productId, quantity);
+                var count = await _cartService.GetCartItemCountAsync(retailer.Id);
+
+                return Json(new { 
+                    success = true, 
+                    message = "Product added to cart!", 
+                    cartItemCount = count 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]

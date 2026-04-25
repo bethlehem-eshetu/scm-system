@@ -9,11 +9,11 @@ namespace SCM_System.Models.Entities
 
         [Required]
         public int SupplierId { get; set; }
-        public Supplier Supplier { get; set; }
+        public Supplier Supplier { get; set; } = null!;
 
         [Required(ErrorMessage = "License Plate is required")]
         [StringLength(50)]
-        public string LicensePlate { get; set; }
+        public required string LicensePlate { get; set; } = string.Empty;
 
         [StringLength(50)]
         public string? AssetCode { get; set; }
@@ -91,21 +91,21 @@ namespace SCM_System.Models.Entities
         public DateTime? DeletedAt { get; set; }
 
         // Navigation
-        public ICollection<VehicleAssignment> Assignments { get; set; } = new List<VehicleAssignment>();
+        public ICollection<VehicleAssignment> Assignments { get; set; } = [];
 
         public int? PrimaryDriverId { get; set; }
         [ForeignKey("PrimaryDriverId")]
         public SupplierEmployee? PrimaryDriver { get; set; }
 
         // Navigation
-        public ICollection<SupplierEmployee> DeliveryAgents { get; set; } = new List<SupplierEmployee>();
+        public ICollection<SupplierEmployee> DeliveryAgents { get; set; } = [];
 
         // History & Tracking
-        public ICollection<VehicleDriverHistory> DriverHistories { get; set; } = new List<VehicleDriverHistory>();
-        public ICollection<VehicleDocument> Documents { get; set; } = new List<VehicleDocument>();
-        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
-        public ICollection<DispatchTask> AssetDispatches { get; set; } = new List<DispatchTask>();
-        public ICollection<IncidentReport> AssetIncidents { get; set; } = new List<IncidentReport>();
-        public ICollection<GPSLog> GPSLogs { get; set; } = new List<GPSLog>();
+        public ICollection<VehicleDriverHistory> DriverHistories { get; set; } = [];
+        public ICollection<VehicleDocument> Documents { get; set; } = [];
+        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = [];
+        public ICollection<DispatchTask> AssetDispatches { get; set; } = [];
+        public ICollection<IncidentReport> AssetIncidents { get; set; } = [];
+        public ICollection<GPSLog> GPSLogs { get; set; } = [];
     }
 }

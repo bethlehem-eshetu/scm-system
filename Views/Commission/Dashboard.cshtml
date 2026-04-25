@@ -1,0 +1,126 @@
+@model SCM_System.Models.ViewModels.CommissionDashboardViewModel
+
+@{
+    ViewData["Title"] = "Commission Dashboard";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-chart-line text-primary me-2"></i>Commission Dashboard</h1>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary btn-sm active">7D</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm">30D</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm">1Y</button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Total Commissions</h6>
+                    <h2>@Model.TotalEarned.ToString("C")</h2>
+                    <p class="mb-0 text-white-50"><i class="fas fa-arrow-up me-1"></i>12% from last month</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Pending Settlement</h6>
+                    <h2>@Model.TotalPending.ToString("C")</h2>
+                    <p class="mb-0 text-white-50">@Model.PendingCount tasks pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 bg-success text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Settled to Suppliers</h6>
+                    <h2>@Model.TotalSettled.ToString("C")</h2>
+                    <p class="mb-0 text-white-50">Last payout: 2h ago</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 bg-info text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Active Suppliers</h6>
+                    <h2>@Model.ActiveSuppliersCount</h2>
+                    <p class="mb-0 text-white-50">Across @Model.TierDistribution.Count tiers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Revenue Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Commission Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="distributionChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const revCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.ChartLabels)),
+                datasets: [{
+                    label: 'Commission Earned',
+                    data: @Html.Raw(Json.Serialize(Model.ChartData)),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        const distCtx = document.getElementById('distributionChart').getContext('2d');
+        new Chart(distCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.TierLabels)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.TierData)),
+                    backgroundColor: ['#cd7f32', '#c0c0c0', '#ffd700', '#e5e4e2']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    </script>
+}

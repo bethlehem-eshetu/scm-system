@@ -232,6 +232,58 @@
         </div>
     </div>
 
+    <!-- Inventory KPIs -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-4 col-md-6">
+            <div class="glass-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas fa-boxes fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Inventory Value</h6>
+                            <h3 class="mb-0 fw-bold">@ViewBag.TotalInventoryValue.ToString("C")</h3>
+                        </div>
+                    </div>
+                    <small class="text-muted">Value of all available stock</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="glass-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas fa-hand-holding-box fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Reserved Value</h6>
+                            <h3 class="mb-0 fw-bold">@ViewBag.TotalReservedValue.ToString("C")</h3>
+                        </div>
+                    </div>
+                    <small class="text-muted">Value of stock held for pending orders</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="glass-card h-100 border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Low Stock Alerts</h6>
+                            <h3 class="mb-0 fw-bold">@ViewBag.LowStockProductsCount</h3>
+                        </div>
+                    </div>
+                    <small class="text-warning fw-bold">Items below threshold</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Activities -->
     <div class="row g-4">
         <!-- Recent Suppliers -->

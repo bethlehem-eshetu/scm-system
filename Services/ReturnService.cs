@@ -8,11 +8,22 @@ namespace SCM_System.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly INotificationService _notificationService;
+        private readonly IChapaService _chapaService;
+        private readonly IEmailService _emailService;
+        private readonly IInventoryService _inventoryService;
 
-        public ReturnService(ApplicationDbContext context, INotificationService notificationService)
+        public ReturnService(
+            ApplicationDbContext context, 
+            INotificationService notificationService, 
+            IChapaService chapaService,
+            IEmailService emailService,
+            IInventoryService inventoryService)
         {
             _context = context;
             _notificationService = notificationService;
+            _chapaService = chapaService;
+            _emailService = emailService;
+            _inventoryService = inventoryService;
         }
 
         public async Task<ReturnRequest> CreateReturnRequestAsync(int purchaseOrderId, string reason, string? description, decimal refundAmount, string? images = null)
@@ -112,6 +123,57 @@ namespace SCM_System.Services
             returnRequest.AdminNotes = adminNotes;
             returnRequest.ApprovedAt = DateTime.Now;
 
+            // Handle refund initialization
+            if (returnRequest.RefundAmount > 0)
+            {
+                var refund = new Refund
+                {
+                    OrderId = returnRequest.OrderId,
+                    ReturnId = returnRequest.Id,
+                    Amount = returnRequest.RefundAmount,
+                    Status = "Pending",
+                    CreatedAt = DateTime.Now
+                };
+                _context.Refunds.Add(refund);
+
+                // Initiate Chapa refund
+                var commission = await _context.Commissions
+                    .FirstOrDefaultAsync(c => c.OrderId == returnRequest.OrderId && c.Status == "Paid" && c.PaymentType == "OrderPayment");
+
+                if (commission != null && !string.IsNullOrEmpty(commission.ChapaTransactionId))
+                {
+                    var result = await _chapaService.InitiateRefundAsync(commission.ChapaTransactionId, returnRequest.RefundAmount);
+                    if (result.Success)
+                    {
+                        refund.Status = "Initiated";
+                        
+                        // Send Notification
+                        var order = await _context.Orders.Include(o => o.Retailer).ThenInclude(r => r.User).FirstOrDefaultAsync(o => o.Id == returnRequest.OrderId);
+                        if (order?.Retailer?.User != null)
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                order.Retailer.User.Id,
+                                "Refund Initiated",
+                                $"A refund of {returnRequest.RefundAmount:C} for Order #{order.OrderNumber} has been initiated.",
+                                "Info",
+                                "/Payment/MyPayments"
+                            );
+                            
+                            await _emailService.SendRefundInitiatedEmailAsync(
+                                order.Retailer.User.Email,
+                                order.Retailer.BusinessName,
+                                order.OrderNumber,
+                                returnRequest.RefundAmount);
+                        }
+                    }
+                    else
+                    {
+                        refund.Status = "Failed";
+                        // Log or notify admin about failed automated refund
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             // Notify retailer
@@ -183,6 +245,9 @@ namespace SCM_System.Services
             returnRequest.Status = ReturnStatus.Processing;
 
             await _context.SaveChangesAsync();
+            
+            // AUTOMATIC RESTOCKING
+            await _inventoryService.RestockReturnedItemsAsync(returnId, (await _context.Suppliers.FindAsync(returnRequest.SupplierId))?.UserId ?? 0);
 
             return returnRequest;
         }

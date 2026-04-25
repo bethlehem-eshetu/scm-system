@@ -371,6 +371,17 @@
                         <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-boxes"></i> Product Catalog</a>
                     </li>
 
+                    <li class="menu-label">Finance & Assets</li>
+                    <li>
+                        <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-wallet"></i> Earnings Ledger</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Payments"><i class="fas fa-file-invoice-dollar"></i> Commission History</a>
+                    </li>
+                    <li>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#withdrawModal"><i class="fas fa-university"></i> Payout Requests</a>
+                    </li>
+
                     <li class="menu-label">Insights & Reports</li>
                     <li>
                         <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-line"></i> Supply Chain Analytics</a>
@@ -682,11 +693,14 @@
                         btn.html(originalHtml).prop('disabled', false);
                         if (res.success) {
                             $('#globalCartCount').text(res.cartItemCount).show();
-                            var cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
-                            cartOffcanvas.show();
+                            // Show success message if not in modal
+                            if (typeof bootstrap !== 'undefined') {
+                                var cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
+                                cartOffcanvas.show();
+                            }
                             loadGlobalCart();
                         } else {
-                            alert(res.message);
+                            alert(res.message || 'Error adding to cart.');
                         }
                     }).fail(function() {
                         btn.html(originalHtml).prop('disabled', false);
