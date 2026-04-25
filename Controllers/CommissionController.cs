@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
@@ -192,6 +192,7 @@ namespace SCM_System.Controllers
 
         // POST: /Commission/Webhook (Chapa webhook)
         [HttpPost]
+        [Route("/api/webhook/chapa")]
         public async Task<IActionResult> Webhook([FromBody] ChapaWebhookPayload payload)
         {
             if (payload == null)
@@ -199,19 +200,44 @@ namespace SCM_System.Controllers
 
             await _chapaService.WebhookHandlerAsync(payload.tx_ref, payload.status);
 
-            var commission = await _context.Commissions
-                .FirstOrDefaultAsync(c => c.ChapaTransactionId == payload.tx_ref);
+            var verifyResult = await _chapaService.VerifyPaymentAsync(payload.tx_ref);
 
-            if (commission != null)
+            if (verifyResult.Success && verifyResult.Status == "success")
             {
-                var verifyResult = await _chapaService.VerifyPaymentAsync(payload.tx_ref);
-
-                if (verifyResult.Success && verifyResult.Status == "success")
+                if (payload.tx_ref.StartsWith("COMM-"))
                 {
-                    commission.Status = "Paid";
-                    commission.PaidAt = DateTime.Now;
+                    var commission = await _context.Commissions
+                        .FirstOrDefaultAsync(c => c.ChapaTransactionId == payload.tx_ref);
 
-                    await _context.SaveChangesAsync();
+                    if (commission != null && commission.Status == "Processing")
+                    {
+                        commission.Status = "Paid";
+                        commission.PaidAt = DateTime.Now;
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                else if (payload.tx_ref.StartsWith("ORD-PAY-"))
+                {
+                    var parts = payload.tx_ref.Split('-');
+                    if (parts.Length >= 3 && int.TryParse(parts[2], out int orderId))
+                    {
+                        var order = await _context.Orders.FindAsync(orderId);
+                        if (order != null && order.PaymentStatus == "Pending")
+                        {
+                            order.PaymentStatus = "Escrow";
+                            
+                            var history = new OrderStatusHistory
+                            {
+                                OrderId = order.Id,
+                                Status = order.OrderStatus,
+                                Comments = "Payment confirmed by Webhook and held in Escrow.",
+                                ChangedByUserId = 1, // Admin or System ID
+                                ChangedAt = DateTime.Now
+                            };
+                            _context.OrderStatusHistories.Add(history);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
                 }
             }
 

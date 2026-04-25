@@ -695,5 +695,103 @@ namespace SCM_System.Controllers
                 return RedirectToAction("Dashboard");
             }
         }
+
+        // GET: /Retailer/PayOrder/5
+        public async Task<IActionResult> PayOrder(int id)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+
+            var order = await _context.Orders
+                .Include(o => o.Supplier)
+                .FirstOrDefaultAsync(o => o.Id == id && o.RetailerId == retailer.Id);
+
+            if (order == null) return NotFound();
+
+            if (order.PaymentStatus != "Pending")
+            {
+                TempData["ErrorMessage"] = "This order is already paid or in escrow.";
+                return RedirectToAction("OrderTrackingDetails", new { id = order.Id });
+            }
+
+            // Initialize Chapa Payment
+            var txRef = $"ORD-PAY-{order.Id}-{DateTime.Now.Ticks}";
+            var user = await _context.Users.FindAsync(userId);
+
+            var chapaService = HttpContext.RequestServices.GetRequiredService<IChapaService>();
+            var request = new ChapaPaymentRequest
+            {
+                Amount = order.TotalAmount,
+                Currency = "ETB",
+                Email = user?.Email ?? "",
+                FirstName = user?.FullName?.Split(' ').FirstOrDefault() ?? "",
+                LastName = user?.FullName?.Split(' ').Skip(1).FirstOrDefault() ?? "",
+                PhoneNumber = user?.PhoneNumber ?? "",
+                TxRef = txRef,
+                CallbackUrl = $"{Request.Scheme}://{Request.Host}/Retailer/PaymentCallback",
+                ReturnUrl = $"{Request.Scheme}://{Request.Host}/Retailer/PaymentCallback?tx_ref={txRef}",
+                CustomizationTitle = "EthioChain Order Payment",
+                CustomizationDescription = $"Payment for Order #{order.OrderNumber}"
+            };
+
+            var result = await chapaService.InitializePaymentAsync(request);
+
+            if (result.Success)
+            {
+                // Temporarily store txRef in the database to verify later
+                // Since Order entity doesn't have ChapaTransactionId, I'll use StatusHistory or a dedicated field if available.
+                // Actually, I'll add a 'ChapaTransactionId' to Order if it's missing, or use PurchaseOrder.
+                
+                // For now, let's assume we can verify by tx_ref in callback.
+                return Redirect(result.PaymentUrl);
+            }
+
+            TempData["ErrorMessage"] = "Failed to initialize payment: " + result.Message;
+            return RedirectToAction("OrderTrackingDetails", new { id = order.Id });
+        }
+
+        // GET: /Retailer/PaymentCallback
+        public async Task<IActionResult> PaymentCallback(string tx_ref, string status)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            if (string.IsNullOrEmpty(tx_ref)) return RedirectToAction("OrderTracking");
+
+            var chapaService = HttpContext.RequestServices.GetRequiredService<IChapaService>();
+            var verifyResult = await chapaService.VerifyPaymentAsync(tx_ref);
+
+            if (verifyResult.Success && verifyResult.Status == "success")
+            {
+                // Parse OrderId from tx_ref (ORD-PAY-{orderId}-{ticks})
+                var parts = tx_ref.Split('-');
+                if (parts.Length >= 3 && int.TryParse(parts[2], out int orderId))
+                {
+                    var order = await _context.Orders.FindAsync(orderId);
+                    if (order != null && order.PaymentStatus == "Pending")
+                    {
+                        order.PaymentStatus = "Escrow";
+                        
+                        var history = new OrderStatusHistory
+                        {
+                            OrderId = order.Id,
+                            Status = order.OrderStatus,
+                            Comments = "Payment received and held in Escrow via Chapa.",
+                            ChangedByUserId = HttpContext.Session.GetInt32("UserId") ?? 0,
+                            ChangedAt = DateTime.Now
+                        };
+                        _context.OrderStatusHistories.Add(history);
+                        
+                        await _context.SaveChangesAsync();
+                        TempData["SuccessMessage"] = "Payment successful! Your funds are now held in Escrow.";
+                        return RedirectToAction("OrderTrackingDetails", new { id = orderId });
+                    }
+                }
+            }
+
+            TempData["ErrorMessage"] = "Payment verification failed or timed out.";
+            return RedirectToAction("OrderTracking");
+        }
     }
-}
+}

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 
@@ -27,28 +27,47 @@ namespace SCM_System.Services
         {
             // ✅ Prevent duplicate commissions
             var exists = await _context.Commissions
-                .AnyAsync(c => c.OrderId == orderId && c.PurchaseOrderId == purchaseOrderId);
+                .AnyAsync(c => c.OrderId == orderId && c.PurchaseOrderId == purchaseOrderId && c.PaymentType == "PlatformCommission");
 
             if (exists)
                 return null;
 
-            // Example: 10% commission
-            decimal commissionRate = 0.10m;
+            // Fetch dynamic commission rate from SystemConfiguration
+            // Default to 5% if not configured
+            var configKey = "CommissionBronze"; // Default tier
+            var configValue = await _context.SystemConfigurations
+                .Where(sc => sc.Key == configKey)
+                .Select(sc => sc.Value)
+                .FirstOrDefaultAsync() ?? "5.0";
+
+            if (!decimal.TryParse(configValue, out decimal commissionPercentage))
+            {
+                commissionPercentage = 5.0m;
+            }
+
+            decimal commissionRate = commissionPercentage / 100m;
             decimal commissionAmount = orderAmount * commissionRate;
 
             var commission = new Commission
             {
                 OrderId = orderId,
-                PurchaseOrderId = purchaseOrderId, // ✅ IMPORTANT FIX
+                PurchaseOrderId = purchaseOrderId,
                 OrderAmount = orderAmount,
                 CommissionRate = commissionRate,
                 CommissionAmount = commissionAmount,
+                PaymentType = "PlatformCommission",
                 Status = "Pending",
                 CreatedAt = DateTime.Now,
                 DueDate = DateTime.Now.AddDays(7)
             };
-            Console.WriteLine("🔥 Commission method HIT!");
-            Console.WriteLine($"💰 Creating commission for Order {orderId}, PO {purchaseOrderId}, Amount {orderAmount}");
+
+            var supplier = await _context.PurchaseOrders
+                .Where(po => po.Id == purchaseOrderId)
+                .Select(po => po.SupplierId)
+                .FirstOrDefaultAsync();
+            
+            commission.SupplierId = supplier;
+
             _context.Commissions.Add(commission);
             await _context.SaveChangesAsync();
 

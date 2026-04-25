@@ -1,72 +1,70 @@
-using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
+using SCM_System.Models.Entities;
 
 namespace SCM_System.Models.ViewModels
 {
     public class AdminSettingsViewModel
     {
-        [Required]
-        [Display(Name = "Full Name")]
-        [StringLength(100)]
-        public string FullName { get; set; } = string.Empty;
+        // Personal Profile
+        public string? FullName { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? ProfilePicture { get; set; }
+        public IFormFile? ProfilePictureFile { get; set; }
 
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email Address")]
-        public string Email { get; set; } = string.Empty;
-
-        [Required]
-        [Phone]
-        [Display(Name = "Phone Number")]
-        public string Phone { get; set; } = string.Empty;
-
-        [Display(Name = "Profile Picture")]
-        public IFormFile? ProfilePicture { get; set; }
-
-        public string? ExistingProfileImage { get; set; }
-
-        [Display(Name = "Current Password")]
-        [DataType(DataType.Password)]
+        // Password Change
         public string? CurrentPassword { get; set; }
-
-        [Display(Name = "New Password")]
-        [DataType(DataType.Password)]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
         public string? NewPassword { get; set; }
-
-        [Display(Name = "Confirm New Password")]
-        [DataType(DataType.Password)]
-        [Compare("NewPassword", ErrorMessage = "Passwords do not match")]
         public string? ConfirmPassword { get; set; }
 
-        // Admin Preferences
-        [Display(Name = "Default Dashboard View")]
-        public string? DefaultDashboardView { get; set; }
-
-        [EmailAddress]
-        [Display(Name = "Secondary Notification Email")]
-        public string? SecondaryNotificationEmail { get; set; }
-
-        [Display(Name = "Receive System Alerts")]
-        public bool ReceiveSystemAlerts { get; set; }
-
-        // New Advanced Preferences
-        [Display(Name = "Two-Factor Authentication")]
+        // Security
         public bool TwoFactorEnabled { get; set; }
+        public List<UserSession> ActiveSessions { get; set; } = new();
+        public List<AuditLog> LoginHistory { get; set; } = new();
 
-        [Display(Name = "Theme Preference")]
-        public string ThemePreference { get; set; } = "System";
+        // Platform Config
+        public decimal CommissionBronze { get; set; }
+        public decimal CommissionSilver { get; set; }
+        public decimal CommissionGold { get; set; }
+        public decimal CommissionPlatinum { get; set; }
 
-        [Display(Name = "Language Preference")]
-        public string LanguagePreference { get; set; } = "English";
+        public int PenaltyWarningThreshold { get; set; }
+        public int PenaltySuspensionDays { get; set; }
+        public int LowStockDefaultThreshold { get; set; }
+        public int MaxTenderDays { get; set; }
+        public int OrderCancellationHours { get; set; }
+        public int AutoReleaseEscrowDays { get; set; }
 
-        [Display(Name = "Alert on New Registration")]
-        public bool AlertNewRegistration { get; set; }
+        // User Defaults
+        public bool RequireSupplierApproval { get; set; }
+        public bool RequireRetailerApproval { get; set; }
+        public string DefaultAccountStatus { get; set; } = "Pending";
+        public bool EnableFaydaVerification { get; set; }
 
-        [Display(Name = "Alert on System Error")]
-        public bool AlertSystemError { get; set; }
+        // Notification Templates
+        public List<EmailTemplate> EmailTemplates { get; set; } = new();
 
-        [Display(Name = "Daily Activity Summary")]
-        public bool AlertDailySummary { get; set; }
+        // System Settings
+        public string? AppUrl { get; set; }
+        public string? SupportEmail { get; set; }
+        public string? PlatformLogo { get; set; }
+        public string? Favicon { get; set; }
+        public string? Timezone { get; set; }
+        public string? Currency { get; set; }
+        public string? DateFormat { get; set; }
+
+        // Chapa Config
+        public string? ChapaSecretKey { get; set; }
+        public string? ChapaWebhookSecret { get; set; }
+        public string? ChapaEnvironment { get; set; } // "Test" or "Live"
+        public bool ChapaTestMode { get; set; }
+
+        // Performance Stats (View Only)
+        public int TotalUsers { get; set; }
+        public int TotalOrders { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public decimal TotalCommission { get; set; }
+        public int PendingApprovals { get; set; }
     }
 }
