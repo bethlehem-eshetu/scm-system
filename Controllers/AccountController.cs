@@ -725,8 +725,28 @@ namespace SCM_System.Controllers
             return RedirectToAction("Login");
         }
 
+        // POST: /Account/SetTheme
+        [HttpPost]
+        public async Task<IActionResult> SetTheme([FromForm] string theme)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId != null && !string.IsNullOrEmpty(theme))
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.ThemePreference = theme;
+                    await _context.SaveChangesAsync();
+                    HttpContext.Session.SetString("ThemePreference", theme);
+                    return Json(new { success = true });
+                }
+            }
+            return Json(new { success = false });
+        }
+
         // GET: /Account/AccessDenied
         public IActionResult AccessDenied()
+
         {
             return View();
         }

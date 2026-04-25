@@ -10,27 +10,10 @@ namespace SCM_System.Models.ViewModels
 
         public IFormFile? CompanyLogoFile { get; set; }
         public string? ExistingLogo { get; set; }
-        public List<BankAccount> BankAccounts { get; set; } = new List<BankAccount>();
-        public List<SupplierEmployee> Employees { get; set; } = new List<SupplierEmployee>();
         public List<UserSession> ActiveSessions { get; set; } = new List<UserSession>();
-
-        // Notification Preferences
-        public bool NotifyOrderAlert { get; set; }
-        public bool NotifyBidAlert { get; set; }
-        public bool NotifyLowStockAlert { get; set; }
-        public bool NotifyPaymentAlert { get; set; }
-        public bool NotifyDisputeAlert { get; set; }
-        public string NotifyChannel { get; set; } = "Both";
 
         // Security
         public bool TwoFactorEnabled { get; set; }
-
-        // Performance KPIs
-        public int TotalOrders { get; set; }
-        public decimal TotalRevenue { get; set; }
-        public double AverageRating { get; set; }
-        public double OnTimeDeliveryRate { get; set; }
-        public double BidWinRate { get; set; }
 
         [Display(Name = "Company Description")]
         public string? CompanyDescription { get; set; }
