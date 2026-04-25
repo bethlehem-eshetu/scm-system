@@ -111,7 +111,24 @@ namespace SCM_System.Controllers
                         ModelState.AddModelError("LicenseNumber", "License number is required");
 
                     if (model.LicenseFile == null)
+                    {
                         ModelState.AddModelError("LicenseFile", "License document is required");
+                    }
+                    else
+                    {
+                        if (model.LicenseFile.Length > 5 * 1024 * 1024)
+                        {
+                            ModelState.AddModelError("LicenseFile", "File size cannot exceed 5MB");
+                        }
+
+                        string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
+                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName).ToLower();
+
+                        if (!allowedExtensions.Contains(fileExtension))
+                        {
+                            ModelState.AddModelError("LicenseFile", "Only PDF, JPG, JPEG, and PNG files are allowed");
+                        }
+                    }
 
                     if (string.IsNullOrEmpty(model.TaxIdentificationNumber))
                         ModelState.AddModelError("TaxIdentificationNumber", "Tax identification number is required");
@@ -290,34 +307,8 @@ namespace SCM_System.Controllers
                     {
                         Console.WriteLine("Processing file upload...");
 
-                        // Validate file size (max 5MB)
-                        if (model.LicenseFile.Length > 5 * 1024 * 1024)
-                        {
-                            await transaction.RollbackAsync();
-                            ModelState.AddModelError("LicenseFile", "File size cannot exceed 5MB");
-                            ViewBag.Categories = await _context.ProductCategories
-                                .Include(c => c.SubCategories)
-                                .Where(c => c.ParentCategoryId == null)
-                                .OrderBy(c => c.CategoryName)
-                                .ToListAsync();
-                            return View(model);
-                        }
-
-                        // Validate file extension
-                        string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
-                        string fileExtension = Path.GetExtension(model.LicenseFile.FileName).ToLower();
-
-                        if (!allowedExtensions.Contains(fileExtension))
-                        {
-                            await transaction.RollbackAsync();
-                            ModelState.AddModelError("LicenseFile", "Only PDF, JPG, JPEG, and PNG files are allowed");
-                            ViewBag.Categories = await _context.ProductCategories
-                                .Include(c => c.SubCategories)
-                                .Where(c => c.ParentCategoryId == null)
-                                .OrderBy(c => c.CategoryName)
-                                .ToListAsync();
-                            return View(model);
-                        }
+                        // File validation is now handled before the transaction
+                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName).ToLower();
 
                         // Create unique filename
                         string fileName = $"supplier_{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";

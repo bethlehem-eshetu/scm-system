@@ -281,7 +281,7 @@
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG) *</label>
-                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
                                         <span asp-validation-for="LicenseFile" class="text-danger extra-small"></span>
                                         <small class="text-muted d-block mt-1">Please re-select your file if you encounter any errors.</small>
                                     </div>
