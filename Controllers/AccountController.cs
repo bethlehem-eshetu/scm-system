@@ -122,11 +122,15 @@ namespace SCM_System.Controllers
                         }
 
                         string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
-                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName).ToLower();
+                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
+                        
+                        string logMsg = $"[FILE VALIDATION] FileName: '{model.LicenseFile.FileName}' -> Extension: '{fileExtension}'\n";
+                        try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", logMsg); } catch {}
 
                         if (!allowedExtensions.Contains(fileExtension))
                         {
-                            ModelState.AddModelError("LicenseFile", "Only PDF, JPG, JPEG, and PNG files are allowed");
+                            try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", $"[FILE VALIDATION] Rejected! '{fileExtension}' not in allowed list.\n"); } catch {}
+                            ModelState.AddModelError("LicenseFile", $"Only PDF, JPG, JPEG, and PNG files are allowed (Detected: {fileExtension})");
                         }
                     }
 
@@ -308,7 +312,7 @@ namespace SCM_System.Controllers
                         Console.WriteLine("Processing file upload...");
 
                         // File validation is now handled before the transaction
-                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName).ToLower();
+                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
 
                         // Create unique filename
                         string fileName = $"supplier_{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
