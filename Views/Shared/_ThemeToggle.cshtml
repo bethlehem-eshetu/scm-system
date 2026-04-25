@@ -1,0 +1,75 @@
+<div class="theme-toggle-container mb-3">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h6 class="mb-1 fw-bold">Appearance</h6>
+            <small class="text-muted">Choose between light and dark mode</small>
+        </div>
+        <div class="btn-group" role="group" aria-label="Theme Toggle">
+            <input type="radio" class="btn-check" name="btnradio_theme" id="btnradio_light" autocomplete="off" value="light">
+            <label class="btn btn-outline-primary" for="btnradio_light">
+                <i class="fas fa-sun me-1"></i> Light
+            </label>
+
+            <input type="radio" class="btn-check" name="btnradio_theme" id="btnradio_dark" autocomplete="off" value="dark">
+            <label class="btn btn-outline-primary" for="btnradio_dark">
+                <i class="fas fa-moon me-1"></i> Dark
+            </label>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const lightRadio = document.getElementById('btnradio_light');
+        const darkRadio = document.getElementById('btnradio_dark');
+        const htmlElement = document.documentElement;
+
+        // Determine current theme
+        let currentTheme = localStorage.getItem('themePreference') || htmlElement.getAttribute('data-theme') || 'light';
+        
+        // Set initial radio state
+        if (currentTheme === 'dark') {
+            darkRadio.checked = true;
+        } else {
+            lightRadio.checked = true;
+        }
+
+        function handleThemeChange(theme) {
+            // Update classes
+            if (theme === 'dark') {
+                htmlElement.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            } else {
+                htmlElement.classList.remove('dark-mode');
+                document.body.classList.remove('dark-mode');
+            }
+
+            // Save to local storage
+            localStorage.setItem('themePreference', theme);
+
+            // Save to server
+            $.ajax({
+                url: '/Account/SetTheme',
+                type: 'POST',
+                data: { theme: theme },
+                success: function(response) {
+                    if (!response.success) {
+                        console.warn('Failed to save theme preference to server.');
+                    }
+                },
+                error: function() {
+                    console.warn('Error connecting to server to save theme preference.');
+                }
+            });
+        }
+
+        // Attach event listeners
+        lightRadio.addEventListener('change', function() {
+            if (this.checked) handleThemeChange('light');
+        });
+
+        darkRadio.addEventListener('change', function() {
+            if (this.checked) handleThemeChange('dark');
+        });
+    });
+</script>
