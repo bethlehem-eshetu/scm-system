@@ -295,28 +295,10 @@ namespace SCM_System.Controllers
                 Email = supplier.User.Email,
                 Phone = supplier.User.PhoneNumber,
                 BankAccounts = await _context.BankAccounts.Where(b => b.SupplierId == supplier.Id).ToListAsync(),
-                Employees = await _context.SupplierEmployees.Include(e => e.User).Include(e => e.Warehouse).Where(e => e.SupplierId == supplier.Id).ToListAsync(),
                 
-                // Notifications
-                NotifyOrderAlert = supplier.NotifyOrderAlert,
-                NotifyBidAlert = supplier.NotifyBidAlert,
-                NotifyLowStockAlert = supplier.NotifyLowStockAlert,
-                NotifyPaymentAlert = supplier.NotifyPaymentAlert,
-                NotifyDisputeAlert = supplier.NotifyDisputeAlert,
-                NotifyChannel = supplier.NotifyChannel,
-
                 // Security
                 TwoFactorEnabled = supplier.User.TwoFactorEnabled,
-                ActiveSessions = await _context.UserSessions.Where(us => us.UserId == supplier.User.Id && us.IsActive).ToListAsync(),
-
-                // KPIs
-                TotalOrders = await _context.Orders.CountAsync(o => o.SupplierId == supplier.Id),
-                TotalRevenue = await _context.Orders.Where(o => o.SupplierId == supplier.Id && o.OrderStatus == "Completed").SumAsync(o => o.TotalAmount),
-                AverageRating = await _context.Ratings.Where(r => r.SupplierId == supplier.Id).AnyAsync() ? await _context.Ratings.Where(r => r.SupplierId == supplier.Id).AverageAsync(r => r.RatingValue) : 0,
-                OnTimeDeliveryRate = await _context.Deliveries.CountAsync(d => d.Order.SupplierId == supplier.Id) > 0 ? 
-                    await _context.Deliveries.CountAsync(d => d.Order.SupplierId == supplier.Id && d.DeliveredDate <= d.Order.ExpectedDeliveryDate) * 100.0 / await _context.Deliveries.CountAsync(d => d.Order.SupplierId == supplier.Id) : 0,
-                BidWinRate = await _context.TenderBids.CountAsync(b => b.SupplierId == supplier.Id) > 0 ? 
-                    await _context.TenderBids.CountAsync(b => b.SupplierId == supplier.Id && b.Status == "Accepted") * 100.0 / await _context.TenderBids.CountAsync(b => b.SupplierId == supplier.Id) : 0
+                ActiveSessions = await _context.UserSessions.Where(us => us.UserId == supplier.User.Id && us.IsActive).ToListAsync()
             };
 
             ViewBag.Warehouses = new SelectList(await _context.Warehouses.Where(w => w.SupplierId == supplier.Id).ToListAsync(), "Id", "Name");
@@ -485,120 +467,6 @@ namespace SCM_System.Controllers
             return Json(new { success = true, message = "Bank account deleted successfully." });
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddEmployee(string fullName, string email, string phone, string role, int? warehouseId, bool isActive)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-            if (supplier == null) return NotFound();
-
-            // Create User
-            var user = new User
-            {
-                FullName = fullName,
-                Email = email,
-                PhoneNumber = phone,
-                Role = "SupplierEmployee",
-                AccountStatus = "Active",
-                IsApproved = true,
-                PasswordHash = HashPassword("TempPass123!") // User should change this later
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            // Create SupplierEmployee
-            var employee = new SupplierEmployee
-            {
-                UserId = user.Id,
-                SupplierId = supplier.Id,
-                WarehouseId = warehouseId,
-                EmployeeRole = role,
-                Phone = phone,
-                Email = email,
-                IsActive = isActive
-            };
-
-            _context.SupplierEmployees.Add(employee);
-            await _context.SaveChangesAsync();
-
-            await _auditLogService.LogActionAsync("SupplierEmployee", employee.Id.ToString(), "Add", notes: $"Added employee: {fullName}", performedByUserId: userId);
-
-            return Json(new { success = true, message = "Employee added successfully." });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateEmployee(int id, string fullName, string email, string phone, string role, int? warehouseId, bool isActive)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var employee = await _context.SupplierEmployees.Include(e => e.User).Include(e => e.Supplier).FirstOrDefaultAsync(e => e.Id == id);
-            if (employee == null || employee.Supplier.UserId != userId) return NotFound();
-
-            employee.User.FullName = fullName;
-            employee.User.Email = email;
-            employee.User.PhoneNumber = phone;
-            employee.Email = email;
-            employee.Phone = phone;
-            employee.EmployeeRole = role;
-            employee.WarehouseId = warehouseId;
-            employee.IsActive = isActive;
-
-            _context.Update(employee);
-            await _context.SaveChangesAsync();
-
-            await _auditLogService.LogActionAsync("SupplierEmployee", id.ToString(), "Update", notes: $"Updated employee: {fullName}", performedByUserId: userId);
-
-            return Json(new { success = true, message = "Employee updated successfully." });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteEmployee(int id)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var employee = await _context.SupplierEmployees.Include(e => e.Supplier).FirstOrDefaultAsync(e => e.Id == id);
-            if (employee == null || employee.Supplier.UserId != userId) return NotFound();
-
-            employee.IsDeleted = true;
-            employee.IsActive = false;
-            _context.Update(employee);
-            await _context.SaveChangesAsync();
-
-            await _auditLogService.LogActionAsync("SupplierEmployee", id.ToString(), "Delete", notes: "Marked employee as deleted", performedByUserId: userId);
-
-            return Json(new { success = true, message = "Employee deleted successfully." });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateNotifications(bool notifyOrderAlert, bool notifyBidAlert, bool notifyLowStockAlert, bool notifyPaymentAlert, bool notifyDisputeAlert, string notifyChannel)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-            if (supplier == null) return NotFound();
-
-            supplier.NotifyOrderAlert = notifyOrderAlert;
-            supplier.NotifyBidAlert = notifyBidAlert;
-            supplier.NotifyLowStockAlert = notifyLowStockAlert;
-            supplier.NotifyPaymentAlert = notifyPaymentAlert;
-            supplier.NotifyDisputeAlert = notifyDisputeAlert;
-            supplier.NotifyChannel = notifyChannel;
-
-            _context.Update(supplier);
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Notification preferences updated successfully." });
-        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

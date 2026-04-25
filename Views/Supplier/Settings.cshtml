@@ -55,7 +55,6 @@
                     <h5 class="fw-bold mb-1">@User.Identity.Name</h5>
                     <div class="d-flex justify-content-center gap-2 mb-0">
                         <span class="badge bg-soft-primary text-primary rounded-pill px-3">Supplier</span>
-                        <span class="badge bg-soft-warning text-warning rounded-pill px-3"><i class="fas fa-star me-1"></i>@Model.AverageRating.ToString("F1")</span>
                     </div>
                 </div>
                 <div class="p-3">
@@ -65,18 +64,6 @@
                         </button>
                         <button class="nav-link text-start mb-2" id="v-pills-banking-tab" data-bs-toggle="pill" data-bs-target="#v-pills-banking" type="button" role="tab">
                             <i class="fas fa-university me-2 w-20px text-center"></i>Banking Info
-                        </button>
-                        <button class="nav-link text-start mb-2" id="v-pills-employees-tab" data-bs-toggle="pill" data-bs-target="#v-pills-employees" type="button" role="tab">
-                            <i class="fas fa-users me-2 w-20px text-center"></i>Employee Hub
-                        </button>
-                        <button class="nav-link text-start mb-2" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
-                            <i class="fas fa-shield-alt me-2 w-20px text-center"></i>Security Hub
-                        </button>
-                        <button class="nav-link text-start mb-2" id="v-pills-notifications-tab" data-bs-toggle="pill" data-bs-target="#v-pills-notifications" type="button" role="tab">
-                            <i class="fas fa-bell me-2 w-20px text-center"></i>Notifications
-                        </button>
-                        <button class="nav-link text-start mb-2" id="v-pills-performance-tab" data-bs-toggle="pill" data-bs-target="#v-pills-performance" type="button" role="tab">
-                            <i class="fas fa-chart-line me-2 w-20px text-center"></i>Performance
                         </button>
                         <button class="nav-link text-start mb-2 text-danger" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab">
                             <i class="fas fa-exclamation-triangle me-2 w-20px text-center"></i>Danger Zone
@@ -218,65 +205,9 @@
                     </div>
                 </div>
 
-                <!-- 3. Employee Management -->
-                <div class="tab-pane fade" id="v-pills-employees" role="tabpanel">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-header bg-white py-3 border-bottom border-light d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold text-info">Employee Management</h5>
-                            <button type="button" class="btn btn-info text-white btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#employeeModal" onclick="resetEmployeeModal()">
-                                <i class="fas fa-plus me-1"></i> Add Employee
-                            </button>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle border-0" id="employeesTable">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="border-0 px-4 py-3 small text-muted text-uppercase">Employee</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase">Role</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase">Warehouse</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase">Status</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var emp in Model.Employees)
-                                        {
-                                            <tr>
-                                                <td class="px-4">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="bg-soft-info text-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
-                                                            <i class="fas fa-user small"></i>
-                                                        </div>
-                                                        <div>
-                                                            <div class="fw-bold mb-0">@emp.User.FullName</div>
-                                                            <small class="text-muted">@emp.Email</small>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td><span class="small fw-bold">@emp.EmployeeRole</span></td>
-                                                <td><span class="small">@(emp.Warehouse?.Name ?? "General")</span></td>
-                                                <td>
-                                                    <span class="badge @(emp.IsActive ? "bg-soft-success text-success" : "bg-soft-secondary text-secondary") rounded-pill px-3">
-                                                        @(emp.IsActive ? "Active" : "Inactive")
-                                                    </span>
-                                                </td>
-                                                <td class="text-end">
-                                                    <button class="btn btn-sm btn-soft-info rounded-pill me-1" onclick="editEmployee(@Json.Serialize(new { id = emp.Id, fullName = emp.User.FullName, email = emp.Email, phone = emp.Phone, role = emp.EmployeeRole, warehouseId = emp.WarehouseId, isActive = emp.IsActive }))">
-                                                        <i class="fas fa-edit text-info"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-soft-danger rounded-pill" onclick="deleteEmployee(@emp.Id)">
-                                                        <i class="fas fa-trash text-danger"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <button class="nav-link text-start mb-2" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
+                            <i class="fas fa-shield-alt me-2 w-20px text-center"></i>Security Hub
+                        </button>
 
                 <!-- 4. Security Hub -->
                 <div class="tab-pane fade" id="v-pills-security" role="tabpanel">
@@ -421,129 +352,6 @@
                     </div>
                 </div>
 
-                <!-- 5. Notifications -->
-                <div class="tab-pane fade" id="v-pills-notifications" role="tabpanel">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-header bg-white py-3 border-bottom border-light">
-                            <h5 class="mb-0 fw-bold text-warning">Notification Preferences</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <form id="notificationsForm">
-                                <div class="row g-4">
-                                    <div class="col-md-7">
-                                        <div class="list-group list-group-flush border rounded-4 overflow-hidden">
-                                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 bg-transparent">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold">Order Alerts</h6>
-                                                    <p class="extra-small text-muted mb-0">Instant notification when you receive new orders.</p>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" id="notifyOrderAlert" name="notifyOrderAlert" value="true" @(Model.NotifyOrderAlert ? "checked" : "")>
-                                                </div>
-                                            </div>
-                                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 bg-transparent">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold">Tender Updates</h6>
-                                                    <p class="extra-small text-muted mb-0">Get notified when there's activity on your bids.</p>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" id="notifyBidAlert" name="notifyBidAlert" value="true" @(Model.NotifyBidAlert ? "checked" : "")>
-                                                </div>
-                                            </div>
-                                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 bg-transparent">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold">Inventory Alerts</h6>
-                                                    <p class="extra-small text-muted mb-0">Warnings when stock levels fall below thresholds.</p>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" id="notifyLowStockAlert" name="notifyLowStockAlert" value="true" @(Model.NotifyLowStockAlert ? "checked" : "")>
-                                                </div>
-                                            </div>
-                                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 bg-transparent">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold">Payment Status</h6>
-                                                    <p class="extra-small text-muted mb-0">Confirmations of disbursements and payouts.</p>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" id="notifyPaymentAlert" name="notifyPaymentAlert" value="true" @(Model.NotifyPaymentAlert ? "checked" : "")>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <div class="card bg-light border-0 rounded-4 h-100">
-                                            <div class="card-body p-4">
-                                                <h6 class="fw-bold mb-3">Delivery Channel</h6>
-                                                <div class="mb-4">
-                                                    <select class="form-select rounded-pill border-0 shadow-sm px-4" name="notifyChannel" id="notifyChannel">
-                                                        <option value="Email" selected="@(Model.NotifyChannel == "Email")">Email Only</option>
-                                                        <option value="SMS" selected="@(Model.NotifyChannel == "SMS")">SMS Only</option>
-                                                        <option value="Both" selected="@(Model.NotifyChannel == "Both")">Both Email & SMS</option>
-                                                    </select>
-                                                </div>
-                                                <div class="alert alert-soft-warning border-0 small rounded-4">
-                                                    <i class="fas fa-info-circle me-2"></i> Ensure your phone number is verified for SMS delivery.
-                                                </div>
-                                                <div class="text-end mt-4">
-                                                    <button type="submit" class="btn btn-warning text-white rounded-pill px-4 shadow-sm">Save Preferences</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 6. Performance Overview -->
-                <div class="tab-pane fade" id="v-pills-performance" role="tabpanel">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-header bg-white py-3 border-bottom border-light">
-                            <h5 class="mb-0 fw-bold text-primary">Key Performance Indicators</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row g-4 text-center">
-                                <div class="col-md-3 col-6">
-                                    <div class="p-4 bg-soft-primary rounded-4 border-0 shadow-none h-100 d-flex flex-column justify-content-center">
-                                        <div class="icon-shape bg-white text-primary rounded-circle p-3 mb-3 mx-auto shadow-sm">
-                                            <i class="fas fa-shopping-basket fa-lg"></i>
-                                        </div>
-                                        <h3 class="fw-bold mb-0">@Model.TotalOrders</h3>
-                                        <span class="text-muted extra-small fw-bold text-uppercase">Total Orders</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <div class="p-4 bg-soft-success rounded-4 border-0 shadow-none h-100 d-flex flex-column justify-content-center">
-                                        <div class="icon-shape bg-white text-success rounded-circle p-3 mb-3 mx-auto shadow-sm">
-                                            <i class="fas fa-coins fa-lg"></i>
-                                        </div>
-                                        <h3 class="fw-bold mb-0">@Model.TotalRevenue.ToString("C0")</h3>
-                                        <span class="text-muted extra-small fw-bold text-uppercase">Revenue</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <div class="p-4 bg-soft-info rounded-4 border-0 shadow-none h-100 d-flex flex-column justify-content-center">
-                                        <div class="icon-shape bg-white text-info rounded-circle p-3 mb-3 mx-auto shadow-sm">
-                                            <i class="fas fa-shipping-fast fa-lg"></i>
-                                        </div>
-                                        <h3 class="fw-bold mb-0">@Model.OnTimeDeliveryRate.ToString("0")%</h3>
-                                        <span class="text-muted extra-small fw-bold text-uppercase">On-Time Rate</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <div class="p-4 bg-soft-warning rounded-4 border-0 shadow-none h-100 d-flex flex-column justify-content-center">
-                                        <div class="icon-shape bg-white text-warning rounded-circle p-3 mb-3 mx-auto shadow-sm">
-                                            <i class="fas fa-star fa-lg"></i>
-                                        </div>
-                                        <h3 class="fw-bold mb-0">@Model.AverageRating.ToString("0.0")</h3>
-                                        <span class="text-muted extra-small fw-bold text-uppercase">Avg Rating</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- 7. Danger Zone -->
                 <div class="tab-pane fade" id="v-pills-danger" role="tabpanel">
@@ -660,60 +468,6 @@
     </div>
 </div>
 
-<!-- Employee Modal -->
-<div class="modal fade" id="employeeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <form id="employeeForm">
-                <input type="hidden" name="id" id="emp_id" />
-                <div class="modal-header bg-info text-white rounded-top-4">
-                    <h5 class="modal-title fw-bold" id="empModalTitle">Add Staff Member</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">Full Name</label>
-                            <input type="text" name="fullName" id="emp_name" class="form-control rounded-pill bg-light border-0 px-4" required />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Email Address</label>
-                            <input type="email" name="email" id="emp_email" class="form-control rounded-pill bg-light border-0 px-4" required />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Phone Number</label>
-                            <input type="text" name="phone" id="emp_phone" class="form-control rounded-pill bg-light border-0 px-4" required />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Designated Role</label>
-                            <select name="role" id="emp_role" class="form-select rounded-pill bg-light border-0 px-4" required>
-                                <option value="warehouse_manager">Warehouse Manager</option>
-                                <option value="delivery_agent">Delivery Agent</option>
-                                <option value="support">Support Staff</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Warehouse Assignment</label>
-                            <select name="warehouseId" id="emp_warehouse" class="form-select rounded-pill bg-light border-0 px-4" asp-items="ViewBag.Warehouses">
-                                <option value="">Global / Head Office</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" type="checkbox" name="isActive" value="true" id="emp_active" checked>
-                                <label class="form-check-label small fw-bold ms-2" for="emp_active">Grant Active System Access</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0 rounded-bottom-4 p-3">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none fw-bold me-auto" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info text-white rounded-pill px-4 shadow-sm">Save Employee</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 @section Styles {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
@@ -786,7 +540,7 @@
                 $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
             });
 
-            $('#bankAccountsTable, #employeesTable').DataTable({
+            $('#bankAccountsTable').DataTable({
                 "pageLength": 5,
                 "lengthMenu": [5, 10, 25, 50],
                 "language": {
@@ -811,103 +565,6 @@
                 });
             });
 
-            // Employee Form Submit
-            $('#employeeForm').submit(function(e) {
-                e.preventDefault();
-                var id = $('#emp_id').val();
-                var url = id ? '/Supplier/UpdateEmployee' : '/Supplier/AddEmployee';
-                
-                $.post(url, $(this).serialize(), function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        toastr.error(res.message);
-                    }
-                });
-            });
-        });
-
-        function resetBankModal() {
-            $('#bankAccountForm')[0].reset();
-            $('#bank_id').val('');
-            $('#bankModalTitle').text('Add Bank Account');
-        }
-
-        function editBankAccount(account) {
-            resetBankModal();
-            $('#bankModalTitle').text('Edit Bank Account');
-            $('#bank_id').val(account.id);
-            $('#bank_name').val(account.bankName);
-            $('#bank_holder').val(account.accountHolderName);
-            $('#bank_number').val(account.accountNumber);
-            $('#bank_branch').val(account.branch);
-            $('#bank_swift').val(account.swiftCode);
-            $('#bank_primary').prop('checked', account.isPrimary);
-            $('#bankAccountModal').modal('show');
-        }
-
-        function deleteBankAccount(id) {
-            if (confirm('Are you sure you want to delete this bank account?')) {
-                $.post('/Supplier/DeleteBankAccount', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    }
-                });
-            }
-        }
-
-        function resetEmployeeModal() {
-            $('#employeeForm')[0].reset();
-            $('#emp_id').val('');
-            $('#empModalTitle').text('Add Employee');
-            $('#emp_active').prop('checked', true);
-        }
-
-        function editEmployee(emp) {
-            resetEmployeeModal();
-            $('#empModalTitle').text('Edit Employee');
-            $('#emp_id').val(emp.id);
-            $('#emp_name').val(emp.fullName);
-            $('#emp_email').val(emp.email);
-            $('#emp_phone').val(emp.phone);
-            $('#emp_role').val(emp.role);
-            $('#emp_warehouse').val(emp.warehouseId);
-            $('#emp_active').prop('checked', emp.isActive);
-            $('#employeeModal').modal('show');
-        }
-
-        function deleteEmployee(id) {
-            if (confirm('Are you sure you want to delete this employee?')) {
-                $.post('/Supplier/DeleteEmployee', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    }
-                });
-            }
-        }
-
-        // Notifications
-        $('#notificationsForm').submit(function(e) {
-            e.preventDefault();
-            var data = $(this).serialize();
-            ['notifyOrderAlert', 'notifyBidAlert', 'notifyLowStockAlert', 'notifyPaymentAlert', 'notifyDisputeAlert'].forEach(function(name) {
-                if (!$('#' + name).is(':checked')) {
-                    data += '&' + name + '=false';
-                }
-            });
-            data += '&__RequestVerificationToken=' + $('input[name="__RequestVerificationToken"]').val();
-
-            $.post('/Supplier/UpdateNotifications', data, function(res) {
-                if (res.success) {
-                    toastr.success(res.message);
-                } else {
-                    toastr.error('Failed to update notification preferences.');
-                }
-            });
-        });
 
         // 2FA Toggle
         function toggle2FA(checkbox) {
