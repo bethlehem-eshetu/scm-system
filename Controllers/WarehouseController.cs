@@ -666,9 +666,24 @@ namespace SCM_System.Controllers
                 Email = manager.User.Email,
                 Phone = manager.User.PhoneNumber ?? "",
                 ExistingProfileImage = manager.User.ProfileImage,
+                
+                // Operational
+                DefaultWarehouseLocation = manager.DefaultWarehouseLocation,
+                LowStockThreshold = manager.LowStockThreshold,
+                PicklistFormat = manager.PicklistFormat,
+                AutoAcceptPickTasks = manager.AutoAcceptPickTasks,
+                NotifyLowStock = manager.NotifyLowStock,
+                DefaultPackingPriority = manager.DefaultPackingPriority,
+                DailyCutoffTime = manager.DailyCutoffTime,
+                PrintLabelFormat = manager.PrintLabelFormat,
+                EnableVoicePicking = manager.EnableVoicePicking,
+                AssignedZones = string.IsNullOrEmpty(manager.AssignedZones) 
+                    ? new List<string>() 
+                    : JsonSerializer.Deserialize<List<string>>(manager.AssignedZones) ?? new List<string>(),
+
+                // Notifications
                 EnableTaskAlerts = manager.EnableTaskAlerts,
-                EnableReminders = manager.EnableReminders,
-                NotifyLowStock = manager.NotifyLowStock
+                EnableReminders = manager.EnableReminders
             };
 
             // Security Details
@@ -706,12 +721,23 @@ namespace SCM_System.Controllers
             manager.FullName = model.FullName;
             manager.Phone = model.Phone;
             
-            // 2. Notification Preferences
+            // 2. Operational Logic
+            manager.DefaultWarehouseLocation = model.DefaultWarehouseLocation;
+            manager.LowStockThreshold = model.LowStockThreshold;
+            manager.PicklistFormat = model.PicklistFormat;
+            manager.AutoAcceptPickTasks = model.AutoAcceptPickTasks;
+            manager.NotifyLowStock = model.NotifyLowStock;
+            manager.DefaultPackingPriority = model.DefaultPackingPriority;
+            manager.DailyCutoffTime = model.DailyCutoffTime;
+            manager.PrintLabelFormat = model.PrintLabelFormat;
+            manager.EnableVoicePicking = model.EnableVoicePicking;
+            manager.AssignedZones = JsonSerializer.Serialize(model.AssignedZones ?? new List<string>());
+
+            // 3. Notification Preferences
             manager.EnableTaskAlerts = model.EnableTaskAlerts;
             manager.EnableReminders = model.EnableReminders;
-            manager.NotifyLowStock = model.NotifyLowStock;
 
-            // 3. Profile Picture
+            // 4. Profile Picture
             if (model.ProfilePicture != null)
             {
                 string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
@@ -729,7 +755,7 @@ namespace SCM_System.Controllers
                 manager.ProfilePhotoPath = manager.User.ProfileImage;
             }
 
-            // 4. Password Security
+            // 5. Password Security
             if (!string.IsNullOrEmpty(model.NewPassword))
             {
                 if (string.IsNullOrEmpty(model.CurrentPassword))
@@ -748,7 +774,7 @@ namespace SCM_System.Controllers
             }
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Account security and profile updated successfully.";
+            TempData["SuccessMessage"] = "Settings updated successfully.";
             return RedirectToAction(nameof(AccountSettings));
         }
 
