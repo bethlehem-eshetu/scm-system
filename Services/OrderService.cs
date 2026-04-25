@@ -140,7 +140,24 @@ namespace SCM_System.Services
             order.OrderStatus = status;
 
             // ================================
-            // 🔥 COMMISSION CREATION FIX (MAIN FIX)
+            // 🔥 ESCROW RELEASE & COMMISSION DEDUCTION
+            // ================================
+            if (status == "Completed" && order.PaymentStatus == "Escrow")
+            {
+                order.PaymentStatus = "Released";
+                
+                foreach (var po in order.PurchaseOrders)
+                {
+                    // Create Platform Commission
+                    await _commissionService.CreateCommissionAsync(order.Id, po.TotalAmount, po.Id);
+                    
+                    // Mark PO as paid in our internal tracking
+                    po.PaymentStatus = "Paid";
+                }
+            }
+
+            // ================================
+            // 🔥 COMMISSION RECORDS (Ensure they exist)
             // ================================
             if (status == "Delivered" || status == "Completed" || status == "Partially Delivered")
             {
@@ -154,7 +171,6 @@ namespace SCM_System.Services
 
                     if (existingOrderPayment == null)
                     {
-                        // ORDER PAYMENT (Retailer → Supplier)
                         var orderPayment = new Commission
                         {
                             PurchaseOrderId = po.Id,
@@ -162,18 +178,24 @@ namespace SCM_System.Services
                             SupplierId = po.SupplierId,
                             RetailerId = order.RetailerId,
                             OrderAmount = po.TotalAmount,
-                            CommissionRate = 1.00m, // It's an order payment, representing the full amount.
+                            CommissionRate = 1.00m,
                             CommissionAmount = po.TotalAmount,
                             PaymentType = "OrderPayment",
-                            Status = "Pending",
+                            Status = (status == "Completed") ? "Paid" : "Pending",
                             PaymentRequestData = "",
                             PaymentVerificationData = "",
                             CreatedAt = DateTime.Now,
+                            PaidAt = (status == "Completed") ? DateTime.Now : null,
                             DueDate = DateTime.Now.AddDays(7),
                             Notes = $"Order payment for Purchase Order #{po.PONumber}"
                         };
 
                         _context.Commissions.Add(orderPayment);
+                    }
+                    else if (status == "Completed")
+                    {
+                        existingOrderPayment.Status = "Paid";
+                        existingOrderPayment.PaidAt = DateTime.Now;
                     }
                 }
             }

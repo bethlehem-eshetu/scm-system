@@ -337,6 +337,51 @@ namespace SCM_System.Data
                     context.SaveChanges();
                 }
 
+                // Seed System Configurations
+                if (!context.SystemConfigurations.Any())
+                {
+                    context.SystemConfigurations.AddRange(new List<SystemConfiguration>
+                    {
+                        new SystemConfiguration { Key = "CommissionBronze", Value = "2.5", Description = "Commission for Bronze tier suppliers", DataType = "decimal" },
+                        new SystemConfiguration { Key = "CommissionSilver", Value = "2.0", Description = "Commission for Silver tier suppliers", DataType = "decimal" },
+                        new SystemConfiguration { Key = "CommissionGold", Value = "1.5", Description = "Commission for Gold tier suppliers", DataType = "decimal" },
+                        new SystemConfiguration { Key = "CommissionPlatinum", Value = "1.0", Description = "Commission for Platinum tier suppliers", DataType = "decimal" },
+                        new SystemConfiguration { Key = "PenaltyWarningThreshold", Value = "3", Description = "Violations before warning", DataType = "int" },
+                        new SystemConfiguration { Key = "PenaltySuspensionDays", Value = "7", Description = "Days of suspension after limit", DataType = "int" },
+                        new SystemConfiguration { Key = "LowStockDefaultThreshold", Value = "10", Description = "Default low stock alert level", DataType = "int" },
+                        new SystemConfiguration { Key = "MaxTenderDays", Value = "30", Description = "Maximum duration for tenders", DataType = "int" },
+                        new SystemConfiguration { Key = "OrderCancellationHours", Value = "24", Description = "Hours before unpaid order cancels", DataType = "int" },
+                        new SystemConfiguration { Key = "AutoReleaseEscrowDays", Value = "5", Description = "Days before escrow release", DataType = "int" },
+                        new SystemConfiguration { Key = "RequireSupplierApproval", Value = "true", Description = "Manual approval for suppliers", DataType = "bool" },
+                        new SystemConfiguration { Key = "RequireRetailerApproval", Value = "true", Description = "Manual approval for retailers", DataType = "bool" },
+                        new SystemConfiguration { Key = "DefaultAccountStatus", Value = "Pending", Description = "Status for new signups", DataType = "string" },
+                        new SystemConfiguration { Key = "EnableFaydaVerification", Value = "true", Description = "Enable Fayda ID checks", DataType = "bool" },
+                        new SystemConfiguration { Key = "AppUrl", Value = "https://localhost:5001", Description = "Base application URL", DataType = "string" },
+                        new SystemConfiguration { Key = "SupportEmail", Value = "support@ethiochain.com", Description = "Platform support email", DataType = "string" },
+                        new SystemConfiguration { Key = "Timezone", Value = "Africa/Addis_Ababa", Description = "System timezone", DataType = "string" },
+                        new SystemConfiguration { Key = "Currency", Value = "ETB", Description = "Base platform currency", DataType = "string" },
+                        new SystemConfiguration { Key = "DateFormat", Value = "dd MMM yyyy", Description = "Display date format", DataType = "string" },
+                        new SystemConfiguration { Key = "ChapaEnvironment", Value = "Test", Description = "Chapa gateway environment", DataType = "string" },
+                        new SystemConfiguration { Key = "ChapaTestMode", Value = "true", Description = "Chapa test mode toggle", DataType = "bool" }
+                    });
+                    context.SaveChanges();
+                }
+
+                // Seed Email Templates
+                if (!context.EmailTemplates.Any())
+                {
+                    context.EmailTemplates.AddRange(new List<EmailTemplate>
+                    {
+                        new EmailTemplate { EventType = "AccountApproval", Subject = "Welcome to EthioChain - Account Approved", Body = "Dear {UserName}, your {Role} account has been approved. You can now log in.", IsActive = true },
+                        new EmailTemplate { EventType = "AccountRejection", Subject = "EthioChain Account Update", Body = "Dear {UserName}, unfortunately your registration could not be approved at this time.", IsActive = true },
+                        new EmailTemplate { EventType = "OrderPlaced", Subject = "New Order Received", Body = "A new order #{OrderId} has been placed in your store.", IsActive = true },
+                        new EmailTemplate { EventType = "PaymentSuccessful", Subject = "Payment Received", Body = "Payment for order #{OrderId} has been successfully processed.", IsActive = true },
+                        new EmailTemplate { EventType = "LowStockAlert", Subject = "Low Stock Alert: {ProductName}", Body = "Warning: Product {ProductName} has fallen below the threshold ({Threshold}).", IsActive = true }
+                    });
+                    context.SaveChanges();
+                }
+
+
             }
         }
 

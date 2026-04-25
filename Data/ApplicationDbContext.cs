@@ -90,6 +90,8 @@ namespace SCM_System.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
+        public DbSet<SystemConfiguration> SystemConfigurations { get; set; }
+        public DbSet<EmailTemplate> EmailTemplates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
