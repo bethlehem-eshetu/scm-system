@@ -157,7 +157,24 @@ namespace SCM_System.Services
             order.OrderStatus = status;
 
             // ================================
-            // 🔥 COMMISSION CREATION FIX (MAIN FIX)
+            // 🔥 ESCROW RELEASE & COMMISSION DEDUCTION
+            // ================================
+            if (status == "Completed" && order.PaymentStatus == "Escrow")
+            {
+                order.PaymentStatus = "Released";
+                
+                foreach (var po in order.PurchaseOrders)
+                {
+                    // Create Platform Commission
+                    await _commissionService.CreateCommissionAsync(order.Id, po.TotalAmount, po.Id);
+                    
+                    // Mark PO as paid in our internal tracking
+                    po.PaymentStatus = "Paid";
+                }
+            }
+
+            // ================================
+            // 🔥 COMMISSION RECORDS (Ensure they exist)
             // ================================
             if (status == "Delivered" || status == "Completed" || status == "Partially Delivered")
             {
@@ -183,13 +200,19 @@ namespace SCM_System.Services
                             CommissionRate = 0.00m, // It's the base payment, not a fee
                             CommissionAmount = po.TotalAmount,
                             PaymentType = "OrderPayment",
-                            Status = "Pending",
+                            Status = (status == "Completed") ? "Paid" : "Pending",
                             CreatedAt = DateTime.Now,
+                            PaidAt = (status == "Completed") ? DateTime.Now : null,
                             DueDate = DateTime.Now.AddDays(7),
                             Notes = $"Main order settlement for #{po.PONumber}"
                         };
 
                         _context.Commissions.Add(orderPayment);
+                    }
+                    else if (status == "Completed")
+                    {
+                        existingOrderPayment.Status = "Paid";
+                        existingOrderPayment.PaidAt = DateTime.Now;
                     }
                 }
             }

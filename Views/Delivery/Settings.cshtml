@@ -1,0 +1,327 @@
+@model SCM_System.Models.ViewModels.DeliverySettingsViewModel
+@{
+    ViewData["Title"] = "Delivery Agent Settings";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Left Column: Profile & Performance -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-body text-center pt-5">
+                    <div class="position-relative d-inline-block mb-4">
+                        <div class="rounded-circle overflow-hidden shadow-sm" style="width: 150px; height: 150px; border: 5px solid #fff;">
+                            @if (!string.IsNullOrEmpty(Model.ExistingProfilePicture))
+                            {
+                                <img src="@Model.ExistingProfilePicture" id="profilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
+                            }
+                            else
+                            {
+                                <div class="bg-light h-100 w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-user-tie fa-4x text-muted"></i>
+                                </div>
+                                <img id="profilePreview" class="img-fluid h-100 w-100 object-fit-cover d-none" alt="Profile" />
+                            }
+                        </div>
+                        <label for="ProfilePicture" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle shadow" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                    </div>
+                    <h5 class="fw-bold mb-1">@Model.FullName</h5>
+                    <p class="text-muted small mb-3">Delivery Agent</p>
+                    
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="form-check form-switch px-4 py-2 bg-light rounded-pill">
+                            <input class="form-check-input" type="checkbox" id="isOnDutySwitch" @(Model.IsOnDuty ? "checked" : "") onchange="updateDutyStatus(this)">
+                            <label class="form-check-label fw-bold ms-2" for="isOnDutySwitch" id="dutyLabel">
+                                @(Model.IsOnDuty ? "ON DUTY" : "OFF DUTY")
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Cards -->
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="card shadow-sm border-0 bg-primary text-white p-3 text-center h-100">
+                        <h3 class="fw-bold mb-0">@Model.TotalDeliveriesMonth</h3>
+                        <span class="small opacity-75">Monthly Jobs</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card shadow-sm border-0 bg-success text-white p-3 text-center h-100">
+                        <h3 class="fw-bold mb-0">@Model.OnTimePercentage%</h3>
+                        <span class="small opacity-75">On-Time Rate</span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card shadow-sm border-0 bg-warning p-3 text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <h3 class="fw-bold mb-0 me-2 text-dark">@Model.AverageRating</h3>
+                            <div class="text-dark">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star @(i <= Math.Round(Model.AverageRating) ? "" : "opacity-25")"></i>
+                                }
+                            </div>
+                        </div>
+                        <span class="small text-dark opacity-75">Customer Rating</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Settings Sections -->
+        <div class="col-lg-8">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form asp-action="Settings" method="post" enctype="multipart/form-data" id="settingsForm">
+                <input type="file" asp-for="ProfilePicture" class="d-none" onchange="previewProfile(this)" />
+                
+                <div class="accordion shadow-sm" id="settingsAccordion">
+                    <!-- Profile Info -->
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#profileCollapse">
+                                <i class="fas fa-id-card me-2 text-primary"></i>Profile Information
+                            </button>
+                        </h2>
+                        <div id="profileCollapse" class="accordion-collapse collapse show" data-bs-parent="#settingsAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="FullName" class="form-label small fw-bold"></label>
+                                        <input asp-for="FullName" class="form-control rounded-pill" />
+                                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Email" class="form-label small fw-bold"></label>
+                                        <input asp-for="Email" class="form-control rounded-pill" />
+                                        <span asp-validation-for="Email" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label asp-for="Phone" class="form-label small fw-bold"></label>
+                                        <input asp-for="Phone" class="form-control rounded-pill" />
+                                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle & Availability -->
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#vehicleCollapse">
+                                <i class="fas fa-truck me-2 text-success"></i>Vehicle & Availability
+                            </button>
+                        </h2>
+                        <div id="vehicleCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                            <div class="accordion-body">
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold">Assigned Vehicle</label>
+                                    <select asp-for="VehicleId" class="form-select rounded-pill">
+                                        <option value="">No Vehicle Assigned</option>
+                                        @foreach (var v in (IEnumerable<SCM_System.Models.Entities.Vehicle>)ViewBag.Vehicles)
+                                        {
+                                            <option value="@v.Id">@v.Make @v.Model (@v.LicensePlate)</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label small fw-bold">Working Hours Start</label>
+                                        <input asp-for="WorkingHoursStart" type="time" class="form-control rounded-pill" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label small fw-bold">Working Hours End</label>
+                                        <input asp-for="WorkingHoursEnd" type="time" class="form-control rounded-pill" />
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label asp-for="MaxDailyDeliveries" class="form-label small fw-bold"></label>
+                                        <input asp-for="MaxDailyDeliveries" type="range" class="form-range" min="1" max="50" oninput="this.nextElementSibling.value = this.value">
+                                        <output class="badge bg-primary rounded-pill">@Model.MaxDailyDeliveries</output>
+                                    </div>
+                                </div>
+                                <input type="hidden" asp-for="IsOnDuty" id="isOnDutyHidden" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Preferences -->
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#preferencesCollapse">
+                                <i class="fas fa-clipboard-check me-2 text-info"></i>Delivery Preferences
+                            </button>
+                        </h2>
+                        <div id="preferencesCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                            <div class="accordion-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="AutoAcceptAssignments">
+                                    <label class="form-check-label small" asp-for="AutoAcceptAssignments">Auto-Accept New Assignments</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="RequireProofPhoto">
+                                    <label class="form-check-label small" asp-for="RequireProofPhoto">Always Require Proof Photo on Delivery</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="RequireSignature">
+                                    <label class="form-check-label small" asp-for="RequireSignature">Always Require Signature on Delivery</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="AllowNightDeliveries">
+                                    <label class="form-check-label small" asp-for="AllowNightDeliveries">Allow Night-Time Deliveries</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#notifyCollapse">
+                                <i class="fas fa-bell me-2 text-warning"></i>Notifications
+                            </button>
+                        </h2>
+                        <div id="notifyCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                            <div class="accordion-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="NotifyNewAssignment">
+                                    <label class="form-check-label small" asp-for="NotifyNewAssignment">In-App Notification for New Jobs</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="SmsNotificationNumber" class="form-label small fw-bold"></label>
+                                    <input asp-for="SmsNotificationNumber" class="form-control rounded-pill" placeholder="+1234567890" />
+                                    <div class="form-text small">Leave blank to disable SMS alerts.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security -->
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#securityCollapse">
+                                <i class="fas fa-key me-2 text-secondary"></i>Security
+                            </button>
+                        </h2>
+                        <div id="securityCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label asp-for="CurrentPassword" class="form-label small fw-bold"></label>
+                                    <input asp-for="CurrentPassword" class="form-control rounded-pill" />
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="NewPassword" class="form-label small fw-bold"></label>
+                                        <input asp-for="NewPassword" class="form-control rounded-pill" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ConfirmPassword" class="form-label small fw-bold"></label>
+                                        <input asp-for="ConfirmPassword" class="form-control rounded-pill" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="accordion-item border-0 rounded shadow-sm overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold text-danger bg-danger bg-opacity-10" type="button" data-bs-toggle="collapse" data-bs-target="#dangerCollapse">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                            </button>
+                        </h2>
+                        <div id="dangerCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                            <div class="accordion-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Deactivate Account</h6>
+                                        <p class="text-muted small mb-0">Temporarily suspend your delivery agent account.</p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-4">Deactivate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 shadow">
+                        <i class="fas fa-save me-2"></i>Save All Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .accordion-button:not(.collapsed) {
+            background-color: transparent;
+            color: inherit;
+            box-shadow: none;
+        }
+        .form-switch-lg .form-check-input {
+            width: 3rem;
+            height: 1.5rem;
+        }
+        .object-fit-cover {
+            object-fit: cover;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+
+    <script>
+        function previewProfile(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profilePreview').attr('src', e.target.result).removeClass('d-none');
+                    $('#profilePreview').parent().find('.bg-light').addClass('d-none');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updateDutyStatus(checkbox) {
+            const isChecked = $(checkbox).is(':checked');
+            $('#dutyLabel').text(isChecked ? "ON DUTY" : "OFF DUTY");
+            $('#isOnDutyHidden').val(isChecked);
+            
+            // Highlight color change
+            if(isChecked) {
+                $(checkbox).parent().removeClass('bg-light').addClass('bg-success text-white');
+            } else {
+                $(checkbox).parent().removeClass('bg-success text-white').addClass('bg-light');
+            }
+
+            toastr.info(isChecked ? "You are now active for new deliveries." : "You will not receive new delivery assignments.");
+        }
+
+        $(document).ready(function() {
+            // Initialize hidden field
+            $('#isOnDutyHidden').val($('#isOnDutySwitch').is(':checked'));
+            
+            // Set initial color
+            if($('#isOnDutySwitch').is(':checked')) {
+                $('#isOnDutySwitch').parent().addClass('bg-success text-white');
+            }
+        });
+    </script>
+}

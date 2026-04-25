@@ -76,19 +76,33 @@ namespace SCM_System.Models.Entities
 
         public bool IsDeleted { get; set; } = false;
 
+        public string? CompanyDescription { get; set; }
+        public string? WebsiteUrl { get; set; }
+        public string? PickupAddress { get; set; }
+        public string? CompanyLogo { get; set; }
+
+        // Notification Preferences
+        public bool NotifyOrderAlert { get; set; } = true;
+        public bool NotifyBidAlert { get; set; } = true;
+        public bool NotifyLowStockAlert { get; set; } = true;
+        public bool NotifyPaymentAlert { get; set; } = true;
+        public bool NotifyDisputeAlert { get; set; } = true;
+        public string NotifyChannel { get; set; } = "Both"; // Email, SMS, Both
+
         // Navigation properties
-        public ICollection<Product> Products { get; set; } = [];
-        public ICollection<Tender> Tenders { get; set; } = [];
-        public ICollection<TenderBid> TenderBids { get; set; } = [];
-        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
-        public ICollection<Order> Orders { get; set; } = [];
-        public ICollection<SupplierEmployee> Employees { get; set; } = [];
-        public ICollection<Commission> Commissions { get; set; } = [];
-        public ICollection<Rating> ReceivedRatings { get; set; } = [];
-        public ICollection<Conversation> Conversations { get; set; } = [];
-        public ICollection<Warehouse> Warehouses { get; set; } = [];
-        public ICollection<Vehicle> Vehicles { get; set; } = [];
-        public ICollection<SupplierCategory> SupplierCategories { get; set; } = [];
-        public ICollection<InboundShipment> InboundShipments { get; set; } = [];
+        public ICollection<Product> Products { get; set; } = new List<Product>();
+        public ICollection<Tender> Tenders { get; set; } = new List<Tender>();
+        public ICollection<TenderBid> TenderBids { get; set; } = new List<TenderBid>();
+        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
+        public ICollection<SupplierEmployee> Employees { get; set; } = new List<SupplierEmployee>();
+        public ICollection<Commission> Commissions { get; set; } = new List<Commission>();
+        public ICollection<Rating> ReceivedRatings { get; set; } = new List<Rating>();
+        public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
+        public ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
+        public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
+        public ICollection<SupplierCategory> SupplierCategories { get; set; } = new List<SupplierCategory>();
+        public ICollection<InboundShipment> InboundShipments { get; set; } = new List<InboundShipment>();
+        public ICollection<BankAccount> BankAccounts { get; set; } = new List<BankAccount>();
     }
 }

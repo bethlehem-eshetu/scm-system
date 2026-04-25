@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
@@ -6,9 +7,14 @@ using SCM_System.Models.ViewModels;
 using SCM_System.Services;
 using System.Security.Cryptography;
 using System.Text;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Google.Authenticator;
 
 namespace SCM_System.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController(
         ApplicationDbContext context, 
         IWebHostEnvironment webHostEnvironment, 
@@ -728,11 +734,33 @@ namespace SCM_System.Controllers
 
             user.IsApproved = true;
             user.IsFaydaVerified = true; // Critical Fix: Ensure user can log in
+            user.FaydaStatus = "Verified";
             user.AccountStatus = "Active";
             user.ApprovedAt = DateTime.Now;
             user.ApprovalStatus = "Approved";
             user.ApprovalStatusType = "Approved";
             user.ApprovalStatusMessage = "Your account has been approved! You can now access all platform features.";
+
+            // Sync with FaydaVerification table if record exists
+            if (user.FaydaVerification != null)
+            {
+                user.FaydaVerification.IsVerified = true;
+                user.FaydaVerification.VerifiedName = user.FullName;
+            }
+            else if (!string.IsNullOrEmpty(user.FAN))
+            {
+                // Optionally create missing verification record
+                var newVerification = new FaydaVerification
+                {
+                    FAN = user.FAN,
+                    UserEmail = user.Email,
+                    IsVerified = true,
+                    VerifiedName = user.FullName,
+                    VerifiedPhone = user.PhoneNumber,
+                    TransactionId = "ADMIN_APPROVAL_" + Guid.NewGuid().ToString().Substring(0, 8)
+                };
+                _context.FaydaVerifications.Add(newVerification);
+            }
 
             // Update associated roles
             if (user.Role == "Supplier")
@@ -1175,25 +1203,6 @@ namespace SCM_System.Controllers
             }
         }
 
-        // GET: /Admin/Settings
-        public IActionResult Settings()
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var user = _context.Users.Find(userId);
-
-            if (user != null)
-            {
-                ViewBag.UserName = user.FullName;
-                ViewBag.UserEmail = user.Email;
-            }
-
-            return View();
-        }
 
         // POST: /Admin/ChangePassword
         [HttpPost]
@@ -1897,6 +1906,307 @@ namespace SCM_System.Controllers
 
             var fileName = $"AuditLog_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv";
             return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
+        }
+
+        // GET: /Admin/Settings
+        public async Task<IActionResult> Settings()
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return NotFound();
+
+            var sysConfigs = await _context.SystemConfigurations.ToDictionaryAsync(c => c.Key, c => c.Value);
+
+            var viewModel = new AdminSettingsViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                ProfilePicture = user.ProfileImage,
+                TwoFactorEnabled = user.TwoFactorEnabled,
+                
+                // Platform Config
+                CommissionBronze = GetConfigDecimal(sysConfigs, "CommissionBronze", 2.0m),
+                CommissionSilver = GetConfigDecimal(sysConfigs, "CommissionSilver", 1.5m),
+                CommissionGold = GetConfigDecimal(sysConfigs, "CommissionGold", 1.0m),
+                CommissionPlatinum = GetConfigDecimal(sysConfigs, "CommissionPlatinum", 0.5m),
+                PenaltyWarningThreshold = GetConfigInt(sysConfigs, "PenaltyWarningThreshold", 3),
+                PenaltySuspensionDays = GetConfigInt(sysConfigs, "PenaltySuspensionDays", 7),
+                LowStockDefaultThreshold = GetConfigInt(sysConfigs, "LowStockDefaultThreshold", 10),
+                MaxTenderDays = GetConfigInt(sysConfigs, "MaxTenderDays", 30),
+                OrderCancellationHours = GetConfigInt(sysConfigs, "OrderCancellationHours", 24),
+                AutoReleaseEscrowDays = GetConfigInt(sysConfigs, "AutoReleaseEscrowDays", 5),
+
+                // User Defaults
+                RequireSupplierApproval = GetConfigBool(sysConfigs, "RequireSupplierApproval", true),
+                RequireRetailerApproval = GetConfigBool(sysConfigs, "RequireRetailerApproval", true),
+                DefaultAccountStatus = GetConfigString(sysConfigs, "DefaultAccountStatus", "Pending"),
+                EnableFaydaVerification = GetConfigBool(sysConfigs, "EnableFaydaVerification", true),
+
+                // System Settings
+                AppUrl = GetConfigString(sysConfigs, "AppUrl", "https://ethiochain.com"),
+                SupportEmail = GetConfigString(sysConfigs, "SupportEmail", "support@ethiochain.com"),
+                PlatformLogo = GetConfigString(sysConfigs, "PlatformLogo", "/assets/logo.png"),
+                Favicon = GetConfigString(sysConfigs, "Favicon", "/favicon.ico"),
+                Timezone = GetConfigString(sysConfigs, "Timezone", "Africa/Addis_Ababa"),
+                Currency = GetConfigString(sysConfigs, "Currency", "ETB"),
+                DateFormat = GetConfigString(sysConfigs, "DateFormat", "dd MMM yyyy"),
+
+                // Chapa Config
+                ChapaSecretKey = GetConfigString(sysConfigs, "ChapaSecretKey", ""),
+                ChapaWebhookSecret = GetConfigString(sysConfigs, "ChapaWebhookSecret", ""),
+                ChapaEnvironment = GetConfigString(sysConfigs, "ChapaEnvironment", "Test"),
+                ChapaTestMode = GetConfigBool(sysConfigs, "ChapaTestMode", true),
+
+                // Stats
+                TotalUsers = await _context.Users.CountAsync(),
+                TotalOrders = await _context.Orders.CountAsync(),
+                TotalRevenue = await _context.Orders.SumAsync(o => (decimal?)o.TotalAmount) ?? 0,
+                TotalCommission = await _context.Commissions.SumAsync(c => (decimal?)c.CommissionAmount) ?? 0,
+                PendingApprovals = await _context.Users.CountAsync(u => !u.IsApproved && u.AccountStatus != "Rejected"),
+                
+                ActiveSessions = await _context.UserSessions.Where(s => s.UserId == userId && s.IsActive).OrderByDescending(s => s.LastActivityTime).ToListAsync(),
+                LoginHistory = await _context.AuditLogs.Where(l => l.PerformedByUserId == userId && l.ActionType == "Login").OrderByDescending(l => l.PerformedAtUtc).Take(10).ToListAsync(),
+                EmailTemplates = await _context.EmailTemplates.ToListAsync()
+            };
+
+            // 2FA Setup
+            if (!user.TwoFactorEnabled)
+            {
+                if (string.IsNullOrEmpty(user.TwoFactorSecret))
+                {
+                    user.TwoFactorSecret = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
+                    await _context.SaveChangesAsync();
+                }
+
+                TwoFactorAuthenticator tfa = new TwoFactorAuthenticator();
+                var setupInfo = tfa.GenerateSetupCode("EthioChain SCM", user.Email, user.TwoFactorSecret, false, 3);
+                ViewBag.QrCodeImageUrl = setupInfo.QrCodeSetupImageUrl;
+                ViewBag.ManualSetupKey = setupInfo.ManualEntryKey;
+            }
+
+            return View(viewModel);
+        }
+
+        // POST: /Admin/Settings
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Settings(AdminSettingsViewModel model)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return NotFound();
+
+            // Profile
+            user.FullName = model.FullName;
+            user.PhoneNumber = model.Phone;
+
+            // Password
+            if (!string.IsNullOrEmpty(model.NewPassword) && !string.IsNullOrEmpty(model.CurrentPassword))
+            {
+                if (VerifyPasswordHash(model.CurrentPassword, user.PasswordHash))
+                {
+                    user.PasswordHash = HashPassword(model.NewPassword);
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Current password is incorrect.";
+                    return RedirectToAction("Settings");
+                }
+            }
+
+            // Profile Picture Upload
+            if (model.ProfilePictureFile != null)
+            {
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "admins");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                string uniqueFileName = $"admin_{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.ProfilePictureFile.FileName)}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ProfilePictureFile.CopyToAsync(fileStream);
+                }
+                user.ProfileImage = $"/uploads/admins/{uniqueFileName}";
+            }
+
+            // Save Configs
+            await SaveOrUpdateConfig("CommissionBronze", model.CommissionBronze.ToString(), "decimal");
+            await SaveOrUpdateConfig("CommissionSilver", model.CommissionSilver.ToString(), "decimal");
+            await SaveOrUpdateConfig("CommissionGold", model.CommissionGold.ToString(), "decimal");
+            await SaveOrUpdateConfig("CommissionPlatinum", model.CommissionPlatinum.ToString(), "decimal");
+            await SaveOrUpdateConfig("PenaltyWarningThreshold", model.PenaltyWarningThreshold.ToString(), "int");
+            await SaveOrUpdateConfig("PenaltySuspensionDays", model.PenaltySuspensionDays.ToString(), "int");
+            await SaveOrUpdateConfig("LowStockDefaultThreshold", model.LowStockDefaultThreshold.ToString(), "int");
+            await SaveOrUpdateConfig("MaxTenderDays", model.MaxTenderDays.ToString(), "int");
+            await SaveOrUpdateConfig("OrderCancellationHours", model.OrderCancellationHours.ToString(), "int");
+            await SaveOrUpdateConfig("AutoReleaseEscrowDays", model.AutoReleaseEscrowDays.ToString(), "int");
+
+            await SaveOrUpdateConfig("RequireSupplierApproval", model.RequireSupplierApproval.ToString(), "bool");
+            await SaveOrUpdateConfig("RequireRetailerApproval", model.RequireRetailerApproval.ToString(), "bool");
+            await SaveOrUpdateConfig("DefaultAccountStatus", model.DefaultAccountStatus, "string");
+            await SaveOrUpdateConfig("EnableFaydaVerification", model.EnableFaydaVerification.ToString(), "bool");
+
+            await SaveOrUpdateConfig("AppUrl", model.AppUrl ?? "", "string");
+            await SaveOrUpdateConfig("SupportEmail", model.SupportEmail ?? "", "string");
+            await SaveOrUpdateConfig("Timezone", model.Timezone ?? "", "string");
+            await SaveOrUpdateConfig("Currency", model.Currency ?? "", "string");
+            await SaveOrUpdateConfig("DateFormat", model.DateFormat ?? "", "string");
+
+            await SaveOrUpdateConfig("ChapaSecretKey", model.ChapaSecretKey ?? "", "string");
+            await SaveOrUpdateConfig("ChapaWebhookSecret", model.ChapaWebhookSecret ?? "", "string");
+            await SaveOrUpdateConfig("ChapaEnvironment", model.ChapaEnvironment ?? "", "string");
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Admin settings updated successfully.";
+            return RedirectToAction("Settings");
+        }
+
+
+        // POST: /Admin/DeleteAccount
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAccount(string confirmPassword)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            if (string.IsNullOrEmpty(confirmPassword) || !VerifyPasswordHash(confirmPassword, user.PasswordHash))
+            {
+                TempData["ErrorMessage"] = "Invalid password. Account deletion aborted.";
+                return RedirectToAction(nameof(Settings));
+            }
+
+            // Deactivate account instead of hard delete for audit purposes
+            user.AccountStatus = "Deleted";
+            user.IsApproved = false;
+            
+            await _context.SaveChangesAsync();
+
+            // Clear session and logout
+            HttpContext.Session.Clear();
+            TempData["SuccessMessage"] = "Your account has been deactivated and marked for deletion.";
+            return RedirectToAction("Login", "Account");
+        }
+
+        // POST: /Admin/Verify2FA
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Verify2FA(string pin)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            TwoFactorAuthenticator tfa = new TwoFactorAuthenticator();
+            bool isValid = tfa.ValidateTwoFactorPIN(user.TwoFactorSecret, pin);
+
+            if (isValid)
+            {
+                user.TwoFactorEnabled = true;
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Two-Factor Authentication has been enabled successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Invalid PIN. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Settings));
+        }
+
+        // POST: /Admin/RevokeSession
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RevokeSession(int sessionId)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId);
+            if (session != null)
+            {
+                session.IsActive = false;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Session revoked successfully." });
+            }
+
+            return Json(new { success = false, message = "Session not found or access denied." });
+        }
+
+        private bool VerifyPasswordHash(string password, string hash)
+        {
+            return HashPassword(password) == hash;
+        }
+
+        // Helpers
+        private decimal GetConfigDecimal(Dictionary<string, string?> configs, string key, decimal defaultVal)
+            => configs.TryGetValue(key, out var val) && decimal.TryParse(val, out var res) ? res : defaultVal;
+        private int GetConfigInt(Dictionary<string, string?> configs, string key, int defaultVal)
+            => configs.TryGetValue(key, out var val) && int.TryParse(val, out var res) ? res : defaultVal;
+        private bool GetConfigBool(Dictionary<string, string?> configs, string key, bool defaultVal)
+            => configs.TryGetValue(key, out var val) && bool.TryParse(val, out var res) ? res : defaultVal;
+        private string GetConfigString(Dictionary<string, string?> configs, string key, string defaultVal)
+            => configs.TryGetValue(key, out var val) && !string.IsNullOrEmpty(val) ? val : defaultVal;
+
+        private async Task SaveOrUpdateConfig(string key, string value, string dataType)
+        {
+            var config = await _context.SystemConfigurations.FirstOrDefaultAsync(c => c.Key == key);
+            if (config != null)
+            {
+                config.Value = value;
+            }
+            else
+            {
+                _context.SystemConfigurations.Add(new SystemConfiguration { Key = key, Value = value, DataType = dataType });
+            }
+        }
+
+        // AJAX: ToggleTestMode
+        [HttpPost]
+        public async Task<IActionResult> ToggleTestMode(bool isTestMode)
+        {
+            if (!IsAdmin()) return Unauthorized();
+            await SaveOrUpdateConfig("ChapaTestMode", isTestMode.ToString(), "bool");
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        // AJAX: GenerateApiKey
+        [HttpPost]
+        public IActionResult GenerateApiKey()
+        {
+            if (!IsAdmin()) return Unauthorized();
+            var newKey = "SCM_" + Guid.NewGuid().ToString("N").ToUpper();
+            return Json(new { success = true, key = newKey });
+        }
+
+        // AJAX: SendTestEmail
+        [HttpPost]
+        public async Task<IActionResult> SendTestEmail(string email)
+        {
+            if (!IsAdmin()) return Unauthorized();
+            try
+            {
+                await _emailService.SendApprovalEmailAsync(email, "Test User", "Admin");
+                return Json(new { success = true });
+            }
+            catch(Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
     }
 }

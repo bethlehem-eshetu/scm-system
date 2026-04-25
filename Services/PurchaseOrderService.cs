@@ -224,6 +224,19 @@ namespace SCM_System.Services
                 if (status == POStatus.Packed) po.PackedAt = DateTime.Now;
                 if (status == POStatus.Delivered) po.DeliveredAt = DateTime.Now;
 
+                // 🆕 Auto-Accept logic
+                if (status == POStatus.Accepted)
+                {
+                    var manager = await _context.SupplierEmployees
+                        .FirstOrDefaultAsync(e => e.WarehouseId == po.WarehouseId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
+                    
+                    if (manager != null && manager.AutoAcceptPickTasks)
+                    {
+                        po.Status = POStatus.Processing;
+                        po.UpdatedAt = DateTime.Now;
+                    }
+                }
+
                 // Sync with parent Order if it exists
                 if (po.Order != null)
                 {
@@ -310,13 +323,66 @@ namespace SCM_System.Services
                         );
                     }
                 }
-                
+                // Handle Inventory Deduction on Delivery
+                if (status == POStatus.Delivered && oldStatus != POStatus.Delivered)
+                {
+                    // Refined logic: Loop through all items in the PO
+                    foreach (var item in po.PurchaseOrderItems)
+                    {
+                        var itemInv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == po.WarehouseId);
+                        
+                        if (itemInv == null)
+                        {
+                            throw new InvalidOperationException($"Inventory record missing for Product ID {item.ProductId} in Warehouse {po.WarehouseId}. Cannot complete delivery.");
+                        }
+
+                        if (itemInv.QuantityReserved < item.Quantity)
+                        {
+                            // Safety guard: if reservation was already cleaned up but Hand is still there, adjust Hand only
+                            // But usually we expect reserved stock to be there if we follow the reservation flow.
+                            _logger.LogWarning("Insufficient reserved stock for Product ID {ProductId} during delivery. Adjusting Hand only.", item.ProductId);
+                        }
+                        else 
+                        {
+                            itemInv.QuantityReserved -= item.Quantity;
+                        }
+
+                        itemInv.QuantityOnHand -= item.Quantity;
+                        
+                        if (itemInv.QuantityOnHand < 0) itemInv.QuantityOnHand = 0; // Safety
+                        
+                        _context.Update(itemInv);
+
+                        // 🆕 Low Stock Notification Logic
+                        var manager = await _context.SupplierEmployees
+                            .FirstOrDefaultAsync(e => e.WarehouseId == po.WarehouseId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
+
+                        if (manager != null && manager.NotifyLowStock && itemInv.QuantityOnHand <= manager.LowStockThreshold)
+                        {
+                            _context.Notifications.Add(new Notification
+                            {
+                                UserId = manager.UserId,
+                                Title = "Low Stock Alert ⚠️",
+                                Message = $"Product {item.Product?.ProductName ?? "Unknown"} is below threshold ({itemInv.QuantityOnHand} remaining in {po.Warehouse?.Name}).",
+                                Type = "Warning",
+                                ActionUrl = "/Warehouse/Alerts",
+                                CreatedAt = DateTime.Now,
+                                IsRead = false
+                            });
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
                 return po;
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                throw; // Preserve error message for Controller
+                _logger.LogError(ex, "Failed to update Purchase Order {Id} to status {Status}", id, status);
+                throw; 
             }
         }
     }

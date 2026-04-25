@@ -15,11 +15,13 @@ namespace SCM_System.Controllers
     {
         private readonly ITenderService _tenderService;
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public TenderController(ITenderService tenderService, ApplicationDbContext context)
+        public TenderController(ITenderService tenderService, ApplicationDbContext context, INotificationService notificationService)
         {
             _tenderService = tenderService;
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IActionResult> Index()
@@ -172,6 +174,7 @@ namespace SCM_System.Controllers
                 }).ToList();
 
                 await _tenderService.CreateTenderAsync(tender, items);
+
                 TempData["SuccessMessage"] = "Tender published successfully!";
                 return RedirectToAction(nameof(Index));
             }
@@ -232,6 +235,8 @@ namespace SCM_System.Controllers
 
             return RedirectToAction(nameof(Details), new { id = tenderId });
         }
+
+
 
         private async Task<int> GetRetailerIdAsync()
         {

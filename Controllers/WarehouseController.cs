@@ -7,23 +7,31 @@ using SCM_System.Models.Enums;
 using SCM_System.Models.Constants;
 using SCM_System.Services;
 using System.Security.Claims;
+using SCM_System.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Hosting;
+using System.Text.Json;
 
 namespace SCM_System.Controllers
 {
-    [Authorize(Roles = "WarehouseManager")]
+    [Authorize(Roles = "Warehouse,WarehouseManager")]
     [Route("Warehouse")]
     public class WarehouseController(
         ApplicationDbContext context, 
         IPurchaseOrderService poService, 
         IAuditLogService auditLogService, 
         ISupplierService supplierService, 
-        IInventoryService inventoryService) : Controller
+        IInventoryService inventoryService,
+        ILogger<WarehouseController> logger,
+        IWebHostEnvironment env) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly IPurchaseOrderService _poService = poService;
         private readonly IAuditLogService _auditLogService = auditLogService;
         private readonly ISupplierService _supplierService = supplierService;
         private readonly IInventoryService _inventoryService = inventoryService;
+        private readonly ILogger<WarehouseController> _logger = logger;
+        private readonly IWebHostEnvironment _env = env;
 
         [Route("")]
         [Route("Index")]
@@ -43,6 +51,16 @@ namespace SCM_System.Controllers
 
         private async Task<SupplierEmployee?> GetCurrentManagerAsync()
         {
+            var employeeIdStr = User.FindFirstValue("EmployeeId");
+            if (int.TryParse(employeeIdStr, out int employeeId))
+            {
+                return await _context.SupplierEmployees
+                    .Include(e => e.Warehouse)
+                    .Include(e => e.User)
+                    .FirstOrDefaultAsync(e => e.Id == employeeId);
+            }
+            
+            // Fallback to UserId if claim is missing
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
@@ -51,7 +69,7 @@ namespace SCM_System.Controllers
                     .Include(e => e.HubAccesses)
                         .ThenInclude(a => a.Warehouse)
                     .Include(e => e.WarehouseAssignments)
-                    .FirstOrDefaultAsync(e => e.UserId == userId && e.EmployeeRole == "WarehouseManager");
+                    .FirstOrDefaultAsync(e => e.UserId == userId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
             }
             return null;
         }
@@ -59,66 +77,91 @@ namespace SCM_System.Controllers
         [Route("Dashboard/{warehouseId?}")]
         public async Task<IActionResult> Dashboard(int? warehouseId)
         {
-            var manager = await GetCurrentManagerAsync();
-            if (manager == null) return Unauthorized();
-
-            // Multi-hub Logic: If no ID provided and manager has multiple, show selection
-            if (warehouseId == null && manager.WarehouseAssignments.Count(wa => wa.IsActive) > 1)
+            try
             {
-                var accessibleHubs = await _context.Warehouses
-                    .Where(w => manager.WarehouseAssignments.Any(wa => wa.WarehouseId == w.Id && wa.IsActive))
+                var manager = await GetCurrentManagerAsync();
+                if (manager == null) 
+                {
+                    _logger.LogWarning("Warehouse manager login failed: Record not found for user {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
+                    return Unauthorized();
+                }
+
+                // Multi-hub Logic: If no ID provided and manager has multiple, show selection
+                if (warehouseId == null && manager.WarehouseAssignments.Count(wa => wa.IsActive) > 1)
+                {
+                    var accessibleHubs = await _context.Warehouses
+                        .Where(w => manager.WarehouseAssignments.Any(wa => wa.WarehouseId == w.Id && wa.IsActive))
+                        .ToListAsync();
+                    return View("HubSelection", accessibleHubs);
+                }
+
+                int wId = warehouseId ?? manager.WarehouseId ?? 0;
+                if (wId == 0 && manager.WarehouseAssignments.Any(wa => wa.IsActive)) wId = manager.WarehouseAssignments.First(wa => wa.IsActive).WarehouseId;
+
+                // Strict Guard: Check if manager has access to this warehouse
+                bool hasAccess = manager.WarehouseId == wId || 
+                     manager.WarehouseAssignments.Any(wa => wa.WarehouseId == wId && wa.IsActive) ||
+                     manager.HubAccesses.Any(a => a.WarehouseId == wId);
+
+                if (!hasAccess)
+                {
+                    return Unauthorized("You do not have access to this warehouse hub.");
+                }
+
+                int sId = manager.SupplierId;
+                var warehouse = await _context.Warehouses.FindAsync(wId);
+                if (warehouse == null) return NotFound();
+
+                var pos = await _context.PurchaseOrders
+                    .Include(p => p.Retailer)
+                    .Include(p => p.PurchaseOrderItems)
+                        .ThenInclude(i => i.Product)
+                    .Where(p => p.WarehouseId == wId && p.Status != POStatus.Cancelled)
                     .ToListAsync();
-                return View("HubSelection", accessibleHubs);
+
+                ViewBag.Manager = manager;
+                ViewBag.Warehouse = warehouse;
+                ViewBag.SelectedWarehouseId = wId;
+                ViewBag.WarehouseLocation = manager.DefaultWarehouseLocation ?? warehouse?.Address ?? "Not Set";
+                
+                // Comprehensive Metrics
+                ViewBag.TotalOrders = pos.Count;
+                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Processing);
+                ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
+                ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
+                ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
+                
+                // Stock Summary
+                var inventories = await _context.Inventories
+                    .Where(i => i.WarehouseId == wId)
+                    .ToListAsync();
+                
+                ViewBag.TotalReserved = inventories.Sum(i => i.QuantityReserved);
+                ViewBag.TotalOnHand = inventories.Sum(i => i.QuantityOnHand);
+                ViewBag.LowStockCount = inventories.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 20);
+                ViewBag.LowStockAlertCount = inventories.Count(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 20));
+
+                // Audit Logs for this Warehouse
+                ViewBag.RecentLogs = await _auditLogService.GetLogsForEntityAsync("Warehouse", wId.ToString());
+
+                // Quick Stats (Fleet & Staff)
+                ViewBag.ActiveAgents = await _context.SupplierEmployees
+                    .CountAsync(e => e.SupplierId == sId && (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person") && e.IsActive);
+                
+                ViewBag.AvailableVehicles = await _context.Vehicles
+                    .CountAsync(v => v.SupplierId == sId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available);
+
+                // Notifications (Recent updates)
+                ViewBag.RecentAlerts = pos.OrderByDescending(p => p.UpdatedAt).Take(5).ToList();
+
+                return View(pos);
             }
-
-            int wId = warehouseId ?? manager.WarehouseId ?? 0;
-            if (wId == 0 && manager.WarehouseAssignments.Any(wa => wa.IsActive)) wId = manager.WarehouseAssignments.First(wa => wa.IsActive).WarehouseId;
-
-            // Strict Guard: Check if manager has access to this warehouse
-            bool hasAccess = manager.WarehouseId == wId || 
-                 manager.WarehouseAssignments.Any(wa => wa.WarehouseId == wId && wa.IsActive) ||
-                 manager.HubAccesses.Any(a => a.WarehouseId == wId);
-
-            if (!hasAccess)
+            catch (Exception ex)
             {
-                return Unauthorized("You do not have access to this warehouse hub.");
+                _logger.LogError(ex, "Error loading Warehouse Dashboard");
+                TempData["ErrorMessage"] = "Error loading dashboard: " + ex.Message;
+                return RedirectToAction("Login", "Account");
             }
-
-            var warehouse = await _context.Warehouses.FindAsync(wId);
-            if (warehouse == null) return NotFound();
-
-            var pos = await _context.PurchaseOrders
-                .Include(p => p.Retailer)
-                .Include(p => p.PurchaseOrderItems)
-                    .ThenInclude(i => i.Product)
-                .Include(p => p.InventoryReservations)
-                .Where(p => p.WarehouseId == wId && p.Status != POStatus.Cancelled)
-                .ToListAsync();
-
-            ViewBag.Manager = manager;
-            ViewBag.Warehouse = warehouse;
-            ViewBag.SelectedWarehouseId = wId;
-            
-            // Comprehensive Metrics
-            ViewBag.TotalOrders = pos.Count;
-            ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Processing);
-            ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
-            ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
-            ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
-            
-            // Stock Summary
-            var inventories = await _context.Inventories
-                .Where(i => i.WarehouseId == wId)
-                .ToListAsync();
-            
-            ViewBag.TotalReserved = inventories.Sum(i => i.QuantityReserved);
-            ViewBag.TotalOnHand = inventories.Sum(i => i.QuantityOnHand);
-            ViewBag.LowStockCount = inventories.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 20);
-
-            // Audit Logs for this Warehouse
-            ViewBag.RecentLogs = await _auditLogService.GetLogsForEntityAsync("Warehouse", wId.ToString());
-
-            return View(pos);
         }
 
         [Route("AssignDelivery/{id?}")]
@@ -163,6 +206,7 @@ namespace SCM_System.Controllers
                 .ToListAsync();
 
             ViewBag.SelectedWarehouseId = wId;
+            ViewBag.PicklistFormat = manager.PicklistFormat ?? "Detailed";
             return View(pos);
         }
 
@@ -182,6 +226,89 @@ namespace SCM_System.Controllers
                 plate = vehicle.LicensePlate,
                 type = vehicle.VehicleType.ToString()
             });
+        }
+
+        [HttpGet]
+        [Route("AddStock")]
+        public async Task<IActionResult> AddStock()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            var products = await _context.Products
+                .Where(p => p.SupplierId == manager.SupplierId && !p.IsDeleted)
+                .OrderBy(p => p.ProductName)
+                .ToListAsync();
+
+            ViewBag.Products = new SelectList(products, "Id", "ProductName");
+            return View(new AddStockViewModel());
+        }
+
+        [HttpPost]
+        [Route("AddStock")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStock(AddStockViewModel model)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || !manager.WarehouseId.HasValue) return Unauthorized();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // 1. Update Inventory
+                    var inventory = await _context.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == model.ProductId && i.WarehouseId == manager.WarehouseId);
+
+                    if (inventory == null)
+                    {
+                        inventory = new Inventory
+                        {
+                            ProductId = model.ProductId,
+                            WarehouseId = manager.WarehouseId.Value,
+                            QuantityOnHand = model.QuantityToAdd,
+                            QuantityReserved = 0,
+                            WarehouseLocation = manager.DefaultWarehouseLocation ?? "Main Floor",
+                            LastUpdated = DateTime.Now
+                        };
+                        _context.Inventories.Add(inventory);
+                    }
+                    else
+                    {
+                        inventory.QuantityOnHand += model.QuantityToAdd;
+                        inventory.LastUpdated = DateTime.Now;
+                    }
+
+                    // 2. Log History
+                    var history = new InventoryHistory
+                    {
+                        ProductId = model.ProductId,
+                        WarehouseId = manager.WarehouseId.Value,
+                        SupplierEmployeeId = manager.Id,
+                        Quantity = model.QuantityToAdd,
+                        BatchNumber = model.BatchNumber,
+                        ExpiryDate = model.ExpiryDate,
+                        Notes = model.Notes,
+                        Timestamp = DateTime.Now
+                    };
+                    _context.InventoryHistories.Add(history);
+
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Stock successfully added to inventory!";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error updating inventory: " + ex.Message);
+                }
+            }
+
+            // If we got here, something failed; redisplay form
+            var products = await _context.Products
+                .Where(p => p.SupplierId == manager.SupplierId && !p.IsDeleted)
+                .ToListAsync();
+            ViewBag.Products = new SelectList(products, "Id", "ProductName", model.ProductId);
+            return View(model);
         }
 
         [Route("Packing")]
@@ -248,11 +375,13 @@ namespace SCM_System.Controllers
             int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
             if (manager == null || !wId.HasValue) return Unauthorized();
 
+            var threshold = manager.LowStockThreshold;
             var lowStock = await _context.Inventories
                 .Include(i => i.Product)
-                .Where(i => i.WarehouseId == wId.Value && (i.QuantityOnHand - i.QuantityReserved) < 20)
+                .Where(i => i.WarehouseId == wId.Value && (i.QuantityOnHand - i.QuantityReserved) < (threshold > 0 ? threshold : 20))
                 .ToListAsync();
 
+            ViewBag.Threshold = threshold;
             return View(lowStock);
         }
 
@@ -325,7 +454,7 @@ namespace SCM_System.Controllers
             {
                 TotalFulfilled = await _context.PurchaseOrders.CountAsync(p => p.WarehouseId == wId.Value && p.Status == POStatus.Completed),
                 CurrentDispatches = await _context.PurchaseOrders.CountAsync(p => p.WarehouseId == wId.Value && p.Status == POStatus.InTransit),
-                LowStockItems = await _context.Inventories.CountAsync(i => i.WarehouseId == wId.Value && (i.QuantityOnHand - i.QuantityReserved) < 20),
+                LowStockItems = await _context.Inventories.CountAsync(i => i.WarehouseId == wId.Value && (i.QuantityOnHand - i.QuantityReserved) < (manager.LowStockThreshold > 0 ? manager.LowStockThreshold : 20)),
                 WarehouseName = warehouse?.Name ?? "Main Warehouse"
             };
 
@@ -638,7 +767,6 @@ namespace SCM_System.Controllers
             TempData["SuccessMessage"] = "Inventory reconciliation complete. QuantityReserved has been synced with the reservation ledger.";
             return RedirectToAction(nameof(Dashboard));
         }
-    }
 
     public class InboundItemReceiptViewModel
     {
@@ -647,5 +775,254 @@ namespace SCM_System.Controllers
         public int DamagedQty { get; set; }
         public string? BatchNumber { get; set; }
         public DateTime? ExpiryDate { get; set; }
+    }
+
+        [Route("OperationalSettings")]
+        public async Task<IActionResult> OperationalSettings()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            var viewModel = new SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel
+            {
+                EmployeeId = manager.Id,
+                FullName = manager.User?.FullName ?? "",
+                Email = manager.User?.Email ?? "",
+                Phone = manager.User?.PhoneNumber ?? "",
+                ExistingProfileImage = manager.User?.ProfileImage,
+                DefaultWarehouseLocation = manager.DefaultWarehouseLocation,
+                LowStockThreshold = manager.LowStockThreshold,
+                PicklistFormat = manager.PicklistFormat,
+                AutoAcceptPickTasks = manager.AutoAcceptPickTasks,
+                NotifyLowStock = manager.NotifyLowStock,
+                DefaultPackingPriority = manager.DefaultPackingPriority,
+                DailyCutoffTime = manager.DailyCutoffTime,
+                PrintLabelFormat = manager.PrintLabelFormat,
+                EnableVoicePicking = manager.EnableVoicePicking,
+                AssignedZones = string.IsNullOrEmpty(manager.AssignedZones) 
+                    ? new List<string>() 
+                    : JsonSerializer.Deserialize<List<string>>(manager.AssignedZones) ?? new List<string>()
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost("OperationalSettings")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OperationalSettings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
+        {
+            var manager = await _context.SupplierEmployees.FindAsync(model.EmployeeId);
+            if (manager == null) return NotFound();
+
+            manager.DefaultWarehouseLocation = model.DefaultWarehouseLocation;
+            manager.LowStockThreshold = model.LowStockThreshold;
+            manager.PicklistFormat = model.PicklistFormat;
+            manager.AutoAcceptPickTasks = model.AutoAcceptPickTasks;
+            manager.NotifyLowStock = model.NotifyLowStock;
+            manager.DefaultPackingPriority = model.DefaultPackingPriority;
+            manager.DailyCutoffTime = model.DailyCutoffTime;
+            manager.PrintLabelFormat = model.PrintLabelFormat;
+            manager.EnableVoicePicking = model.EnableVoicePicking;
+            manager.AssignedZones = JsonSerializer.Serialize(model.AssignedZones ?? new List<string>());
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Operational preferences updated successfully.";
+            return RedirectToAction(nameof(OperationalSettings));
+        }
+
+        [Route("AccountSettings")]
+        public async Task<IActionResult> AccountSettings()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || manager.User == null) return Unauthorized();
+
+            var viewModel = new SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel
+            {
+                EmployeeId = manager.Id,
+                FullName = manager.User.FullName,
+                Email = manager.User.Email,
+                Phone = manager.User.PhoneNumber ?? "",
+                ExistingProfileImage = manager.User.ProfileImage,
+                EnableTaskAlerts = manager.EnableTaskAlerts,
+                EnableReminders = manager.EnableReminders,
+                NotifyLowStock = manager.NotifyLowStock
+            };
+
+            // Security Details
+            ViewBag.TfaEnabled = manager.User.TwoFactorEnabled;
+            
+            // Active Sessions
+            ViewBag.ActiveSessions = await _context.UserSessions
+                .Where(s => s.UserId == manager.UserId && s.IsActive)
+                .OrderByDescending(s => s.LastActivityTime)
+                .ToListAsync();
+
+            // Login History
+            ViewBag.LoginHistory = await _context.AuditLogs
+                .Where(l => l.PerformedByUserId == manager.UserId && l.ActionType == "Login")
+                .OrderByDescending(l => l.PerformedAtUtc)
+                .Take(10)
+                .ToListAsync();
+
+            return View(viewModel);
+        }
+
+        [HttpPost("AccountSettings")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AccountSettings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
+        {
+            var manager = await _context.SupplierEmployees
+                .Include(e => e.User)
+                .FirstOrDefaultAsync(e => e.Id == model.EmployeeId);
+
+            if (manager == null || manager.User == null) return NotFound();
+
+            // 1. Update Identity
+            manager.User.FullName = model.FullName;
+            manager.User.PhoneNumber = model.Phone;
+            manager.FullName = model.FullName;
+            manager.Phone = model.Phone;
+            
+            // 2. Notification Preferences
+            manager.EnableTaskAlerts = model.EnableTaskAlerts;
+            manager.EnableReminders = model.EnableReminders;
+            manager.NotifyLowStock = model.NotifyLowStock;
+
+            // 3. Profile Picture
+            if (model.ProfilePicture != null)
+            {
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = $"profile_{manager.UserId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.ProfilePicture.FileName)}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ProfilePicture.CopyToAsync(fileStream);
+                }
+
+                manager.User.ProfileImage = $"/uploads/profiles/{uniqueFileName}";
+                manager.ProfilePhotoPath = manager.User.ProfileImage;
+            }
+
+            // 4. Password Security
+            if (!string.IsNullOrEmpty(model.NewPassword))
+            {
+                if (string.IsNullOrEmpty(model.CurrentPassword))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Current password is required.");
+                    return await AccountSettings();
+                }
+
+                if (manager.User.PasswordHash != HashPassword(model.CurrentPassword))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Incorrect current password.");
+                    return await AccountSettings();
+                }
+
+                manager.User.PasswordHash = HashPassword(model.NewPassword);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Account security and profile updated successfully.";
+            return RedirectToAction(nameof(AccountSettings));
+        }
+
+        [HttpPost("Toggle2FA")]
+        public async Task<IActionResult> Toggle2FA(bool enable)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || manager.User == null) return Json(new { success = false, message = "User not found." });
+
+            if (!enable)
+            {
+                manager.User.TwoFactorEnabled = false;
+                manager.User.TwoFactorSecret = null;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+
+            // Generate Secret using GoogleAuthenticator
+            string secret = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10).ToUpper();
+            manager.User.TwoFactorSecret = secret;
+            await _context.SaveChangesAsync();
+
+            // Using Google.Authenticator library
+            var tfa = new Google.Authenticator.TwoFactorAuthenticator();
+            var setupInfo = tfa.GenerateSetupCode("SCM System", manager.User.Email, secret, false, 3);
+            
+            return Json(new { success = true, qrCodeUri = setupInfo.QrCodeSetupImageUrl, manualEntryKey = setupInfo.ManualEntryKey });
+        }
+
+        [HttpPost("Verify2FA")]
+        public async Task<IActionResult> Verify2FA(string code)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || manager.User == null || string.IsNullOrEmpty(manager.User.TwoFactorSecret)) 
+                return Json(new { success = false, message = "Invalid setup." });
+
+            var tfa = new Google.Authenticator.TwoFactorAuthenticator();
+            bool isValid = tfa.ValidateTwoFactorPIN(manager.User.TwoFactorSecret, code);
+
+            if (isValid)
+            {
+                manager.User.TwoFactorEnabled = true;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false, message = "Invalid verification code." });
+        }
+
+        [HttpPost("RevokeSession")]
+        public async Task<IActionResult> RevokeSession(string sessionId)
+        {
+            var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.SessionToken == sessionId);
+            if (session != null)
+            {
+                session.IsActive = false;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false, message = "Session not found." });
+        }
+
+        [HttpPost("DeactivateAccount")]
+        public async Task<IActionResult> DeactivateAccount(string password)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null || manager.User == null) return Json(new { success = false, message = "User not found." });
+
+            if (manager.User.PasswordHash != HashPassword(password))
+            {
+                return Json(new { success = false, message = "Incorrect password." });
+            }
+
+            manager.User.AccountStatus = "Inactive";
+            manager.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            // Audit
+            await _auditLogService.LogActionAsync("User", manager.UserId.ToString(), "Deactivate", notes: "Account self-deactivated by Warehouse Manager");
+
+            // Sign out
+            HttpContext.Session.Clear();
+            return Json(new { success = true });
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                var builder = new System.Text.StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
     }
 }

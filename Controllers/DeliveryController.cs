@@ -14,12 +14,14 @@ namespace SCM_System.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IOrderService _orderService;
         private readonly IPurchaseOrderService _poService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public DeliveryController(ApplicationDbContext context, IOrderService orderService, IPurchaseOrderService poService)
+        public DeliveryController(ApplicationDbContext context, IOrderService orderService, IPurchaseOrderService poService, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _orderService = orderService;
             _poService = poService;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         private async Task<int> GetEmployeeIdAsync()
@@ -31,6 +33,155 @@ namespace SCM_System.Controllers
                 return employee?.Id ?? 0;
             }
             return 0;
+        }
+
+        [Authorize(Roles = "DeliveryAgent")]
+        public async Task<IActionResult> Settings()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var employee = await _context.SupplierEmployees
+                .Include(e => e.User)
+                .FirstOrDefaultAsync(e => e.UserId == userId);
+
+            if (employee == null) return NotFound();
+
+            // Stats for Performance Section
+            var now = DateTime.Now;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            
+            var deliveries = await _context.PurchaseOrders
+                .Where(po => po.DeliveryAgentId == employee.Id && po.DeliveredAt >= startOfMonth)
+                .ToListAsync();
+
+            var totalDeliveries = deliveries.Count;
+            var onTimeDeliveries = deliveries.Count(po => po.DeliveredAt.HasValue && po.DeliveredAt <= po.ExpectedDeliveryDate);
+            var onTimePercentage = totalDeliveries > 0 ? (double)onTimeDeliveries / totalDeliveries * 100 : 100;
+
+            var ratings = await _context.Ratings
+                .Where(r => r.PurchaseOrder.DeliveryAgentId == employee.Id)
+                .Select(r => r.RatingValue)
+                .ToListAsync();
+            
+            var averageRating = ratings.Any() ? Math.Round(ratings.Average(), 1) : 5.0;
+
+            var model = new SCM_System.Models.ViewModels.DeliverySettingsViewModel
+            {
+                FullName = employee.User.FullName ?? "",
+                Email = employee.User.Email ?? "",
+                Phone = employee.User.PhoneNumber ?? employee.Phone ?? "",
+                ExistingProfilePicture = employee.ProfilePhotoPath,
+                VehicleId = employee.VehicleId,
+                IsOnDuty = employee.IsOnDuty,
+                WorkingHoursStart = employee.WorkingHoursStart,
+                WorkingHoursEnd = employee.WorkingHoursEnd,
+                MaxDailyDeliveries = employee.MaxDailyDeliveries,
+                RequireProofPhoto = employee.RequireProofPhoto,
+                RequireSignature = employee.RequireSignature,
+                AutoAcceptAssignments = employee.AutoAcceptAssignments,
+                AllowNightDeliveries = employee.AllowNightDeliveries,
+                NotifyNewAssignment = employee.NotifyNewAssignment,
+                SmsNotificationNumber = employee.SmsNotificationNumber,
+                TotalDeliveriesMonth = totalDeliveries,
+                AverageRating = averageRating,
+                OnTimePercentage = Math.Round(onTimePercentage, 1)
+            };
+
+            ViewBag.Vehicles = await _context.Vehicles
+                .Where(v => v.SupplierId == employee.SupplierId && v.IsActive && !v.IsDeleted)
+                .ToListAsync();
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "DeliveryAgent")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Settings(SCM_System.Models.ViewModels.DeliverySettingsViewModel model)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var employee = await _context.SupplierEmployees
+                .Include(e => e.User)
+                .FirstOrDefaultAsync(e => e.UserId == userId);
+
+            if (employee == null) return NotFound();
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Vehicles = await _context.Vehicles
+                    .Where(v => v.SupplierId == employee.SupplierId && v.IsActive && !v.IsDeleted)
+                    .ToListAsync();
+                return View(model);
+            }
+
+            // Update User Profile
+            employee.User.FullName = model.FullName;
+            employee.User.Email = model.Email;
+            employee.User.PhoneNumber = model.Phone;
+
+            // Handle Profile Picture
+            if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
+            {
+                var fileName = $"profile_{userId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.ProfilePicture.FileName)}";
+                var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "profiles");
+                if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
+                
+                var filePath = Path.Combine(uploadPath, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ProfilePicture.CopyToAsync(stream);
+                }
+                employee.ProfilePhotoPath = $"/uploads/profiles/{fileName}";
+            }
+
+            // Update Password if requested
+            if (!string.IsNullOrEmpty(model.NewPassword))
+            {
+                if (string.IsNullOrEmpty(model.CurrentPassword) || employee.User.PasswordHash != HashPassword(model.CurrentPassword))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Current password is incorrect.");
+                    ViewBag.Vehicles = await _context.Vehicles
+                        .Where(v => v.SupplierId == employee.SupplierId && v.IsActive && !v.IsDeleted)
+                        .ToListAsync();
+                    return View(model);
+                }
+                employee.User.PasswordHash = HashPassword(model.NewPassword);
+            }
+
+            // Update Delivery Preferences & Availability
+            employee.VehicleId = model.VehicleId;
+            employee.IsOnDuty = model.IsOnDuty;
+            employee.WorkingHoursStart = model.WorkingHoursStart;
+            employee.WorkingHoursEnd = model.WorkingHoursEnd;
+            employee.MaxDailyDeliveries = model.MaxDailyDeliveries;
+            employee.RequireProofPhoto = model.RequireProofPhoto;
+            employee.RequireSignature = model.RequireSignature;
+            employee.AutoAcceptAssignments = model.AutoAcceptAssignments;
+            employee.AllowNightDeliveries = model.AllowNightDeliveries;
+            employee.NotifyNewAssignment = model.NotifyNewAssignment;
+            employee.SmsNotificationNumber = model.SmsNotificationNumber;
+
+            employee.UpdatedAt = DateTime.Now;
+            employee.UpdatedBy = User.Identity?.Name ?? "System";
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Settings updated successfully.";
+            return RedirectToAction(nameof(Settings));
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                var builder = new System.Text.StringBuilder();
+                for (int i = 0; i < bytes.Length; i++) builder.Append(bytes[i].ToString("x2"));
+                return builder.ToString();
+            }
         }
 
 

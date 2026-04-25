@@ -1,0 +1,696 @@
+@model SCM_System.Models.ViewModels.AdminSettingsViewModel
+@{
+    ViewData["Title"] = "Platform Settings";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold mb-1"><i class="fas fa-cogs text-primary me-2"></i>Platform Settings</h2>
+            <p class="text-muted">Manage global configuration, security, notifications, and platform parameters.</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form asp-action="Settings" asp-controller="Admin" method="post" enctype="multipart/form-data" id="adminSettingsForm">
+        <div class="row g-4">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 20px;">
+                    <div class="card-body p-3">
+                        <ul class="nav nav-pills flex-column nav-pills-custom" id="settingsTabs" role="tablist">
+                            <!-- 1. Profile -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link active" id="tab-profile" data-bs-toggle="pill" href="#pane-profile" role="tab">
+                                    <i class="fas fa-user me-2 w-20px"></i>Personal Profile
+                                </a>
+                            </li>
+                            <!-- 2. Password -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-password" data-bs-toggle="pill" href="#pane-password" role="tab">
+                                    <i class="fas fa-key me-2 w-20px"></i>Change Password
+                                </a>
+                            </li>
+                            <!-- 3. Security -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-security" data-bs-toggle="pill" href="#pane-security" role="tab">
+                                    <i class="fas fa-shield-alt me-2 w-20px"></i>Security Hub
+                                </a>
+                            </li>
+                            <!-- 4. Active Sessions -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-sessions" data-bs-toggle="pill" href="#pane-sessions" role="tab">
+                                    <i class="fas fa-desktop me-2 w-20px"></i>Active Sessions
+                                </a>
+                            </li>
+                            <!-- 5. Login History -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-history" data-bs-toggle="pill" href="#pane-history" role="tab">
+                                    <i class="fas fa-history me-2 w-20px"></i>Login History
+                                </a>
+                            </li>
+                            <hr class="my-2 border-light">
+                            <!-- 6. Platform Commissions -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-commissions" data-bs-toggle="pill" href="#pane-commissions" role="tab">
+                                    <i class="fas fa-percentage me-2 w-20px"></i>Commissions
+                                </a>
+                            </li>
+                            <!-- 7. Penalty Rules -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-penalties" data-bs-toggle="pill" href="#pane-penalties" role="tab">
+                                    <i class="fas fa-gavel me-2 w-20px"></i>Penalty Rules
+                                </a>
+                            </li>
+                            <!-- 8. Operations Config -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-operations" data-bs-toggle="pill" href="#pane-operations" role="tab">
+                                    <i class="fas fa-truck-loading me-2 w-20px"></i>Operations Defaults
+                                </a>
+                            </li>
+                            <!-- 9. User Onboarding -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-onboarding" data-bs-toggle="pill" href="#pane-onboarding" role="tab">
+                                    <i class="fas fa-user-plus me-2 w-20px"></i>User Onboarding
+                                </a>
+                            </li>
+                            <!-- 10. Email Templates -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-emails" data-bs-toggle="pill" href="#pane-emails" role="tab">
+                                    <i class="fas fa-envelope-open-text me-2 w-20px"></i>Email Templates
+                                </a>
+                            </li>
+                            <!-- 11. Global System -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-system" data-bs-toggle="pill" href="#pane-system" role="tab">
+                                    <i class="fas fa-globe me-2 w-20px"></i>Global Settings
+                                </a>
+                            </li>
+                            <!-- 12. Payment Gateway -->
+                            <li class="nav-item mb-1">
+                                <a class="nav-link" id="tab-payment" data-bs-toggle="pill" href="#pane-payment" role="tab">
+                                    <i class="fas fa-credit-card me-2 w-20px"></i>Chapa Config
+                                </a>
+                            </li>
+                            <!-- 13. Danger Zone -->
+                            <li class="nav-item mt-3">
+                                <a class="nav-link text-danger" id="tab-danger" data-bs-toggle="pill" href="#pane-danger" role="tab">
+                                    <i class="fas fa-exclamation-triangle me-2 w-20px"></i>Danger Zone
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold">
+                                <i class="fas fa-save me-2"></i>Save All Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-lg-9 col-md-8">
+                <div class="tab-content bg-white p-4 rounded-4 shadow-sm border-0" id="settingsTabContent">
+                    
+                    <!-- 1. Profile -->
+                    <div class="tab-pane fade show active" id="pane-profile" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Personal Profile</h4>
+                        <div class="row g-4 align-items-center mb-4">
+                            <div class="col-auto">
+                                <div class="position-relative">
+                                    <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) ? "/images/default-avatar.png" : Model.ProfilePicture)" 
+                                         class="rounded-circle shadow-sm" width="120" height="120" id="profileImagePreview" style="object-fit: cover;" />
+                                    <label for="ProfilePictureFile" class="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0 shadow">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                    <input type="file" asp-for="ProfilePictureFile" id="ProfilePictureFile" class="d-none" accept="image/*" onchange="previewImage(event)">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <h5 class="fw-bold mb-1">@Model.FullName</h5>
+                                <p class="text-muted mb-0">Platform Administrator</p>
+                            </div>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Full Name</label>
+                                    <input asp-for="FullName" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Email Address (Read-only)</label>
+                                    <input asp-for="Email" class="form-control rounded-pill bg-light border-0 px-4" readonly />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Phone Number</label>
+                                    <input asp-for="Phone" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Password -->
+                    <div class="tab-pane fade" id="pane-password" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Change Password</h4>
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Current Password</label>
+                                    <input asp-for="CurrentPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">New Password</label>
+                                    <input asp-for="NewPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Confirm New Password</label>
+                                    <input asp-for="ConfirmPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Security Hub -->
+                    <div class="tab-pane fade" id="pane-security" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Security Hub</h4>
+                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4 mb-4">
+                            <div>
+                                <h6 class="fw-bold mb-1"><i class="fas fa-shield-alt text-success me-2"></i>Two-Factor Authentication (2FA)</h6>
+                                <p class="small text-muted mb-0">Add an extra layer of security to your admin account.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input fs-4" type="checkbox" asp-for="TwoFactorEnabled" id="twoFactorSwitch">
+                            </div>
+                        </div>
+                        
+                        @if (!Model.TwoFactorEnabled && ViewBag.QrCodeImageUrl != null)
+                        {
+                            <div class="alert alert-warning rounded-4 border-0 shadow-sm" id="setup2faDiv">
+                                <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i>Setup Instructions</h6>
+                                <ol class="small mb-0">
+                                    <li>Download Google Authenticator or Authy.</li>
+                                    <li>Scan the QR code below.</li>
+                                    <li>Enter the generated PIN to verify.</li>
+                                </ol>
+                                <div class="text-center mt-3">
+                                    <img src="@ViewBag.QrCodeImageUrl" alt="QR Code" class="img-thumbnail rounded-3 mb-2" />
+                                    <p class="small text-muted font-monospace">@ViewBag.ManualSetupKey</p>
+                                </div>
+                                <div class="input-group mt-3 mx-auto" style="max-width: 300px;">
+                                    <input type="text" id="pin2fa" class="form-control rounded-start-pill" placeholder="Enter PIN" />
+                                    <button type="button" class="btn btn-dark rounded-end-pill" onclick="verify2FA()">Verify</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- 4. Active Sessions -->
+                    <div class="tab-pane fade" id="pane-sessions" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Active Sessions</h4>
+                        @if (Model.ActiveSessions.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Device / Browser</th>
+                                            <th>IP Address</th>
+                                            <th>Last Active</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var session in Model.ActiveSessions)
+                                        {
+                                            <tr>
+                                                <td><i class="fas fa-desktop text-muted me-2"></i>@session.UserAgent</td>
+                                                <td>@session.IpAddress</td>
+                                                <td>@session.LastActivityTime.ToString("MMM dd, yyyy HH:mm")</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="revokeSession(@session.Id)">Revoke</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No other active sessions found.</p>
+                        }
+                    </div>
+
+                    <!-- 5. Login History -->
+                    <div class="tab-pane fade" id="pane-history" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Login History</h4>
+                        @if (Model.LoginHistory.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>IP Address</th>
+                                            <th>Device Details</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var log in Model.LoginHistory)
+                                        {
+                                            <tr>
+                                                <td>@log.PerformedAtUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</td>
+                                                <td>@log.IpAddress</td>
+                                                <td class="small text-truncate" style="max-width: 200px;" title="@log.UserAgent">@log.UserAgent</td>
+                                                <td><span class="badge bg-success rounded-pill">Success</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-end">
+                                <a href="/Admin/ExportAuditLogs" class="btn btn-outline-secondary rounded-pill btn-sm"><i class="fas fa-download me-2"></i>Download Full History</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No recent login history available.</p>
+                        }
+                    </div>
+
+                    <!-- 6. Commissions -->
+                    <div class="tab-pane fade" id="pane-commissions" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Commission Rates (%)</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold text-muted"><i class="fas fa-medal text-warning me-2"></i>Bronze Tier</label>
+                                    <input asp-for="CommissionBronze" type="number" step="0.1" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold text-muted"><i class="fas fa-medal text-secondary me-2"></i>Silver Tier</label>
+                                    <input asp-for="CommissionSilver" type="number" step="0.1" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold text-muted"><i class="fas fa-medal text-warning me-2"></i>Gold Tier</label>
+                                    <input asp-for="CommissionGold" type="number" step="0.1" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold text-muted"><i class="fas fa-gem text-info me-2"></i>Platinum Tier</label>
+                                    <input asp-for="CommissionPlatinum" type="number" step="0.1" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Penalty Rules -->
+                    <div class="tab-pane fade" id="pane-penalties" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Penalty Rules & Thresholds</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Warning Threshold (Violations)</label>
+                                    <input asp-for="PenaltyWarningThreshold" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
+                                    <div class="form-text">Violations before official warning.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Suspension Duration (Days)</label>
+                                    <input asp-for="PenaltySuspensionDays" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
+                                    <div class="form-text">Days account is suspended upon reaching limit.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8. Operations Config -->
+                    <div class="tab-pane fade" id="pane-operations" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Operations & Supply Defaults</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Low Stock Default Threshold</label>
+                                    <input asp-for="LowStockDefaultThreshold" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Max Tender Duration (Days)</label>
+                                    <input asp-for="MaxTenderDays" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Order Auto-Cancellation (Hours)</label>
+                                    <input asp-for="OrderCancellationHours" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Escrow Auto-Release (Days)</label>
+                                    <input asp-for="AutoReleaseEscrowDays" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 9. User Onboarding -->
+                    <div class="tab-pane fade" id="pane-onboarding" role="tabpanel">
+                        <h4 class="fw-bold mb-4">User Onboarding Policies</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch p-3 bg-light rounded-4">
+                                    <input class="form-check-input ms-0 me-3 fs-4" type="checkbox" asp-for="RequireSupplierApproval">
+                                    <label class="form-check-label fw-bold">Require Admin Approval for Suppliers</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch p-3 bg-light rounded-4">
+                                    <input class="form-check-input ms-0 me-3 fs-4" type="checkbox" asp-for="RequireRetailerApproval">
+                                    <label class="form-check-label fw-bold">Require Admin Approval for Retailers</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch p-3 bg-light rounded-4">
+                                    <input class="form-check-input ms-0 me-3 fs-4" type="checkbox" asp-for="EnableFaydaVerification">
+                                    <label class="form-check-label fw-bold">Enforce Fayda Digital ID Verification</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Default Account Status</label>
+                                    <select asp-for="DefaultAccountStatus" class="form-select rounded-pill bg-light border-0 px-4">
+                                        <option value="Pending">Pending Approval</option>
+                                        <option value="Active">Active (Auto-Approve)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 10. Email Templates -->
+                    <div class="tab-pane fade" id="pane-emails" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold mb-0">Email Templates</h4>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="sendTestEmail()"><i class="fas fa-paper-plane me-2"></i>Send Test</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Event Type</th>
+                                        <th>Subject Line</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var tmpl in Model.EmailTemplates)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@tmpl.EventType</td>
+                                            <td class="text-truncate" style="max-width: 250px;">@tmpl.Subject</td>
+                                            <td>
+                                                @if(tmpl.IsActive) { <span class="badge bg-success rounded-pill">Active</span> }
+                                                else { <span class="badge bg-secondary rounded-pill">Disabled</span> }
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-light rounded-circle"><i class="fas fa-edit text-primary"></i></button>
+                                            </td>
+                                        </tr>
+                                    }
+                                    @if(!Model.EmailTemplates.Any())
+                                    {
+                                        <tr><td colspan="4" class="text-center text-muted py-3">No templates configured yet.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 11. Global System -->
+                    <div class="tab-pane fade" id="pane-system" role="tabpanel">
+                        <h4 class="fw-bold mb-4">Global System Settings</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Platform URL</label>
+                                    <input asp-for="AppUrl" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Support Email</label>
+                                    <input asp-for="SupportEmail" type="email" class="form-control rounded-pill bg-light border-0 px-4" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Timezone</label>
+                                    <select asp-for="Timezone" class="form-select rounded-pill bg-light border-0 px-4">
+                                        <option value="Africa/Addis_Ababa">Africa/Addis Ababa (EAT)</option>
+                                        <option value="UTC">UTC</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Default Currency</label>
+                                    <select asp-for="Currency" class="form-select rounded-pill bg-light border-0 px-4">
+                                        <option value="ETB">ETB (Birr)</option>
+                                        <option value="USD">USD ($)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Date Format</label>
+                                    <input asp-for="DateFormat" class="form-control rounded-pill bg-light border-0 px-4" placeholder="e.g. dd MMM yyyy" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 12. Payment Gateway -->
+                    <div class="tab-pane fade" id="pane-payment" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold mb-0">Chapa Gateway Config</h4>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input fs-4" type="checkbox" asp-for="ChapaTestMode" id="testModeSwitch" onchange="toggleTestMode(this.checked)">
+                                <label class="form-check-label pt-1 ms-2 fw-bold" for="testModeSwitch">Test Mode</label>
+                            </div>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Secret Key</label>
+                                    <div class="input-group">
+                                        <input asp-for="ChapaSecretKey" type="password" id="chapaSecret" class="form-control rounded-start-pill bg-light border-0 px-4" />
+                                        <button class="btn btn-light border-0 rounded-end-pill" type="button" onclick="togglePassword('chapaSecret')"><i class="fas fa-eye"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold">Webhook Secret</label>
+                                    <div class="input-group">
+                                        <input asp-for="ChapaWebhookSecret" type="password" id="chapaWebhook" class="form-control rounded-start-pill bg-light border-0 px-4" />
+                                        <button class="btn btn-light border-0 rounded-end-pill" type="button" onclick="togglePassword('chapaWebhook')"><i class="fas fa-eye"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 13. Danger Zone -->
+                    <div class="tab-pane fade" id="pane-danger" role="tabpanel">
+                        <h4 class="fw-bold mb-4 text-danger">Danger Zone</h4>
+                        <div class="alert alert-danger border-0 rounded-4 p-4 shadow-sm">
+                            <h5 class="fw-bold mb-3">API Key Generation</h5>
+                            <p class="small mb-3">Generate a new root API key for external integrations. Keep this secure!</p>
+                            <button type="button" class="btn btn-dark rounded-pill px-4 mb-4" onclick="generateApiKey()"><i class="fas fa-key me-2"></i>Generate New Key</button>
+                            
+                            <hr class="border-danger opacity-25 mb-4" />
+
+                            <h5 class="fw-bold mb-3">Deactivate Platform Admin</h5>
+                            <p class="small mb-3">This action will lock your account and log you out immediately. It requires a database manual unlock to restore access.</p>
+                            <button type="button" class="btn btn-outline-danger rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                                <i class="fas fa-trash-alt me-2"></i>Deactivate Account
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Deactivate Modal -->
+<div class="modal fade" id="deactivateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">Confirm Deactivation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you absolutely sure you want to deactivate your admin account? Enter your password to confirm.</p>
+                <form action="/Admin/DeleteAccount" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="password" name="confirmPassword" class="form-control rounded-pill mb-3" placeholder="Enter password" required />
+                    <div class="text-end">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">Yes, Deactivate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    
+    <script>
+        $(document).ready(function () {
+            // Tab persistence
+            var activeTab = localStorage.getItem('adminSettingsTab');
+            if (activeTab) {
+                var tab = new bootstrap.Tab(document.querySelector('#' + activeTab));
+                tab.show();
+            }
+
+            $('a[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
+                localStorage.setItem('adminSettingsTab', e.target.id);
+            });
+
+            // Unsaved changes warning
+            var formChanged = false;
+            $('#adminSettingsForm :input').change(function() { formChanged = true; });
+            $('#adminSettingsForm').submit(function() { formChanged = false; });
+            window.onbeforeunload = function() {
+                if (formChanged) return "You have unsaved changes. Are you sure you want to leave?";
+            };
+        });
+
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('profileImagePreview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function togglePassword(inputId) {
+            var x = document.getElementById(inputId);
+            if (x.type === "password") {
+                x.type = "text";
+            } else {
+                x.type = "password";
+            }
+        }
+
+        function verify2FA() {
+            var pin = $('#pin2fa').val();
+            if(!pin) return toastr.warning("Please enter PIN");
+            
+            $.post('/Admin/Verify2FA', { pin: pin, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
+                location.reload();
+            }).fail(function() {
+                toastr.error("Verification failed. Try again.");
+            });
+        }
+
+        function revokeSession(id) {
+            if(!confirm("Revoke this session?")) return;
+            $.post('/Admin/RevokeSession', { sessionId: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
+                if(res.success) {
+                    toastr.success(res.message);
+                    setTimeout(()=>location.reload(), 1000);
+                } else {
+                    toastr.error(res.message);
+                }
+            });
+        }
+
+        function toggleTestMode(isTest) {
+            $.post('/Admin/ToggleTestMode', { isTestMode: isTest }, function(res) {
+                if(res.success) toastr.success("Test mode toggled.");
+            });
+        }
+
+        function generateApiKey() {
+            if(!confirm("Generate a new root API key? Old ones may be invalidated.")) return;
+            $.post('/Admin/GenerateApiKey', function(res) {
+                if(res.success) {
+                    prompt("Save this key securely! It won't be shown again:", res.key);
+                }
+            });
+        }
+
+        function sendTestEmail() {
+            var email = prompt("Enter email address for test:");
+            if(email) {
+                $.post('/Admin/SendTestEmail', { email: email }, function(res) {
+                    if(res.success) toastr.success("Test email sent!");
+                    else toastr.error("Failed: " + res.message);
+                });
+            }
+        }
+    </script>
+
+    <style>
+        .nav-pills-custom .nav-link {
+            color: #495057;
+            border-radius: 50rem;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-pills-custom .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+        }
+        .nav-pills-custom .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+        }
+        .w-20px { width: 20px; text-align: center; }
+    </style>
+}

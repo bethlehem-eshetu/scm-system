@@ -8,6 +8,8 @@ using SCM_System.Models.Enums;
 using SCM_System.Models.Constants;
 using SCM_System.Services;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authentication;
+using Google.Authenticator;
 using System.Text;
 using System.Security.Claims;
 
@@ -336,6 +338,467 @@ namespace SCM_System.Controllers
             }
 
             return RedirectToAction(nameof(ArchivedAssets));
+        }
+
+        // GET: /Supplier/Settings
+        public async Task<IActionResult> Settings()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction("Login", "Account");
+
+            var supplier = await _context.Suppliers
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (supplier == null) return NotFound();
+
+            var model = new SupplierSettingsViewModel
+            {
+                SupplierId = supplier.Id,
+                CompanyDescription = supplier.CompanyDescription,
+                WebsiteUrl = supplier.WebsiteUrl,
+                PickupAddress = supplier.PickupAddress,
+                ExistingLogo = supplier.CompanyLogo,
+                FullName = supplier.User.FullName,
+                Email = supplier.User.Email,
+                Phone = supplier.User.PhoneNumber,
+                BankAccounts = await _context.BankAccounts.Where(b => b.SupplierId == supplier.Id).ToListAsync(),
+                Employees = await _context.SupplierEmployees.Include(e => e.User).Include(e => e.Warehouse).Where(e => e.SupplierId == supplier.Id).ToListAsync(),
+                
+                // Notifications
+                NotifyOrderAlert = supplier.NotifyOrderAlert,
+                NotifyBidAlert = supplier.NotifyBidAlert,
+                NotifyLowStockAlert = supplier.NotifyLowStockAlert,
+                NotifyPaymentAlert = supplier.NotifyPaymentAlert,
+                NotifyDisputeAlert = supplier.NotifyDisputeAlert,
+                NotifyChannel = supplier.NotifyChannel,
+
+                // Security
+                TwoFactorEnabled = supplier.User.TwoFactorEnabled,
+                ActiveSessions = await _context.UserSessions.Where(us => us.UserId == supplier.User.Id && us.IsActive).ToListAsync(),
+
+                // KPIs
+                TotalOrders = await _context.Orders.CountAsync(o => o.SupplierId == supplier.Id),
+                TotalRevenue = await _context.Orders.Where(o => o.SupplierId == supplier.Id && o.OrderStatus == "Completed").SumAsync(o => o.TotalAmount),
+                AverageRating = await _context.Ratings.Where(r => r.SupplierId == supplier.Id).AnyAsync() ? await _context.Ratings.Where(r => r.SupplierId == supplier.Id).AverageAsync(r => r.RatingValue) : 0,
+                OnTimeDeliveryRate = await _context.Deliveries.CountAsync(d => d.Order.SupplierId == supplier.Id) > 0 ? 
+                    await _context.Deliveries.CountAsync(d => d.Order.SupplierId == supplier.Id && d.DeliveredDate <= d.Order.ExpectedDeliveryDate) * 100.0 / await _context.Deliveries.CountAsync(d => d.Order.SupplierId == supplier.Id) : 0,
+                BidWinRate = await _context.TenderBids.CountAsync(b => b.SupplierId == supplier.Id) > 0 ? 
+                    await _context.TenderBids.CountAsync(b => b.SupplierId == supplier.Id && b.Status == "Accepted") * 100.0 / await _context.TenderBids.CountAsync(b => b.SupplierId == supplier.Id) : 0
+            };
+
+            ViewBag.Warehouses = new SelectList(await _context.Warehouses.Where(w => w.SupplierId == supplier.Id).ToListAsync(), "Id", "Name");
+
+            // Load Login History (AuditLog)
+            ViewBag.LoginHistory = await _context.AuditLogs
+                .Where(al => al.PerformedByUserId == userId && al.ActionType == "Login")
+                .OrderByDescending(al => al.PerformedAtUtc)
+                .Take(10)
+                .ToListAsync();
+
+            return View(model);
+        }
+
+        // POST: /Supplier/Settings
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Settings(SupplierSettingsViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction("Login", "Account");
+
+            var supplier = await _context.Suppliers
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == model.SupplierId && s.UserId == userId);
+
+            if (supplier == null) return NotFound();
+
+            // Update Supplier Info
+            supplier.CompanyDescription = model.CompanyDescription;
+            supplier.WebsiteUrl = model.WebsiteUrl;
+            supplier.PickupAddress = model.PickupAddress;
+
+            // Handle Logo Upload
+            if (model.CompanyLogoFile != null && model.CompanyLogoFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "suppliers");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = $"supplier_{supplier.Id}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(model.CompanyLogoFile.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.CompanyLogoFile.CopyToAsync(fileStream);
+                }
+
+                // Delete old logo if exists
+                if (!string.IsNullOrEmpty(supplier.CompanyLogo))
+                {
+                    var oldFilePath = Path.Combine(_env.WebRootPath, supplier.CompanyLogo.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
+
+                supplier.CompanyLogo = "/uploads/suppliers/" + uniqueFileName;
+            }
+
+            // Update User Info
+            supplier.User.FullName = model.FullName;
+            supplier.User.Email = model.Email;
+            supplier.User.PhoneNumber = model.Phone;
+
+            // Password Change Logic
+            if (!string.IsNullOrEmpty(model.NewPassword))
+            {
+                if (string.IsNullOrEmpty(model.CurrentPassword))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Current password is required to change password.");
+                    return View(model);
+                }
+
+                if (!VerifyPassword(model.CurrentPassword, supplier.User.PasswordHash))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Invalid current password.");
+                    return View(model);
+                }
+
+                supplier.User.PasswordHash = HashPassword(model.NewPassword);
+            }
+
+            _context.Update(supplier);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("Supplier", supplier.Id.ToString(), "UpdateSettings", notes: "Profile and company info updated", performedByUserId: userId);
+
+            TempData["SuccessMessage"] = "Settings updated successfully.";
+            return RedirectToAction(nameof(Settings));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddBankAccount(BankAccount model)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier == null) return NotFound();
+
+            model.SupplierId = supplier.Id;
+            if (model.IsPrimary)
+            {
+                var existingPrimary = await _context.BankAccounts.Where(b => b.SupplierId == supplier.Id && b.IsPrimary).ToListAsync();
+                foreach (var b in existingPrimary) b.IsPrimary = false;
+            }
+
+            _context.BankAccounts.Add(model);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("BankAccount", model.Id.ToString(), "Add", notes: $"Added bank account: {model.BankName}", performedByUserId: userId);
+
+            return Json(new { success = true, message = "Bank account added successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateBankAccount(BankAccount model)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var account = await _context.BankAccounts.Include(b => b.Supplier).FirstOrDefaultAsync(b => b.Id == model.Id);
+            if (account == null || account.Supplier.UserId != userId) return NotFound();
+
+            account.BankName = model.BankName;
+            account.AccountHolderName = model.AccountHolderName;
+            account.AccountNumber = model.AccountNumber;
+            account.Branch = model.Branch;
+            account.SwiftCode = model.SwiftCode;
+
+            if (model.IsPrimary && !account.IsPrimary)
+            {
+                var existingPrimary = await _context.BankAccounts.Where(b => b.SupplierId == account.SupplierId && b.IsPrimary).ToListAsync();
+                foreach (var b in existingPrimary) b.IsPrimary = false;
+            }
+            account.IsPrimary = model.IsPrimary;
+
+            _context.Update(account);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("BankAccount", account.Id.ToString(), "Update", notes: $"Updated bank account: {account.BankName}", performedByUserId: userId);
+
+            return Json(new { success = true, message = "Bank account updated successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteBankAccount(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var account = await _context.BankAccounts.Include(b => b.Supplier).FirstOrDefaultAsync(b => b.Id == id);
+            if (account == null || account.Supplier.UserId != userId) return NotFound();
+
+            _context.BankAccounts.Remove(account);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("BankAccount", id.ToString(), "Delete", notes: $"Deleted bank account: {account.BankName}", performedByUserId: userId);
+
+            return Json(new { success = true, message = "Bank account deleted successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddEmployee(string fullName, string email, string phone, string role, int? warehouseId, bool isActive)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier == null) return NotFound();
+
+            // Create User
+            var user = new User
+            {
+                FullName = fullName,
+                Email = email,
+                PhoneNumber = phone,
+                Role = "SupplierEmployee",
+                AccountStatus = "Active",
+                IsApproved = true,
+                PasswordHash = HashPassword("TempPass123!") // User should change this later
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            // Create SupplierEmployee
+            var employee = new SupplierEmployee
+            {
+                UserId = user.Id,
+                SupplierId = supplier.Id,
+                WarehouseId = warehouseId,
+                EmployeeRole = role,
+                Phone = phone,
+                Email = email,
+                IsActive = isActive
+            };
+
+            _context.SupplierEmployees.Add(employee);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("SupplierEmployee", employee.Id.ToString(), "Add", notes: $"Added employee: {fullName}", performedByUserId: userId);
+
+            return Json(new { success = true, message = "Employee added successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateEmployee(int id, string fullName, string email, string phone, string role, int? warehouseId, bool isActive)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var employee = await _context.SupplierEmployees.Include(e => e.User).Include(e => e.Supplier).FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null || employee.Supplier.UserId != userId) return NotFound();
+
+            employee.User.FullName = fullName;
+            employee.User.Email = email;
+            employee.User.PhoneNumber = phone;
+            employee.Email = email;
+            employee.Phone = phone;
+            employee.EmployeeRole = role;
+            employee.WarehouseId = warehouseId;
+            employee.IsActive = isActive;
+
+            _context.Update(employee);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("SupplierEmployee", id.ToString(), "Update", notes: $"Updated employee: {fullName}", performedByUserId: userId);
+
+            return Json(new { success = true, message = "Employee updated successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteEmployee(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var employee = await _context.SupplierEmployees.Include(e => e.Supplier).FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null || employee.Supplier.UserId != userId) return NotFound();
+
+            employee.IsDeleted = true;
+            employee.IsActive = false;
+            _context.Update(employee);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("SupplierEmployee", id.ToString(), "Delete", notes: "Marked employee as deleted", performedByUserId: userId);
+
+            return Json(new { success = true, message = "Employee deleted successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateNotifications(bool notifyOrderAlert, bool notifyBidAlert, bool notifyLowStockAlert, bool notifyPaymentAlert, bool notifyDisputeAlert, string notifyChannel)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier == null) return NotFound();
+
+            supplier.NotifyOrderAlert = notifyOrderAlert;
+            supplier.NotifyBidAlert = notifyBidAlert;
+            supplier.NotifyLowStockAlert = notifyLowStockAlert;
+            supplier.NotifyPaymentAlert = notifyPaymentAlert;
+            supplier.NotifyDisputeAlert = notifyDisputeAlert;
+            supplier.NotifyChannel = notifyChannel;
+
+            _context.Update(supplier);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Notification preferences updated successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleTwoFactor(bool enable)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            if (enable)
+            {
+                user.TwoFactorEnabled = true;
+                if (string.IsNullOrEmpty(user.TwoFactorSecret))
+                {
+                    user.TwoFactorSecret = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
+                }
+                
+                var tfa = new TwoFactorAuthenticator();
+                var setupCode = tfa.GenerateSetupCode("SCM System", user.Email, user.TwoFactorSecret, false, 3);
+                
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, qrCodeUrl = setupCode.QrCodeSetupImageUrl, manualCode = setupCode.ManualEntryKey });
+            }
+            else
+            {
+                user.TwoFactorEnabled = false;
+                user.TwoFactorSecret = null;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "2FA disabled successfully." });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RevokeSession(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId);
+            if (session != null)
+            {
+                session.IsActive = false;
+                await _context.SaveChangesAsync();
+            }
+            return Json(new { success = true, message = "Session revoked successfully." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeactivateAccount(string password)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || user.PasswordHash != HashPassword(password))
+            {
+                return Json(new { success = false, message = "Invalid password." });
+            }
+
+            user.AccountStatus = "Suspended";
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier != null) supplier.IsDeleted = true;
+
+            await _context.SaveChangesAsync();
+            
+            await HttpContext.SignOutAsync();
+            
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExportData()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (supplier == null) return NotFound();
+
+            var orders = await _context.Orders.Where(o => o.SupplierId == supplier.Id).ToListAsync();
+            var employees = await _context.SupplierEmployees.Include(e => e.User).Where(e => e.SupplierId == supplier.Id).ToListAsync();
+            var bankAccounts = await _context.BankAccounts.Where(b => b.SupplierId == supplier.Id).ToListAsync();
+
+            var csv = new StringBuilder();
+
+            // Orders Section
+            csv.AppendLine("ORDERS");
+            csv.AppendLine("Order Number,Date,Total Amount,Status,Payment Status");
+            foreach (var o in orders)
+            {
+                csv.AppendLine($"{o.OrderNumber},{o.CreatedAt:yyyy-MM-dd HH:mm},{o.TotalAmount},{o.OrderStatus},{o.PaymentStatus}");
+            }
+            csv.AppendLine();
+
+            // Employees Section
+            csv.AppendLine("EMPLOYEES");
+            csv.AppendLine("Full Name,Email,Phone,Role,Status");
+            foreach (var e in employees)
+            {
+                csv.AppendLine($"{e.User.FullName},{e.Email},{e.Phone},{e.EmployeeRole},{(e.IsActive ? "Active" : "Inactive")}");
+            }
+            csv.AppendLine();
+
+            // Bank Accounts Section
+            csv.AppendLine("BANK ACCOUNTS");
+            csv.AppendLine("Bank Name,Account Holder,Account Number,Branch,Is Primary");
+            foreach (var b in bankAccounts)
+            {
+                csv.AppendLine($"{b.BankName},{b.AccountHolderName},{b.AccountNumber},{b.Branch},{(b.IsPrimary ? "Yes" : "No")}");
+            }
+
+            byte[] buffer = Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"supplier_data_{DateTime.Now:yyyyMMddHHmmss}.csv");
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            }
+        }
+
+        private bool VerifyPassword(string password, string hash)
+        {
+            return HashPassword(password) == hash;
         }
     }
 }

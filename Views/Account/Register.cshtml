@@ -88,6 +88,14 @@
                 <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm" class="needs-validation">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Role" id="RoleHidden" />
+                    
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</h6>
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
 
                     <!-- Step 1: Fayda Identity Verification -->
                     <div id="step-1" class="registration-step">
@@ -99,7 +107,7 @@
                             <div class="row g-3">
                                 <div class="col-12 mb-3">
                                     <label asp-for="Email" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Email Address (For OTP)</label>
-                                    <input asp-for="Email" id="EmailInput" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="email" placeholder="john@company.com" required />
+                                    <input asp-for="Email" id="EmailInput" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="email" placeholder="john@company.com" />
                                     <span asp-validation-for="Email" class="text-danger extra-small"></span>
                                 </div>
                                 <div class="col-12" id="fanSection">
@@ -176,25 +184,36 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase">Secure Password</label>
-                                    <input asp-for="Password" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" required />
-                                    <span asp-validation-for="Password" class="text-danger extra-small"></span>
+                                    <div class="position-relative">
+                                        <input asp-for="Password" id="regPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" value="@Model?.Password" />
+                                        <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegPassword">
+                                            <i class="far fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="Password" class="text-danger extra-small mt-1 d-block"></span>
                                 </div>
                                 <div class="col-md-6">
                                     <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
-                                    <input asp-for="ConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" required />
-                                    <span asp-validation-for="ConfirmPassword" class="text-danger extra-small"></span>
+                                    <div class="position-relative">
+                                        <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" value="@Model?.ConfirmPassword" />
+                                        <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegConfirmPassword">
+                                            <i class="far fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger extra-small mt-1 d-block"></span>
                                 </div>
                                 <div class="col-md-12">
                                     <label asp-for="DateOfBirth" class="form-label small fw-bold text-muted text-uppercase d-block">
                                         Date of Birth
                                         <span id="dobBadge" style="display:none" class="badge bg-success float-end"><i class="fas fa-check-circle"></i> Fayda Verified</span>
                                     </label>
-                                    <input asp-for="DateOfBirth" type="date" id="DateOfBirth" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" required />
+                                    <input asp-for="DateOfBirth" type="date" id="DateOfBirth" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
                                     <span asp-validation-for="DateOfBirth" class="text-danger extra-small"></span>
                                     <small id="dobHelpText" class="form-text text-muted"></small>
                                 </div>
                             </div>
-                            <div class="mt-4 text-end">
+                            <div class="mt-4 d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill fw-bold btnBackToStep1"><i class="fas fa-arrow-left me-2"></i> Back</button>
                                 <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold" id="btnNextToStep3">Continue to Business Profile <i class="fas fa-arrow-right ms-2"></i></button>
                             </div>
                         </div>
@@ -228,7 +247,7 @@
                                                     {
                                                         <div class="category-group mb-3">
                                                             <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
-                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="@category.Id" id="cat_@category.Id">
+                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="@category.Id" id="cat_@category.Id" @(Model?.SelectedCategoryIds != null && Model.SelectedCategoryIds.Contains(category.Id) ? "checked" : "")>
                                                                 <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_@category.Id">
                                                                     <i class="fas fa-folder-open me-2 text-primary"></i> @category.CategoryName
                                                                 </label>
@@ -240,7 +259,7 @@
                                                                     {
                                                                         <div class="col-md-4">
                                                                             <div class="form-check custom-checkbox p-2 rounded-3 border bg-white h-100 d-flex align-items-center hover-shadow transition">
-                                                                                <input class="form-check-input ms-0 me-3 sub-category" type="checkbox" name="SelectedCategoryIds" value="@sub.Id" id="cat_@sub.Id" data-parent="cat_@category.Id">
+                                                                                <input class="form-check-input ms-0 me-3 sub-category" type="checkbox" name="SelectedCategoryIds" value="@sub.Id" id="cat_@sub.Id" data-parent="cat_@category.Id" @(Model?.SelectedCategoryIds != null && Model.SelectedCategoryIds.Contains(sub.Id) ? "checked" : "")>
                                                                                 <label class="form-check-label small mb-0 text-muted" for="cat_@sub.Id">
                                                                                     @sub.CategoryName
                                                                                 </label>
@@ -271,8 +290,10 @@
                                         <span asp-validation-for="TaxIdentificationNumber" class="text-danger extra-small"></span>
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG)</label>
-                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG) *</label>
+                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                        <span asp-validation-for="LicenseFile" class="text-danger extra-small"></span>
+                                        <small class="text-muted d-block mt-1">Please re-select your file if you encounter any errors.</small>
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="CompanyAddress" class="form-label small fw-bold text-muted text-uppercase">Headquarters Address</label>
@@ -352,9 +373,14 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm mb-4">
-                            <i class="fas fa-check-double me-2"></i> Complete Registration
-                        </button>
+                        <div class="d-flex gap-3 mb-4">
+                            <button type="button" class="btn btn-outline-secondary py-3 px-4 rounded-pill fw-bold shadow-sm btnBackToStep2">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="submit" class="btn btn-primary flex-grow-1 py-3 rounded-pill fw-bold shadow-sm">
+                                <i class="fas fa-check-double me-2"></i> Complete Registration
+                            </button>
+                        </div>
                     </div>
 
                     <div class="text-center mt-3">
@@ -443,14 +469,30 @@
     <script>
         $(document).ready(function() {
             $('#registerForm').on('submit', function(e) {
-                console.log("Form is being submitted!");
-                
-                // Log all form data
-                var formData = new FormData(this);
-                for (var pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
+                var role = $('#RoleHidden').val() || $('#RoleSelect').val();
+                var isFormValid = true;
+
+                if (role === 'Supplier') {
+                    if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
+                        $('#categoryError').text('Please select at least one business category.');
+                        isFormValid = false;
+                    } else {
+                        $('#categoryError').text('');
+                    }
+                } else if (role === 'Retailer') {
+                    if ($('input[name="SelectedRetailerCategoryIds"]:checked').length === 0) {
+                        $('#retailerCategoryError').text('Please select at least one category.');
+                        isFormValid = false;
+                    } else {
+                        $('#retailerCategoryError').text('');
+                    }
                 }
-                
+
+                if (!isFormValid) {
+                    e.preventDefault();
+                    return false;
+                }
+
                 return true;
             });
             var expiryTimer = null;
@@ -470,10 +512,8 @@
                     // Step 1 completed (Fayda verified)
                     currentStep = 2;
                     
-                    // Check if business info is partially filled (meaning they were on step 3)
-                    if (savedRole === "Supplier" && $('#CompanyName').val() && $('#CompanyName').val().trim() !== "") {
-                        currentStep = 3;
-                    } else if (savedRole === "Retailer" && $('#BusinessName').val() && $('#BusinessName').val().trim() !== "") {
+                    // Check if business info is partially filled or Role was selected (meaning they passed step 2)
+                    if (savedRole && savedRole.trim() !== "") {
                         currentStep = 3;
                     }
                 }
@@ -703,28 +743,17 @@
                     isValid = false;
                 }
 
-                if (isValid && $('#step-3').is(':visible')) {
-                    var role = $('#RoleSelect').val();
-                    if (role === 'Supplier') {
-                        if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
-                            $('#categoryError').text('Please select at least one business category.');
-                            isValid = false;
-                        } else {
-                            $('#categoryError').text('');
-                        }
-                    } else if (role === 'Retailer') {
-                        if ($('input[name="SelectedRetailerCategoryIds"]:checked').length === 0) {
-                            $('#retailerCategoryError').text('Please select at least one category.');
-                            isValid = false;
-                        } else {
-                            $('#retailerCategoryError').text('');
-                        }
-                    }
-                }
-
                 if (isValid) {
                     showStep(3);
                 }
+            });
+
+            $('.btnBackToStep1').click(function() {
+                showStep(1);
+            });
+
+            $('.btnBackToStep2').click(function() {
+                showStep(2);
             });
 
             $('#RoleSelect').change(function() {

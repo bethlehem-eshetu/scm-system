@@ -27,13 +27,25 @@ namespace SCM_System.Services
         {
             // ✅ Prevent duplicate commissions
             var exists = await _context.Commissions
-                .AnyAsync(c => c.OrderId == orderId && c.PurchaseOrderId == purchaseOrderId);
+                .AnyAsync(c => c.OrderId == orderId && c.PurchaseOrderId == purchaseOrderId && c.PaymentType == "PlatformCommission");
 
             if (exists)
                 return null;
 
-            // Example: 5% commission standard
-            decimal commissionRate = 0.05m;
+            // Fetch dynamic commission rate from SystemConfiguration
+            // Default to 5% if not configured
+            var configKey = "CommissionBronze"; // Default tier
+            var configValue = await _context.SystemConfigurations
+                .Where(sc => sc.Key == configKey)
+                .Select(sc => sc.Value)
+                .FirstOrDefaultAsync() ?? "5.0";
+
+            if (!decimal.TryParse(configValue, out decimal commissionPercentage))
+            {
+                commissionPercentage = 5.0m;
+            }
+
+            decimal commissionRate = commissionPercentage / 100m;
             decimal commissionAmount = orderAmount * commissionRate;
 
             var commission = new Commission
@@ -43,10 +55,18 @@ namespace SCM_System.Services
                 OrderAmount = orderAmount,
                 CommissionRate = commissionRate,
                 CommissionAmount = commissionAmount,
+                PaymentType = "PlatformCommission",
                 Status = "Pending",
                 CreatedAt = DateTime.Now,
                 DueDate = DateTime.Now.AddDays(7)
             };
+
+            var supplierId = await _context.PurchaseOrders
+                .Where(po => po.Id == purchaseOrderId)
+                .Select(po => po.SupplierId)
+                .FirstOrDefaultAsync();
+            
+            commission.SupplierId = supplierId;
             _context.Commissions.Add(commission);
             await _context.SaveChangesAsync();
 

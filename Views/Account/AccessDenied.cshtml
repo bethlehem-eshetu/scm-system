@@ -1,0 +1,57 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card border-danger shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Access Denied</h2>
+                </div>
+                <div class="card-body py-5">
+                    <h4 class="card-title text-danger">You do not have permission to access this page.</h4>
+                    <p class="card-text text-muted mb-4">
+                        It looks like your account role doesn't have the necessary authorization to view the requested resource.
+                        If you believe this is an error, please contact your administrator.
+                    </p>
+                    <div class="d-grid gap-2 d-md-block">
+                        <a href="/" class="btn btn-outline-secondary px-4 me-md-2">Go to Home</a>
+                        <a href="/Account/Login" class="btn btn-danger px-4">Log in as another user</a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    Error Code: 403 Forbidden
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .card-header {
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+    }
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+</style>

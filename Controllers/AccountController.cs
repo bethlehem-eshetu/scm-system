@@ -109,7 +109,28 @@ namespace SCM_System.Controllers
                         ModelState.AddModelError("LicenseNumber", "License number is required");
 
                     if (model.LicenseFile == null)
+                    {
                         ModelState.AddModelError("LicenseFile", "License document is required");
+                    }
+                    else
+                    {
+                        if (model.LicenseFile.Length > 5 * 1024 * 1024)
+                        {
+                            ModelState.AddModelError("LicenseFile", "File size cannot exceed 5MB");
+                        }
+
+                        string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
+                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
+                        
+                        string logMsg = $"[FILE VALIDATION] FileName: '{model.LicenseFile.FileName}' -> Extension: '{fileExtension}'\n";
+                        try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", logMsg); } catch {}
+
+                        if (!allowedExtensions.Contains(fileExtension))
+                        {
+                            try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", $"[FILE VALIDATION] Rejected! '{fileExtension}' not in allowed list.\n"); } catch {}
+                            ModelState.AddModelError("LicenseFile", $"Only PDF, JPG, JPEG, and PNG files are allowed (Detected: {fileExtension})");
+                        }
+                    }
 
                     if (string.IsNullOrEmpty(model.TaxIdentificationNumber))
                         ModelState.AddModelError("TaxIdentificationNumber", "Tax identification number is required");
@@ -238,6 +259,11 @@ namespace SCM_System.Controllers
                 {
                     Console.WriteLine("Email already exists!");
                     ModelState.AddModelError("Email", "Email already registered");
+                    ViewBag.Categories = await _context.ProductCategories
+                        .Include(c => c.SubCategories)
+                        .Where(c => c.ParentCategoryId == null)
+                        .OrderBy(c => c.CategoryName)
+                        .ToListAsync();
                     return View(model);
                 }
 
@@ -283,24 +309,8 @@ namespace SCM_System.Controllers
                     {
                         Console.WriteLine("Processing file upload...");
 
-                        // Validate file size (max 5MB)
-                        if (model.LicenseFile.Length > 5 * 1024 * 1024)
-                        {
-                            await transaction.RollbackAsync();
-                            ModelState.AddModelError("LicenseFile", "File size cannot exceed 5MB");
-                            return View(model);
-                        }
-
-                        // Validate file extension
-                        string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
-                        string fileExtension = Path.GetExtension(model.LicenseFile.FileName).ToLower();
-
-                        if (!allowedExtensions.Contains(fileExtension))
-                        {
-                            await transaction.RollbackAsync();
-                            ModelState.AddModelError("LicenseFile", "Only PDF, JPG, JPEG, and PNG files are allowed");
-                            return View(model);
-                        }
+                        // File validation is now handled before the transaction
+                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
 
                         // Create unique filename
                         string fileName = $"supplier_{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
@@ -476,6 +486,12 @@ namespace SCM_System.Controllers
             {
                 _logger.LogError(ex, "REGISTRATION ERROR: {Message}", ex.Message);
 
+                ViewBag.Categories = await _context.ProductCategories
+                    .Include(c => c.SubCategories)
+                    .Where(c => c.ParentCategoryId == null)
+                    .OrderBy(c => c.CategoryName)
+                    .ToListAsync();
+
                 TempData["ErrorMessage"] = "An error occurred during registration. Please try again. " + ex.Message;
                 return View(model);
             }
@@ -501,9 +517,10 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                try
+                Console.WriteLine($"[DEBUG] Login POST called for: {model.Email}");
+                if (ModelState.IsValid)
                 {
                     var user = await _context.Users
                         .FirstOrDefaultAsync(u => u.Email == model.Email);
@@ -560,25 +577,18 @@ namespace SCM_System.Controllers
                             return RedirectToAction("Login");
                         }
 
-                        // Check if user is approved
-                        if (!user.IsApproved)
+                        // Check if user is approved and active
+                        if (!user.IsApproved || user.AccountStatus != "Active")
                         {
-                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative review. Please check back later.";
+                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative review or is inactive. Please check back later.";
                             return RedirectToAction("Login");
                         }
 
-                        // Check if account is active
-                        if (user.AccountStatus != "Active")
+                        // Ensure Fayda verification flag is synced
+                        if (!user.IsFaydaVerified)
                         {
-                            TempData["ErrorMessage"] = $"❌ Your account is {user.AccountStatus}. Please contact support.";
-                            return RedirectToAction("Login");
-                        }
-
-                        // Block login if Fayda NOT verified OR not approved (ApprovalStatus Check)
-                        if (!user.IsFaydaVerified || user.ApprovalStatus != "Approved")
-                        {
-                            TempData["ErrorMessage"] = "⏳ Your account is pending administrative approval or Fayda Identity verification.";
-                            return RedirectToAction("Login");
+                            user.IsFaydaVerified = true;
+                            await _context.SaveChangesAsync();
                         }
                     }
 
@@ -591,6 +601,25 @@ namespace SCM_System.Controllers
                     HttpContext.Session.SetString("UserEmail", user.Email);
                     HttpContext.Session.SetString("UserRole", user.Role);
                     HttpContext.Session.SetString("UserName", user.FullName);
+                    HttpContext.Session.SetString("ProfileImg", user.ProfileImage ?? "");
+                    HttpContext.Session.SetString("ThemePreference", user.ThemePreference ?? "System");
+
+                    // Generate and store real session token
+                    string sessionToken = Guid.NewGuid().ToString();
+                    HttpContext.Session.SetString("SessionToken", sessionToken);
+
+                    var userSession = new UserSession
+                    {
+                        UserId = user.Id,
+                        SessionToken = sessionToken,
+                        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        UserAgent = Request.Headers["User-Agent"].ToString(),
+                        LoginTime = DateTime.Now,
+                        LastActivityTime = DateTime.Now,
+                        IsActive = true
+                    };
+                    _context.UserSessions.Add(userSession);
+                    await _context.SaveChangesAsync();
 
                     // Add proper identity claims authentication
                     var claims = new List<Claim>
@@ -598,8 +627,28 @@ namespace SCM_System.Controllers
                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                         new Claim(ClaimTypes.Name, user.FullName),
                         new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.Role, user.Role)
+                        new Claim(ClaimTypes.Role, user.Role),
+                        new Claim("SessionToken", sessionToken)
                     };
+
+                    // Add EmployeeId claim for all employee roles
+                    if (user.Role == "Warehouse" || user.Role == "WarehouseManager" || user.Role == "DeliveryAgent")
+                    {
+                        SupplierEmployee employee = null;
+                        if (user.Role == "WarehouseManager")
+                        {
+                            employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.Email == user.Email);
+                        }
+                        else
+                        {
+                            employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == user.Id);
+                        }
+
+                        if (employee != null)
+                        {
+                            claims.Add(new Claim("EmployeeId", employee.Id.ToString()));
+                        }
+                    }
 
                     var claimsIdentity = new ClaimsIdentity(
                         claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -631,9 +680,9 @@ namespace SCM_System.Controllers
                     {
                         return RedirectToAction("Dashboard", "Retailer");
                     }
-                    else if (user.Role == "WarehouseManager")
+                    else if (user.Role == "Warehouse" || user.Role == "WarehouseManager")
                     {
-                        return RedirectToAction("Dashboard", "Warehouse");
+                        return RedirectToAction("Index", "Warehouse");
                     }
                     else if (user.Role == "DeliveryAgent")
                     {
@@ -642,14 +691,13 @@ namespace SCM_System.Controllers
 
                     return RedirectToAction("Index", "Home");
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Login Error");
-                    ModelState.AddModelError("", "An error occurred during login. Please try again.");
-                    return View(model);
-                }
             }
-
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Login Error: {Message}", ex.Message);
+                ModelState.AddModelError("", "An error occurred during login. Please try again. " + ex.Message);
+                return View(model);
+            }
             return View(model);
         }
 
@@ -657,6 +705,19 @@ namespace SCM_System.Controllers
         public async Task<IActionResult> Logout()
         {
             string userName = HttpContext.Session.GetString("UserName") ?? "User";
+            string sessionToken = HttpContext.Session.GetString("SessionToken");
+
+            if (!string.IsNullOrEmpty(sessionToken))
+            {
+                var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.SessionToken == sessionToken);
+                if (session != null)
+                {
+                    session.IsActive = false;
+                    session.LastActivityTime = DateTime.Now;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
