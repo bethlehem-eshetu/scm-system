@@ -62,9 +62,6 @@
                         <button class="nav-link active text-start mb-2" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
                             <i class="fas fa-id-card me-2 w-20px text-center"></i>Business Profile
                         </button>
-                        <button class="nav-link text-start mb-2" id="v-pills-banking-tab" data-bs-toggle="pill" data-bs-target="#v-pills-banking" type="button" role="tab">
-                            <i class="fas fa-university me-2 w-20px text-center"></i>Banking Info
-                        </button>
                         <button class="nav-link text-start mb-2 text-danger" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab">
                             <i class="fas fa-exclamation-triangle me-2 w-20px text-center"></i>Danger Zone
                         </button>
@@ -154,56 +151,6 @@
                     </div>
                 </div>
 
-                <!-- 2. Banking Information -->
-                <div class="tab-pane fade" id="v-pills-banking" role="tabpanel">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-header bg-white py-3 border-bottom border-light d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold text-success">Bank Accounts</h5>
-                            <button type="button" class="btn btn-success btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#bankAccountModal" onclick="resetBankModal()">
-                                <i class="fas fa-plus me-1"></i> Add Account
-                            </button>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle border-0" id="bankAccountsTable">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="border-0 px-4 py-3 small text-muted text-uppercase">Bank Name</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase">Holder</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase">Account No.</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase">Status</th>
-                                            <th class="border-0 py-3 small text-muted text-uppercase text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var account in Model.BankAccounts)
-                                        {
-                                            <tr>
-                                                <td class="px-4 fw-bold">@account.BankName</td>
-                                                <td>@account.AccountHolderName</td>
-                                                <td><code class="text-dark">@account.AccountNumber</code></td>
-                                                <td>
-                                                    @if (account.IsPrimary)
-                                                    {
-                                                        <span class="badge bg-soft-success text-success rounded-pill px-3">Primary</span>
-                                                    }
-                                                </td>
-                                                <td class="text-end">
-                                                    <button class="btn btn-sm btn-soft-primary rounded-pill me-1" onclick="editBankAccount(@Json.Serialize(account))">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-soft-danger rounded-pill" onclick="deleteBankAccount(@account.Id)">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                         <button class="nav-link text-start mb-2" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
                             <i class="fas fa-shield-alt me-2 w-20px text-center"></i>Security Hub
@@ -419,54 +366,6 @@
     </div>
 </div>
 
-<!-- Bank Account Modal -->
-<div class="modal fade" id="bankAccountModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <form id="bankAccountForm">
-                <input type="hidden" name="Id" id="bank_id" />
-                <div class="modal-header bg-success text-white rounded-top-4">
-                    <h5 class="modal-title fw-bold" id="bankModalTitle">Add Bank Account</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">Bank Name</label>
-                            <input type="text" name="BankName" id="bank_name" class="form-control rounded-pill bg-light border-0 px-4" required />
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">Account Holder Name</label>
-                            <input type="text" name="AccountHolderName" id="bank_holder" class="form-control rounded-pill bg-light border-0 px-4" required />
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">Account Number</label>
-                            <input type="text" name="AccountNumber" id="bank_number" class="form-control rounded-pill bg-light border-0 px-4" required />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Branch Name</label>
-                            <input type="text" name="Branch" id="bank_branch" class="form-control rounded-pill bg-light border-0 px-4" />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">SWIFT / BIC Code</label>
-                            <input type="text" name="SwiftCode" id="bank_swift" class="form-control rounded-pill bg-light border-0 px-4" />
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" type="checkbox" name="IsPrimary" value="true" id="bank_primary">
-                                <label class="form-check-label small fw-bold ms-2" for="bank_primary">Set as Primary Settlement Account</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0 rounded-bottom-4 p-3">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none fw-bold me-auto" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">Save Account</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 
 @section Styles {
@@ -540,30 +439,7 @@
                 $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
             });
 
-            $('#bankAccountsTable').DataTable({
-                "pageLength": 5,
-                "lengthMenu": [5, 10, 25, 50],
-                "language": {
-                    "search": "",
-                    "searchPlaceholder": "Search records..."
-                }
-            });
 
-            // Bank Account Form Submit
-            $('#bankAccountForm').submit(function(e) {
-                e.preventDefault();
-                var id = $('#bank_id').val();
-                var url = id ? '/Supplier/UpdateBankAccount' : '/Supplier/AddBankAccount';
-                
-                $.post(url, $(this).serialize(), function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        toastr.error(res.message);
-                    }
-                });
-            });
 
 
         // 2FA Toggle

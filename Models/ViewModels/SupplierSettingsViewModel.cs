@@ -10,7 +10,6 @@ namespace SCM_System.Models.ViewModels
 
         public IFormFile? CompanyLogoFile { get; set; }
         public string? ExistingLogo { get; set; }
-        public List<BankAccount> BankAccounts { get; set; } = new List<BankAccount>();
         public List<UserSession> ActiveSessions { get; set; } = new List<UserSession>();
 
         // Security

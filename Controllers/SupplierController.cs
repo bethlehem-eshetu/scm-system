@@ -294,7 +294,6 @@ namespace SCM_System.Controllers
                 FullName = supplier.User.FullName,
                 Email = supplier.User.Email,
                 Phone = supplier.User.PhoneNumber,
-                BankAccounts = await _context.BankAccounts.Where(b => b.SupplierId == supplier.Id).ToListAsync(),
                 
                 // Security
                 TwoFactorEnabled = supplier.User.TwoFactorEnabled,
@@ -393,79 +392,6 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(Settings));
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddBankAccount(BankAccount model)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-            if (supplier == null) return NotFound();
-
-            model.SupplierId = supplier.Id;
-            if (model.IsPrimary)
-            {
-                var existingPrimary = await _context.BankAccounts.Where(b => b.SupplierId == supplier.Id && b.IsPrimary).ToListAsync();
-                foreach (var b in existingPrimary) b.IsPrimary = false;
-            }
-
-            _context.BankAccounts.Add(model);
-            await _context.SaveChangesAsync();
-
-            await _auditLogService.LogActionAsync("BankAccount", model.Id.ToString(), "Add", notes: $"Added bank account: {model.BankName}", performedByUserId: userId);
-
-            return Json(new { success = true, message = "Bank account added successfully." });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateBankAccount(BankAccount model)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var account = await _context.BankAccounts.Include(b => b.Supplier).FirstOrDefaultAsync(b => b.Id == model.Id);
-            if (account == null || account.Supplier.UserId != userId) return NotFound();
-
-            account.BankName = model.BankName;
-            account.AccountHolderName = model.AccountHolderName;
-            account.AccountNumber = model.AccountNumber;
-            account.Branch = model.Branch;
-            account.SwiftCode = model.SwiftCode;
-
-            if (model.IsPrimary && !account.IsPrimary)
-            {
-                var existingPrimary = await _context.BankAccounts.Where(b => b.SupplierId == account.SupplierId && b.IsPrimary).ToListAsync();
-                foreach (var b in existingPrimary) b.IsPrimary = false;
-            }
-            account.IsPrimary = model.IsPrimary;
-
-            _context.Update(account);
-            await _context.SaveChangesAsync();
-
-            await _auditLogService.LogActionAsync("BankAccount", account.Id.ToString(), "Update", notes: $"Updated bank account: {account.BankName}", performedByUserId: userId);
-
-            return Json(new { success = true, message = "Bank account updated successfully." });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteBankAccount(int id)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var account = await _context.BankAccounts.Include(b => b.Supplier).FirstOrDefaultAsync(b => b.Id == id);
-            if (account == null || account.Supplier.UserId != userId) return NotFound();
-
-            _context.BankAccounts.Remove(account);
-            await _context.SaveChangesAsync();
-
-            await _auditLogService.LogActionAsync("BankAccount", id.ToString(), "Delete", notes: $"Deleted bank account: {account.BankName}", performedByUserId: userId);
-
-            return Json(new { success = true, message = "Bank account deleted successfully." });
-        }
 
 
         [HttpPost]
@@ -553,7 +479,6 @@ namespace SCM_System.Controllers
 
             var orders = await _context.Orders.Where(o => o.SupplierId == supplier.Id).ToListAsync();
             var employees = await _context.SupplierEmployees.Include(e => e.User).Where(e => e.SupplierId == supplier.Id).ToListAsync();
-            var bankAccounts = await _context.BankAccounts.Where(b => b.SupplierId == supplier.Id).ToListAsync();
 
             var csv = new StringBuilder();
 
@@ -572,15 +497,6 @@ namespace SCM_System.Controllers
             foreach (var e in employees)
             {
                 csv.AppendLine($"{e.User.FullName},{e.Email},{e.Phone},{e.EmployeeRole},{(e.IsActive ? "Active" : "Inactive")}");
-            }
-            csv.AppendLine();
-
-            // Bank Accounts Section
-            csv.AppendLine("BANK ACCOUNTS");
-            csv.AppendLine("Bank Name,Account Holder,Account Number,Branch,Is Primary");
-            foreach (var b in bankAccounts)
-            {
-                csv.AppendLine($"{b.BankName},{b.AccountHolderName},{b.AccountNumber},{b.Branch},{(b.IsPrimary ? "Yes" : "No")}");
             }
 
             byte[] buffer = Encoding.UTF8.GetBytes(csv.ToString());
