@@ -21,6 +21,9 @@ namespace SCM_System.Data
         public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
         public DbSet<Penalty> Penalties { get; set; }
         public DbSet<BankAccount> BankAccounts { get; set; }
+        public DbSet<RetailerAddress> RetailerAddresses { get; set; }
+        public DbSet<RetailerPaymentMethod> RetailerPaymentMethods { get; set; }
+        public DbSet<RetailerPreference> RetailerPreferences { get; set; }
 
         // Logistics 2.0 Compliance & History
         public DbSet<VehicleDocument> VehicleDocuments { get; set; }
@@ -107,6 +110,13 @@ namespace SCM_System.Data
                 .WithOne(r => r.User)
                 .HasForeignKey<Retailer>(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Retailer - RetailerPreference (one-to-one)
+            modelBuilder.Entity<Retailer>()
+                .HasOne(r => r.Preference)
+                .WithOne(rp => rp.Retailer)
+                .HasForeignKey<RetailerPreference>(rp => rp.RetailerId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Supplier - SupplierEmployee (one-to-many)
             modelBuilder.Entity<SupplierEmployee>()
