@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SCM_System.Data;
 
 #nullable disable
 
-namespace SCM_System.Migrations
+namespace SCM_System.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424204356_AddRetailerSettings")]
+    partial class AddRetailerSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1892,9 +1895,6 @@ namespace SCM_System.Migrations
                     b.Property<bool>("AutoNotifyNewTenders")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("BidAcceptedAlert")
-                        .HasColumnType("bit");
-
                     b.Property<string>("BlockedSuppliers")
                         .HasColumnType("nvarchar(max)");
 
@@ -1964,9 +1964,6 @@ namespace SCM_System.Migrations
                     b.Property<int>("DefaultTenderClosingDays")
                         .HasColumnType("int");
 
-                    b.Property<bool>("DeliveryNotifications")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -1979,18 +1976,6 @@ namespace SCM_System.Migrations
                     b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("LowStockAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("NewTenderMatchAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("OrderDeliveredAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("OrderShippedAlert")
-                        .HasColumnType("bit");
-
                     b.Property<string>("PreferredCategories")
                         .HasColumnType("nvarchar(max)");
 
@@ -1999,9 +1984,6 @@ namespace SCM_System.Migrations
 
                     b.Property<string>("PreferredPaymentMethod")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PriceDropAlert")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("ProofOfDeliveryRequired")
                         .HasColumnType("bit");
@@ -2145,55 +2127,6 @@ namespace SCM_System.Migrations
                     b.HasIndex("RetailerId");
 
                     b.ToTable("RetailerPaymentMethods");
-                });
-
-            modelBuilder.Entity("SCM_System.Models.Entities.RetailerPreference", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("BidAcceptedAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Language")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("LowStockAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("NewTenderMatchAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("OrderDeliveredAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("OrderShippedAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("PriceDropAlert")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("RetailerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Theme")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RetailerId")
-                        .IsUnique();
-
-                    b.ToTable("RetailerPreferences");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.ReturnRequest", b =>
@@ -4427,7 +4360,7 @@ namespace SCM_System.Migrations
             modelBuilder.Entity("SCM_System.Models.Entities.RetailerAddress", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
-                        .WithMany("Addresses")
+                        .WithMany()
                         .HasForeignKey("RetailerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -4457,19 +4390,8 @@ namespace SCM_System.Migrations
             modelBuilder.Entity("SCM_System.Models.Entities.RetailerPaymentMethod", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
-                        .WithMany("PaymentMethods")
+                        .WithMany()
                         .HasForeignKey("RetailerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Retailer");
-                });
-
-            modelBuilder.Entity("SCM_System.Models.Entities.RetailerPreference", b =>
-                {
-                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
-                        .WithOne("Preference")
-                        .HasForeignKey("SCM_System.Models.Entities.RetailerPreference", "RetailerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -4880,8 +4802,6 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Retailer", b =>
                 {
-                    b.Navigation("Addresses");
-
                     b.Navigation("Cart")
                         .IsRequired();
 
@@ -4890,10 +4810,6 @@ namespace SCM_System.Migrations
                     b.Navigation("GivenRatings");
 
                     b.Navigation("Orders");
-
-                    b.Navigation("PaymentMethods");
-
-                    b.Navigation("Preference");
 
                     b.Navigation("PurchaseOrders");
 

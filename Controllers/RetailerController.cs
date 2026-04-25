@@ -222,11 +222,309 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers
                 .Include(r => r.User)
+                .Include(r => r.Addresses)
+                .Include(r => r.PaymentMethods)
+                .Include(r => r.Preference)
                 .FirstOrDefaultAsync(r => r.UserId == userId);
 
             if (retailer == null) return NotFound();
 
+            // Ensure Preference exists
+            if (retailer.Preference == null)
+            {
+                retailer.Preference = new RetailerPreference { RetailerId = retailer.Id };
+                _context.RetailerPreferences.Add(retailer.Preference);
+                await _context.SaveChangesAsync();
+            }
+
+            // Security Data
+            ViewBag.ActiveSessions = await _context.UserSessions
+                .Where(us => us.UserId == userId && us.IsActive)
+                .OrderByDescending(us => us.LastActivityTime)
+                .ToListAsync();
+
+            ViewBag.LoginHistory = await _context.AuditLogs
+                .Where(al => al.PerformedByUserId == userId && al.ActionType == "Login")
+                .OrderByDescending(al => al.PerformedAtUtc)
+                .Take(10)
+                .ToListAsync();
+
+            // Performance KPIs
+            var orders = await _context.Orders
+                .Where(o => o.RetailerId == retailer.Id)
+                .ToListAsync();
+
+            ViewBag.TotalOrders = orders.Count;
+            ViewBag.TotalSpent = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
+            ViewBag.AverageOrderValue = orders.Any() ? orders.Average(o => o.TotalAmount) : 0;
+            
+            var totalOrders = orders.Count;
+            var completedOrdersCount = orders.Count(o => o.OrderStatus == "Completed");
+            ViewBag.OnTimeDeliveryRate = totalOrders > 0 ? Math.Round((completedOrdersCount * 100.0 / totalOrders), 1) : 0;
+
+            var ratings = await _context.Ratings
+                .Where(r => r.RetailerId == retailer.Id)
+                .ToListAsync();
+            ViewBag.AverageRatingGiven = ratings.Any() ? ratings.Average(r => r.RatingValue) : 0;
+
+            // Categories for procurement defaults
+            ViewBag.AllCategories = await _context.ProductCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
             return View(retailer);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateBusinessInfo(Retailer model)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Unauthorized" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null) return Json(new { success = false, message = "Retailer not found" });
+
+            retailer.BusinessName = model.BusinessName;
+            retailer.BusinessType = model.BusinessType;
+            retailer.BusinessLicenseNumber = model.BusinessLicenseNumber;
+            retailer.TaxIdentificationNumber = model.TaxIdentificationNumber;
+            retailer.StoreSize = model.StoreSize;
+            retailer.City = model.City;
+            retailer.BusinessAddress = model.BusinessAddress;
+            retailer.Description = model.Description;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Business information updated successfully!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateContactDetails(string contactPersonName, string contactPersonEmail, string contactPersonPhone)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Unauthorized" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.Include(r => r.User).FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null) return Json(new { success = false, message = "Retailer not found" });
+
+            retailer.ContactPersonName = contactPersonName;
+            retailer.ContactPersonEmail = contactPersonEmail;
+            retailer.ContactPersonPhone = contactPersonPhone;
+
+            // Optionally update the main user profile if they are the same
+            if (retailer.User != null)
+            {
+                retailer.User.FullName = contactPersonName ?? retailer.User.FullName;
+                retailer.User.Email = contactPersonEmail ?? retailer.User.Email;
+                retailer.User.PhoneNumber = contactPersonPhone ?? retailer.User.PhoneNumber;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Contact details updated successfully!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateProcurementDefaults(int defaultTenderClosingDays, int preferredDeliveryTimeline, decimal? budgetMin, decimal? budgetMax, string preferredCategories)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Unauthorized" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null) return Json(new { success = false, message = "Retailer not found" });
+
+            retailer.DefaultTenderClosingDays = defaultTenderClosingDays;
+            retailer.PreferredDeliveryTimeline = preferredDeliveryTimeline;
+            retailer.BudgetMin = budgetMin;
+            retailer.BudgetMax = budgetMax;
+            retailer.PreferredCategories = preferredCategories;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Procurement defaults updated!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrderPreferences(string defaultShippingMethod, bool proofOfDeliveryRequired, bool deliveryNotifications)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Unauthorized" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            
+            retailer.DefaultShippingMethod = defaultShippingMethod;
+            retailer.ProofOfDeliveryRequired = proofOfDeliveryRequired;
+            retailer.DeliveryNotifications = deliveryNotifications;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Order preferences updated!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateNotificationPreferences(bool newTenderMatchAlert, bool bidAcceptedAlert, bool orderShippedAlert, bool orderDeliveredAlert, bool lowStockAlert, bool priceDropAlert)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Unauthorized" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+
+            retailer.NewTenderMatchAlert = newTenderMatchAlert;
+            retailer.BidAcceptedAlert = bidAcceptedAlert;
+            retailer.OrderShippedAlert = orderShippedAlert;
+            retailer.OrderDeliveredAlert = orderDeliveredAlert;
+            retailer.LowStockAlert = lowStockAlert;
+            retailer.PriceDropAlert = priceDropAlert;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Notification preferences updated!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadProfilePicture(IFormFile profilePicture)
+        {
+            if (!IsRetailer()) return RedirectToAction("AccountSettings");
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null || profilePicture == null) return RedirectToAction("AccountSettings");
+
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(profilePicture.FileName);
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/profiles", fileName);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await profilePicture.CopyToAsync(stream);
+            }
+
+            retailer.BusinessLogo = "/uploads/profiles/" + fileName;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Profile picture updated!";
+            return RedirectToAction("AccountSettings");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddAddress(RetailerAddress address)
+        {
+            if (!IsRetailer()) return Json(new { success = false });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            
+            address.RetailerId = retailer.Id;
+            if (address.IsDefault)
+            {
+                var existingDefault = await _context.RetailerAddresses.FirstOrDefaultAsync(a => a.RetailerId == retailer.Id && a.AddressType == address.AddressType && a.IsDefault);
+                if (existingDefault != null) existingDefault.IsDefault = false;
+            }
+
+            _context.RetailerAddresses.Add(address);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteAddress(int id)
+        {
+            if (!IsRetailer()) return Json(new { success = false });
+
+            var address = await _context.RetailerAddresses.FindAsync(id);
+            if (address != null)
+            {
+                _context.RetailerAddresses.Remove(address);
+                await _context.SaveChangesAsync();
+            }
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddPaymentMethod(RetailerPaymentMethod method)
+        {
+            if (!IsRetailer()) return Json(new { success = false });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+
+            method.RetailerId = retailer.Id;
+            if (method.IsDefault)
+            {
+                var existingDefault = await _context.RetailerPaymentMethods.FirstOrDefaultAsync(p => p.RetailerId == retailer.Id && p.IsDefault);
+                if (existingDefault != null) existingDefault.IsDefault = false;
+            }
+
+            _context.RetailerPaymentMethods.Add(method);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RevokeSession(int sessionId)
+        {
+            if (!IsRetailer()) return Json(new { success = false });
+
+            var session = await _context.UserSessions.FindAsync(sessionId);
+            if (session != null)
+            {
+                session.IsActive = false;
+                await _context.SaveChangesAsync();
+            }
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateSupplierPreferences(string favoriteSuppliers, string blockedSuppliers, int supplierRatingThreshold)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Unauthorized" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null) return Json(new { success = false, message = "Retailer not found" });
+
+            retailer.FavoriteSuppliers = favoriteSuppliers;
+            retailer.BlockedSuppliers = blockedSuppliers;
+            retailer.SupplierRatingThreshold = supplierRatingThreshold;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Supplier preferences updated!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeactivateAccount(string password)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Unauthorized" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var user = await _context.Users.FindAsync(userId);
+
+            // Simple verification for mock (in production use BCrypt or similar)
+            if (user.PasswordHash == password)
+            {
+                user.AccountStatus = "Suspended";
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Account deactivated." });
+            }
+
+            return Json(new { success = false, message = "Invalid password." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportData()
+        {
+            if (!IsRetailer()) return Unauthorized();
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Property,Value");
+            csv.AppendLine($"Business Name,{retailer.BusinessName}");
+            csv.AppendLine($"Business Type,{retailer.BusinessType}");
+            csv.AppendLine($"City,{retailer.City}");
+            csv.AppendLine($"Created At,{retailer.CreatedAt}");
+            
+            // Add more data as needed...
+            
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"Retailer_Data_{retailer.Id}.csv");
         }
 
         // GET: /Retailer/BrowseCatalog
