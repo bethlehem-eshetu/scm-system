@@ -264,7 +264,6 @@ namespace SCM_System.Data
                         new ProductCategory { CategoryName = "Women's Shoes", ParentCategoryId = footwear.Id, Level = 2 },
                         new ProductCategory { CategoryName = "Sports Shoes", ParentCategoryId = footwear.Id, Level = 2 }
                     );
-
                     context.SaveChanges();
                     Console.WriteLine("=================================");
                     Console.WriteLine("Hierarchical Product Categories seeded!");
