@@ -468,7 +468,33 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Prevent Enter key from submitting the form unexpectedly
+            $('#registerForm').on('keydown', 'input', function(e) {
+                if (e.which == 13) {
+                    e.preventDefault();
+                    var $step = $(this).closest('.registration-step');
+                    var stepId = $step.attr('id');
+                    
+                    if (stepId === 'step-1') {
+                        if ($('#otpSection').is(':visible')) {
+                            $('#btnVerifyOtp').click();
+                        } else {
+                            $('#btnRequestOtp').click();
+                        }
+                    } else if (stepId === 'step-2') {
+                        $('#btnNextToStep3').click();
+                    }
+                    return false;
+                }
+            });
+
             $('#registerForm').on('submit', function(e) {
+                // Prevent submission if not on the final step
+                if (!$('#step-3').is(':visible')) {
+                    e.preventDefault();
+                    return false;
+                }
+
                 var role = $('#RoleHidden').val() || $('#RoleSelect').val();
                 var isFormValid = true;
 
@@ -480,16 +506,13 @@
                         $('#categoryError').text('');
                     }
                 } else if (role === 'Retailer') {
-                    if ($('input[name="SelectedRetailerCategoryIds"]:checked').length === 0) {
-                        $('#retailerCategoryError').text('Please select at least one category.');
-                        isFormValid = false;
-                    } else {
-                        $('#retailerCategoryError').text('');
-                    }
+                    // Retailers no longer select categories during registration
+                    // This section is kept for future-proofing or if logic is restored
                 }
 
                 if (!isFormValid) {
                     e.preventDefault();
+                    window.scrollTo(0, 0);
                     return false;
                 }
 
@@ -512,6 +535,14 @@
                     // Step 1 completed (Fayda verified)
                     currentStep = 2;
                     
+                    // Re-populate verification UI state
+                    $('#nameBadge').show();
+                    $('#fullNameHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
+                    $('#phoneBadge').show();
+                    $('#phoneHelpText').html('<span class="badge bg-info">✓ Verified by Fayda</span>');
+                    $('#dobBadge').show();
+                    $('#dobHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
+
                     // Check if business info is partially filled or Role was selected (meaning they passed step 2)
                     if (savedRole && savedRole.trim() !== "") {
                         currentStep = 3;
@@ -519,12 +550,6 @@
                 }
                 
                 showStep(currentStep);
-                
-                if ($('#VerifiedFullName').val() && $('#VerifiedFullName').val().trim() !== "") {
-                    $('#nameBadge').show();
-                    $('#phoneBadge').show();
-                    $('#dobBadge').show();
-                }
                 
                 if (savedRole) {
                     $('#RoleSelect').val(savedRole).trigger('change');

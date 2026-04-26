@@ -74,28 +74,7 @@ namespace SCM_System.Controllers
 
             try
             {
-                // Validate common fields
-                if (string.IsNullOrEmpty(model.FullName))
-                    ModelState.AddModelError("FullName", "Full name is required");
-
-                if (string.IsNullOrEmpty(model.Email))
-                    ModelState.AddModelError("Email", "Email is required");
-
-                if (string.IsNullOrEmpty(model.Password))
-                    ModelState.AddModelError("Password", "Password is required");
-
-                if (model.Password != model.ConfirmPassword)
-                    ModelState.AddModelError("ConfirmPassword", "Passwords do not match");
-
-                if (string.IsNullOrEmpty(model.PhoneNumber))
-                    ModelState.AddModelError("PhoneNumber", "Phone number is required");
-
-                if (string.IsNullOrEmpty(model.Role))
-                    ModelState.AddModelError("Role", "Please select a role");
-
-                // City is required for BOTH roles
-                if (string.IsNullOrEmpty(model.City))
-                    ModelState.AddModelError("City", "City is required");
+                // (Common field validation is handled by RegisterViewModel DataAnnotations)
 
                 // Validate based on role
                 if (model.Role == "Supplier")
@@ -141,11 +120,7 @@ namespace SCM_System.Controllers
                     // Website and Description are optional
                 }
 
-                // FAN Validation (Simulated Fayda)
-                if (string.IsNullOrEmpty(model.FAN) || !System.Text.RegularExpressions.Regex.IsMatch(model.FAN, @"^\d{16}$"))
-                {
-                    ModelState.AddModelError("FAN", "FAN must be a valid 16-digit number.");
-                }
+                // (FAN format validation is handled by RegisterViewModel DataAnnotations)
 
                 // Duplicate FAN Check
                 if (await _context.Users.AnyAsync(u => u.FAN == model.FAN))
@@ -165,11 +140,7 @@ namespace SCM_System.Controllers
                     model.FullName = faydaData.fullName;
                 }
 
-                // Date of Birth check
-                if (!model.DateOfBirth.HasValue)
-                {
-                    ModelState.AddModelError("DateOfBirth", "Date of birth is required.");
-                }
+                // (Date of Birth check is handled by RegisterViewModel DataAnnotations)
 
                 if (model.Role == "Retailer")
                 {
