@@ -65,6 +65,7 @@ namespace SCM_System.Models.ViewModels
         [Display(Name = "Company Address")]
         public string? CompanyAddress { get; set; }
 
+        [Required(ErrorMessage = "City is required")]
         [Display(Name = "City")]
         public string? City { get; set; }
 
