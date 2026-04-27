@@ -594,6 +594,26 @@
         document.getElementById('CategoryId').addEventListener('change', function() {
             var categoryId = this.value;
             var container = document.getElementById('dynamicAttributesContainer');
+            var subCategorySelect = document.getElementById('subCategorySelect');
+            
+            // Clear subcategories
+            if (subCategorySelect) {
+                subCategorySelect.innerHTML = '<option value="">-- Select Sub Category --</option>';
+                
+                if (categoryId) {
+                    fetch(`/Product/GetSubCategories?categoryId=${categoryId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(sub => {
+                                var option = document.createElement('option');
+                                option.value = sub.id;
+                                option.text = sub.categoryName;
+                                subCategorySelect.appendChild(option);
+                            });
+                        })
+                        .catch(err => console.error("Error fetching subcategories", err));
+                }
+            }
             
             if (!categoryId) {
                 container.innerHTML = '<div class="col-12 text-center py-4 text-muted"><i class="fas fa-info-circle mb-2 fa-2x"></i><p>Please select a Category first to load relevant specifications.</p></div>';
@@ -672,5 +692,13 @@
                 row.remove();
             }
         }
+        
+        // Trigger change event on load to populate subcategories if category is pre-selected
+        window.addEventListener('DOMContentLoaded', (event) => {
+            var categorySelect = document.getElementById('CategoryId');
+            if (categorySelect && categorySelect.value) {
+                categorySelect.dispatchEvent(new Event('change'));
+            }
+        });
     </script>
 }
