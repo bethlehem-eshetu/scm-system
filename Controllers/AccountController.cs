@@ -21,12 +21,14 @@ namespace SCM_System.Controllers
         ApplicationDbContext context,
         IWebHostEnvironment webHostEnvironment,
         SCM_System.Services.IFaydaService faydaService,
+        SCM_System.Services.IEmailService emailService,
         ILogger<AccountController> logger,
         IConfiguration configuration) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
         private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
+        private readonly SCM_System.Services.IEmailService _emailService = emailService;
         private readonly ILogger<AccountController> _logger = logger;
         private readonly IConfiguration _configuration = configuration;
 
@@ -759,17 +761,16 @@ namespace SCM_System.Controllers
                 // Create reset link
                 string resetLink = Url.Action("ResetPassword", "Account", new { email = user.Email, token = token }, Request.Scheme);
 
-                // Send email
-                bool emailSent = await SendPasswordResetEmail(user.Email, user.FullName, resetLink);
-
-                if (emailSent)
+                // Send email via service
+                try 
                 {
+                    await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, resetLink);
                     _logger.LogInformation($"Password reset email sent to: {user.Email}");
                     return Json(new { success = true, message = "If an account exists with that email, we've sent a password reset link." });
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.LogError($"Failed to send password reset email to: {user.Email}");
+                    _logger.LogError(ex, $"Failed to send password reset email to: {user.Email}");
                     return Json(new { success = false, message = "Unable to send reset email. Please try again later or contact support." });
                 }
             }
@@ -864,105 +865,6 @@ namespace SCM_System.Controllers
             }
         }
 
-        private async Task<bool> SendPasswordResetEmail(string email, string fullName, string resetLink)
-        {
-            try
-            {
-                // Get email settings from configuration - MATCHING YOUR APPSETTINGS.JSON
-                string smtpHost = _configuration["EmailSettings:Host"] ?? "smtp.gmail.com";
-                int smtpPort = int.Parse(_configuration["EmailSettings:Port"] ?? "587");
-                string smtpUsername = _configuration["EmailSettings:Email"] ?? "";  // Changed from "Username" to "Email" to match your appsettings
-                string smtpPassword = _configuration["EmailSettings:Password"] ?? "";
-                string fromEmail = _configuration["EmailSettings:Email"] ?? "ethiochainscm@gmail.com";
-                string fromName = _configuration["EmailSettings:SenderName"] ?? "EthioChain SCM";
-                bool enableEmail = bool.Parse(_configuration["EmailSettings:EnableEmail"] ?? "true");
-
-                if (!enableEmail)
-                {
-                    _logger.LogInformation($"Email sending disabled. Password reset link for {email}: {resetLink}");
-                    return true;
-                }
-
-                if (string.IsNullOrEmpty(smtpUsername) || string.IsNullOrEmpty(smtpPassword))
-                {
-                    _logger.LogWarning("Email credentials not configured. Logging reset link instead.");
-                    _logger.LogInformation($"Password reset link for {email}: {resetLink}");
-                    return true;
-                }
-
-                using (var client = new SmtpClient(smtpHost, smtpPort))
-                {
-                    client.EnableSsl = bool.Parse(_configuration["EmailSettings:EnableSsl"] ?? "true");
-                    client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
-                    client.Timeout = 10000; // 10 second timeout
-
-                    string subject = "EthioChain SCM - Password Reset Request";
-                    string body = $@"
-                        <html>
-                        <head>
-                            <style>
-                                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                                .header {{ background: linear-gradient(135deg, #0b3d60, #07253b); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                                .header h1 {{ color: #cba052; margin: 0; }}
-                                .content {{ padding: 30px; background: #f8f9fc; border-radius: 0 0 10px 10px; }}
-                                .button {{ display: inline-block; padding: 12px 30px; background: #0b3d60; color: white; text-decoration: none; border-radius: 50px; margin: 20px 0; }}
-                                .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #666; }}
-                                .warning {{ color: #dc3545; font-size: 12px; }}
-                            </style>
-                        </head>
-                        <body>
-                            <div class='container'>
-                                <div class='header'>
-                                    <h1>EthioChain SCM</h1>
-                                    <p style='color: white; margin: 0;'>Supply Chain Management</p>
-                                </div>
-                                <div class='content'>
-                                    <h2>Hello {fullName},</h2>
-                                    <p>We received a request to reset the password for your EthioChain SCM account.</p>
-                                    <p>Click the button below to create a new password:</p>
-                                    <div style='text-align: center;'>
-                                        <a href='{resetLink}' class='button' style='color: white;'>Reset Password</a>
-                                    </div>
-                                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
-                                    <p style='word-break: break-all;'><small>{resetLink}</small></p>
-                                    <p class='warning'><strong>⚠️ This link will expire in 1 hour.</strong></p>
-                                    <p>If you didn't request this, please ignore this email. Your password won't change until you create a new one.</p>
-                                    <hr>
-                                    <p><small>For security reasons, never share this link with anyone.</small></p>
-                                </div>
-                                <div class='footer'>
-                                    <p>&copy; {DateTime.Now.Year} EthioChain SCM. All rights reserved.</p>
-                                    <p>Ethiopia's Trusted Supply Chain Network</p>
-                                </div>
-                            </div>
-                        </body>
-                        </html>
-                    ";
-
-                    using (var message = new MailMessage(fromEmail, email)
-                    {
-                        Subject = subject,
-                        Body = body,
-                        IsBodyHtml = true
-                    })
-                    {
-                        await client.SendMailAsync(message);
-                    }
-                }
-
-                _logger.LogInformation($"Password reset email sent successfully to {email}");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to send password reset email to {email}");
-
-                // Fallback: Log the reset link for development
-                _logger.LogInformation($"Password reset link for {email}: {resetLink}");
-                return true; // Return true even if email fails during development
-            }
-        }
     }
 
     // ViewModel for Forgot Password request
