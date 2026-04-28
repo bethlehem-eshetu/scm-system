@@ -4,12 +4,20 @@
     {
         public int MessageId { get; set; }
         public string SenderName { get; set; } = string.Empty;
+        public string SenderEmail { get; set; } = string.Empty;
         public string SenderRole { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public DateTime SentAt { get; set; }
         public bool IsRead { get; set; }
         public int ConversationId { get; set; }
         public string ConversationBetween { get; set; } = string.Empty;
+        public bool ContainsFlaggedWords { get; set; }
+        public int AttachmentCount { get; set; }
+        public DateTime Timestamp
+        {
+            get => SentAt;
+            set => SentAt = value;
+        }
 
         public string TimeAgo
         {

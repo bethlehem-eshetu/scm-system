@@ -137,6 +137,17 @@
                     </div>
                 </div>
 
+                <!-- QR Code Verification Section -->
+                @if (displayStatus == "In Transit")
+                {
+                    <div class="mb-4 text-center p-4 rounded-4" style="background-color: #f8f9fa; border: 2px dashed #0d6efd;">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-qrcode me-2"></i>Delivery QR Code</h6>
+                        <div id="qrcode-container" class="d-inline-block bg-white p-2 rounded-3 shadow-sm mb-3"></div>
+                        <p class="small text-muted mb-0">Show this code to the Delivery Agent upon arrival to instantly confirm receipt.</p>
+                        <div class="mt-2 fw-bold text-dark" style="letter-spacing: 2px;">ORDER-@Model.OrderNumber</div>
+                    </div>
+                }
+
                 @if (Model.PaymentStatus == "Pending" && Model.OrderStatus != "Cancelled" && Model.OrderStatus != "Rejected")
                 {
                     <div class="mb-4">
@@ -268,7 +279,21 @@
 </style>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
+        // Generate QR Code if container exists
+        const qrContainer = document.getElementById('qrcode-container');
+        if (qrContainer) {
+            new QRCode(qrContainer, {
+                text: "ORDER-@Model.OrderNumber",
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
         // Polling for status updates every 10 seconds
         setInterval(function() {
             const container = document.querySelector('.order-status-container');

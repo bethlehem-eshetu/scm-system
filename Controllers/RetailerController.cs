@@ -103,6 +103,7 @@ namespace SCM_System.Controllers
 
             // Advanced Stats for Dashboard
             var orders = await _context.Orders
+                .Include(o => o.Supplier)
                 .Include(o => o.PurchaseOrders)
                 .Where(o => o.RetailerId == retailer.Id)
                 .ToListAsync();
@@ -147,6 +148,26 @@ namespace SCM_System.Controllers
                 .OrderByDescending(n => n.CreatedAt)
                 .Take(5)
                 .ToListAsync();
+
+            var recentConversations = await _context.Conversations
+                .Include(c => c.Supplier)
+                .Include(c => c.Messages)
+                .Where(c => c.RetailerId == retailer.Id)
+                .OrderByDescending(c => c.LastMessageAt)
+                .Take(4)
+                .Select(c => new
+                {
+                    OtherUserId = c.Supplier.UserId,
+                    OtherUserName = c.Supplier.CompanyName,
+                    OtherUserRole = "Supplier",
+                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault() != null 
+                        ? c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault().MessageText 
+                        : "No messages yet",
+                    LastMessageAt = c.LastMessageAt ?? c.CreatedAt,
+                    UnreadCount = c.Messages.Count(m => !m.IsRead && m.SenderId != userId)
+                })
+                .ToListAsync();
+            ViewBag.RecentConversations = recentConversations;
 
             ViewBag.AllCategories = await _context.ProductCategories
                 .Where(c => c.IsActive)

@@ -1,4 +1,4 @@
-﻿@model List<SCM_System.Models.ViewModels.AdminMessageViewModel>
+@model List<SCM_System.Models.ViewModels.AdminMessageViewModel>
 
 @{
     ViewData["Title"] = "Message Monitoring";
@@ -6,117 +6,381 @@
 }
 
 <div class="container-fluid py-4">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-envelope-open-text text-primary me-2"></i>Message Monitoring
-        </h1>
         <div>
-            <a asp-action="BlockedMessages" class="btn btn-warning me-2">
-                <i class="fas fa-ban me-1"></i> Blocked Messages
-                @if (ViewBag.BlockedMessagesCount > 0)
-                {
-                    <span class="badge bg-danger ms-1">@ViewBag.BlockedMessagesCount</span>
-                }
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">
+                <i class="fas fa-envelope-open-text text-primary me-2"></i>Message Monitoring
+            </h1>
+            <p class="text-muted small mb-0">Track and monitor all communications across the platform.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="BlockedMessages" class="btn btn-warning rounded-pill px-4 shadow-sm fw-bold text-dark">
+                <i class="fas fa-ban me-2"></i> Blocked Violations
+                @if (ViewBag.BlockedMessagesCount > 0) { <span class="badge bg-danger ms-1">@ViewBag.BlockedMessagesCount</span> }
             </a>
-            <a asp-action="Dashboard" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            <a asp-action="Dashboard" class="btn btn-light rounded-pill px-4 shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i> Dashboard
             </a>
         </div>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- Enhanced Stats Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card bg-primary text-white shadow-sm">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
+                <div class="card-body text-white p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50 mb-2">Total Messages</h6>
-                            <h3 class="mb-0">@ViewBag.TotalMessagesCount</h3>
+                            <div class="text-white-50 small fw-bold text-uppercase mb-1">Total Messages</div>
+                            <div class="h2 mb-0 fw-bold">@ViewBag.TotalMessagesCount</div>
                         </div>
-                        <i class="fas fa-envelope fa-3x opacity-50"></i>
+                        <i class="fas fa-envelope fa-2x text-white-50"></i>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-warning text-white shadow-sm">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50 mb-2">Blocked Messages</h6>
-                            <h3 class="mb-0">@ViewBag.BlockedMessagesCount</h3>
+                            <div class="text-warning small fw-bold text-uppercase mb-1">Blocked Violations</div>
+                            <div class="h2 mb-0 fw-bold text-dark">@ViewBag.BlockedMessagesCount</div>
                         </div>
-                        <i class="fas fa-ban fa-3x opacity-50"></i>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-ban fa-xl text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-danger text-white shadow-sm">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50 mb-2">Active Penalties</h6>
-                            <h3 class="mb-0">@ViewBag.ActivePenaltiesCount</h3>
+                            <div class="text-danger small fw-bold text-uppercase mb-1">Active Penalties</div>
+                            <div class="h2 mb-0 fw-bold text-dark">@ViewBag.ActivePenaltiesCount</div>
                         </div>
-                        <i class="fas fa-gavel fa-3x opacity-50"></i>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-gavel fa-xl text-danger"></i>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modern Filter Section -->
+    <div class="card shadow-sm mb-4 border-0 rounded-4">
+        <div class="card-header bg-white py-3 px-4 border-0">
+            <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-filter me-2 text-primary"></i>Advanced Filtering</h6>
+        </div>
+        <div class="card-body pt-0 px-4">
+            <form method="get" id="filterForm" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Sender Name</label>
+                    <input type="text" class="form-control form-control-sm border-0 bg-light rounded-3 px-3 py-2" name="senderName"
+                           value="@ViewBag.CurrentFilters.SenderName" placeholder="Search by name...">
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Sender Role</label>
+                    <select class="form-select form-select-sm border-0 bg-light rounded-3 px-3 py-2" name="senderRole">
+                        <option value="">All Roles</option>
+                        <option value="Supplier" selected="@(ViewBag.CurrentFilters.SenderRole == "Supplier")">Supplier</option>
+                        <option value="Buyer" selected="@(ViewBag.CurrentFilters.SenderRole == "Retailer")">Retailer</option>
+                        <option value="Admin" selected="@(ViewBag.CurrentFilters.SenderRole == "Admin")">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Date Range</label>
+                    <select class="form-select form-select-sm border-0 bg-light rounded-3 px-3 py-2" id="dateFilter" name="dateFilter">
+                        <option value="all" selected="@(ViewBag.CurrentFilters.DateFilter == "all")">All Time</option>
+                        <option value="today" selected="@(ViewBag.CurrentFilters.DateFilter == "today")">Today</option>
+                        <option value="last7days" selected="@(ViewBag.CurrentFilters.DateFilter == "last7days")">Last 7 Days</option>
+                        <option value="custom" selected="@(ViewBag.CurrentFilters.DateFilter == "custom")">Custom Range</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 d-flex gap-2" id="startDateDiv" style="display: @(ViewBag.CurrentFilters.DateFilter == "custom" ? "flex" : "none");">
+                    <div class="flex-grow-1">
+                        <label class="form-label small fw-bold text-muted">Start Date</label>
+                        <input type="date" class="form-control form-control-sm border-0 bg-light rounded-3" name="startDate" value="@ViewBag.CurrentFilters.StartDate">
+                    </div>
+                    <div class="flex-grow-1">
+                        <label class="form-label small fw-bold text-muted">End Date</label>
+                        <input type="date" class="form-control form-control-sm border-0 bg-light rounded-3" name="endDate" value="@ViewBag.CurrentFilters.EndDate">
+                    </div>
+                </div>
+                
+
+                <div class="col-md-2 text-end">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 flex-grow-1 shadow-sm fw-bold">
+                            <i class="fas fa-search me-1"></i> Apply
+                        </button>
+                        <button type="button" class="btn btn-light btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px;" onclick="clearFilters()" title="Clear Filters">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Messages Table -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">
-                <i class="fas fa-list me-2 text-primary"></i>Recent Messages
-            </h5>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+            <h6 class="mb-0 fw-bold text-dark">
+                Recent Conversations
+                @if (ViewBag.FilteredCount > 0) { <span class="badge bg-light text-primary border ms-2" style="font-size: 0.75rem;">@ViewBag.FilteredCount results</span> }
+            </h6>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="width: 220px;">
+                    <span class="input-group-text bg-light border-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted small"></i></span>
+                    <input type="text" id="liveSearch" class="form-control bg-light border-0 rounded-end-pill pe-3" placeholder="Live search results...">
+                </div>
+                <button class="btn btn-sm btn-light rounded-circle shadow-sm" style="width: 32px; height: 32px;" onclick="exportToCSV()" title="Export CSV">
+                    <i class="fas fa-download small"></i>
+                </button>
+                <button id="autoRefreshBtn" class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm fw-bold" onclick="toggleAutoRefresh()">
+                    <i class="fas fa-pause me-1"></i> Live
+                </button>
+            </div>
         </div>
         <div class="card-body p-0">
             @if (!Model.Any())
             {
                 <div class="text-center py-5">
-                    <i class="fas fa-envelope fa-4x text-muted mb-3"></i>
-                    <h5 class="text-muted">No messages found</h5>
+                    <i class="fas fa-envelope-open fa-4x text-muted opacity-25 mb-3"></i>
+                    <h5 class="text-muted fw-bold">No messages found</h5>
+                    <p class="text-muted small">Try adjusting your filters or clear them to see all messages.</p>
+                    @if (ViewBag.HasFilters)
+                    {
+                        <button class="btn btn-primary btn-sm rounded-pill px-4 mt-2" onclick="clearFilters()">Clear Filters</button>
+                    }
                 </div>
             }
             else
             {
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Time</th>
-                                <th>Sender</th>
-                                <th>Role</th>
-                                <th>Conversation</th>
-                                <th>Message</th>
-                                <th>Actions</th>
+                    <table class="table table-hover align-middle mb-0" id="messagesTable">
+                        <thead class="bg-light">
+                            <tr class="text-muted small text-uppercase">
+                                <th class="ps-4 py-3"><a href="#" onclick="sortTable(0)" class="text-muted text-decoration-none">Time <i class="fas fa-sort ms-1"></i></a></th>
+                                <th class="py-3"><a href="#" onclick="sortTable(1)" class="text-muted text-decoration-none">Sender <i class="fas fa-sort ms-1"></i></a></th>
+                                <th class="py-3">Role</th>
+                                <th class="py-3">Between</th>
+                                <th class="py-3">Message Preview</th>
+                                <th class="pe-4 text-end py-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var msg in Model)
                             {
-                                <tr>
-                                    <td><small>@msg.TimeAgo</small></td>
-                                    <td><strong>@msg.SenderName</strong></td>
-                                    <td><span class="badge bg-@(msg.SenderRole == "Supplier" ? "primary" : "info")">@msg.SenderRole</span></td>
-                                    <td><small>@msg.ConversationBetween</small></td>
-                                    <td>@(msg.Content.Length > 50 ? msg.Content.Substring(0, 50) + "..." : msg.Content)</td>
+                                <tr data-role="@msg.SenderRole">
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">@msg.TimeAgo</div>
+                                        <div class="text-muted small">@msg.Timestamp.ToString("MMM dd, HH:mm")</div>
+                                    </td>
                                     <td>
-                                        <a asp-action="ViewConversation" asp-route-id="@msg.ConversationId"
-                                               class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
+                                        <div class="fw-bold text-dark">@msg.SenderName</div>
+                                        @if (!string.IsNullOrEmpty(msg.SenderEmail))
+                                        {
+                                            <div class="text-muted small">@msg.SenderEmail</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(msg.SenderRole == "Supplier" ? "primary" : msg.SenderRole == "Buyer" ? "info" : "secondary") rounded-pill px-3 py-1">
+                                            @msg.SenderRole
+                                        </span>
+                                    </td>
+                                    <td><div class="small text-muted">@msg.ConversationBetween</div></td>
+                                    <td>
+                                        <div class="message-preview" data-full-message="@Html.Raw(msg.Content.Replace("\"", "&quot;"))">
+                                            <span class="text-dark">@(msg.Content.Length > 80 ? msg.Content.Substring(0, 80) + "..." : msg.Content)</span>
+                                            @if (msg.Content.Length > 80)
+                                            {
+                                                <a href="#" class="text-primary small ms-1 text-decoration-none fw-bold" onclick="showFullMessage(this); return false;">more</a>
+                                            }
+                                        </div>
+                                        <div class="mt-1">
+                                            @if (msg.ContainsFlaggedWords)
+                                            {
+                                                <span class="badge bg-warning text-dark small me-1"><i class="fas fa-exclamation-triangle me-1"></i>Flagged</span>
+                                            }
+                                            @if (msg.AttachmentCount > 0)
+                                            {
+                                                <span class="badge bg-light text-dark border small"><i class="fas fa-paperclip me-1"></i>@msg.AttachmentCount</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <div class="btn-group btn-group-sm rounded-pill overflow-hidden shadow-sm">
+                                            <a asp-action="ViewConversation" asp-route-id="@msg.ConversationId" class="btn btn-white border-end" title="View Full Conversation">
+                                                <i class="fas fa-eye text-primary"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-white" onclick="reportMessage(@msg.MessageId)" title="Report Message">
+                                                <i class="fas fa-flag text-danger"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
+
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="card-footer bg-white border-0 py-3">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link rounded-circle mx-1 border-0 bg-light text-dark" href="?page=@(ViewBag.CurrentPage - 1)&@GetQueryString()">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+                                
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    if (i == ViewBag.CurrentPage)
+                                    {
+                                        <li class="page-item active"><span class="page-link rounded-circle mx-1 border-0 shadow-sm">@i</span></li>
+                                    }
+                                    else if (Math.Abs(i - ViewBag.CurrentPage) <= 2 || i == 1 || i == ViewBag.TotalPages)
+                                    {
+                                        <li class="page-item"><a class="page-link rounded-circle mx-1 border-0 bg-light text-dark" href="?page=@i&@GetQueryString()">@i</a></li>
+                                    }
+                                    else if (Math.Abs(i - ViewBag.CurrentPage) == 3)
+                                    {
+                                        <li class="page-item disabled"><span class="page-link border-0 bg-transparent">...</span></li>
+                                    }
+                                }
+                                
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link rounded-circle mx-1 border-0 bg-light text-dark" href="?page=@(ViewBag.CurrentPage + 1)&@GetQueryString()">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
             }
         </div>
     </div>
 </div>
+
+<!-- Full Message Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-envelope-open-text me-2 text-primary"></i>Full Message Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="fullMessageText" class="text-muted lh-base mb-0"></p>
+            </div>
+            <div class="modal-footer border-top-0 pb-4 px-4">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Live Search
+            $("#liveSearch").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#messagesTable tbody tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+
+            // Date Filter toggle
+            $("#dateFilter").on("change", function() {
+                $("#startDateDiv").toggle($(this).val() === "custom");
+            });
+        });
+
+        function clearFilters() {
+            const form = document.getElementById('filterForm');
+            form.reset();
+            window.location.href = window.location.pathname;
+        }
+        
+        function showFullMessage(element) {
+            const previewDiv = element.closest('.message-preview');
+            const fullMessage = previewDiv.getAttribute('data-full-message');
+            document.getElementById('fullMessageText').innerText = fullMessage;
+            new bootstrap.Modal(document.getElementById('messageModal')).show();
+        }
+        
+        function reportMessage(messageId) {
+            if (confirm('Report this message to system security?')) {
+                fetch(`/Admin/ReportMessage/${messageId}`, { method: 'POST' })
+                    .then(r => r.ok ? alert('Reported successfully') : alert('Error reporting'));
+            }
+        }
+        
+        function exportToCSV() {
+            let csv = "Time,Sender,Role,Between,Message\n";
+            $("#messagesTable tbody tr:visible").each(function() {
+                let row = $(this).find("td").map((i, el) => `"${$(el).text().replace(/"/g, '""').trim()}"`).get().slice(0, 5);
+                csv += row.join(",") + "\n";
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'messages_export.csv');
+            a.click();
+        }
+
+        let autoRefresh = true;
+        let refreshInterval = setInterval(() => { if (autoRefresh && !document.hidden) location.reload(); }, 60000);
+        
+        function toggleAutoRefresh() {
+            autoRefresh = !autoRefresh;
+            $("#autoRefreshBtn").toggleClass("btn-warning btn-success")
+                .html(autoRefresh ? '<i class="fas fa-pause me-1"></i> Live' : '<i class="fas fa-play me-1"></i> Paused');
+        }
+
+        function sortTable(n) {
+            const tbody = document.querySelector("#messagesTable tbody");
+            const rows = Array.from(tbody.rows);
+            const isAsc = tbody.getAttribute("data-sort") === "asc";
+            rows.sort((a, b) => a.cells[n].innerText.localeCompare(b.cells[n].innerText, undefined, {numeric: true}));
+            if (isAsc) rows.reverse();
+            tbody.setAttribute("data-sort", isAsc ? "desc" : "asc");
+            rows.forEach(r => tbody.appendChild(r));
+        }
+    </script>
+}
+
+@functions {
+    public string GetQueryString() {
+        var q = new List<string>();
+        var f = ViewBag.CurrentFilters;
+        if (!string.IsNullOrEmpty(f?.SenderName)) q.Add($"senderName={Uri.EscapeDataString(f.SenderName)}");
+        if (!string.IsNullOrEmpty(f?.SenderRole)) q.Add($"senderRole={f.SenderRole}");
+        if (!string.IsNullOrEmpty(f?.DateFilter)) q.Add($"dateFilter={f.DateFilter}");
+        if (!string.IsNullOrEmpty(f?.StartDate)) q.Add($"startDate={f.StartDate}");
+        if (!string.IsNullOrEmpty(f?.EndDate)) q.Add($"endDate={f.EndDate}");
+        if (!string.IsNullOrEmpty(f?.Keyword)) q.Add($"keyword={Uri.EscapeDataString(f.Keyword)}");
+        return string.Join("&", q);
+    }
+}

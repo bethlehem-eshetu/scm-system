@@ -95,6 +95,49 @@ namespace SCM_System.Controllers
             return View(model);
         }
 
+        public class QRCodeRequest
+        {
+            public int purchaseOrderId { get; set; }
+            public string qrCode { get; set; }
+            public bool? isManual { get; set; }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "DeliveryAgent")]
+        public async Task<IActionResult> VerifyQRCode([FromBody] QRCodeRequest request)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Json(new { success = false, message = "Unauthorized" });
+
+            var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == userId);
+            if (employee == null) return Json(new { success = false, message = "Employee profile not found" });
+
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Order)
+                .FirstOrDefaultAsync(p => p.Id == request.purchaseOrderId && p.DeliveryAgentId == employee.Id);
+
+            if (po == null)
+            {
+                return Json(new { success = false, message = "Purchase order not found or not assigned to you." });
+            }
+
+            // Expected QR format: "ORDER-{OrderNumber}"
+            var expectedQR = $"ORDER-{po.Order.OrderNumber}";
+
+            if (request.isManual == true)
+            {
+                // Manual confirmation, don't verify strict format, just return success so form can submit
+                return Json(new { success = true });
+            }
+
+            if (!string.IsNullOrEmpty(request.qrCode) && request.qrCode.Trim().Equals(expectedQR, StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new { success = true, message = "QR Code verified successfully." });
+            }
+
+            return Json(new { success = false, message = "Invalid QR Code for this order." });
+        }
+
         [HttpPost]
         [Authorize(Roles = "DeliveryAgent")]
         [ValidateAntiForgeryToken]
@@ -232,6 +275,31 @@ namespace SCM_System.Controllers
                 .ToListAsync();
 
             ViewBag.RecentDeliveries = recentDeliveries;
+
+            var activeDeliveries = await _context.PurchaseOrders
+                .Include(po => po.Order)
+                    .ThenInclude(o => o.Retailer)
+                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
+                .ToListAsync();
+
+            var mapDataList = new List<object>();
+            var random = new Random();
+            var index = 0;
+            foreach (var po in activeDeliveries)
+            {
+                mapDataList.Add(new {
+                    id = po.Id,
+                    poNumber = po.PONumber,
+                    businessName = po.Order?.Retailer?.BusinessName ?? "Retailer",
+                    address = po.DeliveryAddress ?? (po.Order?.Retailer?.BusinessAddress ?? "Address not set"),
+                    lat = 9.02 + (index * 0.12) + (random.NextDouble() * 0.05),
+                    lng = 38.75 + (index * 0.09) + (random.NextDouble() * 0.03),
+                    priority = po.Status == "In Transit" ? "High" : "Normal",
+                    status = po.Status
+                });
+                index++;
+            }
+            ViewBag.MapData = Newtonsoft.Json.JsonConvert.SerializeObject(mapDataList);
 
             return View(employee);
         }

@@ -4,7 +4,7 @@ namespace SCM_System.Services
 {
     public interface IEmailService
     {
-        Task SendEmailAsync(string toEmail, string subject, string body);
+        Task SendEmailAsync(string toEmail, string subject, string body, string? replyTo = null);
         Task SendApprovalEmailAsync(string toEmail, string userName, string role);
         Task SendRejectionEmailAsync(string toEmail, string userName, string role, string reason);
         Task SendWelcomeEmailAsync(string toEmail, string userName, string role);

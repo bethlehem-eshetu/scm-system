@@ -17,7 +17,8 @@
             border-bottom: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             padding: 1rem 2rem;
-            position: sticky;
+            position: fixed;
+            width: 100%;
             top: 0;
             z-index: 1000;
         }
@@ -78,8 +79,8 @@
         }
 
         main {
-            min-height: calc(100vh - 180px);
-            padding: 2rem 0;
+            min-height: 100vh;
+            padding: 0;
         }
 
         .btn-primary {
@@ -135,10 +136,10 @@
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">About</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">About</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Contact</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
                         </li>
 
                         @if (Context.Session.GetString("UserRole") == "Admin")
@@ -217,7 +218,7 @@
     <main>
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="container mt-3">
+            <div class="container" style="padding-top: 100px;">
                 <div class="alert alert-success alert-dismissible fade show">
                     <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -227,7 +228,7 @@
 
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="container mt-3">
+            <div class="container" style="padding-top: 100px;">
                 <div class="alert alert-danger alert-dismissible fade show">
                     <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -250,7 +251,7 @@
                 <div class="col-md-6 text-md-end">
                     <a asp-area="" asp-controller="Home" asp-action="Privacy" class="me-3">Privacy</a>
                     <a asp-area="" asp-controller="Home" asp-action="Terms" class="me-3">Terms</a>
-                    <a href="#">
+                    <a href="https://twitter.com/ethiochain" target="_blank" rel="noopener noreferrer">
                         <i class="fab fa-twitter"></i>
                     </a>
                 </div>

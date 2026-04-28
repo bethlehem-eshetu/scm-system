@@ -8,6 +8,9 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using System.Net;
+using System.Net.Mail;
 
 namespace SCM_System.Controllers
 {
@@ -15,15 +18,17 @@ namespace SCM_System.Controllers
     public class OtpVerifyModel { public string FAN { get; set; } public string OTP { get; set; } }
 
     public class AccountController(
-        ApplicationDbContext context, 
-        IWebHostEnvironment webHostEnvironment, 
+        ApplicationDbContext context,
+        IWebHostEnvironment webHostEnvironment,
         SCM_System.Services.IFaydaService faydaService,
-        ILogger<AccountController> logger) : Controller
+        ILogger<AccountController> logger,
+        IConfiguration configuration) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
         private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
         private readonly ILogger<AccountController> _logger = logger;
+        private readonly IConfiguration _configuration = configuration;
 
         // POST: /Account/RequestFaydaOtp
         [HttpPost]
@@ -31,9 +36,9 @@ namespace SCM_System.Controllers
         {
             if (string.IsNullOrEmpty(model?.FAN)) return Json(new { success = false, message = "FAN is required." });
             if (string.IsNullOrEmpty(model?.Email)) return Json(new { success = false, message = "Email is required to receive OTP." });
-            
+
             var result = await _faydaService.GenerateOtpAsync(model.FAN, model.Email);
-            
+
             return Json(new { success = result.success, message = result.message });
         }
 
@@ -83,7 +88,7 @@ namespace SCM_System.Controllers
                         ModelState.AddModelError("CompanyName", "Company name is required");
 
                     // Industry Focus (BusinessType) is now redundant as Categories define the scope
-                    
+
                     if (string.IsNullOrEmpty(model.LicenseNumber))
                         ModelState.AddModelError("LicenseNumber", "License number is required");
 
@@ -100,13 +105,13 @@ namespace SCM_System.Controllers
 
                         string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
                         string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
-                        
+
                         string logMsg = $"[FILE VALIDATION] FileName: '{model.LicenseFile.FileName}' -> Extension: '{fileExtension}'\n";
-                        try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", logMsg); } catch {}
+                        try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", logMsg); } catch { }
 
                         if (!allowedExtensions.Contains(fileExtension))
                         {
-                            try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", $"[FILE VALIDATION] Rejected! '{fileExtension}' not in allowed list.\n"); } catch {}
+                            try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", $"[FILE VALIDATION] Rejected! '{fileExtension}' not in allowed list.\n"); } catch { }
                             ModelState.AddModelError("LicenseFile", $"Only PDF, JPG, JPEG, and PNG files are allowed (Detected: {fileExtension})");
                         }
                     }
@@ -291,7 +296,7 @@ namespace SCM_System.Controllers
                         {
                             webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                         }
-                        
+
                         // Ensure upload directory exists
                         string uploadPath = Path.Combine(webRootPath, "uploads", "licenses");
                         if (!Directory.Exists(uploadPath))
@@ -365,7 +370,7 @@ namespace SCM_System.Controllers
                                 Type = "Info",
                                 CreatedAt = DateTime.Now,
                                 IsRead = false,
-                                ActionUrl = "/Admin/PendingSuppliers"  // ✅ FIXED: Added ActionUrl
+                                ActionUrl = "/Admin/PendingSuppliers"
                             };
                             _context.Notifications.Add(notification);
                             Console.WriteLine("Admin notification added");
@@ -563,6 +568,9 @@ namespace SCM_System.Controllers
                         }
                     }
 
+                    // Reset login attempts on successful login
+                    user.LoginAttempts = 0;
+
                     // Update last login
                     user.LastLoginAt = DateTime.Now;
                     await _context.SaveChangesAsync();
@@ -626,13 +634,13 @@ namespace SCM_System.Controllers
 
                     var authProperties = new AuthenticationProperties
                     {
-                        IsPersistent = true,
+                        IsPersistent = model.RememberMe,
                         ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
                     };
 
                     await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme, 
-                        new ClaimsPrincipal(claimsIdentity), 
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
                     // Set success message
@@ -657,7 +665,7 @@ namespace SCM_System.Controllers
                     }
                     else if (user.Role == "DeliveryAgent")
                     {
-                        return RedirectToAction("MyDeliveries", "Delivery");
+                        return RedirectToAction("Dashboard", "Delivery");
                     }
 
                     return RedirectToAction("Index", "Home");
@@ -715,12 +723,132 @@ namespace SCM_System.Controllers
             return Json(new { success = false });
         }
 
+        // ==================== FORGOT PASSWORD METHODS ====================
+
+        // POST: /Account/ForgotPassword
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request?.Email))
+                {
+                    return Json(new { success = false, message = "Please provide a valid email address." });
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+                // For security, don't reveal if email exists or not
+                if (user == null)
+                {
+                    // Log that someone tried to reset a non-existent email
+                    _logger.LogWarning($"Password reset requested for non-existent email: {request.Email}");
+                    return Json(new { success = true, message = "If an account exists with that email, we've sent a password reset link." });
+                }
+
+                // Generate password reset token
+                string token = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+                token = token.Replace('+', '-').Replace('/', '_').TrimEnd('=');
+
+                // Store token with expiration (1 hour from now)
+                user.PasswordResetToken = token;
+                user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+                await _context.SaveChangesAsync();
+
+                // Create reset link
+                string resetLink = Url.Action("ResetPassword", "Account", new { email = user.Email, token = token }, Request.Scheme);
+
+                // Send email
+                bool emailSent = await SendPasswordResetEmail(user.Email, user.FullName, resetLink);
+
+                if (emailSent)
+                {
+                    _logger.LogInformation($"Password reset email sent to: {user.Email}");
+                    return Json(new { success = true, message = "If an account exists with that email, we've sent a password reset link." });
+                }
+                else
+                {
+                    _logger.LogError($"Failed to send password reset email to: {user.Email}");
+                    return Json(new { success = false, message = "Unable to send reset email. Please try again later or contact support." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ForgotPassword error for email: {Email}", request?.Email);
+                return Json(new { success = false, message = "An error occurred. Please try again later." });
+            }
+        }
+
+        // GET: /Account/ResetPassword
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                TempData["ErrorMessage"] = "Invalid password reset link. Please request a new one.";
+                return RedirectToAction("Login");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null ||
+                user.PasswordResetToken != token ||
+                user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                TempData["ErrorMessage"] = "This password reset link is invalid or has expired. Please request a new one.";
+                return RedirectToAction("Login");
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        // POST: /Account/ResetPassword
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+
+            if (user == null ||
+                user.PasswordResetToken != model.Token ||
+                user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                ModelState.AddModelError("", "This password reset link is invalid or has expired. Please request a new one.");
+                return View(model);
+            }
+
+            // Hash and update password
+            user.PasswordHash = HashPassword(model.NewPassword);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+            user.LoginAttempts = 0; // Reset login attempts on password change
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Your password has been reset successfully. Please login with your new password.";
+            return RedirectToAction("Login");
+        }
+
         // GET: /Account/AccessDenied
         public IActionResult AccessDenied()
-
         {
             return View();
         }
+
+        // ==================== PRIVATE HELPER METHODS ====================
 
         private string HashPassword(string password)
         {
@@ -735,5 +863,111 @@ namespace SCM_System.Controllers
                 return builder.ToString();
             }
         }
+
+        private async Task<bool> SendPasswordResetEmail(string email, string fullName, string resetLink)
+        {
+            try
+            {
+                // Get email settings from configuration - MATCHING YOUR APPSETTINGS.JSON
+                string smtpHost = _configuration["EmailSettings:Host"] ?? "smtp.gmail.com";
+                int smtpPort = int.Parse(_configuration["EmailSettings:Port"] ?? "587");
+                string smtpUsername = _configuration["EmailSettings:Email"] ?? "";  // Changed from "Username" to "Email" to match your appsettings
+                string smtpPassword = _configuration["EmailSettings:Password"] ?? "";
+                string fromEmail = _configuration["EmailSettings:Email"] ?? "ethiochainscm@gmail.com";
+                string fromName = _configuration["EmailSettings:SenderName"] ?? "EthioChain SCM";
+                bool enableEmail = bool.Parse(_configuration["EmailSettings:EnableEmail"] ?? "true");
+
+                if (!enableEmail)
+                {
+                    _logger.LogInformation($"Email sending disabled. Password reset link for {email}: {resetLink}");
+                    return true;
+                }
+
+                if (string.IsNullOrEmpty(smtpUsername) || string.IsNullOrEmpty(smtpPassword))
+                {
+                    _logger.LogWarning("Email credentials not configured. Logging reset link instead.");
+                    _logger.LogInformation($"Password reset link for {email}: {resetLink}");
+                    return true;
+                }
+
+                using (var client = new SmtpClient(smtpHost, smtpPort))
+                {
+                    client.EnableSsl = bool.Parse(_configuration["EmailSettings:EnableSsl"] ?? "true");
+                    client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
+                    client.Timeout = 10000; // 10 second timeout
+
+                    string subject = "EthioChain SCM - Password Reset Request";
+                    string body = $@"
+                        <html>
+                        <head>
+                            <style>
+                                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                                .header {{ background: linear-gradient(135deg, #0b3d60, #07253b); padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                                .header h1 {{ color: #cba052; margin: 0; }}
+                                .content {{ padding: 30px; background: #f8f9fc; border-radius: 0 0 10px 10px; }}
+                                .button {{ display: inline-block; padding: 12px 30px; background: #0b3d60; color: white; text-decoration: none; border-radius: 50px; margin: 20px 0; }}
+                                .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #666; }}
+                                .warning {{ color: #dc3545; font-size: 12px; }}
+                            </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <div class='header'>
+                                    <h1>EthioChain SCM</h1>
+                                    <p style='color: white; margin: 0;'>Supply Chain Management</p>
+                                </div>
+                                <div class='content'>
+                                    <h2>Hello {fullName},</h2>
+                                    <p>We received a request to reset the password for your EthioChain SCM account.</p>
+                                    <p>Click the button below to create a new password:</p>
+                                    <div style='text-align: center;'>
+                                        <a href='{resetLink}' class='button' style='color: white;'>Reset Password</a>
+                                    </div>
+                                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                                    <p style='word-break: break-all;'><small>{resetLink}</small></p>
+                                    <p class='warning'><strong>⚠️ This link will expire in 1 hour.</strong></p>
+                                    <p>If you didn't request this, please ignore this email. Your password won't change until you create a new one.</p>
+                                    <hr>
+                                    <p><small>For security reasons, never share this link with anyone.</small></p>
+                                </div>
+                                <div class='footer'>
+                                    <p>&copy; {DateTime.Now.Year} EthioChain SCM. All rights reserved.</p>
+                                    <p>Ethiopia's Trusted Supply Chain Network</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                    ";
+
+                    using (var message = new MailMessage(fromEmail, email)
+                    {
+                        Subject = subject,
+                        Body = body,
+                        IsBodyHtml = true
+                    })
+                    {
+                        await client.SendMailAsync(message);
+                    }
+                }
+
+                _logger.LogInformation($"Password reset email sent successfully to {email}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send password reset email to {email}");
+
+                // Fallback: Log the reset link for development
+                _logger.LogInformation($"Password reset link for {email}: {resetLink}");
+                return true; // Return true even if email fails during development
+            }
+        }
+    }
+
+    // ViewModel for Forgot Password request
+    public class ForgotPasswordRequest
+    {
+        public string Email { get; set; }
     }
 }

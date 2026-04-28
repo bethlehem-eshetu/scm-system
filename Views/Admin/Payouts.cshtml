@@ -1,42 +1,13 @@
 @{
-    ViewData["Title"] = "Payouts";
+    ViewData["Title"] = "Payouts (Deprecated)";
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
-    <h2 class="mb-4"><i class="fas fa-money-bill-wave me-2 text-success"></i> Supplier Payouts</h2>
-    <div class="glass-card p-4">
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Supplier</th>
-                        <th>Amount</th>
-                        <th>Action/Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var p in Model)
-                    {
-                        <tr>
-                            <td>@p.CreatedAt.ToString("MMM dd, yyyy")</td>
-                            <td>@(p.Supplier?.CompanyName ?? "Unknown")</td>
-                            <td class="text-success fw-bold">@p.CommissionAmount.ToString("C")</td>
-                            <td>
-                                @if (p.Status == "Pending")
-                                {
-                                    <button class="btn btn-sm btn-primary">Process Payout</button>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">Paid</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<div class="container-fluid py-5 text-center">
+    <div class="glass-card p-5 mx-auto" style="max-width: 600px;">
+        <i class="fas fa-tools fa-4x text-muted mb-4"></i>
+        <h3 class="text-dark fw-bold">Payouts Module</h3>
+        <p class="text-muted">This module is currently being evaluated and is hidden from the main dashboard navigation. Payouts are now managed automatically via the Commission Overview and Financial Reports.</p>
+        <a asp-action="Dashboard" class="btn btn-primary rounded-pill mt-3 px-4">Return to Dashboard</a>
     </div>
 </div>

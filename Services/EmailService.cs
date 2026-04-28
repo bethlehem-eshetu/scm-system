@@ -26,12 +26,12 @@ namespace SCM_System.Services
             _context = context;
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        public async Task SendEmailAsync(string toEmail, string subject, string body, string? replyTo = null)
         {
-            await SendEmailInternalAsync(toEmail, subject, body, "General", null);
+            await SendEmailInternalAsync(toEmail, subject, body, "General", null, replyTo);
         }
 
-        private async Task SendEmailInternalAsync(string toEmail, string subject, string body, string type, string? referenceId)
+        private async Task SendEmailInternalAsync(string toEmail, string subject, string body, string type, string? referenceId, string? replyTo = null)
         {
             Console.WriteLine($"[EMAIL] Attempting to send '{type}' email to: {toEmail}");
             Console.WriteLine($"[EMAIL] Subject: {subject}");
@@ -67,6 +67,10 @@ namespace SCM_System.Services
                         IsBodyHtml = true
                     };
                     mailMessage.To.Add(toEmail);
+                    if (!string.IsNullOrEmpty(replyTo))
+                    {
+                        mailMessage.ReplyToList.Add(new MailAddress(replyTo));
+                    }
 
                     await client.SendMailAsync(mailMessage);
                     success = true;
