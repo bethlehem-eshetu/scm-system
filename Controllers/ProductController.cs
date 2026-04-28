@@ -322,6 +322,20 @@ namespace SCM_System.Controllers
             return Json(attributes);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetSubCategories(int categoryId)
+        {
+            var subCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == categoryId)
+                .OrderBy(c => c.CategoryName)
+                .Select(c => new { 
+                    id = c.Id, 
+                    categoryName = c.CategoryName 
+                })
+                .ToListAsync();
+            return Json(subCategories);
+        }
+
         // GET: Product/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
