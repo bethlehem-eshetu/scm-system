@@ -211,8 +211,12 @@
                         <div class="form-check">
                             <input class="form-check-input border-secondary" type="checkbox" id="validityCommit" checked required>
                             <label class="form-check-label fw-bold small" for="validityCommit">
-                                Bid price is valid for <span class="text-primary fw-bold">@Model.ValidityPeriodDays days</span>
+                                Bid price is valid for:
                             </label>
+                            <div class="input-group input-group-sm mt-1" style="max-width: 150px;">
+                                <input asp-for="ValidityPeriodDays" class="form-control border-2 fw-bold" type="number" min="1" max="365" />
+                                <span class="input-group-text bg-light border-2">days</span>
+                            </div>
                         </div>
                     </div>
                 </div>

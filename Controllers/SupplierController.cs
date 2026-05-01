@@ -359,6 +359,7 @@ namespace SCM_System.Controllers
                 WebsiteUrl = supplier.WebsiteUrl,
                 PickupAddress = supplier.PickupAddress,
                 ExistingLogo = supplier.CompanyLogo,
+                Region = supplier.Region,
                 FullName = supplier.User.FullName,
                 Email = supplier.User.Email,
                 Phone = supplier.User.PhoneNumber,
@@ -419,6 +420,7 @@ namespace SCM_System.Controllers
             supplier.CompanyDescription = model.CompanyDescription;
             supplier.WebsiteUrl = model.WebsiteUrl;
             supplier.PickupAddress = model.PickupAddress;
+            supplier.Region = model.Region;
 
             // Handle Logo Upload
             if (model.CompanyLogoFile != null && model.CompanyLogoFile.Length > 0)

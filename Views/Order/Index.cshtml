@@ -62,8 +62,16 @@
 
                             <div class="row g-0 mb-4 py-3 border-top border-bottom">
                                 <div class="col-6 border-end text-center">
-                                    <p class="text-muted small mb-1">Total Amount</p>
-                                    <h5 class="fw-bold mb-0 text-success">@order.TotalAmount.ToString("C0")</h5>
+                                    @{
+                                        // Fallback if TotalAmount is Net for old orders
+                                        var displayTotal = order.TotalAmount;
+                                        if (order.Subtotal <= 0 && order.VAT <= 0) {
+                                            var calcNet = order.OrderItems.Sum(i => i.Quantity * i.UnitPrice);
+                                            if (displayTotal <= calcNet + 1) displayTotal = calcNet * 1.15m;
+                                        }
+                                    }
+                                    <p class="text-muted small mb-1">Total (inc. VAT)</p>
+                                    <h5 class="fw-bold mb-0 text-success">@displayTotal.ToString("C0")</h5>
                                 </div>
                                 <div class="col-6 text-center">
                                     <p class="text-muted small mb-1">Items</p>

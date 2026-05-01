@@ -1,3 +1,4 @@
+@model SCM_System.Models.ViewModels.AdminDashboardViewModel
 @{
     ViewData["Title"] = "Admin Dashboard";
     Layout = "_DashboardLayout";
@@ -55,23 +56,23 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Total Suppliers</h6>
-                            <h3 class="mb-0 fw-bold">@ViewBag.TotalSuppliers</h3>
+                            <h3 class="mb-0 fw-bold">@Model.TotalSuppliers</h3>
                             <small class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>@ViewBag.VerifiedSuppliers Verified
+                                <i class="fas fa-check-circle me-1"></i>@Model.VerifiedSuppliersCount Verified
                             </small>
                             <small class="text-danger ms-2">
-                                <i class="fas fa-times-circle me-1"></i>@ViewBag.RejectedSuppliers Rejected
+                                <i class="fas fa-times-circle me-1"></i>@Model.RejectedSuppliersCount Rejected
                             </small>
                         </div>
                     </div>
                     <div class="mt-3">
                         <a asp-action="AllSuppliers" class="stretched-link"></a>
                         <div class="progress" style="height: 5px;">
-                            <div class="progress-bar bg-primary" style="width: @(ViewBag.TotalSuppliers > 0 ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers) : 0)%"></div>
+                            <div class="progress-bar bg-primary" style="width: @(Model.TotalSuppliers > 0 ? (Model.VerifiedSuppliersCount * 100 / Model.TotalSuppliers) : 0)%"></div>
                         </div>
                         <div class="d-flex justify-content-between mt-1">
-                            <small class="text-muted">Pending: @ViewBag.PendingSuppliers</small>
-                            <small class="text-muted">@(ViewBag.TotalSuppliers > 0 ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers) : 0)% Verified</small>
+                            <small class="text-muted">Pending: @Model.PendingSuppliersCount</small>
+                            <small class="text-muted">@(Model.TotalSuppliers > 0 ? (Model.VerifiedSuppliersCount * 100 / Model.TotalSuppliers) : 0)% Verified</small>
                         </div>
                     </div>
                 </div>
@@ -88,23 +89,23 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Total Retailers</h6>
-                            <h3 class="mb-0 fw-bold">@ViewBag.TotalRetailers</h3>
+                            <h3 class="mb-0 fw-bold">@Model.TotalRetailers</h3>
                             <small class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>@ViewBag.ApprovedRetailers Approved
+                                <i class="fas fa-check-circle me-1"></i>@Model.ApprovedRetailersCount Approved
                             </small>
                             <small class="text-danger ms-2">
-                                <i class="fas fa-times-circle me-1"></i>@ViewBag.RejectedRetailers Rejected
+                                <i class="fas fa-times-circle me-1"></i>@Model.RejectedRetailersCount Rejected
                             </small>
                         </div>
                     </div>
                     <div class="mt-3">
                         <a asp-action="AllRetailers" class="stretched-link"></a>
                         <div class="progress" style="height: 5px;">
-                            <div class="progress-bar bg-success" style="width: @(ViewBag.TotalRetailers > 0 ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers) : 0)%"></div>
+                            <div class="progress-bar bg-success" style="width: @(Model.TotalRetailers > 0 ? (Model.ApprovedRetailersCount * 100 / Model.TotalRetailers) : 0)%"></div>
                         </div>
                         <div class="d-flex justify-content-between mt-1">
-                            <small class="text-muted">Pending: @ViewBag.PendingRetailers</small>
-                            <small class="text-muted">@(ViewBag.TotalRetailers > 0 ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers) : 0)% Approved</small>
+                            <small class="text-muted">Pending: @Model.PendingRetailersCount</small>
+                            <small class="text-muted">@(Model.TotalRetailers > 0 ? (Model.ApprovedRetailersCount * 100 / Model.TotalRetailers) : 0)% Approved</small>
                         </div>
                     </div>
                 </div>
@@ -121,10 +122,10 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Pending Approvals</h6>
-                            <h3 class="mb-0 fw-bold">@(ViewBag.PendingSuppliers + ViewBag.PendingRetailers)</h3>
+                            <h3 class="mb-0 fw-bold">@(Model.PendingSuppliersCount + Model.PendingRetailersCount)</h3>
                             <small class="text-warning">
-                                <i class="fas fa-building me-1"></i>@ViewBag.PendingSuppliers Suppliers |
-                                <i class="fas fa-store me-1"></i>@ViewBag.PendingRetailers Retailers
+                                <i class="fas fa-building me-1"></i>@Model.PendingSuppliersCount Suppliers |
+                                <i class="fas fa-store me-1"></i>@Model.PendingRetailersCount Retailers
                             </small>
                         </div>
                     </div>
@@ -143,9 +144,9 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Total Products</h6>
-                            <h3 class="mb-0 fw-bold">@ViewBag.TotalProducts</h3>
+                            <h3 class="mb-0 fw-bold">@Model.TotalProducts</h3>
                             <small class="text-info">
-                                <i class="fas fa-shopping-cart me-1"></i>@ViewBag.TotalOrders Orders
+                                <i class="fas fa-shopping-cart me-1"></i>@Model.TotalOrders Orders
                             </small>
                         </div>
                     </div>
@@ -156,21 +157,6 @@
     </div>
 
  
-    <!-- New Charts Section -->
-    <div class="row mb-5">
-        <div class="col-md-8">
-            <div class="glass-card p-4 h-100">
-                <h5 class="mb-4 fw-bold"><i class="fas fa-chart-line me-2 text-primary"></i>Platform Activity</h5>
-                <canvas id="platformActivityChart" height="100"></canvas>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="glass-card p-4 h-100">
-                <h5 class="mb-4 fw-bold"><i class="fas fa-list-alt me-2 text-success"></i>Top Categories</h5>
-                <canvas id="topCategoriesChart" height="200"></canvas>
-            </div>
-        </div>
-    </div>
 
     <!-- Quick Actions -->
     <div class="row mb-5">
@@ -184,9 +170,9 @@
                         <div class="col-md-3">
                             <a asp-action="PendingUsers" class="btn btn-outline-primary w-100 py-3">
                                 <i class="fas fa-user-clock me-2"></i>User Verifications
-                                @if (ViewBag.PendingSuppliers > 0 || ViewBag.PendingRetailers > 0)
+                                @if (Model.PendingSuppliersCount > 0 || Model.PendingRetailersCount > 0)
                                 {
-                                    <span class="badge bg-danger ms-2">@(ViewBag.PendingSuppliers + ViewBag.PendingRetailers)</span>
+                                    <span class="badge bg-danger ms-2">@(Model.PendingSuppliersCount + Model.PendingRetailersCount)</span>
                                 }
                             </a>
                         </div>
@@ -205,26 +191,6 @@
                                 <i class="fas fa-check-circle me-2"></i>Verified Suppliers
                             </a>
                         </div>
-                        <!-- NEW: Message Monitoring Button -->
-                        <div class="col-md-3">
-                            <a asp-action="MessageLog" class="btn btn-outline-warning w-100 py-3">
-                                <i class="fas fa-envelope-open-text me-2"></i>Message Monitoring
-                                @if (ViewBag.BlockedMessagesCount > 0)
-                                {
-                                    <span class="badge bg-danger ms-2">@ViewBag.BlockedMessagesCount</span>
-                                }
-                            </a>
-                        </div>
-                        <!-- NEW: Penalty Management Button -->
-                        <div class="col-md-3">
-                            <a asp-action="Penalties" class="btn btn-outline-danger w-100 py-3">
-                                <i class="fas fa-gavel me-2"></i>Penalty Management
-                                @if (ViewBag.ActivePenaltiesCount > 0)
-                                {
-                                    <span class="badge bg-warning ms-2">@ViewBag.ActivePenaltiesCount</span>
-                                }
-                            </a>
-                        </div>
                        
                     </div>
                 </div>
@@ -232,57 +198,6 @@
         </div>
     </div>
 
-    <!-- Inventory KPIs -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-4 col-md-6">
-            <div class="glass-card h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="fas fa-boxes fa-2x text-primary"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Total Inventory Value</h6>
-                            <h3 class="mb-0 fw-bold">@ViewBag.TotalInventoryValue.ToString("C")</h3>
-                        </div>
-                    </div>
-                    <small class="text-muted">Value of all available stock</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="glass-card h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="fas fa-hand-holding-box fa-2x text-info"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Total Reserved Value</h6>
-                            <h3 class="mb-0 fw-bold">@ViewBag.TotalReservedValue.ToString("C")</h3>
-                        </div>
-                    </div>
-                    <small class="text-muted">Value of stock held for pending orders</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="glass-card h-100 border-start border-warning border-4">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Low Stock Alerts</h6>
-                            <h3 class="mb-0 fw-bold">@ViewBag.LowStockProductsCount</h3>
-                        </div>
-                    </div>
-                    <small class="text-warning fw-bold">Items below threshold</small>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Recent Activities -->
     <div class="row g-4">
@@ -294,10 +209,10 @@
                     <a asp-action="AllSuppliers" class="btn btn-sm btn-primary">View All</a>
                 </div>
                 <div class="card-body">
-                    @if (ViewBag.RecentSuppliers != null && ((IEnumerable<dynamic>)ViewBag.RecentSuppliers).Any())
+                    @if (Model.RecentSuppliers != null && ((IEnumerable<dynamic>)Model.RecentSuppliers).Any())
                     {
                         <div class="list-group list-group-flush">
-                            @foreach (var supplier in ViewBag.RecentSuppliers)
+                            @foreach (var supplier in Model.RecentSuppliers)
                             {
                                 <div class="list-group-item border-0 px-0">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -340,10 +255,10 @@
                     <a asp-action="AllRetailers" class="btn btn-sm btn-success">View All</a>
                 </div>
                 <div class="card-body">
-                    @if (ViewBag.RecentRetailers != null && ((IEnumerable<dynamic>)ViewBag.RecentRetailers).Any())
+                    @if (Model.RecentRetailers != null && ((IEnumerable<dynamic>)Model.RecentRetailers).Any())
                     {
                         <div class="list-group list-group-flush">
-                            @foreach (var retailer in ViewBag.RecentRetailers)
+                            @foreach (var retailer in Model.RecentRetailers)
                             {
                                 <div class="list-group-item border-0 px-0">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -392,7 +307,7 @@
     </div>
 
     <!-- Debug Info (Remove in production) -->
-    @if (ViewBag.PendingRetailers != null)
+    @if (Model.PendingRetailersCount != null)
     {
         <div class="row mt-2">
             <div class="col-12">
@@ -400,9 +315,9 @@
                     <div class="card-body py-2">
                         <small class="text-muted">
                             <i class="fas fa-info-circle me-1"></i>
-                            Stats: Pending Suppliers: @ViewBag.PendingSuppliers |
-                            Pending Retailers: @ViewBag.PendingRetailers |
-                            Rejected Retailers: @ViewBag.RejectedRetailers
+                            Stats: Pending Suppliers: @Model.PendingSuppliersCount |
+                            Pending Retailers: @Model.PendingRetailersCount |
+                            Rejected Retailers: @Model.RejectedRetailersCount
                         </small>
                     </div>
                 </div>
@@ -419,39 +334,5 @@
             $('.alert').fadeOut('slow');
         }, 5000);
 
-        // Platform Activity Chart
-        const ctxActivity = document.getElementById('platformActivityChart').getContext('2d');
-        new Chart(ctxActivity, {
-            type: 'line',
-            data: {
-                labels: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'],
-                datasets: [{
-                    label: 'Orders',
-                    data: [15, 20, 35, 40, 25, 52],
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            }
-        });
-
-        // Top Categories Chart
-        const ctxCategories = document.getElementById('topCategoriesChart').getContext('2d');
-        new Chart(ctxCategories, {
-            type: 'doughnut',
-            data: {
-                labels: ['Electronics', 'Furniture', 'Clothing', 'Industrial'],
-                datasets: [{
-                    data: [45, 25, 20, 10],
-                    backgroundColor: [
-                        '#4f46e5',
-                        '#10b981',
-                        '#f59e0b',
-                        '#ec4899'
-                    ]
-                }]
-            }
-        });
     </script>
 }

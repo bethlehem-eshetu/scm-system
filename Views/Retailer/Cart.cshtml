@@ -77,7 +77,15 @@
                                                 </button>
                                             </div>
                                         </td>
-                                        <td class="py-4 fw-bold">@((item.Quantity * item.Product.BasePrice).ToString("C"))</td>
+                                        <td class="py-4 fw-bold">
+                                            @{
+                                                var itemNet = item.Quantity * item.Product.BasePrice;
+                                                var itemVat = Math.Round(itemNet * 0.15m, 2);
+                                                var itemTotal = itemNet + itemVat;
+                                            }
+                                            <div class="text-dark">@itemTotal.ToString("C")</div>
+                                            <div class="text-muted smaller fw-normal">Net: @itemNet.ToString("N2")</div>
+                                        </td>
                                         <td class="pe-4 py-4 text-end">
                                             <form asp-action="RemoveFromCart" method="post" class="d-inline">
                                                 <input type="hidden" name="cartItemId" value="@item.Id" />
@@ -100,17 +108,26 @@
                     <h5 class="fw-bold mb-4">Order Summary</h5>
                     
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Subtotal</span>
+                        <span class="text-muted">Net Value</span>
                         <span class="fw-bold">@Model.CartItems.Sum(i => i.Quantity * i.Product.BasePrice).ToString("C")</span>
                     </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">VAT (15%)</span>
+                        <span class="fw-bold text-info">@((Model.CartItems.Sum(i => i.Quantity * i.Product.BasePrice) * 0.15m).ToString("C"))</span>
+                    </div>
                     <div class="d-flex justify-content-between mb-3">
-                        <span class="text-muted">Processing Fee</span>
-                        <span class="text-success fw-bold">FREE</span>
+                        <span class="text-muted">Delivery Fee</span>
+                        <span class="fw-bold text-dark">ETB 50.00</span>
                     </div>
                     <hr class="my-4 opacity-50">
                     <div class="d-flex justify-content-between mb-4">
-                        <h5 class="fw-bold mb-0">Total</h5>
-                        <h4 class="fw-bold text-primary mb-0">@Model.CartItems.Sum(i => i.Quantity * i.Product.BasePrice).ToString("C")</h4>
+                        <h5 class="fw-bold mb-0">TOTAL PAYABLE</h5>
+                        @{
+                            var netTotal = Model.CartItems.Sum(i => i.Quantity * i.Product.BasePrice);
+                            var vatTotal = Math.Round(netTotal * 0.15m, 2);
+                            var grandTotal = netTotal + vatTotal + 50.00m;
+                        }
+                        <h4 class="fw-bold text-primary mb-0">@grandTotal.ToString("C")</h4>
                     </div>
 
                     <form asp-action="Checkout" method="post" id="checkoutForm">

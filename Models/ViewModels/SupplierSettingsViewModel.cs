@@ -43,6 +43,10 @@ namespace SCM_System.Models.ViewModels
         public string? PickupAddress { get; set; }
 
         [Required]
+        [Display(Name = "Region")]
+        public string Region { get; set; }
+
+        [Required]
         [Display(Name = "Full Name")]
         public string FullName { get; set; }
 

@@ -7,9 +7,8 @@ namespace SCM_System.Models.Entities
     {
         public int Id { get; set; }
 
-        [Required]
-        public int PurchaseOrderId { get; set; }
-        public PurchaseOrder PurchaseOrder { get; set; }
+        public int? PurchaseOrderId { get; set; }
+        public PurchaseOrder? PurchaseOrder { get; set; }
 
         [Required]
         public int OrderId { get; set; }
@@ -35,6 +34,9 @@ namespace SCM_System.Models.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal CommissionAmount { get; set; }
 
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal CommissionRateAtTransaction { get; set; } // Snapshot at payment time
+
         // ✅ Add PaymentType to distinguish who pays whom
         [Required]
         [StringLength(30)]
@@ -51,6 +53,7 @@ namespace SCM_System.Models.Entities
         public string? ChapaPaymentUrl { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; set; }
 
         public DateTime? PaidAt { get; set; }
 

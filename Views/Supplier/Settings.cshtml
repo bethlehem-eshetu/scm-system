@@ -62,12 +62,17 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label asp-for="Phone" class="form-label font-weight-bold"></label>
                                 <input asp-for="Phone" class="form-control rounded-pill" placeholder="Enter your phone number" />
                                 <span asp-validation-for="Phone" class="text-danger small"></span>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Region" class="form-label font-weight-bold"></label>
+                                <input asp-for="Region" class="form-control rounded-pill" placeholder="e.g. Oromia, Amhara" />
+                                <span asp-validation-for="Region" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
                                 <label asp-for="WebsiteUrl" class="form-label font-weight-bold"></label>
                                 <input asp-for="WebsiteUrl" class="form-control rounded-pill" placeholder="https://example.com" />
                                 <span asp-validation-for="WebsiteUrl" class="text-danger small"></span>

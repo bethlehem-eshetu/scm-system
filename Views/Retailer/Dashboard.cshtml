@@ -58,11 +58,6 @@
                 <span id="messageBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
             </a>
             
-            <a href="@Url.Action("Index", "Notification")" class="btn btn-outline-secondary rounded-pill px-3 shadow-sm position-relative">
-                <i class="fas fa-bell"></i>
-                <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
-            </a>
-            
             <div class="dropdown">
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-plus me-2"></i>Quick Actions
@@ -246,7 +241,7 @@
                                         _ => "bg-secondary"
                                     };
                                     
-                                    <tr style="cursor: pointer" onclick="window.location.href='/Retailer/OrderTrackingDetails/@o.Id'">
+                                    <tr style="cursor: pointer" onclick="window.location.href='/Order/Details/@o.Id'">
                                         <td class="ps-4 fw-bold">#@o.OrderNumber</td>
                                         <td>@o.Supplier?.CompanyName</td>
                                         <td>

@@ -1,0 +1,134 @@
+@model IEnumerable<SCM_System.Models.Entities.TenderBid>
+@inject SCM_System.Data.ApplicationDbContext _context
+@{
+    ViewData["Title"] = "Contract Fulfillment Center";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4 bg-light min-vh-100">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Procurement</a></li>
+                    <li class="breadcrumb-item active">Operational Contracts</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold text-dark mb-1"><i class="fas fa-file-signature text-success me-2"></i>Contract Fulfillment Center</h3>
+            <p class="text-muted mb-0">Manage your won tenders and begin the logistics phase.</p>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var bid in Model)
+            {
+                var po = _context.PurchaseOrders.FirstOrDefault(p => p.TenderBidId == bid.Id);
+                var poStatus = po != null ? po.Status : "Awaiting Generation";
+                var statusColor = poStatus == "Issued" ? "warning" : (poStatus == "Accepted" || poStatus.Contains("Pack") || poStatus.Contains("Pick") || poStatus.Contains("Transit") ? "primary" : (poStatus == "Completed" || poStatus == "Delivered" ? "success" : "secondary"));
+
+                <div class="col-xl-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden border-top border-5 border-success">
+                        <div class="card-header bg-white border-0 p-4 pb-2 d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-light text-muted border rounded-pill px-3 mb-2">@bid.Tender?.ReferenceNumber</span>
+                                <h5 class="fw-bold mb-1 text-dark">@bid.Tender?.Title</h5>
+                                <span class="small text-muted d-block">Awarded securely on @(bid.SubmittedAt.ToString("MMM dd, yyyy"))</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-@(statusColor)-subtle text-@statusColor rounded-pill px-3 py-2 shadow-sm d-block mb-1">@poStatus</span>
+                                @if(po != null) {
+                                    <span class="extra-small text-muted d-block">PO: @po.PONumber</span>
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="card-body p-4 pt-2">
+                            <h6 class="fw-bold text-uppercase text-muted smaller mb-3 border-bottom pb-2">Commercial Terms</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-sm-6 border-end">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small text-muted">Contract Value:</span>
+                                        <span class="small fw-bold text-success">@bid.ProposedTotalAmount.ToString("N0") ETB</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="small text-muted">Items Quantity:</span>
+                                        <span class="small fw-bold">@bid.Tender?.TenderItems?.Sum(i => i.Quantity) Units</span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 ps-sm-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small text-muted">SLA Lead Time:</span>
+                                        <span class="small fw-bold">@bid.DeliveryLeadTimeDays Days</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="small text-muted">Est. Dispatch:</span>
+                                        <span class="small fw-bold text-danger">@(bid.SubmittedAt.AddDays(bid.DeliveryLeadTimeDays).ToString("MMM dd"))</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-light rounded-4 p-3 mb-4 border border-1 shadow-sm border-white">
+                                <p class="text-muted small fw-bold mb-1"><i class="fas fa-warehouse text-primary me-1"></i> Fulfillment Status</p>
+                                @if(po != null && po.WarehouseId == null) {
+                                    <p class="small mb-0 text-warning fw-bold"><i class="fas fa-exclamation-circle me-1"></i> Pending Hub Acceptance</p>
+                                    <p class="extra-small text-muted mt-1 mb-0">You must formally accept the PO and assign a source warehouse.</p>
+                                } else if (po != null && po.WarehouseId != null) {
+                                    <p class="small mb-0 text-success fw-bold"><i class="fas fa-check-circle me-1"></i> Hub Assigned (@po.Warehouse?.Name)</p>
+                                    <p class="extra-small text-muted mt-1 mb-0">Proceeding with physical fulfillment ops.</p>
+                                } else {
+                                    <p class="small mb-0 text-muted">Awaiting formal Purchase Order generation from Retailer.</p>
+                                }
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a asp-controller="Tender" asp-action="ReviewProposal" asp-route-id="@bid.Id" class="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-sm border">
+                                    Review Terms
+                                </a>
+                                @if (po != null)
+                                {
+                                    <a asp-controller="Order" asp-action="Details" asp-route-id="@po.OrderId" asp-route-poId="@po.Id" class="btn btn-success btn-sm rounded-pill px-4 fw-bold flex-grow-1 shadow-sm w-100">
+                                        @(po.Status == "Issued" ? "Review & Accept PO" : "Open Workspace") <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button disabled class="btn btn-secondary btn-sm rounded-pill px-4 fw-bold flex-grow-1 shadow-sm w-100">
+                                        Awaiting Generation
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+            <div class="py-5">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                    <i class="fas fa-file-contract fa-3x text-muted opacity-25"></i>
+                </div>
+                <h5 class="fw-bold">No Active Contracts</h5>
+                <p class="text-muted">You have no won bids currently ready for fulfillment. Stay competitive and bid on more tenders!</p>
+                <a asp-controller="Tender" asp-action="AvailableTenders" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm mt-2">
+                    Open Marketplace
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .smaller { font-size: 0.75rem; letter-spacing: 0.5px; }
+        .extra-small { font-size: 0.65rem; }
+        .bg-primary-subtle { background-color: rgba(13, 110, 253, 0.1); }
+        .bg-success-subtle { background-color: rgba(25, 135, 84, 0.1); }
+        .bg-warning-subtle { background-color: rgba(255, 193, 7, 0.1); }
+        .bg-secondary-subtle { background-color: rgba(108, 117, 125, 0.1); }
+    </style>
+}

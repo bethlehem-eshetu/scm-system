@@ -401,7 +401,11 @@ namespace SCM_System.Services
                     .Where(r => r.OrderId == orderId && r.Status != ReservationStatus.Completed)
                     .ToListAsync();
 
-                if (!reservations.Any()) return false;
+                if (!reservations.Any()) 
+                {
+                    _logger.LogInformation("No active reservations found for order {OrderId} to return.", orderId);
+                    return true;
+                }
 
                 foreach (var reservation in reservations)
                 {
@@ -684,7 +688,7 @@ namespace SCM_System.Services
             if (productId.HasValue) query = query.Where(i => i.ProductId == productId.Value);
 
             var inventoryList = await query.ToListAsync();
-            var activeStatuses = new List<string> { POStatus.Accepted, POStatus.Processing, POStatus.Picked, POStatus.Packed, POStatus.Ready, POStatus.InTransit };
+            var activeStatuses = new List<string> { POStatus.Accepted, POStatus.Picking, POStatus.Picked, POStatus.Packed, POStatus.Ready, POStatus.InTransit };
 
             // 🔥 STAGE 1: Repair Physical Stock Discrepancies
             // Audit based: Find Delivered/Completed orders that missed their Movement record

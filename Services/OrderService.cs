@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Models.Constants;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
@@ -68,10 +69,13 @@ namespace SCM_System.Services
                 OrderNumber = "ORD-" + DateTime.Now.Ticks.ToString().Substring(8),
                 SupplierId = po.SupplierId,
                 RetailerId = po.RetailerId,
+                Subtotal = po.TotalAmount / 1.15m, // Derived from PO if it doesn't have explicit bits yet, or just copy po details
+                VAT = po.TotalAmount - (po.TotalAmount / 1.15m),
                 TotalAmount = po.TotalAmount,
-                OrderStatus = "Processing",
-                PaymentStatus = "Pending",
+                OrderStatus = POStatus.Picking,
+                PaymentStatus = PaymentStatus.Pending.ToString(),
                 CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 QRCodeValue = "" // Temporary, will update after saving
             };
 
@@ -102,7 +106,7 @@ namespace SCM_System.Services
             var history = new OrderStatusHistory
             {
                 OrderId = order.Id,
-                Status = "Processing",
+                Status = POStatus.Picking,
                 Comments = "Order generated from Purchase Order",
                 ChangedByUserId = po.Supplier.UserId,
                 ChangedAt = DateTime.Now
@@ -157,11 +161,11 @@ namespace SCM_System.Services
             order.OrderStatus = status;
 
             // ================================
-            // 🔥 ESCROW RELEASE & COMMISSION DEDUCTION
+            // 🔥 CHAPA RELEASE & COMMISSION DEDUCTION
             // ================================
-            if (status == "Completed" && order.PaymentStatus == "Escrow")
+            if (status == "Completed" && order.PaymentStatus == "Chapa")
             {
-                order.PaymentStatus = "Released";
+                order.PaymentStatus = PaymentStatus.Paid.ToString();
                 
                 foreach (var po in order.PurchaseOrders)
                 {
@@ -200,7 +204,7 @@ namespace SCM_System.Services
                             CommissionRate = 0.00m, // It's the base payment, not a fee
                             CommissionAmount = po.TotalAmount,
                             PaymentType = "OrderPayment",
-                            Status = (status == "Completed") ? "Paid" : "Pending",
+                            Status = (status == "Completed") ? PaymentStatus.Paid.ToString() : PaymentStatus.Pending.ToString(),
                             CreatedAt = DateTime.Now,
                             PaidAt = (status == "Completed") ? DateTime.Now : null,
                             DueDate = DateTime.Now.AddDays(7),
@@ -211,7 +215,7 @@ namespace SCM_System.Services
                     }
                     else if (status == "Completed")
                     {
-                        existingOrderPayment.Status = "Paid";
+                        existingOrderPayment.Status = PaymentStatus.Paid.ToString();
                         existingOrderPayment.PaidAt = DateTime.Now;
                     }
                 }
@@ -247,26 +251,40 @@ namespace SCM_System.Services
                 var order = await _context.Orders
                     .Include(o => o.OrderItems)
                         .ThenInclude(i => i.Product)
+                    .Include(o => o.Retailer)
                     .FirstOrDefaultAsync(o => o.Id == orderId);
 
-                if (order == null || order.OrderStatus == "Picked" || order.OrderStatus == "Shipped" || order.OrderStatus == "Completed" || order.OrderStatus == "Delivered" || order.OrderStatus == "Cancelled")
+                if (order == null || order.OrderStatus == "Shipped" || order.OrderStatus == "Completed" || order.OrderStatus == "Delivered" || order.OrderStatus == "Cancelled")
                     return false;
 
                 // Release reserved stock from warehouses
                 var pos = await _context.PurchaseOrders
                     .Include(p => p.PurchaseOrderItems)
-                    .Where(p => p.OrderId == order.Id && p.Status != "Cancelled" && p.Status != "Completed").ToListAsync();
+                    .Where(p => p.OrderId == order.Id && p.Status != "Cancelled").ToListAsync();
+
+                // If any part of the order is already Picked or further, we can't cancel the whole thing
+                if (pos.Any(p => p.Status == "Picked" || p.Status == "Packed" || p.Status == "Ready Dispatch" || p.Status == "In Transit" || p.Status == "Delivered" || p.Status == "Completed"))
+                {
+                    return false;
+                }
 
                 foreach (var po in pos)
                 {
                     po.Status = "Cancelled";
                 }
 
+                // ReturnStockOnCancelAsync now returns true even if no reservations found
                 await _inventoryService.ReturnStockOnCancelAsync(order.Id);
 
                 order.OrderStatus = "Cancelled";
                 
-                var history = new OrderStatusHistory { OrderId = order.Id, Status = "Cancelled", Comments = "Order cancelled by Retailer. Stock reservations released.", ChangedByUserId = order.RetailerId, ChangedAt = DateTime.Now };
+                var history = new OrderStatusHistory { 
+                    OrderId = order.Id, 
+                    Status = "Cancelled", 
+                    Comments = "Order cancelled by Retailer. Stock reservations released (if any).", 
+                    ChangedByUserId = order.Retailer?.UserId ?? 0, 
+                    ChangedAt = DateTime.Now 
+                };
                 _context.OrderStatusHistories.Add(history);
 
                 await _context.SaveChangesAsync();
@@ -489,8 +507,10 @@ namespace SCM_System.Services
 
                 // Status Logic: Split? -> Partially Processing, Else -> Processing
                 bool isSplit = poAllocations.Count > 1;
-                order.OrderStatus = isSplit ? "Partially Processing" : POStatus.Processing;
-                order.TotalAmount = totalOrderAmount; // Synchronize with PO totals (includes VAT/Commissions)
+                order.OrderStatus = isSplit ? "Partially Picking" : POStatus.Picking;
+                order.Subtotal = poAllocations.Values.Sum(v => v.Sum(i => i.Quantity * i.UnitPrice));
+                order.VAT = order.Subtotal * 0.15m;
+                order.TotalAmount = order.Subtotal + order.VAT;
                 
                 var history = new OrderStatusHistory 
                 { 
@@ -518,7 +538,7 @@ namespace SCM_System.Services
                         "Order Accepted ✅",
                         $"Your order #{order.OrderNumber} has been accepted by {order.Supplier?.CompanyName}.",
                         "Success",
-                        $"/Retailer/OrderTrackingDetails/{order.Id}"
+                        $"/Order/Details/{order.Id}"
                     );
                 }
 
@@ -566,7 +586,7 @@ namespace SCM_System.Services
                     "Order Rejected ❌",
                     $"Your order #{order.OrderNumber} was rejected by {order.Supplier?.CompanyName}. Reason: {reason}",
                     "Error",
-                    $"/Retailer/OrderTrackingDetails/{order.Id}"
+                    $"/Order/Details/{order.Id}"
                 );
             }
 
@@ -602,7 +622,7 @@ namespace SCM_System.Services
                             CommissionRate = 1.00m,
                             CommissionAmount = po.TotalAmount,
                             PaymentType = "OrderPayment",
-                            Status = "Pending",
+                            Status = PaymentStatus.Pending.ToString(),
                             ChapaTransactionId = "",
                             PaymentRequestData = "",
                             PaymentVerificationData = "",
@@ -632,7 +652,7 @@ namespace SCM_System.Services
                             CommissionRate = commissionRate,
                             CommissionAmount = platformAmount,
                             PaymentType = "PlatformCommission",
-                            Status = "Pending",
+                            Status = PaymentStatus.Pending.ToString(),
                             CreatedAt = DateTime.Now,
                             DueDate = DateTime.Now.AddDays(7),
                             Notes = $"Platform service fee (5%) for #{po.PONumber}"

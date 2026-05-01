@@ -28,7 +28,7 @@
             </a>
             @if (User.IsInRole("Retailer") && Model.Status == "Published")
             {
-                <button class="btn btn-outline-danger rounded-pill px-4" onclick="confirmDelete(@Model.Id)">
+                <button type="button" class="btn btn-outline-danger rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#cancelTenderModal">
                     <i class="fas fa-times-circle me-2"></i> Cancel Tender
                 </button>
             }
@@ -84,7 +84,15 @@
 
                         <div class="col-md-4">
                             <label class="text-muted small text-uppercase fw-bold mb-1">Submission Deadline</label>
-                            <p class="text-dark mb-0"><i class="far fa-clock me-2 text-warning"></i> @Model.SubmissionDeadline.ToString("MMM dd, yyyy HH:mm")</p>
+                            <p class="text-dark mb-0">
+                                <i class="far fa-clock me-2 text-warning"></i> @Model.SubmissionDeadline.ToString("MMM dd, yyyy HH:mm")
+                                @if (Model.SubmissionDeadline > DateTime.Now) {
+                                    var daysLeft = (Model.SubmissionDeadline - DateTime.Now).Days;
+                                    <span class="badge @(daysLeft < 3 ? "bg-danger" : "bg-warning text-dark") ms-2"><i class="fas fa-hourglass-half me-1"></i> @daysLeft days left</span>
+                                } else {
+                                    <span class="badge bg-danger ms-2">Expired</span>
+                                }
+                            </p>
                         </div>
                         <div class="col-md-4">
                             <label class="text-muted small text-uppercase fw-bold mb-1">Expected Delivery</label>
@@ -144,6 +152,12 @@
             </div>
 
             <!-- Bids Section -->
+            @if (Model.BudgetMax.HasValue && Model.Bids != null && Model.Bids.Any(b => b.Status != "Rejected") && Model.Bids.Where(b => b.Status != "Rejected").All(b => b.ProposedTotalAmount > Model.BudgetMax.Value))
+            {
+                <div class="alert alert-danger shadow-sm rounded-4 mb-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i> <strong>Over Budget Alert:</strong> All active bids exceed your target budget range.
+                </div>
+            }
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-warning"><i class="fas fa-hand-holding-usd me-2"></i> Received Proposals</h5>
@@ -154,26 +168,54 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr class="text-muted small text-uppercase">
-                                    <th class="ps-4">Supplier</th>
+                                    <th class="ps-4">Rank</th>
+                                    <th>Supplier</th>
                                     <th>Proposed Total</th>
+                                    <th>Variance</th>
                                     <th>Lead Time</th>
+                                    <th>Score</th>
                                     <th>Status</th>
                                     <th class="text-end pe-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @if(Model.Bids != null && Model.Bids.Any())
+                                @{
+                                    var rankedBids = Model.Bids?.Select(bid => {
+                                        var pScore = Model.BudgetMax.HasValue && Model.BudgetMax > 0 ? Math.Max(0, 100 - ((double)Math.Max(0, bid.ProposedTotalAmount - Model.BudgetMax.Value) / (double)Model.BudgetMax.Value * 100)) : 100;
+                                        var leadTimeScore = bid.DeliveryLeadTimeDays <= 30 ? (30 - bid.DeliveryLeadTimeDays) / 30.0 * 100.0 : 0;
+                                        var rScore = 100.0; // Simulated rating
+                                        return new { Bid = bid, Score = (pScore * 0.4) + (leadTimeScore * 0.4) + (rScore * 0.2) };
+                                    }).OrderByDescending(b => b.Score).ToList();
+                                }
+                                @if(rankedBids != null && rankedBids.Any())
                                 {
-                                    foreach(var bid in Model.Bids) {
+                                    int currentRank = 1;
+                                    foreach(var item in rankedBids) {
+                                        var bid = item.Bid;
                                         <tr class="@(bid.IsWinningBid ? "bg-success bg-opacity-10" : "")">
-                                            <td class="ps-4">
+                                            <td class="ps-4 fs-4">
+                                                @(currentRank == 1 ? "🥇" : currentRank == 2 ? "🥈" : currentRank == 3 ? "🥉" : "#" + currentRank)
+                                            </td>
+                                            <td>
                                                 <div class="fw-bold text-dark">@bid.Supplier?.CompanyName</div>
                                                 <div class="text-muted small">Submitted: @bid.SubmittedAt.ToString("MMM dd, yyyy")</div>
                                             </td>
-                                            <td class="fw-bold text-success">@bid.ProposedTotalAmount.ToString("N2") ETB</td>
+                                            <td class="fw-bold text-success">
+                                                @bid.ProposedTotalAmount.ToString("N2") ETB
+                                                @if (Model.BudgetMax.HasValue && bid.ProposedTotalAmount > Model.BudgetMax.Value)
+                                                {
+                                                    <div class="mt-1"><span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Over Budget</span></div>
+                                                }
+                                            </td>
+                                            <td class="fw-bold @(Model.BudgetMax.HasValue && bid.ProposedTotalAmount > Model.BudgetMax.Value ? "text-danger" : "text-success")">
+                                                @(Model.BudgetMax.HasValue ? ((bid.ProposedTotalAmount - Model.BudgetMax.Value) / Model.BudgetMax.Value * 100).ToString("+0.0;-0.0") + "%" : "N/A")
+                                            </td>
                                             <td class="fw-medium">@bid.DeliveryLeadTimeDays Days</td>
                                             <td>
-                                                <span class="badge rounded-pill @(bid.Status == "Accepted" ? "bg-success" : bid.Status == "Rejected" ? "bg-danger" : "bg-warning text-dark")">
+                                                <span class="badge bg-primary rounded-pill">@(item.Score.ToString("F1"))%</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge rounded-pill" style="background-color: @(bid.Status == "Pending" ? "#f59e0b" : bid.Status == "Reviewed" ? "#3b82f6" : bid.Status == "Awarded" || bid.Status == "Accepted" ? "#10b981" : "#ef4444"); color: white;">
                                                     @bid.Status
                                                 </span>
                                             </td>
@@ -196,6 +238,7 @@
                                                 </div>
                                             </td>
                                         </tr>
+                                        currentRank++;
                                     }
                                 }
                                 else
@@ -290,12 +333,24 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        function confirmDelete(id) {
-            if (confirm('Are you sure you want to cancel this tender? This action cannot be undone.')) {
-                // Implement cancel logic
-            }
-        }
-    </script>
-}
+<!-- Cancel Tender Modal -->
+<div class="modal fade" id="cancelTenderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header bg-danger text-white border-0 rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Tender</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-0 fs-5">Are you sure? This will reject all bids and close the tender.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Go Back</button>
+                <form asp-action="CancelTender" asp-controller="Tender" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Confirm Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Google.Authenticator;
 
+using SCM_System.Models.Enums;
+
 namespace SCM_System.Controllers
 {
     [Authorize(Roles = "Admin")]
@@ -49,121 +51,45 @@ namespace SCM_System.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
+            var model = new AdminDashboardViewModel();
             try
             {
-                // Supplier Statistics
-                ViewBag.TotalSuppliers = _context.Suppliers.Count();
-                ViewBag.PendingSuppliers = _context.Suppliers.Count(s => s.VerificationStatus == "Pending");
-                ViewBag.VerifiedSuppliers = _context.Suppliers.Count(s => s.VerificationStatus == "Verified");
-                ViewBag.RejectedSuppliers = _context.Suppliers.Count(s => s.VerificationStatus == "Rejected");
+                var orders = await _context.Orders.ToListAsync() ?? new List<Order>();
+                var suppliers = await _context.Suppliers.ToListAsync() ?? new List<Supplier>();
+                var retailers = await _context.Retailers.Include(r => r.User).ToListAsync() ?? new List<Retailer>();
+                var products = await _context.Products.ToListAsync() ?? new List<Product>();
+                var commissions = await _context.Commissions.ToListAsync() ?? new List<Commission>();
 
-                // Retailer Statistics - Using User properties with safety checks
-                var retailers = await _context.Retailers.Include(r => r.User).ToListAsync();
-                ViewBag.TotalRetailers = retailers.Count;
-                ViewBag.PendingRetailers = retailers.Count(r => r.User == null || (!r.User.IsApproved && r.User.AccountStatus != "Rejected"));
-                ViewBag.ApprovedRetailers = retailers.Count(r => r.User != null && r.User.IsApproved);
-                ViewBag.RejectedRetailers = retailers.Count(r => r.User != null && r.User.AccountStatus == "Rejected");
+                model.TotalOrders = orders?.Count ?? 0;
+                model.TotalSuppliers = suppliers?.Count ?? 0;
+                model.TotalRetailers = retailers?.Count ?? 0;
+                model.TotalProducts = products?.Count ?? 0;
 
-                // Product and Order Statistics
-                ViewBag.TotalProducts = _context.Products.Count();
-                ViewBag.TotalOrders = _context.Orders.Count();
-                ViewBag.PendingOrders = _context.Orders.Count(o => o.OrderStatus == "Processing" || o.OrderStatus == "Pending");
+                model.TotalRevenue = Math.Round(commissions?.Where(c => c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.CommissionAmount) ?? 0, 2);
 
-                // Get recent suppliers with FULL User object included
-                var recentSuppliers = _context.Suppliers
-                    .Include(s => s.User)
-                    .OrderByDescending(s => s.CreatedAt)
-                    .Take(5)
-                    .ToList();
-
-                ViewBag.RecentSuppliers = recentSuppliers;
-
-                // Get recent retailers with FULL User object included
-                var recentRetailers = _context.Retailers
-                    .Include(r => r.User)
-                    .OrderByDescending(r => r.CreatedAt)
-                    .Take(5)
-                    .ToList();
-
-                ViewBag.RecentRetailers = recentRetailers;
-
-                // Commission Statistics
-                ViewBag.TotalCommissionRevenue = _context.Commissions
-                    .Where(c => c.Status == "Paid")
-                    .Sum(c => (decimal?)c.CommissionAmount) ?? 0;
-
-                ViewBag.PendingCommissions = _context.Commissions
-                    .Where(c => c.Status == "Pending")
-                    .Sum(c => (decimal?)c.CommissionAmount) ?? 0;
-
-                // Recent Commissions
-                ViewBag.RecentCommissions = _context.Commissions
-                    .Include(c => c.Supplier)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Take(5)
-                    .ToList();
-
-                // Notification data
-                var adminUser = _context.Users.FirstOrDefault(u => u.Role == "Admin");
-                if (adminUser != null)
-                {
-                    ViewBag.UnreadNotifications = _context.Notifications
-                        .Count(n => n.UserId == adminUser.Id && !n.IsRead);
-
-                    ViewBag.RecentNotifications = _context.Notifications
-                        .Where(n => n.UserId == adminUser.Id)
-                        .OrderByDescending(n => n.CreatedAt)
-                        .Take(5)
-                        .ToList();
-                }
-
-                // Progress bar calculations
-                ViewBag.SupplierProgress = ViewBag.TotalSuppliers > 0
-                    ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers)
+                model.AvgOrderValue = model.TotalOrders > 0 
+                    ? Math.Round((orders?.Sum(o => o.TotalAmount) ?? 0) / model.TotalOrders, 2)
                     : 0;
 
-                ViewBag.RetailerProgress = ViewBag.TotalRetailers > 0
-                    ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers)
-                    : 0;
+                model.VerifiedSuppliersCount = suppliers?.Count(s => s.VerificationStatus == "Verified") ?? 0;
+                model.PendingSuppliersCount = suppliers?.Count(s => s.VerificationStatus == "Pending") ?? 0;
+                model.RejectedSuppliersCount = suppliers?.Count(s => s.VerificationStatus == "Rejected") ?? 0;
 
-                // ========== ADD THESE NEW VIEWBAG PROPERTIES ==========
+                model.ApprovedRetailersCount = retailers?.Count(r => r.User != null && r.User.IsApproved) ?? 0;
+                model.PendingRetailersCount = retailers?.Count(r => r.User == null || (!r.User.IsApproved && r.User.AccountStatus != "Rejected")) ?? 0;
+                model.RejectedRetailersCount = retailers?.Count(r => r.User != null && r.User.AccountStatus == "Rejected") ?? 0;
 
-                // Message Monitoring Statistics
-                ViewBag.BlockedMessagesCount = _context.MessageViolations.Count(v => !v.IsResolved);
-                ViewBag.ActivePenaltiesCount = _context.Penalties.Count(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
-                ViewBag.TotalMessagesCount = _context.Messages.Count();
+                model.RecentSuppliers = suppliers.OrderByDescending(s => s.CreatedAt).Take(5).ToList();
+                model.RecentRetailers = retailers.OrderByDescending(r => r.CreatedAt).Take(5).ToList();
 
-                // Inventory Metrics
-                ViewBag.TotalInventoryValue = _context.Products
-                    .Include(p => p.Inventories)
-                    .AsEnumerable()
-                    .Sum(p => (decimal?)(p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved) * p.BasePrice)) ?? 0;
-                ViewBag.TotalReservedValue = _context.Products
-                    .Include(p => p.Inventories)
-                    .AsEnumerable()
-                    .Sum(p => (decimal?)(p.Inventories.Sum(i => i.QuantityReserved) * p.BasePrice)) ?? 0;
-                ViewBag.LowStockProductsCount = _context.Products
-                    .Include(p => p.Inventories)
-                    .AsEnumerable()
-                    .Count(p => p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved) < 20);
-
-                // Get recent blocked messages for dashboard display (optional)
-                ViewBag.RecentBlockedMessages = _context.MessageViolations
-                    .Include(v => v.Message)
-                        .ThenInclude(m => m.Sender)
-                    .OrderByDescending(v => v.CreatedAt)
-                    .Take(5)
-                    .ToList();
-
-                // ========== END OF ADDED PROPERTIES ==========
+                return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Dashboard Error");
-                TempData["ErrorMessage"] = "Error loading dashboard data.";
+                _logger.LogError(ex, "Error loading admin dashboard");
+                ViewBag.Error = ex.Message;
+                return View(new AdminDashboardViewModel());
             }
-
-            return View();
         }
 
         // GET: /Admin/PendingSuppliers
@@ -1820,10 +1746,10 @@ namespace SCM_System.Controllers
                 .ToListAsync();
 
             // High-Level KPIs
-            ViewBag.GrossSales = commissions.Where(c => c.PaymentType == "OrderPayment" && c.Status == "Paid").Sum(c => c.OrderAmount);
-            ViewBag.PlatformRevenue = commissions.Where(c => c.PaymentType == "PlatformCommission" && c.Status == "Paid").Sum(c => c.CommissionAmount);
-            ViewBag.SupplierPayables = commissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Pending").Sum(c => c.CommissionAmount);
-            ViewBag.FailedPayments = commissions.Where(c => c.Status == "Failed").Count();
+            ViewBag.GrossSales = commissions.Where(c => c.PaymentType == "OrderPayment" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.OrderAmount);
+            ViewBag.PlatformRevenue = commissions.Where(c => c.PaymentType == "PlatformCommission" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.CommissionAmount);
+            ViewBag.SupplierPayables = commissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == PaymentStatus.Pending.ToString()).Sum(c => c.CommissionAmount);
+            ViewBag.FailedPayments = commissions.Where(c => c.Status == PaymentStatus.Failed.ToString()).Count();
 
             // Chart Data: Status Breakdown
             var statusGroups = commissions.GroupBy(c => c.Status)

@@ -205,6 +205,9 @@ namespace SCM_System.Migrations
                     b.Property<decimal>("CommissionRate")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("CommissionRateAtTransaction")
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -240,7 +243,7 @@ namespace SCM_System.Migrations
                     b.Property<string>("PaymentVerificationData")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PurchaseOrderId")
+                    b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("RemainingBalance")
@@ -269,12 +272,17 @@ namespace SCM_System.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("IX_Commission_OrderId");
 
                     b.HasIndex("PurchaseOrderId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[PurchaseOrderId] IS NOT NULL");
 
                     b.HasIndex("RetailerId");
 
@@ -297,15 +305,28 @@ namespace SCM_System.Migrations
                     b.Property<DateTime?>("LastMessageAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
                     b.Property<int>("RetailerId")
                         .HasColumnType("int");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("OrderId");
+
                     b.HasIndex("RetailerId");
+
+                    b.HasIndex("WarehouseId");
 
                     b.HasIndex("SupplierId", "RetailerId")
                         .IsUnique();
@@ -1533,6 +1554,9 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("BlockedAt")
                         .HasColumnType("datetime2");
 
@@ -1555,8 +1579,17 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("MessageType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("PenaltyId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Priority")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("SeenAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("SenderId")
                         .HasColumnType("int");
@@ -1723,10 +1756,19 @@ namespace SCM_System.Migrations
                     b.Property<int>("RetailerId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("VAT")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -1808,6 +1850,55 @@ namespace SCM_System.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("OrderStatusHistories");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReceiptUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("RetailerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TxRef")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("IX_Payment_OrderId");
+
+                    b.HasIndex("RetailerId");
+
+                    b.HasIndex("TxRef")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_Payment_TxRef")
+                        .HasFilter("[TxRef] IS NOT NULL");
+
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Penalty", b =>
@@ -2161,6 +2252,9 @@ namespace SCM_System.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool>("ChecklistVerified")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -2179,15 +2273,26 @@ namespace SCM_System.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("DeliveryNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<decimal>("Discount")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("ExpectedDeliveryDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("InvoiceNumber")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsQRVerified")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
@@ -2222,6 +2327,10 @@ namespace SCM_System.Migrations
                     b.Property<int>("RetailerId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SignaturePath")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -2248,7 +2357,7 @@ namespace SCM_System.Migrations
                     b.Property<int?>("VehicleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("WarehouseId")
+                    b.Property<int?>("WarehouseId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -2526,6 +2635,10 @@ namespace SCM_System.Migrations
 
                     b.Property<bool>("ProofOfDeliveryRequired")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("StoreSize")
                         .HasMaxLength(20)
@@ -2882,6 +2995,9 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("BusinessType")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -2961,6 +3077,16 @@ namespace SCM_System.Migrations
 
                     b.Property<string>("PickupAddress")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<string>("TaxIdentificationNumber")
                         .HasMaxLength(50)
@@ -3252,6 +3378,46 @@ namespace SCM_System.Migrations
                     b.ToTable("SupplierEmployees");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.SupplierTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("IX_SupplierTransaction_OrderId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("SupplierTransactions");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.SupportTicket", b =>
                 {
                     b.Property<int>("Id")
@@ -3433,6 +3599,9 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -4468,9 +4637,7 @@ namespace SCM_System.Migrations
 
                     b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
                         .WithOne("Commission")
-                        .HasForeignKey("SCM_System.Models.Entities.Commission", "PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SCM_System.Models.Entities.Commission", "PurchaseOrderId");
 
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
                         .WithMany()
@@ -4493,6 +4660,10 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Conversation", b =>
                 {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId");
+
                     b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
                         .WithMany("Conversations")
                         .HasForeignKey("RetailerId")
@@ -4505,9 +4676,17 @@ namespace SCM_System.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId");
+
+                    b.Navigation("Order");
+
                     b.Navigation("Retailer");
 
                     b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.Delivery", b =>
@@ -5008,6 +5187,25 @@ namespace SCM_System.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.Payment", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
+                        .WithMany()
+                        .HasForeignKey("RetailerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Retailer");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.Penalty", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.User", "IssuedByAdmin")
@@ -5125,9 +5323,7 @@ namespace SCM_System.Migrations
 
                     b.HasOne("SCM_System.Models.Entities.Warehouse", "Warehouse")
                         .WithMany()
-                        .HasForeignKey("WarehouseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("WarehouseId");
 
                     b.Navigation("DeliveryAgent");
 
@@ -5414,6 +5610,24 @@ namespace SCM_System.Migrations
                     b.Navigation("Vehicle");
 
                     b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.SupplierTransaction", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SCM_System.Models.Entities.Supplier", "Supplier")
+                        .WithMany("SupplierTransactions")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.SupportTicket", b =>
@@ -5764,6 +5978,8 @@ namespace SCM_System.Migrations
                     b.Navigation("ReceivedRatings");
 
                     b.Navigation("SupplierCategories");
+
+                    b.Navigation("SupplierTransactions");
 
                     b.Navigation("TenderBids");
 

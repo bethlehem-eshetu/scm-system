@@ -178,6 +178,10 @@
                                     <label class="form-label small fw-bold text-muted">City / Location</label>
                                     <input type="text" name="City" class="form-control rounded-pill" value="@Model.City" />
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Region</label>
+                                    <input type="text" name="Region" class="form-control rounded-pill" value="@Model.Region" />
+                                </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Registered Address</label>
                                     <textarea name="BusinessAddress" class="form-control rounded-3" rows="2">@Model.BusinessAddress</textarea>
@@ -564,7 +568,7 @@
                                 </div>
                                 <div class="p-4">
                                     <div class="list-group list-group-flush rounded-4">
-                                        @foreach (var session in (IEnumerable<UserSession>)ViewBag.ActiveSessions)
+                                    @foreach (var session in (ViewBag.ActiveSessions as IEnumerable<UserSession>) ?? Enumerable.Empty<UserSession>())
                                         {
                                             <div class="list-group-item px-0 bg-transparent py-3">
                                                 <div class="d-flex align-items-center">
@@ -601,7 +605,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach (var log in (IEnumerable<AuditLog>)ViewBag.LoginHistory)
+                                                @foreach (var log in (ViewBag.LoginHistory as IEnumerable<AuditLog>) ?? Enumerable.Empty<AuditLog>())
                                                 {
                                                     <tr>
                                                         <td class="px-4 small">@log.PerformedAtUtc.ToLocalTime().ToString("g")</td>

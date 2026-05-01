@@ -108,6 +108,7 @@
                         <option value="Paid">Cleared / Paid</option>
                         <option value="Pending">Pending</option>
                         <option value="Processing">Processing</option>
+                        <option value="Failed">Failed</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -181,21 +182,29 @@
                             <td class="text-center">
                                 @if (payment.Status == "Paid") { <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-check-circle me-1"></i>Cleared</span> }
                                 else if (payment.Status == "Processing") { <span class="badge bg-info rounded-pill px-3 py-2"><i class="fas fa-sync fa-spin me-1"></i>Processing</span> }
+                                else if (payment.Status == "Failed") { <span class="badge bg-danger rounded-pill px-3 py-2"><i class="fas fa-exclamation-triangle me-1"></i>Failed</span> }
                                 else { <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Pending</span> }
                             </td>
                             <td class="text-end pe-4">
-                                @if (userRole == "Retailer" && (payment.Status == "Pending" || payment.Status == "Processing") && payment.PaymentType == "OrderPayment")
+                                @if (userRole == "Retailer" && payment.PaymentType == "OrderPayment")
                                 {
-                                    <form asp-action="InitializePayment" asp-controller="Payment" method="post">
-                                        <input type="hidden" name="commissionId" value="@payment.Id" />
-                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
-                                            <i class="fas fa-credit-card me-1"></i>Pay Now
-                                        </button>
-                                    </form>
+                                    if (payment.Status == "Pending" || payment.Status == "Failed")
+                                    {
+                                        <form asp-action="InitializePayment" asp-controller="Payment" method="post">
+                                            <input type="hidden" name="commissionId" value="@payment.Id" />
+                                            <button type="submit" class="btn btn-sm @(payment.Status == "Failed" ? "btn-danger" : "btn-primary") rounded-pill px-3 shadow-sm">
+                                                <i class="fas fa-credit-card me-1"></i>@(payment.Status == "Failed" ? "Retry Payment" : "Pay Now")
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (payment.Status == "Paid")
+                                    {
+                                        <a href="/Payment/Receipt/@payment.Id" class="btn btn-sm btn-light border rounded-pill px-3">View Receipt</a>
+                                    }
                                 }
                                 else
                                 {
-                                    <button class="btn btn-sm btn-light border rounded-pill px-3" disabled>View Receipt</button>
+                                    <a href="/Payment/Receipt/@payment.Id" class="btn btn-sm btn-light border rounded-pill px-3">View Receipt</a>
                                 }
                             </td>
                         </tr>

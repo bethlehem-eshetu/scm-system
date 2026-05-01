@@ -16,6 +16,7 @@ namespace SCM_System.Controllers
 {
     [Authorize(Roles = "Warehouse,WarehouseManager")]
     [Route("Warehouse")]
+    [Route("WarehouseManager")]
     public class WarehouseController(
         ApplicationDbContext context, 
         IPurchaseOrderService poService, 
@@ -116,6 +117,9 @@ namespace SCM_System.Controllers
                     .Include(p => p.Retailer)
                     .Include(p => p.PurchaseOrderItems)
                         .ThenInclude(i => i.Product)
+                    .Include(p => p.DeliveryAgent)
+                        .ThenInclude(da => da.User)
+                    .Include(p => p.Vehicle)
                     .Where(p => p.WarehouseId == wId && p.Status != POStatus.Cancelled)
                     .ToListAsync();
 
@@ -126,7 +130,7 @@ namespace SCM_System.Controllers
                 
                 // Comprehensive Metrics
                 ViewBag.TotalOrders = pos.Count;
-                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Processing);
+                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Picking);
                 ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
                 ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
                 ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
@@ -175,9 +179,9 @@ namespace SCM_System.Controllers
             if (id.HasValue)
             {
                 var targetPO = await _context.PurchaseOrders.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id.Value);
-                if (targetPO != null)
+                if (targetPO != null && targetPO.WarehouseId.HasValue)
                 {
-                    wId = targetPO.WarehouseId;
+                    wId = targetPO.WarehouseId.Value;
                 }
             }
             
@@ -362,7 +366,7 @@ namespace SCM_System.Controllers
                 .Include(p => p.PurchaseOrderItems)
                     .ThenInclude(i => i.Product)
                 .Include(p => p.InventoryReservations)
-                .Where(p => p.WarehouseId == wId && (p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Processing))
+                .Where(p => p.WarehouseId == wId && (p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Picking))
                 .ToListAsync();
 
             return View(pos);
@@ -585,13 +589,13 @@ namespace SCM_System.Controllers
             var hubAccesses = manager.WarehouseAssignments.Where(a => a.IsActive).Select(a => a.WarehouseId).ToList();
             if (manager.WarehouseId.HasValue) hubAccesses.Add(manager.WarehouseId.Value);
 
-            if (!hubAccesses.Contains(po.WarehouseId))
+            if (!po.WarehouseId.HasValue || !hubAccesses.Contains(po.WarehouseId.Value))
             {
                 TempData["ErrorMessage"] = "You do not have authorization to dispatch orders from this warehouse.";
                 return RedirectToAction(nameof(Ready));
             }
 
-            int wId = po.WarehouseId;
+            int wId = po.WarehouseId ?? 0;
 
             var agent = await _context.SupplierEmployees
                 .FirstOrDefaultAsync(e => e.Id == agentId && 
@@ -631,9 +635,6 @@ namespace SCM_System.Controllers
 
             await _poService.UpdatePurchaseOrderStatusAsync(id, POStatus.InTransit, userId);
             
-            TempData["SuccessMessage"] = $"Order #{po.PONumber} has been successfully dispatched.";
-            return RedirectToAction(nameof(Ready));
-
             // AUDIT LOG
             await _auditLogService.LogActionAsync(
                 "PurchaseOrder", 

@@ -1,131 +1,97 @@
-﻿@using SCM_System.Models.ViewModels
+@using SCM_System.Models.ViewModels
 @model List<ConversationViewModel>
 
 @{
-    ViewData["Title"] = "Inbox";
+    Layout = "_DashboardLayout";
+    ViewData["Title"] = "Business Messages";
     string currentUserType = Context.Session.GetString("UserRole") ?? "Retailer";
 }
 
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h4 class="mb-0">
-                                <i class="fas fa-inbox me-2 text-primary"></i>Inbox
-                            </h4>
-                        </div>
-                        <div class="col-auto">
-                            <a href="@Url.Action("Sent")" class="btn btn-outline-primary me-2">
-                                <i class="fas fa-paper-plane me-1"></i>Sent Messages
-                            </a>
-                            <a href="@Url.Action("SelectRecipient")" class="btn btn-primary">
-                                <i class="fas fa-plus me-1"></i>New Message
-                            </a>
-                        </div>
-                    </div>
-                </div>
+<link href="~/css/chat.css" rel="stylesheet" />
 
-                <!-- Penalty Warning Banner -->
-                @if (ViewBag.ActivePenalties > 0)
+<div class="container-fluid py-4">
+    <!-- Premium Messaging Center Layout -->
+    <div class="messaging-center list-active shadow border-0">
+        
+        <!-- LEFT PANEL: Conversation List -->
+        <div class="conversation-list">
+            <div class="conversation-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-comment-dots text-primary me-2"></i>Messages</h5>
+                    <a href="@Url.Action("SelectRecipient")" class="btn btn-sm btn-light rounded-circle shadow-sm" title="New Message">
+                        <i class="fas fa-plus text-primary"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="conversation-search">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="Search chats..." id="chatSearch">
+                </div>
+            </div>
+
+            <div class="conversation-items">
+                @if (!Model.Any())
                 {
-                    <div class="alert alert-warning alert-dismissible fade show m-3 mb-0" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-                            <div>
-                                <strong>⚠️ Attention!</strong> You have @ViewBag.ActivePenalties active penalty(s).
-                                <p class="mb-0 small text-muted">Repeated violations may result in message restrictions or account suspension.</p>
-                            </div>
-                            <a href="@Url.Action("Index", "Penalty")" class="btn btn-sm btn-outline-warning ms-auto">
-                                View Penalties
-                            </a>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="text-center p-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3 opacity-50"></i>
+                        <p class="text-muted small">No conversations yet.</p>
+                        <a href="@Url.Action("SelectRecipient")" class="btn btn-sm btn-outline-primary rounded-pill">Start a Chat</a>
                     </div>
                 }
-
-                <div class="card-body p-0">
-                    @if (!Model.Any())
+                else
+                {
+                    foreach (var conversation in Model)
                     {
-                        <div class="text-center py-5">
-                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                            <h5 class="text-muted">Your inbox is empty</h5>
-                            <p class="text-muted mb-4">
-                                Start connecting with @(currentUserType == "Supplier" ? "retailers" : "suppliers")
-                            </p>
-                            <a href="@Url.Action("SelectRecipient")" class="btn btn-primary">
-                                <i class="fas fa-comment me-1"></i>Start New Conversation
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="list-group list-group-flush">
-                            @foreach (var conversation in Model)
-                            {
-                                <a href="@Url.Action("Conversation", new { id = conversation.OtherUserId })"
-                                       class="list-group-item list-group-item-action p-3 @(conversation.UnreadCount > 0 ? "bg-light" : "")">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <div class="avatar-circle @(conversation.OtherUserType == "Supplier" ? "bg-warning" : "bg-info") text-white">
-                                                @(conversation.OtherUserName.Length > 0 ? conversation.OtherUserName.Substring(0, 1).ToUpper() : "?")
-                                            </div>
-                                        </div>
-                                        <div class="col">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <h6 class="mb-0 fw-bold">
-                                                    @conversation.OtherUserName
-                                                    <small class="text-muted ms-2">(@conversation.OtherUserType)</small>
-                                                </h6>
-                                                <small class="text-muted">@conversation.TimeAgo</small>
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <p class="mb-0 text-truncate" style="max-width: 400px;">
-                                                    @if (conversation.UnreadCount > 0)
-                                                    {
-                                                        <span class="fw-bold">@conversation.LastMessage</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted">@conversation.LastMessage</span>
-                                                    }
-                                                </p>
-                                                @if (conversation.UnreadCount > 0)
-                                                {
-                                                    <span class="badge bg-primary rounded-pill">@conversation.UnreadCount new</span>
-                                                }
-                                            </div>
-                                        </div>
+                        <a href="@Url.Action("Conversation", new { id = conversation.OtherUserId })" class="conversation-item">
+                            <div class="conversation-avatar @(conversation.OtherUserType == "Supplier" ? "bg-warning" : "bg-info") shadow-sm">
+                                @(conversation.OtherUserName.Length > 0 ? conversation.OtherUserName.Substring(0, 1).ToUpper() : "?")
+                            </div>
+                            <div class="conversation-info">
+                                <div class="d-flex justify-content-between">
+                                    <div class="conversation-name">
+                                        @conversation.OtherUserName
+                                        @if (conversation.UnreadCount > 0)
+                                        {
+                                            <span class="badge bg-primary ms-1" style="font-size: 0.6rem;">@conversation.UnreadCount</span>
+                                        }
                                     </div>
-                                </a>
-                            }
-                        </div>
+                                    <div class="conversation-time">@conversation.TimeSpanDisplay</div>
+                                </div>
+                                <div class="conversation-preview @(conversation.UnreadCount > 0 ? "fw-bold text-dark" : "")">
+                                    @conversation.LastMessage
+                                </div>
+                            </div>
+                        </a>
                     }
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Chat Area (Empty State for Inbox) -->
+        <div class="chat-area d-none d-lg-flex bg-light align-items-center justify-content-center">
+            <div class="text-center opacity-50">
+                <div class="mb-4">
+                    <i class="fas fa-comments fa-5x text-secondary"></i>
                 </div>
+                <h4 class="text-muted">Business Communication Center</h4>
+                <p class="text-muted">Select a conversation from the sidebar or start a new one.</p>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .avatar-circle {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-    
-    .bg-warning {
-        background-color: #ffc107 !important;
-    }
-    
-    .bg-info {
-        background-color: #17a2b8 !important;
-    }
-</style>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Simple front-end filtering
+            $('#chatSearch').on('keyup', function () {
+                var value = $(this).val().toLowerCase();
+                $('.conversation-item').filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    </script>
+}

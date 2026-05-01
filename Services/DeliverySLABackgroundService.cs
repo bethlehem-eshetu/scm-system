@@ -56,7 +56,7 @@ namespace SCM_System.Services
                                 "Delivery Delay Alert ⏳",
                                 $"Order {order.OrderNumber} is past its expected delivery date: {order.ExpectedDeliveryDate?.ToString("f")}. Please update the status.",
                                 "Danger",
-                                $"/Supplier/Orders"
+                                $"/Order/Details/{order.Id}"
                             );
 
                             // Notify Retailer
@@ -65,7 +65,7 @@ namespace SCM_System.Services
                                 "Order Delayed Update 📦",
                                 $"Order {order.OrderNumber} is experiencing a delay. Expected date was: {order.ExpectedDeliveryDate?.ToString("d")}. We are working on it.",
                                 "Warning",
-                                $"/Retailer/OrderDetails/{order.Id}"
+                                $"/Order/Details/{order.Id}"
                             );
                         }
 

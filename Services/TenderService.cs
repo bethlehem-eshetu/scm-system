@@ -47,6 +47,7 @@ namespace SCM_System.Services
         public async Task<Tender> CreateTenderAsync(Tender tender, List<TenderItem> items)
         {
             tender.CreatedAt = DateTime.Now;
+            tender.UpdatedAt = DateTime.Now;
             tender.Status = "Published"; // Default to Published as per new requirements
             
             _context.Tenders.Add(tender);
@@ -109,6 +110,54 @@ namespace SCM_System.Services
             }
 
             tender.Status = "Awarded";
+
+            // Auto-create Order
+            var order = new Order
+            {
+                OrderNumber = "ORD-" + DateTime.Now.Ticks.ToString().Substring(8),
+                DeliveryAddress = tender.DeliveryLocation ?? "Tender default location",
+                ExpectedDeliveryDate = DateTime.Now.AddDays(winningBid.DeliveryLeadTimeDays),
+                SupplierId = winningBid.SupplierId,
+                RetailerId = tender.RetailerId,
+                TotalAmount = winningBid.ProposedTotalAmount,
+                OrderStatus = "Issued",
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                OrderItems = tender.TenderItems.Select(ti => new OrderItem
+                {
+                    ProductId = ti.ProductId,
+                    ProductName = ti.ProductName ?? "Custom Product",
+                    Quantity = ti.Quantity,
+                    UnitPrice = tender.TenderItems.Sum(t => t.Quantity) > 0 ? winningBid.ProposedTotalAmount / tender.TenderItems.Sum(t => t.Quantity) : winningBid.ProposedTotalAmount
+                }).ToList()
+            };
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            // Auto-create PO
+            var po = new PurchaseOrder
+            {
+                PONumber = "PO-TEND-" + DateTime.Now.Ticks.ToString().Substring(8),
+                RetailerId = tender.RetailerId,
+                SupplierId = winningBid.SupplierId,
+                TenderBidId = winningBid.Id,
+                Subtotal = winningBid.ProposedTotalAmount,
+                TotalAmount = winningBid.ProposedTotalAmount,
+                Status = "Issued",
+                DeliveryAddress = tender.DeliveryLocation ?? "Tender default location",
+                WarehouseId = null,
+                ExpectedDeliveryDate = DateTime.Now.AddDays(winningBid.DeliveryLeadTimeDays),
+                OrderDate = DateTime.Now,
+                OrderId = order.Id,
+                PurchaseOrderItems = tender.TenderItems.Select(ti => new PurchaseOrderItem
+                {
+                    ProductId = ti.ProductId,
+                    ProductName = ti.ProductName ?? "Custom Product",
+                    Quantity = ti.Quantity,
+                    UnitPrice = tender.TenderItems.Sum(t => t.Quantity) > 0 ? winningBid.ProposedTotalAmount / tender.TenderItems.Sum(t => t.Quantity) : winningBid.ProposedTotalAmount
+                }).ToList()
+            };
+            _context.PurchaseOrders.Add(po);
             await _context.SaveChangesAsync();
             
             return true;

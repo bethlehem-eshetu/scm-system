@@ -47,9 +47,8 @@ namespace SCM_System.Models.Entities
         [StringLength(100)]
         public string? DeliveryMethod { get; set; }
 
-        [Required]
-        public int WarehouseId { get; set; }
-        public Warehouse Warehouse { get; set; }
+        public int? WarehouseId { get; set; }
+        public Warehouse? Warehouse { get; set; }
 
         public int? DeliveryAgentId { get; set; }
         public SupplierEmployee DeliveryAgent { get; set; }
@@ -79,6 +78,19 @@ namespace SCM_System.Models.Entities
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public DateTime OrderDate { get; set; } = DateTime.Now;
+
+        [StringLength(255)]
+        public string? SignaturePath { get; set; }
+
+        [StringLength(1000)]
+        public string? DeliveryNotes { get; set; }
+
+        public bool ChecklistVerified { get; set; } = false;
+
+        public bool IsQRVerified { get; set; } = false;
+
+        [StringLength(500)]
+        public string? FailureReason { get; set; }
 
         [StringLength(500)]
         public string? CancellationReason { get; set; }

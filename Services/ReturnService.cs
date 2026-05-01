@@ -76,10 +76,12 @@ namespace SCM_System.Services
         {
             return await _context.ReturnRequests
                 .Include(r => r.Order)
+                .Include(r => r.PurchaseOrder)
                 .Include(r => r.Retailer)
                     .ThenInclude(r => r.User)
                 .Include(r => r.Supplier)
                     .ThenInclude(s => s.User)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
@@ -87,20 +89,31 @@ namespace SCM_System.Services
         {
             return await _context.ReturnRequests
                 .Include(r => r.Order)
+                .Include(r => r.PurchaseOrder)
                 .Include(r => r.Supplier)
                 .Where(r => r.RetailerId == retailerId)
+                .AsNoTracking()
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
 
         public async Task<List<ReturnRequest>> GetSupplierReturnsAsync(int supplierId)
         {
-            return await _context.ReturnRequests
+            var returns = await _context.ReturnRequests
                 .Include(r => r.Order)
+                .Include(r => r.PurchaseOrder)
                 .Include(r => r.Retailer)
                 .Where(r => r.SupplierId == supplierId)
+                .AsNoTracking()
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
+
+            // Safety: Handle Null Regions if DB has dirty data
+            foreach (var r in returns)
+            {
+                if (r.Retailer != null && r.Retailer.Region == null) r.Retailer.Region = "Unknown";
+            }
+            return returns;
         }
 
         public async Task<List<ReturnRequest>> GetPendingReturnsAsync()

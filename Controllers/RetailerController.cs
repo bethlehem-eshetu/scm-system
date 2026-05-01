@@ -4,6 +4,7 @@ using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Services;
 using System.Security.Claims;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Controllers
 {
@@ -64,7 +65,7 @@ namespace SCM_System.Controllers
                 TempData["ErrorMessage"] = "Failed to cancel order. It may have already been dispatched.";
             }
             
-            return RedirectToAction("OrderTrackingDetails", new { id });
+            return RedirectToAction("Details", "Order", new { id });
         }
 
         // GET: /Retailer/Dashboard
@@ -165,6 +166,8 @@ namespace SCM_System.Controllers
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
 
             var orders = await _context.Orders
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(o => o.Supplier)
                 .Include(o => o.PurchaseOrders)
                     .ThenInclude(po => po.Warehouse)
@@ -178,38 +181,7 @@ namespace SCM_System.Controllers
             return View(orders);
         }
 
-        // GET: /Retailer/OrderTrackingDetails/5
-        public async Task<IActionResult> OrderTrackingDetails(int id)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-
-            var order = await _context.Orders
-                .Include(o => o.Supplier)
-                .Include(o => o.OrderItems)
-                    .ThenInclude(i => i.Product)
-                .Include(o => o.PurchaseOrders)
-                    .ThenInclude(po => po.Warehouse)
-                .Include(o => o.PurchaseOrders)
-                    .ThenInclude(po => po.DeliveryAgent)
-                        .ThenInclude(da => da.User)
-                .Include(o => o.PurchaseOrders)
-                    .ThenInclude(po => po.Commission)
-                .FirstOrDefaultAsync(o => o.Id == id && o.RetailerId == retailer.Id);
-
-            if (order == null) return NotFound();
-
-            var statusHistory = await _context.OrderStatusHistories
-                .Where(h => h.OrderId == order.Id)
-                .OrderByDescending(h => h.ChangedAt)
-                .ToListAsync();
-
-            ViewBag.StatusHistory = statusHistory;
-
-            return View(order);
-        }
+        // Method removed to favor Order/Details
 
         // GET: /Retailer/MyPurchaseOrders
         public async Task<IActionResult> MyPurchaseOrders()
@@ -236,6 +208,7 @@ namespace SCM_System.Controllers
                 await _context.SaveChangesAsync();
             }
 
+
             return View(notifications);
         }
 
@@ -250,6 +223,27 @@ namespace SCM_System.Controllers
                 .FirstOrDefaultAsync(r => r.UserId == userId);
 
             if (retailer == null) return NotFound();
+
+            var orders = await _context.Orders
+                .Where(o => o.RetailerId == retailer.Id)
+                .ToListAsync();
+
+            ViewBag.TotalOrders = orders.Count;
+            ViewBag.TotalSpent = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
+            
+            int totalOrders = orders.Count;
+            int completedOrdersCount = orders.Count(o => o.OrderStatus == "Completed");
+            ViewBag.OnTimeDeliveryRate = totalOrders > 0 ? Math.Round((completedOrdersCount * 100.0 / totalOrders), 1) : 0;
+
+            var ratingsList = await _context.Ratings
+                .Where(r => r.RetailerId == retailer.Id)
+                .ToListAsync();
+            ViewBag.AverageRatingGiven = ratingsList.Any() ? ratingsList.Average(r => r.RatingValue) : 0;
+
+            ViewBag.AllCategories = await _context.ProductCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
 
             return View(retailer);
         }
@@ -365,6 +359,11 @@ namespace SCM_System.Controllers
 
             var cart = await _cartService.GetCartAsync(retailer.Id);
 
+            var netSubtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0;
+            var taxTotal = Math.Round(netSubtotal * 0.15m, 2);
+            var deliveryFee = 50.00m;
+            var grandTotal = netSubtotal + taxTotal + deliveryFee;
+
             var result = new
             {
                 success = true,
@@ -372,13 +371,19 @@ namespace SCM_System.Controllers
                     id = i.Id,
                     productId = i.ProductId,
                     productName = i.Product?.ProductName,
-                    supplierName = i.Product?.Supplier?.CompanyName,
                     price = i.Product?.BasePrice,
+                    imageUrl = i.Product?.ImageUrl ?? "/img/placeholder-product.png",
+                    taxRate = i.Product?.TaxRate ?? 15,
                     quantity = i.Quantity,
                     maxQuantity = i.Product?.Inventories?.Sum(inv => inv.QuantityOnHand - inv.QuantityReserved) ?? 0,
-                    total = (i.Quantity * (i.Product?.BasePrice ?? 0))
+                    supplierId = i.Product?.SupplierId, 
+                    supplierName = i.Product?.Supplier?.CompanyName ?? "Unknown Supplier",
+                    total = (i.Quantity * (i.Product?.BasePrice ?? 0)) // This is the Net Total for the item
                 }),
-                subtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0
+                subtotal = netSubtotal, // Net
+                taxTotal = taxTotal,
+                deliveryFee = deliveryFee,
+                total = grandTotal
             };
 
             return Json(result);
@@ -395,7 +400,8 @@ namespace SCM_System.Controllers
             await _cartService.UpdateCartItemQuantityAsync(retailer.Id, cartItemId, quantity);
             var cart = await _cartService.GetCartAsync(retailer.Id);
 
-            return Json(new { success = true, subtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0 });
+            var netSubtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0;
+            return Json(new { success = true, subtotal = netSubtotal, taxTotal = Math.Round(netSubtotal * 0.15m, 2) });
         }
 
         [HttpPost]
@@ -410,7 +416,8 @@ namespace SCM_System.Controllers
             var count = await _cartService.GetCartItemCountAsync(retailer.Id);
             var cart = await _cartService.GetCartAsync(retailer.Id);
 
-            return Json(new { success = true, cartItemCount = count, subtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0 });
+            var netSubtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0;
+            return Json(new { success = true, cartItemCount = count, subtotal = netSubtotal, taxTotal = Math.Round(netSubtotal * 0.15m, 2) });
         }
 
         [HttpPost]
@@ -451,6 +458,7 @@ namespace SCM_System.Controllers
             retailer.TaxIdentificationNumber = model.TaxIdentificationNumber;
             retailer.StoreSize = model.StoreSize;
             retailer.City = model.City;
+            retailer.Region = model.Region;
             retailer.BusinessAddress = model.BusinessAddress;
             retailer.Description = model.Description;
 
@@ -695,20 +703,24 @@ namespace SCM_System.Controllers
 
             if (order == null) return NotFound();
 
-            if (order.PaymentStatus != "Pending")
+            if (order.PaymentStatus != PaymentStatus.Pending.ToString())
             {
                 TempData["ErrorMessage"] = "This order is already paid or in escrow.";
-                return RedirectToAction("OrderTrackingDetails", new { id = order.Id });
+                return RedirectToAction("Details", "Order", new { id = order.Id });
             }
 
             // Initialize Chapa Payment
             var txRef = $"ORD-PAY-{order.Id}-{DateTime.Now.Ticks}";
             var user = await _context.Users.FindAsync(userId);
 
+            // Initialize Master Commission record
+            var commissionService = HttpContext.RequestServices.GetRequiredService<ICommissionService>();
+            await commissionService.InitiateOrderPaymentAsync(order.Id);
+
             var chapaService = HttpContext.RequestServices.GetRequiredService<IChapaService>();
             var request = new ChapaPaymentRequest
             {
-                Amount = order.TotalAmount,
+                Amount = order.TotalAmount, // Total amount already includes VAT per business rule
                 Currency = "ETB",
                 Email = user?.Email ?? "",
                 FirstName = user?.FullName?.Split(' ').FirstOrDefault() ?? "",
@@ -747,29 +759,14 @@ namespace SCM_System.Controllers
                 var parts = tx_ref.Split('-');
                 if (parts.Length >= 3 && int.TryParse(parts[2], out int orderId))
                 {
-                    var order = await _context.Orders.FindAsync(orderId);
-                    if (order != null && order.PaymentStatus == "Pending")
-                    {
-                        order.PaymentStatus = "Escrow";
-                        
-                        var history = new OrderStatusHistory
-                        {
-                            OrderId = order.Id,
-                            Status = order.OrderStatus,
-                            Comments = "Payment received and held in Escrow via Chapa.",
-                            ChangedByUserId = HttpContext.Session.GetInt32("UserId") ?? 0,
-                            ChangedAt = DateTime.Now
-                        };
-                        _context.OrderStatusHistories.Add(history);
-                        
-                        await _context.SaveChangesAsync();
-                        TempData["SuccessMessage"] = "Payment successful! Your funds are now held in Escrow.";
-                        return RedirectToAction("OrderTrackingDetails", new { id = orderId });
-                    }
+                    // The WebhookController will handle the actual status update.
+                    // We just show a pleasant success/pending message to the UI.
+                    TempData["SuccessMessage"] = "Payment verification in progress. Your order status will be updated shortly.";
+                    return RedirectToAction("Details", "Order", new { id = orderId });
                 }
             }
 
-            TempData["ErrorMessage"] = "Payment verification failed or timed out.";
+            TempData["ErrorMessage"] = "Payment verification pending. If you completed the payment, your order will be updated automatically via our secure webhook.";
             return RedirectToAction("OrderTracking");
         }
     }

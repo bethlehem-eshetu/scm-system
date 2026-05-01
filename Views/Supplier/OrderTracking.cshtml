@@ -66,8 +66,11 @@
                                 <partial name="_OrderTrackingTimeline" model="order.OrderStatus" />
                             </div>
                         </div>
-                        <div class="card-footer border-0 bg-transparent p-3 pt-0">
-                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary w-100 rounded-pill fw-bold">View Global Details</a>
+                        <div class="card-footer border-0 bg-transparent p-3 pt-0 d-flex gap-2">
+                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary flex-grow-1 rounded-pill fw-bold">View Global Details</a>
+                            <a asp-controller="Message" asp-action="StartOrderChat" asp-route-orderId="@order.Id" class="btn btn-light rounded-pill px-3 shadow-sm" title="Message Retailer">
+                                <i class="fas fa-comment-medical text-primary"></i>
+                            </a>
                         </div>
                     </div>
                 </div>

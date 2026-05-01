@@ -8,6 +8,7 @@ using SCM_System.Models.Entities;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using SCM_System.Services;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Controllers
 {
@@ -41,6 +42,29 @@ namespace SCM_System.Controllers
             return HttpContext.Session.GetInt32("UserId") ?? 0;
         }
 
+        // GET: /Payment/Receipt/5
+        public async Task<IActionResult> Receipt(int id)
+        {
+            var commission = await _context.Commissions
+                .Include(c => c.Order)
+                .Include(c => c.PurchaseOrder)
+                .Include(c => c.Supplier)
+                    .ThenInclude(s => s.User)
+                .Include(c => c.Retailer)
+                    .ThenInclude(r => r.User)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (commission == null) return NotFound();
+
+            // ✅ FIND SHARED TRUTH: The master payment record for this order
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.OrderId == commission.OrderId);
+            
+            ViewBag.MasterPayment = payment;
+
+            return View(commission);
+        }
+
         [HttpPost]
         public async Task<IActionResult> InitializePayment(int commissionId)
         {
@@ -56,7 +80,7 @@ namespace SCM_System.Controllers
                 if (commission == null)
                     return NotFound();
 
-                if (commission.Status == "Paid")
+                if (commission.Status == PaymentStatus.Paid.ToString())
                 {
                     TempData["SuccessMessage"] = "This payment has already been successfully processed.";
                     return RedirectToAction("MyPayments", "Payment");
@@ -128,7 +152,7 @@ namespace SCM_System.Controllers
 
                     // ✅ IMPORTANT FIX: store YOUR tx_ref (not Chapa response)
                     commission.ChapaTransactionId = tx_ref;
-                    commission.Status = "Processing";
+                    commission.Status = PaymentStatus.Processing.ToString();
                     commission.PaymentRequestData = responseContent;
 
                     await _context.SaveChangesAsync();
@@ -172,7 +196,7 @@ namespace SCM_System.Controllers
                     return RedirectToAction("MyPayments", "Payment");
                 }
 
-                if (commission.Status == "Paid")
+                if (commission.Status == PaymentStatus.Paid.ToString())
                 {
                     Console.WriteLine($"ℹ️ Payment already processed - tx_ref: {tx_ref}");
                     TempData["SuccessMessage"] = "Payment has already been successfully processed.";
@@ -212,7 +236,7 @@ namespace SCM_System.Controllers
                         }
                         else
                         {
-                            commission.Status = "Failed";
+                            commission.Status = PaymentStatus.Failed.ToString();
                             await _context.SaveChangesAsync();
                             Console.WriteLine($"❌ Commission {commission.Id} marked as FAILED");
                             TempData["ErrorMessage"] = "Payment verification failed.";
@@ -226,7 +250,7 @@ namespace SCM_System.Controllers
                 {
                     // Reload the entity to see if it was updated by the webhook concurrently
                     await _context.Entry(commission).ReloadAsync();
-                    if (commission.Status == "Paid")
+                    if (commission.Status == PaymentStatus.Paid.ToString())
                     {
                         Console.WriteLine($"ℹ️ Concurrency handled: Payment was already marked as PAID by another process.");
                         TempData["SuccessMessage"] = "Payment confirmed.";
@@ -332,8 +356,8 @@ namespace SCM_System.Controllers
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            ViewBag.TotalCleared = earnings.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Paid").Sum(c => c.CommissionAmount);
-            ViewBag.TotalPending = earnings.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Pending").Sum(c => c.CommissionAmount);
+            ViewBag.TotalCleared = earnings.Where(c => c.PaymentType == "SupplierPayout" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.CommissionAmount);
+            ViewBag.TotalPending = earnings.Where(c => c.PaymentType == "SupplierPayout" && c.Status == PaymentStatus.Pending.ToString()).Sum(c => c.CommissionAmount);
             ViewBag.TotalDeducted = earnings.Where(c => c.PaymentType == "PlatformCommission").Sum(c => c.CommissionAmount);
 
             return View(earnings);
@@ -380,7 +404,7 @@ namespace SCM_System.Controllers
                     return Ok(); // Acknowledge to stop Chapa retries
                 }
 
-                if (commission.Status == "Paid")
+                if (commission.Status == PaymentStatus.Paid.ToString())
                 {
                     return Ok(); // Already processed
                 }
