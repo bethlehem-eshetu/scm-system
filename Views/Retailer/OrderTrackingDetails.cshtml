@@ -145,7 +145,7 @@
                     </div>
                 }
 
-                @if (Model.PaymentStatus == "Pending" && Model.OrderStatus != "Rejected")
+                @if (Model.PaymentStatus == "Pending" && Model.OrderStatus != "Cancelled" && Model.OrderStatus != "Rejected")
                 {
                     <div class="mb-4">
                         <form asp-controller="Retailer" asp-action="PayOrder" method="post">
@@ -203,8 +203,8 @@
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">@item.Product?.ProductName</div>
                                             <div class="extra-small text-muted">SKU: @item.Product?.Id.ToString("D5")</div>
-                                         </td
-                                        <td><span class="badge bg-light text-dark border">x @item.Quantity @item.Product?.Unit</span></td
+                                         </td>
+                                        <td><span class="badge bg-light text-dark border">x @item.Quantity @item.Product?.Unit</span></td>
                                         <td class="text-end pe-4">
                                             <span class="badge @(displayStatus == "Delivered" || displayStatus == "Completed" ? "bg-success" : "bg-primary") bg-opacity-10 @(displayStatus == "Delivered" || displayStatus == "Completed" ? "text-success" : "text-primary") rounded-pill px-3">
                                                 @(displayStatus == "Delivered" || displayStatus == "Completed" ? "Delivered" : "Fulfillment Active")

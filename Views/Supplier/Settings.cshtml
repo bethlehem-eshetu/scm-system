@@ -14,6 +14,11 @@
                         <h2 class="text-white mb-1 fw-bold"><i class="fas fa-user-cog me-2"></i>Control Center</h2>
                         <p class="text-white-50 mb-0">Manage your business profile, security protocols, and operational preferences.</p>
                     </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light btn-sm rounded-pill px-3" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,6 +93,10 @@
                                 <input type="hidden" asp-for="ExistingLogo" />
 
                                 <div class="row g-4">
+<<<<<<< HEAD
+=======
+                                    <!-- Logo Upload -->
+>>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
                                     <div class="col-12 text-center mb-2">
                                         <div class="position-relative d-inline-block">
                                             <div class="bg-light rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 120px; height: 120px; border: 4px solid #fff;">
@@ -106,7 +115,7 @@
                                             </label>
                                             <input asp-for="CompanyLogoFile" type="file" class="d-none" accept="image/*" onchange="previewImage(this)" />
                                         </div>
-                                        <p class="text-muted small mt-2 mb-0">Company Logo</p>
+                                        <p class="text-muted small mt-2 mb-0">Company Logo (Click camera to change)</p>
                                     </div>
 
                                     <div class="col-md-6">
@@ -201,34 +210,143 @@
 
                 <!-- 3. Security Hub -->
                 <div class="tab-pane fade" id="v-pills-security" role="tabpanel">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-header bg-white py-3 border-bottom border-light">
-                            <h5 class="mb-0 fw-bold text-dark">Password & Preferences</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="mb-4">
-                                <partial name="_ThemeToggle" />
+                    <div class="row g-4">
+                        <!-- Password & Appearance -->
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <h5 class="mb-0 fw-bold text-dark">Password & Preferences</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="mb-4">
+                                        <partial name="_ThemeToggle" />
+                                    </div>
+                                    <hr class="my-4 border-light">
+                                    <h6 class="fw-bold mb-3"><i class="fas fa-key me-2 text-primary"></i>Update Password</h6>
+                                    <form asp-action="Settings" method="post">
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <label asp-for="CurrentPassword" class="form-label small fw-bold text-muted">Current Password</label>
+                                                <input asp-for="CurrentPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" placeholder="Enter current password to verify changes" />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label asp-for="NewPassword" class="form-label small fw-bold text-muted">New Password</label>
+                                                <input asp-for="NewPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted">Confirm New Password</label>
+                                                <input asp-for="ConfirmPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                            </div>
+                                            <div class="col-12 text-end">
+                                                <button type="submit" class="btn btn-outline-primary rounded-pill px-4">Update Security</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                            <hr class="my-4 border-light">
-                            <form asp-action="Settings" method="post">
-                                <div class="row g-3">
-                                    <div class="col-md-12">
-                                        <label asp-for="CurrentPassword" class="form-label small fw-bold text-muted">Current Password</label>
-                                        <input asp-for="CurrentPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                        </div>
+
+                        <!-- 2FA -->
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-shield-alt me-2"></i>Two-Factor Auth</h5>
+                                </div>
+                                <div class="card-body p-4 text-center">
+                                    <div class="mb-3">
+                                        <div class="icon-shape bg-soft-primary text-primary rounded-circle p-3 mb-3 d-inline-flex">
+                                            <i class="fas fa-lock fa-2x"></i>
+                                        </div>
+                                        <p class="text-muted small">Enhance security by requiring a verification code from Google Authenticator.</p>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="NewPassword" class="form-label small fw-bold text-muted">New Password</label>
-                                        <input asp-for="NewPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                    <div class="form-check form-switch d-inline-block mb-3">
+                                        <input class="form-check-input" type="checkbox" id="twoFactorToggle" @(Model.TwoFactorEnabled ? "checked" : "") onchange="toggle2FA(this)" style="width: 3rem; height: 1.5rem;">
+                                        <label class="form-check-label fw-bold ms-2 mt-1" for="twoFactorToggle" id="twoFactorLabel">
+                                            @(Model.TwoFactorEnabled ? "2FA Enabled" : "Enable 2FA")
+                                        </label>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted">Confirm New Password</label>
-                                        <input asp-for="ConfirmPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
-                                    </div>
-                                    <div class="col-12 text-end">
-                                        <button type="submit" class="btn btn-outline-primary rounded-pill px-4">Update Security</button>
+                                    <div id="qrCodeContainer" class="d-none mt-3 p-3 bg-light rounded-4 border border-light">
+                                        <p class="small fw-bold">Scan with Google Authenticator</p>
+                                        <img id="qrCodeImage" src="" alt="QR Code" class="img-fluid mb-2 border rounded shadow-sm" style="max-width: 150px;">
+                                        <p class="extra-small text-muted mb-1">Manual entry key:</p>
+                                        <code id="manualCodeText" class="d-block bg-white p-2 rounded text-primary fw-bold mb-0"></code>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
+                        </div>
+
+                        <!-- Sessions -->
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <h5 class="mb-0 fw-bold text-info"><i class="fas fa-desktop me-2"></i>Active Sessions</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush rounded-bottom-4">
+                                        @if (Model.ActiveSessions.Any())
+                                        {
+                                            @foreach (var session in Model.ActiveSessions)
+                                            {
+                                                <div class="list-group-item border-0 px-4 py-3 bg-transparent">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="icon-shape bg-soft-info text-info rounded-pill p-2 me-3">
+                                                                <i class="fas fa-laptop small"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-bold small mb-0">@session.IpAddress</div>
+                                                                <small class="text-muted extra-small">Active since @session.LoginTime.ToString("MMM dd, HH:mm")</small>
+                                                            </div>
+                                                        </div>
+                                                        <button class="btn btn-sm btn-soft-danger rounded-pill px-2 py-0" onclick="revokeSession(@session.Id)" title="Terminate session">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="p-4 text-center text-muted small">No other active sessions.</div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Login History -->
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-history me-2"></i>Recent Logins</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="px-4 py-3 border-0 small text-muted text-uppercase">Time (UTC)</th>
+                                                    <th class="py-3 border-0 small text-muted text-uppercase">IP Address</th>
+                                                    <th class="py-3 border-0 small text-muted text-uppercase">Device / Browser</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (ViewBag.LoginHistory != null)
+                                                {
+                                                    foreach (var log in (IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.LoginHistory)
+                                                    {
+                                                        <tr>
+                                                            <td class="px-4 small">@log.PerformedAtUtc.ToString("MMM dd, yyyy HH:mm")</td>
+                                                            <td class="small fw-bold">@log.IpAddress</td>
+                                                            <td><span class="extra-small text-muted text-truncate d-inline-block" style="max-width: 300px;" title="@log.UserAgent">@log.UserAgent</span></td>
+                                                        </tr>
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -237,49 +355,202 @@
                 <div class="tab-pane fade" id="v-pills-danger" role="tabpanel">
                     <div class="card border-0 shadow-sm rounded-4 border-top border-danger border-4">
                         <div class="card-header bg-white py-3 border-bottom border-light">
-                            <h5 class="mb-0 fw-bold text-danger">Critical Actions</h5>
+                            <h5 class="mb-0 fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Critical Actions</h5>
                         </div>
-                        <div class="card-body p-4 text-center">
-                            <div class="mb-5">
-                                <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
-                                <h5>Be careful here</h5>
-                                <p class="text-muted">These actions cannot be easily undone.</p>
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-4 border-bottom border-light gap-3">
+                                <div>
+                                    <h6 class="fw-bold mb-1">Export Business Archive</h6>
+                                    <p class="text-muted small mb-0">Download a full CSV export of your orders, staff, and financial records.</p>
+                                </div>
+                                <form asp-action="ExportData" method="post">
+                                    <button type="submit" class="btn btn-outline-dark rounded-pill px-4">
+                                        <i class="fas fa-download me-2"></i>Export All Data
+                                    </button>
+                                </form>
                             </div>
-                            <button class="btn btn-danger rounded-pill px-5 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#deactivateModal">
-                                Deactivate Account
-                            </button>
+
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                                <div>
+                                    <h6 class="text-danger fw-bold mb-1">Deactivate Provider Account</h6>
+                                    <p class="text-muted small mb-0">Temporarily suspend your presence on the platform. This action is sensitive.</p>
+                                </div>
+                                <button class="btn btn-danger rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                                    Deactivate Account
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </div>
 
-@section Styles {
-    <style>
+<style>
+        :root {
+            --bs-primary-rgb: 13, 110, 253;
+        }
         .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-        .nav-pills-custom .nav-link { border-radius: 0.75rem; padding: 0.8rem 1.2rem; color: #6c757d; transition: all 0.3s ease; border: none; background: none; }
-        .nav-pills-custom .nav-link.active { background-color: #0d6efd; color: white; }
-        .glass-panel { border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+        .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
+        .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1); }
+        
+        .btn-soft-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; border: none; }
+        .btn-soft-primary:hover { background-color: #0d6efd; color: white; }
+        .btn-soft-danger { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: none; }
+        .btn-soft-danger:hover { background-color: #dc3545; color: white; }
+        .btn-soft-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; border: none; }
+        .btn-soft-info:hover { background-color: #0dcaf0; color: white; }
+
+        .nav-pills-custom .nav-link {
+            border-radius: 0.75rem;
+            padding: 0.8rem 1.2rem;
+            color: #6c757d;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-pills-custom .nav-link:hover {
+            background-color: #f8f9fa;
+            color: var(--bs-primary);
+        }
+        .nav-pills-custom .nav-link.active {
+            background-color: var(--bs-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.2);
+        }
+        .w-20px { width: 20px; display: inline-block; }
+        .extra-small { font-size: 0.75rem; }
+        .object-fit-cover { object-fit: cover; }
+        .icon-shape { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+        
+        .glass-panel {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
+            background-color: #fff !important;
+        }
+
+        .table > :not(caption) > * > * {
+            padding: 1rem 0.5rem;
+        }
     </style>
 }
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+<<<<<<< HEAD
+=======
+        $(document).ready(function() {
+            // Re-initialize DataTables when switching tabs
+            $('button[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
+                $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+            });
+
+
+
+
+        // 2FA Toggle
+        function toggle2FA(checkbox) {
+            var enable = $(checkbox).is(':checked');
+            $.post('/Supplier/ToggleTwoFactor', { enable: enable, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
+                if (res.success) {
+                    if (enable) {
+                        $('#twoFactorLabel').text('2FA Enabled');
+                        $('#qrCodeImage').attr('src', res.qrCodeUrl);
+                        $('#manualCodeText').text(res.manualCode);
+                        $('#qrCodeContainer').removeClass('d-none');
+                        toastr.success('2FA enabled! Please scan the QR code.');
+                    } else {
+                        $('#twoFactorLabel').text('Enable 2FA');
+                        $('#qrCodeContainer').addClass('d-none');
+                        toastr.success(res.message);
+                    }
+                } else {
+                    $(checkbox).prop('checked', !enable);
+                    toastr.error('Failed to toggle 2FA.');
+                }
+            });
+        }
+
+        // Revoke Session
+        function revokeSession(id) {
+            if (confirm('Are you sure you want to revoke this session?')) {
+                $.post('/Supplier/RevokeSession', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
+                    if (res.success) {
+                        toastr.success(res.message);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    }
+                });
+            }
+        }
+
+        // Deactivate Account
+        function confirmDeactivation() {
+            var pwd = $('#deactivatePassword').val();
+            if (!pwd) {
+                toastr.warning('Please enter your password.');
+                return;
+            }
+
+            $.post('/Supplier/DeactivateAccount', { password: pwd, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
+                if (res.success) {
+                    $('#deactivateModal').modal('hide');
+                    toastr.success('Account deactivated successfully. Logging out...');
+                    setTimeout(function() { window.location.href = '/Account/Login'; }, 2000);
+                } else {
+                    toastr.error(res.message);
+                }
+            });
+        }
+
+>>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
         function previewImage(input) {
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
                 reader.onload = function (e) {
+<<<<<<< HEAD
                     $('#logoPreview').attr('src', e.target.result).removeClass('d-none');
                     $('#logoPlaceholder').addClass('d-none');
                     $('#sidebarLogoPreview').attr('src', e.target.result);
+=======
+                    var preview = document.getElementById('logoPreview');
+                    var placeholder = document.getElementById('logoPlaceholder');
+                    var sidebarPreview = document.getElementById('sidebarLogoPreview');
+                    
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    if (placeholder) {
+                        placeholder.classList.add('d-none');
+                    }
+                    if (sidebarPreview) {
+                        sidebarPreview.src = e.target.result;
+                    }
+>>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
+<<<<<<< HEAD
+=======
+
+        // Unsaved Changes Warning
+        let formChanged = false;
+        $('#mainSettingsForm').on('change input', 'input, select, textarea', function() { formChanged = true; });
+        $('#mainSettingsForm').submit(function() { formChanged = false; });
+        window.addEventListener('beforeunload', function (e) {
+            if (formChanged) {
+                var confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?';
+                e.returnValue = confirmationMessage;
+                return confirmationMessage;
+            }
+        });
+>>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
     </script>
 }

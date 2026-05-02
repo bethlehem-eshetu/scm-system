@@ -591,11 +591,12 @@
             }
             loadNotifications();
             $('#notifDropdown').on('click', loadNotifications);
-
             // --- Theme Init Logic ---
             const htmlElement = document.documentElement;
 
             // 1. Determine Initial Theme
+            // 1. Determine Initial Theme
+            // First check localStorage (client override), then fallback to server attribute (data-theme)
             let currentTheme = localStorage.getItem('themePreference');
             if (!currentTheme) {
                 currentTheme = htmlElement.getAttribute('data-theme') || 'light';
