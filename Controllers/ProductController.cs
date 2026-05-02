@@ -88,15 +88,23 @@ namespace SCM_System.Controllers
             var supplierId = await GetCurrentSupplierIdAsync();
             var supplier = await _context.Suppliers.FindAsync(supplierId);
 
-            var supplierCategories = await _context.SupplierCategories
+            // Get all category IDs the supplier is registered for
+            var supplierCategoryIds = await _context.SupplierCategories
                 .Where(sc => sc.SupplierId == supplierId)
-                .Select(sc => sc.Category)
+                .Select(sc => sc.CategoryId)
+                .ToListAsync();
+
+            // Find all Parent Categories that match the supplier's selected categories or their parents
+            var parentCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == null && 
+                           (supplierCategoryIds.Contains(c.Id) || 
+                            _context.ProductCategories.Any(sc => sc.ParentCategoryId == c.Id && supplierCategoryIds.Contains(sc.Id))))
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
             var model = new ProductViewModel
             {
-                CategoryList = new SelectList(supplierCategories, "Id", "CategoryName"),
+                CategoryList = new SelectList(parentCategories, "Id", "CategoryName"),
                 SupplierList = supplier != null ? new SelectList(new[] { supplier }, "Id", "CompanyName", supplierId) : null,
                 SupplierId = supplierId ?? 0
             };
@@ -131,6 +139,17 @@ namespace SCM_System.Controllers
             if (!isCategoryValid)
             {
                 ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
+
+            // Server-side Sub-Category Validation
+            if (model.SubCategoryId.HasValue)
+            {
+                var isSubCategoryValid = await _context.ProductCategories
+                    .AnyAsync(c => c.Id == model.SubCategoryId && c.ParentCategoryId == model.CategoryId);
+                if (!isSubCategoryValid)
+                {
+                    ModelState.AddModelError("SubCategoryId", "Invalid sub-category for selected category.");
+                }
             }
 
             // Check for duplicate product name
@@ -205,6 +224,36 @@ namespace SCM_System.Controllers
 
                 _context.Add(product);
                 await _context.SaveChangesAsync();
+
+                // Handle Gallery Images Upload
+                if (model.GalleryImages != null && model.GalleryImages.Any())
+                {
+                    string webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    string galleryFolder = Path.Combine(webRoot, "images", "products", "gallery");
+                    if (!Directory.Exists(galleryFolder)) Directory.CreateDirectory(galleryFolder);
+
+                    int order = 0;
+                    foreach (var galleryFile in model.GalleryImages.Take(10))
+                    {
+                        if (galleryFile.Length > 0)
+                        {
+                            string safeName = galleryFile.FileName.Replace(",", "_");
+                            string uniqueName = Guid.NewGuid().ToString() + "_" + safeName;
+                            using (var fs = new FileStream(Path.Combine(galleryFolder, uniqueName), FileMode.Create))
+                            {
+                                await galleryFile.CopyToAsync(fs);
+                            }
+                            _context.ProductImages.Add(new ProductImage
+                            {
+                                ProductId = product.Id,
+                                ImageUrl = "/images/products/gallery/" + uniqueName,
+                                DisplayOrder = order++
+                            });
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 
                 // Handle dynamic attribute saving
                 if (model.DynamicAttributes != null && model.DynamicAttributes.Any())
@@ -283,13 +332,21 @@ namespace SCM_System.Controllers
                 ModelState.AddModelError(string.Empty, "Validation errors: " + errors);
             }
 
-            var supplierCategories = await _context.SupplierCategories
+            // Get all category IDs the supplier is registered for
+            var supplierCategoryIds = await _context.SupplierCategories
                 .Where(sc => sc.SupplierId == supplierId)
-                .Select(sc => sc.Category)
+                .Select(sc => sc.CategoryId)
+                .ToListAsync();
+
+            // Find all Parent Categories that match the supplier's selected categories or their parents
+            var parentCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == null && 
+                           (supplierCategoryIds.Contains(c.Id) || 
+                            _context.ProductCategories.Any(sc => sc.ParentCategoryId == c.Id && supplierCategoryIds.Contains(sc.Id))))
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
-            model.CategoryList = new SelectList(supplierCategories, "Id", "CategoryName", model.CategoryId);
+            model.CategoryList = new SelectList(parentCategories, "Id", "CategoryName", model.CategoryId);
             var supplierObj = await _context.Suppliers.FindAsync(supplierId);
             model.SupplierList = supplierObj != null ? new SelectList(new[] { supplierObj }, "Id", "CompanyName", supplierId) : null;
             
@@ -350,20 +407,38 @@ namespace SCM_System.Controllers
                 return Unauthorized();
             }
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.GalleryImages.OrderBy(gi => gi.DisplayOrder))
+                .FirstOrDefaultAsync(p => p.Id == id);
             
             if (product == null || product.SupplierId != supplierId || product.IsDeleted)
             {
                 return NotFound();
             }
 
-            var supplierCategories = await _context.SupplierCategories
+            // Load gallery images for the view
+            ViewBag.GalleryImages = product.GalleryImages.Select(gi => new GalleryImageViewModel
+            {
+                Id = gi.Id,
+                ImageUrl = gi.ImageUrl,
+                DisplayOrder = gi.DisplayOrder
+            }).ToList();
+
+            // Get all category IDs the supplier is registered for
+            var supplierCategoryIds = await _context.SupplierCategories
                 .Where(sc => sc.SupplierId == supplierId)
-                .Select(sc => sc.Category)
+                .Select(sc => sc.CategoryId)
+                .ToListAsync();
+
+            // Find all Parent Categories
+            var parentCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == null && 
+                           (supplierCategoryIds.Contains(c.Id) || 
+                            _context.ProductCategories.Any(sc => sc.ParentCategoryId == c.Id && supplierCategoryIds.Contains(sc.Id))))
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
-            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", product.CategoryId);
+            ViewBag.Categories = new SelectList(parentCategories, "Id", "CategoryName", product.CategoryId);
             return View(product);
         }
 
@@ -416,6 +491,17 @@ namespace SCM_System.Controllers
             if (!isCategoryValid)
             {
                 ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
+
+            // Server-side Sub-Category Validation
+            if (model.SubCategoryId.HasValue)
+            {
+                var isSubCategoryValid = await _context.ProductCategories
+                    .AnyAsync(c => c.Id == model.SubCategoryId && c.ParentCategoryId == model.CategoryId);
+                if (!isSubCategoryValid)
+                {
+                    ModelState.AddModelError("SubCategoryId", "Invalid sub-category for selected category.");
+                }
             }
 
             // Check for duplicate product name
@@ -504,6 +590,35 @@ namespace SCM_System.Controllers
 
                     _context.Update(product);
                     await _context.SaveChangesAsync();
+
+                    // Handle new gallery images in Edit
+                    var galleryFiles = HttpContext.Request.Form.Files.GetFiles("GalleryImages");
+                    if (galleryFiles != null && galleryFiles.Any())
+                    {
+                        string webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        string galleryFolder = Path.Combine(webRoot, "images", "products", "gallery");
+                        if (!Directory.Exists(galleryFolder)) Directory.CreateDirectory(galleryFolder);
+
+                        int maxOrder = await _context.ProductImages.Where(pi => pi.ProductId == product.Id).Select(pi => pi.DisplayOrder).DefaultIfEmpty(0).MaxAsync();
+                        foreach (var gf in galleryFiles.Take(10))
+                        {
+                            if (gf.Length > 0)
+                            {
+                                string uniqueName = Guid.NewGuid().ToString() + "_" + gf.FileName.Replace(",", "_");
+                                using (var fs = new FileStream(Path.Combine(galleryFolder, uniqueName), FileMode.Create))
+                                {
+                                    await gf.CopyToAsync(fs);
+                                }
+                                _context.ProductImages.Add(new ProductImage
+                                {
+                                    ProductId = product.Id,
+                                    ImageUrl = "/images/products/gallery/" + uniqueName,
+                                    DisplayOrder = ++maxOrder
+                                });
+                            }
+                        }
+                        await _context.SaveChangesAsync();
+                    }
                     
                     TempData["SuccessMessage"] = "Product updated successfully!";
                     return RedirectToAction(nameof(MyProducts));
@@ -524,6 +639,31 @@ namespace SCM_System.Controllers
             return View(model);
         }
 
+        // POST: Product/DeleteGalleryImage (AJAX)
+        [HttpPost]
+        public async Task<IActionResult> DeleteGalleryImage(int imageId)
+        {
+            var supplierId = await GetCurrentSupplierIdAsync();
+            if (supplierId == null) return Unauthorized();
+
+            var image = await _context.ProductImages
+                .Include(pi => pi.Product)
+                .FirstOrDefaultAsync(pi => pi.Id == imageId);
+
+            if (image == null || image.Product.SupplierId != supplierId)
+                return NotFound();
+
+            // Delete the physical file
+            string webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var filePath = Path.Combine(webRoot, image.ImageUrl.TrimStart('/'));
+            if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+
+            _context.ProductImages.Remove(image);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
         // GET: Product/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -540,6 +680,7 @@ namespace SCM_System.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.GalleryImages.OrderBy(gi => gi.DisplayOrder))
                 .Include(p => p.AttributeValues)
                     .ThenInclude(av => av.AttributeDefinition)
                 .FirstOrDefaultAsync(m => m.Id == id && m.SupplierId == supplierId && !m.IsDeleted);

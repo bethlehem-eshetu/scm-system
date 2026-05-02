@@ -112,6 +112,8 @@ namespace SCM_System.Models.Entities
         public ICollection<ProductAttributeValue> AttributeValues { get; set; } = [];
         public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = [];
         public ICollection<OrderItem> OrderItems { get; set; } = [];
+        public ICollection<ProductImage> GalleryImages { get; set; } = new List<ProductImage>();
+
         // Add these after your existing fields
 
         // ========== INVENTORY TRACKING FIELDS ==========

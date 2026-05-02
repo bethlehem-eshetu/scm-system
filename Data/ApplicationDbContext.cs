@@ -63,6 +63,7 @@ namespace SCM_System.Data
 
         public DbSet<ProductAttributeDefinition> ProductAttributeDefinitions { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<InventoryHistory> InventoryHistories { get; set; }

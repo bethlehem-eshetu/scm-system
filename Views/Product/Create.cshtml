@@ -105,7 +105,7 @@
                                         <label asp-for="SubCategoryId" class="form-label fw-bold">
                                             Sub Category
                                         </label>
-                                        <select asp-for="SubCategoryId" class="form-select" id="subCategorySelect">
+                                        <select asp-for="SubCategoryId" class="form-select" id="subCategorySelect" data-selected="@Model.SubCategoryId">
                                             <option value="">-- Select Sub Category --</option>
                                         </select>
                                         <small class="text-muted">Optional for better organization</small>
@@ -424,45 +424,17 @@
                         <h5 class="fw-bold mb-0"><i class="fas fa-images me-2 text-primary"></i>Gallery Images</h5>
                     </div>
                     <div class="card-body p-4">
-                        <div class="bg-light border-2 border-dashed p-4 rounded-4 text-center position-relative">
-                            <input asp-for="GalleryImages" type="file" class="form-control position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;" multiple accept="image/*" />
+                        <div class="bg-light border-2 border-dashed p-4 rounded-4 text-center position-relative" id="galleryDropZone">
+                            <input asp-for="GalleryImages" type="file" class="form-control position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;" multiple accept="image/*" id="galleryInput" onchange="previewGallery(this)" />
                             <i class="fas fa-images fa-2x text-muted mb-2"></i>
                             <p class="mb-0 fw-bold">Drag & drop or click</p>
                             <small class="text-muted">Upload multiple angles (max 10)</small>
                         </div>
+                        <div id="galleryPreviewContainer" class="d-flex flex-wrap gap-2 mt-3"></div>
                     </div>
                 </div>
                 
-                <!-- SEO Card -->
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-header bg-white p-4 border-0 pb-0">
-                        <h5 class="fw-bold mb-0"><i class="fab fa-google me-2 text-primary"></i>Search Optimization</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <label asp-for="MetaTitle" class="form-label fw-bold">Meta Title</label>
-                            <input asp-for="MetaTitle" class="form-control" placeholder="SEO title for search engines" />
-                            <small class="text-muted">Recommended: 50-60 characters</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="MetaDescription" class="form-label fw-bold">Meta Description</label>
-                            <textarea asp-for="MetaDescription" class="form-control" rows="2" placeholder="SEO description for search results"></textarea>
-                            <small class="text-muted">Recommended: 150-160 characters</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="MetaKeywords" class="form-label fw-bold">Meta Keywords</label>
-                            <input asp-for="MetaKeywords" class="form-control" placeholder="keyword1, keyword2, keyword3" />
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="Slug" class="form-label fw-bold">URL Slug</label>
-                            <input asp-for="Slug" class="form-control" placeholder="organic-coffee-beans" />
-                            <small class="text-muted">Auto-generated from product name</small>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
         
@@ -604,12 +576,17 @@
                     fetch(`/Product/GetSubCategories?categoryId=${categoryId}`)
                         .then(response => response.json())
                         .then(data => {
+                            var selectedValue = subCategorySelect.getAttribute('data-selected');
                             data.forEach(sub => {
                                 var option = document.createElement('option');
                                 option.value = sub.id;
                                 option.text = sub.categoryName;
+                                if (selectedValue && selectedValue == sub.id) {
+                                    option.selected = true;
+                                }
                                 subCategorySelect.appendChild(option);
                             });
+                            subCategorySelect.removeAttribute('data-selected');
                         })
                         .catch(err => console.error("Error fetching subcategories", err));
                 }
@@ -700,5 +677,24 @@
                 categorySelect.dispatchEvent(new Event('change'));
             }
         });
+
+        function previewGallery(input) {
+            var container = document.getElementById('galleryPreviewContainer');
+            container.innerHTML = '';
+            if (input.files) {
+                Array.from(input.files).forEach(function(file, i) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var div = document.createElement('div');
+                        div.className = 'position-relative';
+                        div.style.width = '80px';
+                        div.style.height = '80px';
+                        div.innerHTML = '<img src="' + e.target.result + '" class="rounded-3 shadow-sm" style="width:80px;height:80px;object-fit:cover;" />';
+                        container.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
     </script>
 }
