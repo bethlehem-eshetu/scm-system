@@ -14,20 +14,54 @@
 
     <style>
         :root {
+            /* Light Theme Variables */
             --sidebar-width: 280px;
             --sidebar-bg: linear-gradient(180deg, #1e1b4b 0%, #111827 100%);
             --sidebar-hover: rgba(255, 255, 255, 0.05);
             --sidebar-color: #94a3b8;      /* Slate 400 */
             --sidebar-active: #ffffff;
-            --primary-color: #3b82f6;
-            --bg-color: #f5f7fa;
+            --bg-color: #f8fafc;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.125);
+            --top-nav-bg: #ffffff;
+        }
+
+        /* Dark Theme Variables */
+        html.dark-mode:root, body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+            --top-nav-bg: #1e1e1e;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark-mode .card, .dark-mode .bg-white {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+        
+        .dark-mode .text-dark {
+            color: #ffffff !important;
+        }
+        
+        .dark-mode .table, .dark-mode .table-hover tbody tr:hover {
+            color: var(--text-color);
+            background-color: transparent;
+        }
+        
+        .dark-mode .border-bottom {
+            border-bottom-color: var(--border-color) !important;
         }
 
         /* Sidebar Styling */
@@ -183,7 +217,7 @@
         /* Top Navbar */
         .top-navbar {
             padding: 1rem 2rem;
-            background: white;
+            background: var(--top-nav-bg);
             box-shadow: 0 2px 10px rgba(0,0,0,0.02);
             display: flex;
             justify-content: space-between;
@@ -191,6 +225,7 @@
             z-index: 999;
             position: sticky;
             top: 0;
+            transition: background 0.3s ease;
         }
 
         .sidebar-toggler {
@@ -280,7 +315,54 @@
 
                 @if (role == "Admin")
                 {
-                    <partial name="_AdminSidebar" />
+                    <li>
+                        <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-check"></i> Verifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users"></i> All Users</a>
+                    </li>
+                    
+                    <li class="menu-label">Communication</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope-open-text"></i> Message Monitoring</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="BlockedMessages"><i class="fas fa-ban"></i> Blocked Messages</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Penalties"><i class="fas fa-gavel"></i> Penalties</a>
+                    </li>
+
+                    <li class="menu-label">Finance</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-pie"></i> Commission Overview</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-exchange-alt"></i> Transactions</a>
+                    </li>
+
+
+                    <li class="menu-label">Report</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-file-invoice-dollar"></i> Financial Reports</a>
+                    </li>
+
+                    <li class="menu-label">System Admin</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-history"></i> Audit Logs</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-envelope-open-text"></i> Email Logs</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
+                    </li>
                 }
                 else if (role == "Supplier")
                 {
@@ -325,6 +407,12 @@
                     <li class="menu-label">Business Center</li>
                     <li>
                         <a asp-controller="Message" asp-action="Inbox"><i class="fas fa-comment-dots"></i> Messaging Hub</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Reports"><i class="fas fa-chart-line"></i> Performance Reports</a>
                     </li>
                     <li>
                         <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
@@ -383,6 +471,23 @@
                 </button>
 
                 <div class="d-flex align-items-center">
+                    @if (Context.Session.GetString("UserRole") == "Admin")
+                    {
+                        <div class="dropdown me-3">
+                            <button class="btn btn-warning rounded-pill dropdown-toggle px-3 btn-sm fw-medium shadow-sm" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bolt me-1 text-dark"></i> <span class="text-dark">Quick Actions</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2">
+                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-clock me-2 text-primary"></i>User Verifications</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="AllSuppliers"><i class="fas fa-building me-2 text-success"></i>All Suppliers</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="AllRetailers"><i class="fas fa-store me-2 text-info"></i>All Retailers</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="VerifiedSuppliers"><i class="fas fa-check-circle me-2 text-secondary"></i>Verified Suppliers</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope-open-text me-2 text-warning"></i>Message Monitoring</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="Penalties"><i class="fas fa-gavel me-2 text-danger"></i>Penalty Management</a></li>
+                            </ul>
+                        </div>
+                    }
                     @if (Context.Session.GetString("UserRole") == "Retailer")
                     {
                         <!-- Global Cart Toggle -->
@@ -486,6 +591,21 @@
             }
             loadNotifications();
             $('#notifDropdown').on('click', loadNotifications);
+
+            // --- Theme Init Logic ---
+            const htmlElement = document.documentElement;
+
+            // 1. Determine Initial Theme
+            let currentTheme = localStorage.getItem('themePreference');
+            if (!currentTheme) {
+                currentTheme = htmlElement.getAttribute('data-theme') || 'light';
+            }
+
+            // Apply theme on load
+            if (currentTheme === 'dark') {
+                htmlElement.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            }
         });
     </script>
     

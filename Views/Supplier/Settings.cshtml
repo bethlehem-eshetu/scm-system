@@ -1,365 +1,195 @@
 @model SCM_System.Models.ViewModels.SupplierSettingsViewModel
 @{
-    ViewData["Title"] = "Account Settings";
+    ViewData["Title"] = "Supplier Account Settings";
     Layout = "_SupplierLayout";
 }
 
 <div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-3">
-                    <h5 class="mb-0"><i class="fas fa-user-cog me-2"></i>Account Settings</h5>
-                </div>
-                <div class="card-body p-4">
-                    @if (TempData["SuccessMessage"] != null)
-                    {
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    }
-
-                    <form id="mainSettingsForm" asp-action="Settings" method="post" enctype="multipart/form-data">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                        <input type="hidden" asp-for="SupplierId" />
-                        <input type="hidden" asp-for="ExistingLogo" />
-
-                        <!-- Logo Section -->
-                        <div class="text-center mb-4">
-                            <div class="position-relative d-inline-block">
-                                <div class="bg-light rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 120px; height: 120px; border: 3px solid #eee;">
-                                    @if (!string.IsNullOrEmpty(Model.ExistingLogo))
-                                    {
-                                        <img src="@Model.ExistingLogo" id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Company Logo" />
-                                    }
-                                    else
-                                    {
-                                        <i class="fas fa-building fa-3x text-muted" id="logoPlaceholder"></i>
-                                        <img id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover d-none" alt="Company Logo" />
-                                    }
-                                </div>
-                                <label for="CompanyLogoFile" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle shadow" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-camera"></i>
-                                </label>
-                            </div>
-                            <input asp-for="CompanyLogoFile" type="file" class="d-none" accept="image/*" onchange="previewImage(this)" />
-                            <div class="mt-2 text-muted small">Company Logo</div>
-                            <span asp-validation-for="CompanyLogoFile" class="text-danger small"></span>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="FullName" class="form-label font-weight-bold"></label>
-                                <input asp-for="FullName" class="form-control rounded-pill" placeholder="Enter your full name" />
-                                <span asp-validation-for="FullName" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Email" class="form-label font-weight-bold"></label>
-                                <input asp-for="Email" class="form-control rounded-pill" placeholder="Enter your email" />
-                                <span asp-validation-for="Email" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="Phone" class="form-label font-weight-bold"></label>
-                                <input asp-for="Phone" class="form-control rounded-pill" placeholder="Enter your phone number" />
-                                <span asp-validation-for="Phone" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="Region" class="form-label font-weight-bold"></label>
-                                <input asp-for="Region" class="form-control rounded-pill" placeholder="e.g. Oromia, Amhara" />
-                                <span asp-validation-for="Region" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="WebsiteUrl" class="form-label font-weight-bold"></label>
-                                <input asp-for="WebsiteUrl" class="form-control rounded-pill" placeholder="https://example.com" />
-                                <span asp-validation-for="WebsiteUrl" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="PickupAddress" class="form-label font-weight-bold"></label>
-                            <input asp-for="PickupAddress" class="form-control rounded-pill" placeholder="Warehouse or store address for order pickups" />
-                            <span asp-validation-for="PickupAddress" class="text-danger small"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="CompanyDescription" class="form-label font-weight-bold"></label>
-                            <textarea asp-for="CompanyDescription" class="form-control" rows="4" placeholder="Tell us about your company..."></textarea>
-                            <span asp-validation-for="CompanyDescription" class="text-danger small"></span>
-                        </div>
-
-                        <hr class="my-4" />
-                        <h6 class="text-muted mb-3"><i class="fas fa-key me-2"></i>Change Password (Optional)</h6>
-
-                        <div class="mb-3">
-                            <label asp-for="CurrentPassword" class="form-label font-weight-bold"></label>
-                            <input asp-for="CurrentPassword" class="form-control rounded-pill" placeholder="Enter current password to make changes" />
-                            <span asp-validation-for="CurrentPassword" class="text-danger small"></span>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="NewPassword" class="form-label font-weight-bold"></label>
-                                <input asp-for="NewPassword" class="form-control rounded-pill" placeholder="Leave blank to keep current" />
-                                <span asp-validation-for="NewPassword" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="ConfirmPassword" class="form-label font-weight-bold"></label>
-                                <input asp-for="ConfirmPassword" class="form-control rounded-pill" placeholder="Confirm new password" />
-                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <div class="text-end mt-4">
-                            <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm">
-                                <i class="fas fa-save me-2"></i>Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Bank Accounts Section -->
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-university me-2"></i>Bank Accounts</h5>
-                    <button type="button" class="btn btn-light btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#bankAccountModal" onclick="resetBankModal()">
-                        <i class="fas fa-plus me-1"></i>Add Account
-                    </button>
-                </div>
-                <div class="card-body p-4">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle" id="bankAccountsTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Bank Name</th>
-                                    <th>Account Holder</th>
-                                    <th>Account Number</th>
-                                    <th>Branch</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var account in Model.BankAccounts)
-                                {
-                                    <tr>
-                                        <td>@account.BankName</td>
-                                        <td>@account.AccountHolderName</td>
-                                        <td>@account.AccountNumber</td>
-                                        <td>@account.Branch</td>
-                                        <td>
-                                            @if (account.IsPrimary)
-                                            {
-                                                <span class="badge bg-success rounded-pill">Primary</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="editBankAccount(@Json.Serialize(account))">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger rounded-circle" onclick="deleteBankAccount(@account.Id)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-panel p-4 mb-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--bs-primary) 0%, #0d6efd 100%); border-radius: 1rem;">
+                <div class="position-relative z-index-1 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h2 class="text-white mb-1 fw-bold"><i class="fas fa-user-cog me-2"></i>Control Center</h2>
+                        <p class="text-white-50 mb-0">Manage your business profile, security protocols, and operational preferences.</p>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Employees Section -->
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header bg-info text-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Employee Management</h5>
-                    <button type="button" class="btn btn-light btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#employeeModal" onclick="resetEmployeeModal()">
-                        <i class="fas fa-plus me-1"></i>Add Employee
-                    </button>
-                </div>
-                <div class="card-body p-4">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle" id="employeesTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Full Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Warehouse</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var emp in Model.Employees)
-                                {
-                                    <tr>
-                                        <td>@emp.User.FullName</td>
-                                        <td>@emp.Email</td>
-                                        <td>@emp.EmployeeRole</td>
-                                        <td>@(emp.Warehouse?.Name ?? "N/A")</td>
-                                        <td>
-                                            <span class="badge @(emp.IsActive ? "bg-success" : "bg-secondary") rounded-pill">
-                                                @(emp.IsActive ? "Active" : "Inactive")
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="editEmployee(@Json.Serialize(new { id = emp.Id, fullName = emp.User.FullName, email = emp.Email, phone = emp.Phone, role = emp.EmployeeRole, warehouseId = emp.WarehouseId, isActive = emp.IsActive }))">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger rounded-circle" onclick="deleteEmployee(@emp.Id)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-3 fa-lg"></i>
+                <div>@TempData["SuccessMessage"]</div>
             </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-            <!-- Notifications Section -->
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header bg-warning text-dark py-3">
-                    <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notification Preferences</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form id="notificationsForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="notifyOrderAlert" name="notifyOrderAlert" value="true" @(Model.NotifyOrderAlert ? "checked" : "")>
-                                    <label class="form-check-label" for="notifyOrderAlert">New Order Alerts</label>
-                                </div>
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="notifyBidAlert" name="notifyBidAlert" value="true" @(Model.NotifyBidAlert ? "checked" : "")>
-                                    <label class="form-check-label" for="notifyBidAlert">Tender Bid Updates</label>
-                                </div>
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="notifyLowStockAlert" name="notifyLowStockAlert" value="true" @(Model.NotifyLowStockAlert ? "checked" : "")>
-                                    <label class="form-check-label" for="notifyLowStockAlert">Low Stock Warnings</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="notifyPaymentAlert" name="notifyPaymentAlert" value="true" @(Model.NotifyPaymentAlert ? "checked" : "")>
-                                    <label class="form-check-label" for="notifyPaymentAlert">Payment Notifications</label>
-                                </div>
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="notifyDisputeAlert" name="notifyDisputeAlert" value="true" @(Model.NotifyDisputeAlert ? "checked" : "")>
-                                    <label class="form-check-label" for="notifyDisputeAlert">Dispute Updates</label>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label text-muted small">Notification Channel</label>
-                                    <select class="form-select form-select-sm" name="notifyChannel" id="notifyChannel">
-                                        <option value="Email" selected="@(Model.NotifyChannel == "Email")">Email Only</option>
-                                        <option value="SMS" selected="@(Model.NotifyChannel == "SMS")">SMS Only</option>
-                                        <option value="Both" selected="@(Model.NotifyChannel == "Both")">Both Email & SMS</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm mt-2"><i class="fas fa-save me-1"></i>Save Preferences</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Security Section -->
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header bg-dark text-white py-3">
-                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Security & Sessions</h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row">
-                        <div class="col-md-6 border-end">
-                            <h6 class="mb-3">Two-Factor Authentication (2FA)</h6>
-                            <p class="text-muted small">Enhance your account security by requiring a verification code from Google Authenticator when you sign in.</p>
-                            <div class="form-check form-switch form-switch-lg mb-3">
-                                <input class="form-check-input" type="checkbox" id="twoFactorToggle" @(Model.TwoFactorEnabled ? "checked" : "") onchange="toggle2FA(this)">
-                                <label class="form-check-label" for="twoFactorToggle" id="twoFactorLabel">
-                                    @(Model.TwoFactorEnabled ? "2FA is Enabled" : "Enable 2FA")
-                                </label>
-                            </div>
-                            <div id="qrCodeContainer" class="d-none text-center p-3 bg-light rounded border">
-                                <h6>Scan this QR Code with Google Authenticator</h6>
-                                <img id="qrCodeImage" src="" alt="QR Code" class="img-fluid mb-2 border" style="max-width: 200px;">
-                                <p class="small text-muted mb-0">Or enter this manual code:</p>
-                                <code id="manualCodeText" class="fs-6 user-select-all"></code>
-                            </div>
-                        </div>
-                        <div class="col-md-6 ps-4">
-                            <h6 class="mb-3">Active Sessions</h6>
-                            <p class="text-muted small">Manage devices currently signed in to your account.</p>
-                            @if (Model.ActiveSessions.Any())
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 20px;">
+                <div class="p-4 text-center border-bottom border-light">
+                    <div class="position-relative d-inline-block mb-3">
+                        <div class="bg-light rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 100px; height: 100px; border: 3px solid #fff; margin: 0 auto;">
+                            @if (!string.IsNullOrEmpty(Model.ExistingLogo))
                             {
-                                <ul class="list-group list-group-flush">
-                                    @foreach (var session in Model.ActiveSessions)
-                                    {
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                            <div>
-                                                <i class="fas fa-desktop text-muted me-2"></i>
-                                                <small class="fw-bold">@session.IpAddress</small><br>
-                                                <small class="text-muted" style="font-size: 0.75rem;">Login: @session.LoginTime.ToString("MMM dd, yyyy HH:mm")</small>
-                                            </div>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="revokeSession(@session.Id)">Revoke</button>
-                                        </li>
-                                    }
-                                </ul>
+                                <img src="@Model.ExistingLogo" id="sidebarLogoPreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Logo" />
                             }
                             else
                             {
-                                <div class="text-muted small"><i class="fas fa-info-circle me-1"></i>No active sessions found.</div>
+                                <i class="fas fa-building fa-2x text-muted"></i>
                             }
                         </div>
                     </div>
-                    
-                    <hr class="my-4" />
+                    <h5 class="fw-bold mb-1">@User.Identity.Name</h5>
+                    <div class="d-flex justify-content-center gap-2 mb-0">
+                        <span class="badge bg-soft-primary text-primary rounded-pill px-3">Supplier</span>
+                    </div>
+                </div>
+                <div class="p-3">
+                    <div class="nav flex-column nav-pills nav-pills-custom" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                        <button class="nav-link active text-start mb-2" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
+                            <i class="fas fa-id-card me-2 w-20px text-center"></i>Business Profile
+                        </button>
+                        <button class="nav-link text-start mb-2" id="v-pills-finance-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finance" type="button" role="tab">
+                            <i class="fas fa-university me-2 w-20px text-center"></i>Financial Setup
+                        </button>
+                        <button class="nav-link text-start mb-2" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
+                            <i class="fas fa-shield-alt me-2 w-20px text-center"></i>Security Hub
+                        </button>
+                        <button class="nav-link text-start mb-2 text-danger" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab">
+                            <i class="fas fa-exclamation-triangle me-2 w-20px text-center"></i>Danger Zone
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Recent Login History Section -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <h6 class="mb-3">Recent Login History</h6>
-                            <p class="text-muted small">Review recent successful sign-ins to your account.</p>
+        <!-- Main Content Area -->
+        <div class="col-lg-9">
+            <div class="tab-content" id="v-pills-tabContent">
+                
+                <!-- 1. Business Profile -->
+                <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3 border-bottom border-light">
+                            <h5 class="mb-0 fw-bold text-primary">Business Profile</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="mainSettingsForm" asp-action="Settings" method="post" enctype="multipart/form-data">
+                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                                <input type="hidden" asp-for="SupplierId" />
+                                <input type="hidden" asp-for="ExistingLogo" />
+
+                                <div class="row g-4">
+                                    <div class="col-12 text-center mb-2">
+                                        <div class="position-relative d-inline-block">
+                                            <div class="bg-light rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 120px; height: 120px; border: 4px solid #fff;">
+                                                @if (!string.IsNullOrEmpty(Model.ExistingLogo))
+                                                {
+                                                    <img src="@Model.ExistingLogo" id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Logo" />
+                                                }
+                                                else
+                                                {
+                                                    <i class="fas fa-building fa-3x text-muted" id="logoPlaceholder"></i>
+                                                    <img id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover d-none" alt="Logo" />
+                                                }
+                                            </div>
+                                            <label for="CompanyLogoFile" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2" style="cursor: pointer;">
+                                                <i class="fas fa-camera"></i>
+                                            </label>
+                                            <input asp-for="CompanyLogoFile" type="file" class="d-none" accept="image/*" onchange="previewImage(this)" />
+                                        </div>
+                                        <p class="text-muted small mt-2 mb-0">Company Logo</p>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="FullName" class="form-label small fw-bold text-muted">Legal Representative Name</label>
+                                        <input asp-for="FullName" class="form-control rounded-pill bg-light border-0 px-4" />
+                                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Email" class="form-label small fw-bold text-muted">Business Email</label>
+                                        <input asp-for="Email" class="form-control rounded-pill bg-light border-0 px-4" />
+                                        <span asp-validation-for="Email" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Phone" class="form-label small fw-bold text-muted">Contact Phone</label>
+                                        <input asp-for="Phone" class="form-control rounded-pill bg-light border-0 px-4" />
+                                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="WebsiteUrl" class="form-label small fw-bold text-muted">Website URL</label>
+                                        <input asp-for="WebsiteUrl" class="form-control rounded-pill bg-light border-0 px-4" placeholder="https://" />
+                                        <span asp-validation-for="WebsiteUrl" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="PickupAddress" class="form-label small fw-bold text-muted">Primary Pickup Address</label>
+                                        <input asp-for="PickupAddress" class="form-control rounded-pill bg-light border-0 px-4" />
+                                        <span asp-validation-for="PickupAddress" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="CompanyDescription" class="form-label small fw-bold text-muted">Company Description</label>
+                                        <textarea asp-for="CompanyDescription" class="form-control rounded-4 bg-light border-0 p-4" rows="4"></textarea>
+                                        <span asp-validation-for="CompanyDescription" class="text-danger small"></span>
+                                    </div>
+                                </div>
+
+                                <div class="text-end mt-4 pt-3 border-top border-light">
+                                    <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm py-2 fw-bold">
+                                        <i class="fas fa-save me-2"></i>Update Profile
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Financial Setup -->
+                <div class="tab-pane fade" id="v-pills-finance" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-success">Bank Accounts</h5>
+                            <button type="button" class="btn btn-success btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#bankAccountModal" onclick="resetBankModal()">
+                                <i class="fas fa-plus me-1"></i> Add Account
+                            </button>
+                        </div>
+                        <div class="card-body p-4">
                             <div class="table-responsive">
-                                <table class="table table-sm table-hover align-middle">
+                                <table class="table table-hover align-middle">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Timestamp (UTC)</th>
-                                            <th>IP Address</th>
-                                            <th>User Agent</th>
+                                            <th>Bank Name</th>
+                                            <th>Account Holder</th>
+                                            <th>Account Number</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @if (ViewBag.LoginHistory != null)
-                                        {
-                                            var historyList = ViewBag.LoginHistory as IEnumerable<SCM_System.Models.Entities.AuditLog>;
-                                            if (historyList != null && historyList.Any())
-                                            {
-                                                foreach (var log in historyList)
-                                                {
-                                                    <tr>
-                                                        <td>@log.PerformedAtUtc.ToString("MMM dd, yyyy HH:mm")</td>
-                                                        <td>@log.IpAddress</td>
-                                                        <td><span class="text-truncate d-inline-block" style="max-width: 250px;" title="@log.UserAgent">@log.UserAgent</span></td>
-                                                    </tr>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                <tr>
-                                                    <td colspan="3" class="text-center text-muted small py-3">No recent login history found.</td>
-                                                </tr>
-                                            }
-                                        }
-                                        else
+                                        @foreach (var account in Model.BankAccounts)
                                         {
                                             <tr>
-                                                <td colspan="3" class="text-center text-muted small py-3">Login history unavailable.</td>
+                                                <td class="fw-bold">@account.BankName</td>
+                                                <td>@account.AccountHolderName</td>
+                                                <td><code>@account.AccountNumber</code></td>
+                                                <td>
+                                                    @if (account.IsPrimary)
+                                                    {
+                                                        <span class="badge bg-soft-success text-success rounded-pill px-3">Primary</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-soft-primary rounded-circle me-1" onclick="editBankAccount(@Json.Serialize(account))">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         }
                                     </tbody>
@@ -368,419 +198,88 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Performance Section -->
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header bg-primary text-white py-3">
-                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Performance Overview</h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row text-center g-3">
-                        <div class="col-md-3 col-6">
-                            <div class="p-3 bg-light rounded border border-light shadow-sm">
-                                <i class="fas fa-box fa-2x text-primary mb-2"></i>
-                                <h4 class="mb-0">@Model.TotalOrders</h4>
-                                <span class="text-muted small">Total Orders</span>
+                <!-- 3. Security Hub -->
+                <div class="tab-pane fade" id="v-pills-security" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3 border-bottom border-light">
+                            <h5 class="mb-0 fw-bold text-dark">Password & Preferences</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-4">
+                                <partial name="_ThemeToggle" />
                             </div>
+                            <hr class="my-4 border-light">
+                            <form asp-action="Settings" method="post">
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label asp-for="CurrentPassword" class="form-label small fw-bold text-muted">Current Password</label>
+                                        <input asp-for="CurrentPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="NewPassword" class="form-label small fw-bold text-muted">New Password</label>
+                                        <input asp-for="NewPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted">Confirm New Password</label>
+                                        <input asp-for="ConfirmPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-outline-primary rounded-pill px-4">Update Security</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                        <div class="col-md-3 col-6">
-                            <div class="p-3 bg-light rounded border border-light shadow-sm">
-                                <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
-                                <h4 class="mb-0">@Model.TotalRevenue.ToString("C")</h4>
-                                <span class="text-muted small">Total Revenue</span>
+                    </div>
+                </div>
+
+                <!-- 4. Danger Zone -->
+                <div class="tab-pane fade" id="v-pills-danger" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-4 border-top border-danger border-4">
+                        <div class="card-header bg-white py-3 border-bottom border-light">
+                            <h5 class="mb-0 fw-bold text-danger">Critical Actions</h5>
+                        </div>
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-5">
+                                <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                                <h5>Be careful here</h5>
+                                <p class="text-muted">These actions cannot be easily undone.</p>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="p-3 bg-light rounded border border-light shadow-sm">
-                                <i class="fas fa-truck fa-2x text-info mb-2"></i>
-                                <h4 class="mb-0">@Model.OnTimeDeliveryRate.ToString("0.0")%</h4>
-                                <span class="text-muted small">On-Time Rate</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="p-3 bg-light rounded border border-light shadow-sm">
-                                <i class="fas fa-star fa-2x text-warning mb-2"></i>
-                                <h4 class="mb-0">@Model.AverageRating.ToString("0.0")</h4>
-                                <span class="text-muted small">Avg Rating</span>
-                            </div>
+                            <button class="btn btn-danger rounded-pill px-5 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                                Deactivate Account
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Danger Zone Section -->
-            <div class="card shadow-sm border-danger mt-4 mb-5">
-                <div class="card-header bg-danger text-white py-3">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-4">
-                        <div>
-                            <h6 class="fw-bold mb-1">Export Data</h6>
-                            <p class="text-muted small mb-0">Download a CSV file containing your orders, employees, and bank account information.</p>
-                        </div>
-                        <form asp-action="ExportData" method="post">
-                            <button type="submit" class="btn btn-outline-secondary">Export All Data (CSV)</button>
-                        </form>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-danger fw-bold mb-1">Deactivate Account</h6>
-                            <p class="text-muted small mb-0">Once you deactivate your account, there is no going back. Please be certain.</p>
-                        </div>
-                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deactivateModal">Deactivate Account</button>
-                    </div>
-                </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Deactivate Modal -->
-<div class="modal fade" id="deactivateModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content border-danger">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deactivation</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <p class="text-danger fw-bold">Warning: This action is irreversible!</p>
-                <p>To confirm deactivation, please enter your password below.</p>
-                <div class="mb-3">
-                    <input type="password" id="deactivatePassword" class="form-control" placeholder="Enter password to confirm" />
-                </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDeactivation()">I understand, Deactivate</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bank Account Modal -->
-<div class="modal fade" id="bankAccountModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="bankAccountForm">
-                <input type="hidden" name="Id" id="bank_id" />
-                <div class="modal-header">
-                    <h5 class="modal-title" id="bankModalTitle">Add Bank Account</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Bank Name</label>
-                        <input type="text" name="BankName" id="bank_name" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Account Holder Name</label>
-                        <input type="text" name="AccountHolderName" id="bank_holder" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Account Number</label>
-                        <input type="text" name="AccountNumber" id="bank_number" class="form-control" required />
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Branch</label>
-                            <input type="text" name="Branch" id="bank_branch" class="form-control" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">SWIFT Code</label>
-                            <input type="text" name="SwiftCode" id="bank_swift" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" name="IsPrimary" value="true" id="bank_primary">
-                        <label class="form-check-label">Set as Primary Account</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Account</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Employee Modal -->
-<div class="modal fade" id="employeeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="employeeForm">
-                <input type="hidden" name="id" id="emp_id" />
-                <div class="modal-header">
-                    <h5 class="modal-title" id="empModalTitle">Add Employee</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="fullName" id="emp_name" class="form-control" required />
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" id="emp_email" class="form-control" required />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Phone</label>
-                            <input type="text" name="phone" id="emp_phone" class="form-control" required />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Role</label>
-                            <select name="role" id="emp_role" class="form-select" required>
-                                <option value="warehouse_manager">Warehouse Manager</option>
-                                <option value="delivery_agent">Delivery Agent</option>
-                                <option value="support">Support Staff</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Warehouse Assignment</label>
-                            <select name="warehouseId" id="emp_warehouse" class="form-select" asp-items="ViewBag.Warehouses">
-                                <option value="">No Assignment</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" name="isActive" value="true" id="emp_active" checked>
-                        <label class="form-check-label">Is Active</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Employee</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+        .nav-pills-custom .nav-link { border-radius: 0.75rem; padding: 0.8rem 1.2rem; color: #6c757d; transition: all 0.3s ease; border: none; background: none; }
+        .nav-pills-custom .nav-link.active { background-color: #0d6efd; color: white; }
+        .glass-panel { border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); }
+    </style>
 }
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    
     <script>
-        $(document).ready(function() {
-            $('#bankAccountsTable, #employeesTable').DataTable();
-
-            // Bank Account Form Submit
-            $('#bankAccountForm').submit(function(e) {
-                e.preventDefault();
-                var id = $('#bank_id').val();
-                var url = id ? '/Supplier/UpdateBankAccount' : '/Supplier/AddBankAccount';
-                
-                $.post(url, $(this).serialize(), function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        toastr.error(res.message);
-                    }
-                });
-            });
-
-            // Employee Form Submit
-            $('#employeeForm').submit(function(e) {
-                e.preventDefault();
-                var id = $('#emp_id').val();
-                var url = id ? '/Supplier/UpdateEmployee' : '/Supplier/AddEmployee';
-                
-                $.post(url, $(this).serialize(), function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    } else {
-                        toastr.error(res.message);
-                    }
-                });
-            });
-        });
-
-        function resetBankModal() {
-            $('#bankAccountForm')[0].reset();
-            $('#bank_id').val('');
-            $('#bankModalTitle').text('Add Bank Account');
-        }
-
-        function editBankAccount(account) {
-            resetBankModal();
-            $('#bankModalTitle').text('Edit Bank Account');
-            $('#bank_id').val(account.id);
-            $('#bank_name').val(account.bankName);
-            $('#bank_holder').val(account.accountHolderName);
-            $('#bank_number').val(account.accountNumber);
-            $('#bank_branch').val(account.branch);
-            $('#bank_swift').val(account.swiftCode);
-            $('#bank_primary').prop('checked', account.isPrimary);
-            $('#bankAccountModal').modal('show');
-        }
-
-        function deleteBankAccount(id) {
-            if (confirm('Are you sure you want to delete this bank account?')) {
-                $.post('/Supplier/DeleteBankAccount', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    }
-                });
-            }
-        }
-
-        function resetEmployeeModal() {
-            $('#employeeForm')[0].reset();
-            $('#emp_id').val('');
-            $('#empModalTitle').text('Add Employee');
-            $('#emp_active').prop('checked', true);
-        }
-
-        function editEmployee(emp) {
-            resetEmployeeModal();
-            $('#empModalTitle').text('Edit Employee');
-            $('#emp_id').val(emp.id);
-            $('#emp_name').val(emp.fullName);
-            $('#emp_email').val(emp.email);
-            $('#emp_phone').val(emp.phone);
-            $('#emp_role').val(emp.role);
-            $('#emp_warehouse').val(emp.warehouseId);
-            $('#emp_active').prop('checked', emp.isActive);
-            $('#employeeModal').modal('show');
-        }
-
-        function deleteEmployee(id) {
-            if (confirm('Are you sure you want to delete this employee?')) {
-                $.post('/Supplier/DeleteEmployee', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    }
-                });
-            }
-        }
-
-        // Notifications
-        $('#notificationsForm').submit(function(e) {
-            e.preventDefault();
-            var data = $(this).serialize();
-            // Handle unchecked checkboxes
-            ['notifyOrderAlert', 'notifyBidAlert', 'notifyLowStockAlert', 'notifyPaymentAlert', 'notifyDisputeAlert'].forEach(function(name) {
-                if (!$('#' + name).is(':checked')) {
-                    data += '&' + name + '=false';
-                }
-            });
-            data += '&__RequestVerificationToken=' + $('input[name="__RequestVerificationToken"]').val();
-
-            $.post('/Supplier/UpdateNotifications', data, function(res) {
-                if (res.success) {
-                    toastr.success(res.message);
-                } else {
-                    toastr.error('Failed to update notification preferences.');
-                }
-            });
-        });
-
-        // 2FA Toggle
-        function toggle2FA(checkbox) {
-            var enable = $(checkbox).is(':checked');
-            $.post('/Supplier/ToggleTwoFactor', { enable: enable, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
-                if (res.success) {
-                    if (enable) {
-                        $('#twoFactorLabel').text('2FA is Enabled');
-                        $('#qrCodeImage').attr('src', res.qrCodeUrl);
-                        $('#manualCodeText').text(res.manualCode);
-                        $('#qrCodeContainer').removeClass('d-none');
-                        toastr.success('2FA enabled! Please scan the QR code.');
-                    } else {
-                        $('#twoFactorLabel').text('Enable 2FA');
-                        $('#qrCodeContainer').addClass('d-none');
-                        toastr.success(res.message);
-                    }
-                } else {
-                    $(checkbox).prop('checked', !enable); // Revert
-                    toastr.error('Failed to toggle 2FA.');
-                }
-            });
-        }
-
-        // Revoke Session
-        function revokeSession(id) {
-            if (confirm('Are you sure you want to revoke this session?')) {
-                $.post('/Supplier/RevokeSession', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
-                    if (res.success) {
-                        toastr.success(res.message);
-                        setTimeout(function() { location.reload(); }, 1000);
-                    }
-                });
-            }
-        }
-
-        // Deactivate Account
-        function confirmDeactivation() {
-            var pwd = $('#deactivatePassword').val();
-            if (!pwd) {
-                toastr.warning('Please enter your password.');
-                return;
-            }
-
-            $.post('/Supplier/DeactivateAccount', { password: pwd, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(res) {
-                if (res.success) {
-                    $('#deactivateModal').modal('hide');
-                    toastr.success('Account deactivated successfully. Logging out...');
-                    setTimeout(function() { window.location.href = '/Account/Login'; }, 2000);
-                } else {
-                    toastr.error(res.message);
-                }
-            });
-        }
-
         function previewImage(input) {
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
                 reader.onload = function (e) {
-                    var preview = document.getElementById('logoPreview');
-                    var placeholder = document.getElementById('logoPlaceholder');
-                    
-                    preview.src = e.target.result;
-                    preview.classList.remove('d-none');
-                    if (placeholder) {
-                        placeholder.classList.add('d-none');
-                    }
+                    $('#logoPreview').attr('src', e.target.result).removeClass('d-none');
+                    $('#logoPlaceholder').addClass('d-none');
+                    $('#sidebarLogoPreview').attr('src', e.target.result);
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
-
-        // Unsaved Changes Warning
-        let formChanged = false;
-
-        $('#mainSettingsForm').on('change input', 'input, select, textarea', function() {
-            formChanged = true;
-        });
-
-        $('#mainSettingsForm').submit(function() {
-            formChanged = false;
-        });
-
-        window.addEventListener('beforeunload', function (e) {
-            if (formChanged) {
-                var confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?';
-                e.returnValue = confirmationMessage;
-                return confirmationMessage;
-            }
-        });
     </script>
 }

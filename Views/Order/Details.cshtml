@@ -17,13 +17,13 @@
     int currentIdx = Array.IndexOf(statuses, currentStatus);
     if (currentIdx == -1) currentIdx = 0;
 
-    bool isTerminal = new[] { "Cancelled", "Rejected", "Expired", "Completed" }.Contains(currentStatus);
+    bool isTerminal = new[] { "Rejected", "Expired", "Completed" }.Contains(currentStatus);
 
     // ✅ FIXED: show panel whenever warehouse missing and PO is still active
     bool showAssignPanel = (isSupplier || isWarehouseRole) && 
                           po != null && 
                           !po.WarehouseId.HasValue && 
-                          !new[] { "Cancelled", "Rejected", "Completed", "Delivered", "Expired" }.Contains(po.Status);
+                          !new[] { "Rejected", "Completed", "Delivered", "Expired" }.Contains(po.Status);
 
     bool isDelivered = currentStatus == "Delivered" || currentStatus == "Completed";
 
@@ -505,7 +505,7 @@
             "Accepted" => "bg-primary-subtle text-primary",
             "Delivered" => "bg-success-subtle text-success",
             "Completed" => "bg-success text-white",
-            "Rejected" or "Cancelled" or "Expired" => "bg-danger-subtle text-danger",
+            "Rejected" or "Expired" => "bg-danger-subtle text-danger",
             _ => "bg-warning-subtle text-warning"
         };
     }

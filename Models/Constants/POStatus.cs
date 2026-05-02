@@ -14,7 +14,6 @@ namespace SCM_System.Models.Constants
         public const string Delivered = "Delivered";
         public const string Completed = "Completed";
         public const string Processing = "Processing";
-        public const string Cancelled = "Cancelled";
         public const string Rejected = "Rejected";
         public const string Expired = "Expired";
     }

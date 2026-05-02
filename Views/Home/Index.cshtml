@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "EthioChain SCM - Browse, Order, or Tender";
+    ViewData["Title"] = "EthioChain SCM - The Digital Backbone for SMEs";
 }
 
 @section Styles {
@@ -13,395 +13,205 @@
             --bg-surface: #f8f9fc;
         }
 
-        /* Hero Section Wrap */
-        .hero-wrap {
-            position: relative;
-            min-height: 90vh;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--ethio-blue-dark) 0%, var(--ethio-blue) 100%);
-            color: #fff;
-            padding: 100px 0;
+        /* Fullscreen Video Background */
+        .video-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2;
+        }
+        .video-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(7, 37, 59, 0.85) 0%, rgba(11, 61, 96, 0.70) 50%, rgba(7, 37, 59, 0.95) 100%);
+            z-index: -1;
         }
 
-        .hero-bg-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('/images/network-bg.png') center/cover no-repeat;
-            opacity: 0.15;
-            z-index: 0;
+        /* Hero Section */
+        .hero-section {
+            position: relative; min-height: 100vh; display: flex; align-items: center; padding: 120px 0 80px; z-index: 1;
         }
-
-        .hero-content { position: relative; z-index: 2; }
-
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-        }
-
+        .hero-title { font-size: 4rem; line-height: 1.1; letter-spacing: -0.02em; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        @@media (max-width: 991.98px) { .hero-title { font-size: 3rem; } }
+        
         .text-gradient-gold {
             background: linear-gradient(90deg, var(--ethio-gold-light) 0%, var(--ethio-gold) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-
-        /* KPI Strip */
-        .kpi-section { margin-top: -50px; position: relative; z-index: 10; }
-        .kpi-card {
-            background: #fff;
-            border: none;
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
-            text-align: center;
-        }
-        .kpi-card:hover { transform: translateY(-10px); }
-        .kpi-value { font-size: 2rem; font-weight: 800; color: var(--ethio-blue); display: block; }
-        .kpi-label { font-size: 0.9rem; color: #6c757d; font-weight: 500; }
-
-        /* Trust Line */
-        .trust-line {
-            padding: 2rem 0;
-            border-bottom: 1px solid #eee;
-            background: #fff;
-        }
-        .trust-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 600;
-            color: var(--ethio-blue);
-            font-size: 0.95rem;
-        }
-        .trust-item i { color: var(--ethio-gold); font-size: 1.2rem; }
-
-        /* Live Preview Cards */
-        .preview-card {
-            background: #fdfdfd;
-            border: 1px solid #edf2f7;
-            border-radius: 12px;
-            padding: 1.5rem;
-            height: 100%;
-            transition: all 0.3s;
-        }
-        .preview-card:hover { border-color: var(--ethio-gold); background: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.03); }
-        .preview-icon { font-size: 1.5rem; color: var(--ethio-gold); margin-bottom: 1rem; }
-
-        /* Section Spacing */
-        section { padding: 80px 0; }
-        .bg-surface { background-color: var(--bg-surface); }
-
-        /* Horizontal Timeline */
-        .timeline-container { display: flex; justify-content: space-between; position: relative; padding: 40px 0; flex-wrap: wrap; }
-        .timeline-line {
-            position: absolute; top: 75px; left: 5%; width: 90%; height: 2px;
-            background: #e2e8f0; z-index: 1;
-        }
-        .timeline-step {
-            width: 15%;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-            min-width: 120px;
-            margin-bottom: 2rem;
-        }
-        .step-icon {
-            width: 70px;
-            height: 70px;
-            background: #fff;
-            border: 3px solid #e2e8f0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            color: var(--ethio-blue);
-            font-size: 1.5rem;
-            transition: all 0.3s;
-        }
-        .timeline-step:hover .step-icon { border-color: var(--ethio-gold); color: var(--ethio-gold); transform: scale(1.1); }
-        .step-title { font-weight: 700; font-size: 1rem; color: var(--ethio-blue); margin-bottom: 0.25rem; }
-        .step-desc { font-size: 0.85rem; color: #718096; }
 
         /* Buttons */
-        .btn-premium {
-            padding: 0.8rem 2.2rem;
-            border-radius: 50px;
-            font-weight: 700;
-            transition: all 0.3s;
+        .btn-brand {
+            background: linear-gradient(135deg, var(--ethio-gold) 0%, #a67c33 100%);
+            color: #fff !important; border: none; font-weight: 700;
+            padding: 1rem 2.5rem; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(203, 160, 82, 0.3);
         }
-        .btn-gold { background: var(--ethio-gold); color: #fff; border: none; }
-        .btn-gold:hover { background: #b38a44; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(203, 160, 82, 0.3); color: #fff; }
-        .btn-outline-white { border: 2px solid #fff; color: #fff; }
-        .btn-outline-white:hover { background: #fff; color: var(--ethio-blue-dark); }
+        .btn-brand:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(203, 160, 82, 0.5); }
+        
+        .btn-outline-glass {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff !important; font-weight: 700; padding: 1rem 2.5rem; border-radius: 50px;
+            text-transform: uppercase; letter-spacing: 1px;  backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .btn-outline-glass:hover { background: rgba(255,255,255,1); color: var(--ethio-blue-dark) !important; transform: translateY(-3px); }
 
-        /* Responsive Fixes */
-        @@media (max-width: 991px) {
-            .hero-title { font-size: 2.5rem; }
-            .timeline-line { display: none; }
-            .timeline-step { width: 50%; }
+        /* Sections */
+        .bg-light-surface { background-color: var(--bg-surface); position: relative; z-index: 2; padding: 100px 0; }
+        .bg-white-pure { background-color: #ffffff; position: relative; z-index: 2; padding: 100px 0; }
+
+        /* Feature Cards */
+        .premium-card {
+            background: #fff; border-radius: 20px; border: none; padding: 3rem 2rem;
+            box-shadow: 0 20px 40px -10px rgba(11, 61, 96, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .premium-card:hover { transform: translateY(-10px); box-shadow: 0 30px 60px -15px rgba(11, 61, 96, 0.15); }
+        .icon-circle {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(11, 61, 96, 0.05) 0%, rgba(11, 61, 96, 0.15) 100%);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;
+            color: var(--ethio-blue); font-size: 2rem;
+        }
+
+        /* Timeline / Pipeline */
+        .timeline-step { text-align: center; position: relative; z-index: 2; }
+        .timeline-icon {
+            width: 70px; height: 70px; margin: 0 auto 1.5rem; border-radius: 50%;
+            background: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: var(--ethio-gold); border: 2px solid var(--ethio-gold);
+            position: relative; z-index: 2; transition: all 0.3s ease;
+        }
+        .timeline-step:hover .timeline-icon { background: var(--ethio-gold); color: #fff; transform: scale(1.1); }
+        .timeline-line {
+            position: absolute; top: 35px; left: 50%; width: 100%; height: 2px;
+            background: linear-gradient(90deg, var(--ethio-gold) 0%, rgba(203, 160, 82, 0.2) 100%);
+            z-index: 1;
+        }
+
+        /* CTA */
+        .cta-box {
+            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
+            border-radius: 30px; padding: 4rem; position: relative; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(11, 61, 96, 0.5);
+        }
+        .cta-bg-motif {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(203, 160, 82, 0.1) 0%, transparent 60%); z-index: 0;
+            animation: rotateSlow 30s linear infinite;
+        }
+        @@keyframes rotateSlow { 100% { transform: rotate(360deg); } }
     </style>
 }
 
+<!-- Fullscreen Video Background -->
+<video class="video-background" autoplay muted loop playsinline>
+    <source src="~/videos/HOME.mp4" type="video/mp4">
+</video>
+<div class="video-overlay"></div>
+
 <!-- Hero Section -->
-<div class="hero-wrap">
-    <div class="hero-bg-overlay"></div>
-    <div class="container hero-content">
+<section class="hero-section">
+    <div class="container position-relative z-index-2">
         <div class="row align-items-center">
-            <div class="col-lg-7" data-aos="fade-right">
-                <h1 class="hero-title">
-                    Browse, Order, or Tender — <br />
-                    <span class="text-gradient-gold">Manage Everything in One Platform.</span>
+            <div class="col-lg-8" data-aos="fade-up" data-aos-duration="1000">
+                <div class="badge bg-white bg-opacity-10 text-white px-4 py-2 rounded-pill mb-4 border border-white border-opacity-25" style="backdrop-filter: blur(5px);">
+                    <i class="fas fa-chart-line me-2 text-warning"></i> Built for Small & Medium Enterprises
+                </div>
+                <h1 class="fw-bolder hero-title text-white mb-4">
+                    The Digital Backbone for <br />
+                    <span class="text-gradient-gold">Small & Medium Supply Chains.</span>
                 </h1>
-                <p class="lead mb-5 text-white-50">
-                    Connect retailers, suppliers, warehouses, and logistics teams in one trusted platform with live tracking, Chapa payments, and Fayda identity verification.
+                <p class="lead text-white text-opacity-75 mb-5 fw-light" style="max-width: 650px; font-size: 1.25rem;">
+                    Empowering retailers, distributors, and local suppliers across Ethiopia with accessible milestone tracking, smart procurement, and automated logistics.
                 </p>
-                <div class="d-flex flex-wrap gap-3">
+                <div class="d-flex flex-wrap gap-4">
                     @if (Context.Session.GetInt32("UserId") == null)
                     {
-                        <a asp-controller="Account" asp-action="Register" class="btn btn-premium btn-gold shadow">Start Ordering</a>
-                        <a href="#how-it-works" class="btn btn-premium btn-outline-white">Explore Platform</a>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-brand">Start Free Trial</a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-glass">Business Login</a>
                     }
                     else
                     {
-                        <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-premium btn-gold shadow">Go to Dashboard</a>
+                        <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-brand">Access Dashboard</a>
                     }
                 </div>
             </div>
-            <div class="col-lg-5 d-none d-lg-block" data-aos="fade-left">
-                <div class="card bg-white bg-opacity-10 border-0 rounded-4 p-4 shadow-lg backdrop-blur" style="backdrop-filter: blur(10px);">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="mb-0 fw-bold">Live System Overview</h5>
-                        <span class="badge bg-success rounded-pill">Live Updates</span>
-                    </div>
-                    <div class="space-y-3 nav flex-column gap-3">
-                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-white bg-opacity-10">
-                            <span>Active Orders</span>
-                            <span class="fw-bold fs-5 text-warning">24</span>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-white bg-opacity-10">
-                            <span>Open Tenders</span>
-                            <span class="fw-bold fs-5 text-warning">8</span>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-white bg-opacity-10">
-                            <span>Warehouse Fill Rate</span>
-                            <span class="fw-bold fs-5 text-warning">91%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- KPI Strip -->
-<div class="kpi-section">
+<!-- SME Value Proposition -->
+<section class="bg-light-surface">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="100">
-                <div class="kpi-card">
-                    <span class="kpi-value">1,245+</span>
-                    <span class="kpi-label">Active Suppliers</span>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="200">
-                <div class="kpi-card">
-                    <span class="kpi-value">320+</span>
-                    <span class="kpi-label">Orders Today</span>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="300">
-                <div class="kpi-card">
-                    <span class="kpi-value">96%</span>
-                    <span class="kpi-label">Delivery Success</span>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="400">
-                <div class="kpi-card">
-                    <span class="kpi-value">45</span>
-                    <span class="kpi-label">Warehouses Active</span>
-                </div>
-            </div>
+        <div class="text-center mb-5 pb-4" data-aos="fade-up">
+            <h2 class="display-5 fw-bolder text-dark-blue mb-3">From manual chaos to digital clarity</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 700px;">We level the playing field for small businesses across Ethiopia.</p>
         </div>
-    </div>
-</div>
-
-<!-- Trust Line -->
-<div class="trust-line">
-    <div class="container">
-        <div class="row g-4 justify-content-center text-center">
-            <div class="col-md-3 col-6">
-                <div class="trust-item"><i class="fas fa-lock"></i> Secure Chapa Payments</div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="trust-item"><i class="fas fa-id-card"></i> Verified by Fayda</div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="trust-item"><i class="fas fa-map-marker-alt"></i> Live Tracking</div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="trust-item"><i class="fas fa-building"></i> Trusted B2B Network</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Section 2: Live Control Center -->
-<section class="bg-surface">
-    <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-            <h2 class="fw-bold text-dark">Real-Time Supply Chain Signal</h2>
-            <p class="text-muted lead">Monitor the heartbeat of Ethiopian commerce through our unified data layer.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
-                <div class="preview-card">
-                    <div class="preview-icon"><i class="fas fa-satellite"></i></div>
-                    <h5 class="fw-bold">Procurement Flow</h5>
-                    <p class="small text-muted">Intelligent matching of retailers to the nearest verified supplier, reducing lead times by up to 40%.</p>
-                    <hr />
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>Daily Volume</span>
-                        <span class="fw-bold text-dark">ETB 1.2M</span>
-                    </div>
+        <div class="row g-5">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm"><i class="fas fa-coins"></i></div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Pay-as-you-grow</h4>
+                    <p class="text-muted mb-0">No massive upfront costs. Scale your plan as your business expands.</p>
                 </div>
             </div>
-            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-                <div class="preview-card">
-                    <div class="preview-icon"><i class="fas fa-shield-alt"></i></div>
-                    <h5 class="fw-bold">Inventory Integrity</h5>
-                    <p class="small text-muted">Every item tracked via digital manifest from the moment it enters the warehouse to final reception.</p>
-                    <hr />
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>Items Staged</span>
-                        <span class="fw-bold text-dark">12,402 Units</span>
-                    </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm"><i class="fas fa-mobile-alt"></i></div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Mobile-first design</h4>
+                    <p class="text-muted mb-0">Manage your entire supply chain from your phone - anywhere.</p>
                 </div>
             </div>
-            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
-                <div class="preview-card">
-                    <div class="preview-icon"><i class="fas fa-credit-card"></i></div>
-                    <h5 class="fw-bold">Payment Settlement</h5>
-                    <p class="small text-muted">Instant Chapa-powered payouts for suppliers and transparent invoicing for retail partners.</p>
-                    <hr />
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>Paid Today</span>
-                        <span class="fw-bold text-dark">ETB 42,000</span>
-                    </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm"><i class="fas fa-headset"></i></div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Local Support</h4>
+                    <p class="text-muted mb-0">Full platform support in Amharic and English with local customer service.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Section 3: Features Grid -->
-<section id="features" class="bg-white">
+<!-- How It Works Section -->
+<section class="bg-light-surface">
     <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-6" data-aos="fade-right">
-                <h2 class="display-6 fw-bold mb-4">Everything You Need to Run Your Supply Chain</h2>
-                <div class="list-group list-group-flush gap-4">
-                    <div class="d-flex gap-3">
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-shopping-cart text-primary"></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-1">Browse & Order Products</h5>
-                            <p class="text-muted mb-0">Search, compare, and order directly from verified suppliers in our marketplace.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-3">
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-file-invoice text-primary"></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-1">Smart Tendering System</h5>
-                            <p class="text-muted mb-0">Broadcast tenders for large orders and receive competitive bids from top-tier providers.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-3">
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-truck text-primary"></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-1">Real-Time Tracking</h5>
-                            <p class="text-muted mb-0">Monitor every truck and every parcel live on the map from dispatch to delivery.</p>
-                        </div>
-                    </div>
+        <div class="text-center mb-5 pb-5" data-aos="fade-up">
+            <h2 class="display-5 fw-bolder text-dark-blue mb-3">Simple Workflow</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 600px;">From order to delivery — watch your business run like clockwork.</p>
+        </div>
+        <div class="row g-4 justify-content-center px-4">
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-file-contract"></i></div>
+                    <h5 class="fw-bold text-dark-blue">1. Request</h5>
                 </div>
             </div>
-            <div class="col-lg-6" data-aos="fade-left">
-                <div class="rounded-4 overflow-hidden shadow-2xl">
-                    <img src="/images/dashboard-mockup.png" class="img-fluid" alt="System Dashboard" />
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <h5 class="fw-bold text-dark-blue">2. Compare</h5>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- Section 4: How It Works -->
-<section id="how-it-works" class="bg-surface">
-    <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-            <h2 class="fw-bold">From Discovery to Final Delivery</h2>
-            <p class="text-muted lead">A unified 6-step flow engineered for maximum reliability.</p>
-        </div>
-        
-        <div class="timeline-container">
-            <div class="timeline-line"></div>
-            
-            <div class="timeline-step" data-aos="fade-up" data-aos-delay="100">
-                <div class="step-icon">1</div>
-                <h6 class="step-title">Browse / Tender</h6>
-                <p class="step-desc">Pick products or request bids.</p>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-box-open"></i></div>
+                    <h5 class="fw-bold text-dark-blue">3. Pack</h5>
+                </div>
             </div>
-            <div class="timeline-step" data-aos="fade-up" data-aos-delay="200">
-                <div class="step-icon">2</div>
-                <h6 class="step-title">Compare</h6>
-                <p class="step-desc">Review prices and reliability.</p>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="400">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-truck-loading"></i></div>
+                    <h5 class="fw-bold text-dark-blue">4. Ship</h5>
+                </div>
             </div>
-            <div class="timeline-step" data-aos="fade-up" data-aos-delay="300">
-                <div class="step-icon">3</div>
-                <h6 class="step-title">Confirm</h6>
-                <p class="step-desc">Lock in the order & terms.</p>
-            </div>
-            <div class="timeline-step" data-aos="fade-up" data-aos-delay="400">
-                <div class="step-icon">4</div>
-                <h6 class="step-title">Warehouse</h6>
-                <p class="step-desc">Items processed and packed.</p>
-            </div>
-            <div class="timeline-step" data-aos="fade-up" data-aos-delay="500">
-                <div class="step-icon">5</div>
-                <h6 class="step-title">Track</h6>
-                <p class="step-desc">Monitor transit in real-time.</p>
-            </div>
-            <div class="timeline-step" data-aos="fade-up" data-aos-delay="600">
-                <div class="step-icon">6</div>
-                <h6 class="step-title">Pay</h6>
-                <p class="step-desc">Seamless secure settlement.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Final CTA -->
-<section class="bg-white">
-    <div class="container">
-        <div class="bg-primary rounded-5 p-5 text-center text-white shadow-lg overflow-hidden position-relative">
-            <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark-blue opacity-25" style="z-index: 1;"></div>
-            <div class="position-relative" style="z-index: 2;" data-aos="zoom-in">
-                <h2 class="display-5 fw-bold mb-4">Ready to modernize your supply chain?</h2>
-                <p class="lead mb-5 opacity-75 mx-auto" style="max-width: 600px;">
-                    Join over 1,200 businesses already using EthioChain to power their growth and streamline logistics.
-                </p>
-                <div class="d-flex justify-content-center gap-3">
-                    <a asp-controller="Account" asp-action="Register" class="btn btn-premium btn-gold btn-lg shadow">Start Ordering</a>
-                    <a href="#" class="btn btn-premium btn-outline-white btn-lg">Book Demo</a>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="500">
+                <div class="timeline-step">
+                    <div class="timeline-icon"><i class="fas fa-check-circle"></i></div>
+                    <h5 class="fw-bold text-dark-blue">5. Receive</h5>
                 </div>
             </div>
         </div>
@@ -411,16 +221,6 @@
 @section Scripts {
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ duration: 800, once: true });
-        
-        // Navbar shrink effect
-        window.addEventListener('scroll', function() {
-            const nav = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                nav.classList.add('py-2', 'shadow-sm');
-            } else {
-                nav.classList.remove('py-2', 'shadow-sm');
-            }
-        });
+        AOS.init({ duration: 1000, once: true });
     </script>
-}
+}

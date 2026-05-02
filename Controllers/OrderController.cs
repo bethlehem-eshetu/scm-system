@@ -178,17 +178,6 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        [HttpPost]
-        [Authorize(Roles = "Retailer")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelOrder(int id)
-        {
-            bool success = await _orderService.CancelOrderAsync(id);
-            if (!success) TempData["ErrorMessage"] = "Could not cancel Order. It may have already been shipped or completed.";
-            else TempData["SuccessMessage"] = "Order Cancelled Successfully. Vendor stock has been released.";
-            
-            return RedirectToAction(nameof(Details), new { id });
-        }
 
         [HttpPost]
         [Authorize(Roles = "Supplier")]

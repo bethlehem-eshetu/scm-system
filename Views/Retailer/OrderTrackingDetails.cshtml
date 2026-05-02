@@ -43,12 +43,6 @@
             <p class="text-muted mb-0">Real-time logistics monitoring for your procurement</p>
         </div>
         <div class="text-end d-flex align-items-center gap-3">
-            @if (displayStatus != "Shipped" && displayStatus != "In Transit" && displayStatus != "Delivered" && displayStatus != "Completed" && displayStatus != "Cancelled" && !(Model.PurchaseOrders?.Any(p => p.Status == "Picked" || p.Status == "Packed") ?? false))
-            {
-                <button type="button" class="btn btn-outline-danger rounded-pill px-4 py-2 fs-6 fw-bold" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
-                    <i class="fas fa-times-circle me-2"></i>Cancel Order
-                </button>
-            }
             <div class="d-flex align-items-center gap-2">
                 <a asp-controller="Message" asp-action="StartOrderChat" asp-route-orderId="@Model.Id" class="btn btn-light rounded-pill px-3 shadow-sm" title="Message Supplier">
                     <i class="fas fa-comment-dots text-primary me-2"></i>Message Supplier
@@ -140,7 +134,18 @@
                     </div>
                 </div>
 
-                @if (Model.PaymentStatus == "Pending" && Model.OrderStatus != "Cancelled" && Model.OrderStatus != "Rejected")
+                <!-- QR Code Verification Section -->
+                @if (displayStatus == "In Transit")
+                {
+                    <div class="mb-4 text-center p-4 rounded-4" style="background-color: #f8f9fa; border: 2px dashed #0d6efd;">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-qrcode me-2"></i>Delivery QR Code</h6>
+                        <div id="qrcode-container" class="d-inline-block bg-white p-2 rounded-3 shadow-sm mb-3"></div>
+                        <p class="small text-muted mb-0">Show this code to the Delivery Agent upon arrival to instantly confirm receipt.</p>
+                        <div class="mt-2 fw-bold text-dark" style="letter-spacing: 2px;">ORDER-@Model.OrderNumber</div>
+                    </div>
+                }
+
+                @if (Model.PaymentStatus == "Pending" && Model.OrderStatus != "Rejected")
                 {
                     <div class="mb-4">
                         <form asp-controller="Retailer" asp-action="PayOrder" method="post">
@@ -221,36 +226,6 @@
         // ... (truncated for brevity in TargetContent matching)
     }
 
-    <!-- Cancel Order Modal -->
-    <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center p-5 pt-2">
-                    <div class="bg-danger-subtle text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                        <i class="fas fa-exclamation-triangle fa-2x"></i>
-                    </div>
-                    <h3 class="fw-bold text-dark mb-3">Cancel Order?</h3>
-                    <p class="text-muted mb-4">Are you sure you want to cancel Order <strong>#@Model.OrderNumber</strong>? All reserved stock will be immediately released back to the supplier.</p>
-                    
-                    <form asp-controller="Retailer" asp-action="CancelOrder" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow-sm">
-                                <i class="fas fa-trash-alt me-2"></i>Yes, Cancel Order
-                            </button>
-                            <button type="button" class="btn btn-light btn-lg rounded-pill fw-bold py-3 border" data-bs-dismiss="modal">
-                                Keep Order
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <style>
@@ -260,7 +235,21 @@
 </style>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
+        // Generate QR Code if container exists
+        const qrContainer = document.getElementById('qrcode-container');
+        if (qrContainer) {
+            new QRCode(qrContainer, {
+                text: "ORDER-@Model.OrderNumber",
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
         // Polling for status updates every 10 seconds
         setInterval(function() {
             const container = document.querySelector('.order-status-container');

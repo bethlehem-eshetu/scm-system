@@ -243,59 +243,6 @@ namespace SCM_System.Services
             return order;
         }
 
-        public async Task<bool> CancelOrderAsync(int orderId)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
-            try
-            {
-                var order = await _context.Orders
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(i => i.Product)
-                    .Include(o => o.Retailer)
-                    .FirstOrDefaultAsync(o => o.Id == orderId);
-
-                if (order == null || order.OrderStatus == "Shipped" || order.OrderStatus == "Completed" || order.OrderStatus == "Delivered" || order.OrderStatus == "Cancelled")
-                    return false;
-
-                // Release reserved stock from warehouses
-                var pos = await _context.PurchaseOrders
-                    .Include(p => p.PurchaseOrderItems)
-                    .Where(p => p.OrderId == order.Id && p.Status != "Cancelled").ToListAsync();
-
-                // If any part of the order is already Picked or further, we can't cancel the whole thing
-                if (pos.Any(p => p.Status == "Picked" || p.Status == "Packed" || p.Status == "Ready Dispatch" || p.Status == "In Transit" || p.Status == "Delivered" || p.Status == "Completed"))
-                {
-                    return false;
-                }
-
-                foreach (var po in pos)
-                {
-                    po.Status = "Cancelled";
-                }
-
-                // ReturnStockOnCancelAsync now returns true even if no reservations found
-                await _inventoryService.ReturnStockOnCancelAsync(order.Id);
-
-                order.OrderStatus = "Cancelled";
-                
-                var history = new OrderStatusHistory { 
-                    OrderId = order.Id, 
-                    Status = "Cancelled", 
-                    Comments = "Order cancelled by Retailer. Stock reservations released (if any).", 
-                    ChangedByUserId = order.Retailer?.UserId ?? 0, 
-                    ChangedAt = DateTime.Now 
-                };
-                _context.OrderStatusHistories.Add(history);
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
 
 
         public async Task<IEnumerable<OrderStatusHistory>> GetOrderStatusHistoryAsync(int orderId)

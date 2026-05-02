@@ -4,22 +4,24 @@
     Layout = "_DashboardLayout";
 }
 
-<!-- Page Header -->
-<div class="container-fluid py-5 position-relative overflow-hidden mb-4" style="background: var(--hero-bg);">
-    <div class="animated-bg" style="opacity: 0.05;"></div>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
+<!-- Page Header with Shimmer Effect -->
+<div class="container-fluid py-5 position-relative overflow-hidden mb-4" style="background: linear-gradient(135deg, #0a1a2f 0%, #0d2b3e 100%); border-bottom: 1px solid rgba(59, 130, 246, 0.2);">
+    <div class="container position-relative z-1">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="text-white mb-2">
-                    <i class="fas fa-user-shield me-2"></i>Admin Dashboard
-                </h1>
-                <p class="text-white-50 mb-0">
+                <!-- Welcome Message with Shimmer Effect -->
+                <div class="welcome-shimmer mb-2">
+                    <h1 class="text-white mb-2 shimmer-text">
+                        <i class="fas fa-user-shield me-2"></i>Welcome back, <span class="gradient-shimmer">@(Context.Session.GetString("UserName") ?? "System Administrator")</span>!
+                    </h1>
+                </div>
+                <p class="text-white-70 mb-0">
                     <i class="fas fa-calendar-alt me-2"></i>@DateTime.Now.ToString("dddd, MMMM dd, yyyy")
                 </p>
             </div>
-            <div class="bg-white bg-opacity-10 rounded-3 px-4 py-2">
+            <div class="stats-badge bg-white bg-opacity-10 rounded-3 px-4 py-2">
                 <span class="text-white">
-                    <i class="fas fa-user-circle me-2"></i>Welcome, @(Context.Session.GetString("UserName") ?? "Admin")
+                    <i class="fas fa-chart-line me-2"></i>Live Dashboard
                 </span>
             </div>
         </div>
@@ -44,35 +46,165 @@
         </div>
     }
 
+    <style>
+        /* Shimmer Effect Styles */
+        .shimmer-text {
+            background: linear-gradient(135deg, #ffffff 0%, #60a5fa 50%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer-gold 3s ease-in-out infinite;
+        }
+        
+        .gradient-shimmer {
+            background: linear-gradient(90deg, #fff, #3b82f6, #60a5fa, #fff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 4s linear infinite;
+            font-weight: 700;
+        }
+        
+        @@keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        @@keyframes shimmer-gold {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .welcome-shimmer {
+            position: relative;
+        }
+        
+        .welcome-shimmer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @@keyframes shine {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
+        
+        /* Stat Card Styles */
+        .stat-card {
+            border-radius: 20px;
+            border: none;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+        }
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .bg-gradient-primary { background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; }
+        .bg-gradient-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .bg-gradient-warning { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: white; }
+        .bg-gradient-info { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; }
+        
+        .stat-card .text-muted {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        .stat-icon-wrapper {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card .progress {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        
+        .stat-card .progress-bar {
+            background-color: #ffffff;
+            border-radius: 10px;
+        }
+        
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Glass Card Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Stats Badge */
+        .stats-badge {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+    </style>
+
     <!-- Stats Cards -->
     <div class="row g-4 mb-4">
         <!-- Total Suppliers Card -->
         <div class="col-xl-3 col-md-6">
-            <div class="glass-card mb-4 h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
-                            <i class="fas fa-building fa-2x text-primary"></i>
-                        </div>
+            <div class="card stat-card bg-gradient-primary mb-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h6 class="text-muted mb-1">Total Suppliers</h6>
-                            <h3 class="mb-0 fw-bold">@Model.TotalSuppliers</h3>
-                            <small class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>@Model.VerifiedSuppliersCount Verified
-                            </small>
-                            <small class="text-danger ms-2">
-                                <i class="fas fa-times-circle me-1"></i>@Model.RejectedSuppliersCount Rejected
-                            </small>
+                            <h6 class="text-white text-opacity-75 mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Suppliers</h6>
+                            <h2 class="mb-0 fw-bold text-white display-6">@ViewBag.TotalSuppliers</h2>
+                        </div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fas fa-building fa-2x text-white"></i>
                         </div>
                     </div>
-                    <div class="mt-3">
+                    
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="stat-badge text-white">
+                            <i class="fas fa-check-circle me-1"></i>@ViewBag.VerifiedSuppliers Verified
+                        </span>
+                        <span class="stat-badge text-white">
+                            <i class="fas fa-times-circle me-1"></i>@ViewBag.RejectedSuppliers Rejected
+                        </span>
+                    </div>
+
+                    <div class="mt-auto">
                         <a asp-action="AllSuppliers" class="stretched-link"></a>
-                        <div class="progress" style="height: 5px;">
-                            <div class="progress-bar bg-primary" style="width: @(Model.TotalSuppliers > 0 ? (Model.VerifiedSuppliersCount * 100 / Model.TotalSuppliers) : 0)%"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-white text-opacity-75 fw-medium">Pending: @ViewBag.PendingSuppliers</small>
+                            <small class="text-white fw-bold">@(ViewBag.TotalSuppliers > 0 ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers) : 0)%</small>
                         </div>
-                        <div class="d-flex justify-content-between mt-1">
-                            <small class="text-muted">Pending: @Model.PendingSuppliersCount</small>
-                            <small class="text-muted">@(Model.TotalSuppliers > 0 ? (Model.VerifiedSuppliersCount * 100 / Model.TotalSuppliers) : 0)% Verified</small>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" style="width: @(ViewBag.TotalSuppliers > 0 ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers) : 0)%"></div>
                         </div>
                     </div>
                 </div>
@@ -81,31 +213,35 @@
 
         <!-- Total Retailers Card -->
         <div class="col-xl-3 col-md-6">
-            <div class="glass-card mb-4 h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
-                            <i class="fas fa-store fa-2x text-success"></i>
-                        </div>
+            <div class="card stat-card bg-gradient-success mb-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h6 class="text-muted mb-1">Total Retailers</h6>
-                            <h3 class="mb-0 fw-bold">@Model.TotalRetailers</h3>
-                            <small class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>@Model.ApprovedRetailersCount Approved
-                            </small>
-                            <small class="text-danger ms-2">
-                                <i class="fas fa-times-circle me-1"></i>@Model.RejectedRetailersCount Rejected
-                            </small>
+                            <h6 class="text-white text-opacity-75 mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Retailers</h6>
+                            <h2 class="mb-0 fw-bold text-white display-6">@ViewBag.TotalRetailers</h2>
+                        </div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fas fa-store fa-2x text-white"></i>
                         </div>
                     </div>
-                    <div class="mt-3">
+                    
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="stat-badge text-white">
+                            <i class="fas fa-check-circle me-1"></i>@ViewBag.ApprovedRetailers Approved
+                        </span>
+                        <span class="stat-badge text-white">
+                            <i class="fas fa-times-circle me-1"></i>@ViewBag.RejectedRetailers Rejected
+                        </span>
+                    </div>
+
+                    <div class="mt-auto">
                         <a asp-action="AllRetailers" class="stretched-link"></a>
-                        <div class="progress" style="height: 5px;">
-                            <div class="progress-bar bg-success" style="width: @(Model.TotalRetailers > 0 ? (Model.ApprovedRetailersCount * 100 / Model.TotalRetailers) : 0)%"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-white text-opacity-75 fw-medium">Pending: @ViewBag.PendingRetailers</small>
+                            <small class="text-white fw-bold">@(ViewBag.TotalRetailers > 0 ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers) : 0)%</small>
                         </div>
-                        <div class="d-flex justify-content-between mt-1">
-                            <small class="text-muted">Pending: @Model.PendingRetailersCount</small>
-                            <small class="text-muted">@(Model.TotalRetailers > 0 ? (Model.ApprovedRetailersCount * 100 / Model.TotalRetailers) : 0)% Approved</small>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" style="width: @(ViewBag.TotalRetailers > 0 ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers) : 0)%"></div>
                         </div>
                     </div>
                 </div>
@@ -114,19 +250,28 @@
 
         <!-- Pending Approvals Card -->
         <div class="col-xl-3 col-md-6">
-            <div class="glass-card mb-4 h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
-                            <i class="fas fa-clock fa-2x text-warning"></i>
-                        </div>
+            <div class="card stat-card bg-gradient-warning mb-4 h-100">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h6 class="text-muted mb-1">Pending Approvals</h6>
-                            <h3 class="mb-0 fw-bold">@(Model.PendingSuppliersCount + Model.PendingRetailersCount)</h3>
-                            <small class="text-warning">
-                                <i class="fas fa-building me-1"></i>@Model.PendingSuppliersCount Suppliers |
-                                <i class="fas fa-store me-1"></i>@Model.PendingRetailersCount Retailers
-                            </small>
+                            <h6 class="text-white text-opacity-75 mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Pending Apps</h6>
+                            <h2 class="mb-0 fw-bold text-white display-6">@(ViewBag.PendingSuppliers + ViewBag.PendingRetailers)</h2>
+                        </div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fas fa-user-clock fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3 mb-2 backdrop-blur">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-white"><i class="fas fa-building me-2"></i>Suppliers</span>
+                                <span class="badge bg-white text-warning rounded-pill px-3 py-1">@ViewBag.PendingSuppliers</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-white"><i class="fas fa-store me-2"></i>Retailers</span>
+                                <span class="badge bg-white text-warning rounded-pill px-3 py-1">@ViewBag.PendingRetailers</span>
+                            </div>
                         </div>
                     </div>
                     <a asp-action="PendingUsers" class="stretched-link"></a>
@@ -136,18 +281,28 @@
 
         <!-- Total Products Card -->
         <div class="col-xl-3 col-md-6">
-            <div class="glass-card mb-4 h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
-                            <i class="fas fa-box fa-2x text-info"></i>
-                        </div>
+            <div class="card stat-card bg-gradient-info mb-4 h-100">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h6 class="text-muted mb-1">Total Products</h6>
-                            <h3 class="mb-0 fw-bold">@Model.TotalProducts</h3>
-                            <small class="text-info">
-                                <i class="fas fa-shopping-cart me-1"></i>@Model.TotalOrders Orders
-                            </small>
+                            <h6 class="text-white text-opacity-75 mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Products</h6>
+                            <h2 class="mb-0 fw-bold text-white display-6">@ViewBag.TotalProducts</h2>
+                        </div>
+                        <div class="stat-icon-wrapper">
+                            <i class="fas fa-box-open fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <div class="d-flex align-items-center justify-content-between bg-white bg-opacity-25 rounded-3 p-3">
+                            <div class="d-flex align-items-center text-white">
+                                <i class="fas fa-shopping-cart fa-lg me-3"></i>
+                                <div>
+                                    <h6 class="mb-0 fw-bold">@ViewBag.TotalOrders</h6>
+                                    <small class="text-white text-opacity-75">Total Orders</small>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-white text-opacity-50"></i>
                         </div>
                     </div>
                     <a href="#" class="stretched-link"></a>
@@ -156,48 +311,21 @@
         </div>
     </div>
 
- 
-
-    <!-- Quick Actions -->
+    <!-- Charts Section -->
     <div class="row mb-5">
-        <div class="col-12">
-            <div class="glass-card p-4">
-                <div class="border-0 mb-3">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <a asp-action="PendingUsers" class="btn btn-outline-primary w-100 py-3">
-                                <i class="fas fa-user-clock me-2"></i>User Verifications
-                                @if (Model.PendingSuppliersCount > 0 || Model.PendingRetailersCount > 0)
-                                {
-                                    <span class="badge bg-danger ms-2">@(Model.PendingSuppliersCount + Model.PendingRetailersCount)</span>
-                                }
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a asp-action="AllSuppliers" class="btn btn-outline-success w-100 py-3">
-                                <i class="fas fa-building me-2"></i>All Suppliers
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a asp-action="AllRetailers" class="btn btn-outline-info w-100 py-3">
-                                <i class="fas fa-store me-2"></i>All Retailers
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a asp-action="VerifiedSuppliers" class="btn btn-outline-secondary w-100 py-3">
-                                <i class="fas fa-check-circle me-2"></i>Verified Suppliers
-                            </a>
-                        </div>
-                       
-                    </div>
-                </div>
+        <div class="col-md-8">
+            <div class="glass-card p-4 h-100">
+                <h5 class="mb-4 fw-bold"><i class="fas fa-chart-line me-2 text-primary"></i>Platform Activity</h5>
+                <canvas id="platformActivityChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4 h-100">
+                <h5 class="mb-4 fw-bold"><i class="fas fa-list-alt me-2 text-success"></i>Top Categories</h5>
+                <canvas id="topCategoriesChart" height="200"></canvas>
             </div>
         </div>
     </div>
-
 
     <!-- Recent Activities -->
     <div class="row g-4">
@@ -305,25 +433,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Debug Info (Remove in production) -->
-    @if (Model.PendingRetailersCount != null)
-    {
-        <div class="row mt-2">
-            <div class="col-12">
-                <div class="card bg-light">
-                    <div class="card-body py-2">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Stats: Pending Suppliers: @Model.PendingSuppliersCount |
-                            Pending Retailers: @Model.PendingRetailersCount |
-                            Rejected Retailers: @Model.RejectedRetailersCount
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
 </div>
 
 @section Scripts {
@@ -334,5 +443,63 @@
             $('.alert').fadeOut('slow');
         }, 5000);
 
+        // Platform Activity Chart
+        const ctxActivity = document.getElementById('platformActivityChart').getContext('2d');
+        new Chart(ctxActivity, {
+            type: 'line',
+            data: {
+                labels: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [15, 20, 35, 40, 25, 52],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: 'rgba(255,255,255,0.7)' }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: 'rgba(255,255,255,0.7)' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: 'rgba(255,255,255,0.7)' }
+                    }
+                }
+            }
+        });
+
+        // Top Categories Chart
+        const ctxCategories = document.getElementById('topCategoriesChart').getContext('2d');
+        new Chart(ctxCategories, {
+            type: 'doughnut',
+            data: {
+                labels: ['Electronics', 'Furniture', 'Clothing', 'Industrial'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: 'rgba(255,255,255,0.7)', padding: 15 }
+                    }
+                }
+            }
+        });
     </script>
 }

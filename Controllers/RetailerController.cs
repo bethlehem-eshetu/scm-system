@@ -44,29 +44,6 @@ namespace SCM_System.Controllers
             return 0;
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelOrder(int id)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-            
-            var rId = await GetRetailerIdInternalAsync();
-            var order = await _orderService.GetOrderByIdAsync(id);
-            
-            if (order == null || order.RetailerId != rId) return NotFound();
-            
-            bool success = await _orderService.CancelOrderAsync(id);
-            if (success)
-            {
-                TempData["SuccessMessage"] = "Order cancelled successfully. Stock has been returned.";
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Failed to cancel order. It may have already been dispatched.";
-            }
-            
-            return RedirectToAction("Details", "Order", new { id });
-        }
 
         // GET: /Retailer/Dashboard
         public async Task<IActionResult> Dashboard()
@@ -104,12 +81,13 @@ namespace SCM_System.Controllers
 
             // Advanced Stats for Dashboard
             var orders = await _context.Orders
+                .Include(o => o.Supplier)
                 .Include(o => o.PurchaseOrders)
                 .Where(o => o.RetailerId == retailer.Id)
                 .ToListAsync();
 
             ViewBag.TotalOrders = orders.Count;
-            ViewBag.ActiveOrders = orders.Count(o => o.OrderStatus != "Completed" && o.OrderStatus != "Cancelled" && o.OrderStatus != "Rejected");
+            ViewBag.ActiveOrders = orders.Count(o => o.OrderStatus != "Completed" && o.OrderStatus != "Rejected");
             ViewBag.TotalPurchaseOrders = retailer.PurchaseOrders?.Count ?? 0;
             ViewBag.ActiveTenders = retailer.Tenders?.Count(t => t.Status == "Open") ?? 0;
 
@@ -148,6 +126,26 @@ namespace SCM_System.Controllers
                 .OrderByDescending(n => n.CreatedAt)
                 .Take(5)
                 .ToListAsync();
+
+            var recentConversations = await _context.Conversations
+                .Include(c => c.Supplier)
+                .Include(c => c.Messages)
+                .Where(c => c.RetailerId == retailer.Id)
+                .OrderByDescending(c => c.LastMessageAt)
+                .Take(4)
+                .Select(c => new
+                {
+                    OtherUserId = c.Supplier.UserId,
+                    OtherUserName = c.Supplier.CompanyName,
+                    OtherUserRole = "Supplier",
+                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault() != null 
+                        ? c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault().MessageText 
+                        : "No messages yet",
+                    LastMessageAt = c.LastMessageAt ?? c.CreatedAt,
+                    UnreadCount = c.Messages.Count(m => !m.IsRead && m.SenderId != userId)
+                })
+                .ToListAsync();
+            ViewBag.RecentConversations = recentConversations;
 
             ViewBag.AllCategories = await _context.ProductCategories
                 .Where(c => c.IsActive)

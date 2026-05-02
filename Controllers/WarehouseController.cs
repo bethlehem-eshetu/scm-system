@@ -15,7 +15,6 @@ using System.Text.Json;
 namespace SCM_System.Controllers
 {
     [Authorize(Roles = "Warehouse,WarehouseManager")]
-    [Route("Warehouse")]
     [Route("WarehouseManager")]
     public class WarehouseController(
         ApplicationDbContext context, 
@@ -36,45 +35,6 @@ namespace SCM_System.Controllers
 
         [Route("")]
         [Route("Index")]
-        public IActionResult Index() => RedirectToAction(nameof(Dashboard));
-
-
-        private async Task<int> GetWarehouseIdAsync()
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                var emp = await _context.SupplierEmployees.FirstOrDefaultAsync(x => x.UserId == userId);
-                return emp?.WarehouseId ?? 0;
-            }
-            return 0;
-        }
-
-        private async Task<SupplierEmployee?> GetCurrentManagerAsync()
-        {
-            var employeeIdStr = User.FindFirstValue("EmployeeId");
-            if (int.TryParse(employeeIdStr, out int employeeId))
-            {
-                return await _context.SupplierEmployees
-                    .Include(e => e.Warehouse)
-                    .Include(e => e.User)
-                    .FirstOrDefaultAsync(e => e.Id == employeeId);
-            }
-            
-            // Fallback to UserId if claim is missing
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                return await _context.SupplierEmployees
-                    .Include(e => e.User)
-                    .Include(e => e.HubAccesses)
-                        .ThenInclude(a => a.Warehouse)
-                    .Include(e => e.WarehouseAssignments)
-                    .FirstOrDefaultAsync(e => e.UserId == userId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
-            }
-            return null;
-        }
-
         [Route("Dashboard/{warehouseId?}")]
         public async Task<IActionResult> Dashboard(int? warehouseId)
         {
@@ -120,7 +80,7 @@ namespace SCM_System.Controllers
                     .Include(p => p.DeliveryAgent)
                         .ThenInclude(da => da.User)
                     .Include(p => p.Vehicle)
-                    .Where(p => p.WarehouseId == wId && p.Status != POStatus.Cancelled)
+                    .Where(p => p.WarehouseId == wId)
                     .ToListAsync();
 
                 ViewBag.Manager = manager;
@@ -193,20 +153,69 @@ namespace SCM_System.Controllers
                 .Where(p => p.WarehouseId == wId && p.Status == POStatus.Packed)
                 .ToListAsync();
 
-            // Smart Dispatch Suggestions
-            ViewBag.SuggestedVehicles = await _supplierService.GetSmartDispatchSuggestionsAsync(wId);
-            ViewBag.SuggestedDrivers = await _supplierService.GetSmartDriverSuggestionsAsync(wId);
+            // Calculate Order Weights for each PO in the list
+            // We'll store these in a temporary dictionary or dynamic object if needed, 
+            // but for now, the View can handle it since we Inclulde Items.
 
-            ViewBag.Agents = await _context.SupplierEmployees
+            // Fetch agents with their vehicles for workload calculation
+            var agents = await _context.SupplierEmployees
                 .Include(e => e.User)
+                .Include(e => e.VehicleAssignments)
+                    .ThenInclude(va => va.Vehicle) // Fixed navigation path
                 .Where(e => e.SupplierId == manager.SupplierId && 
                             e.IsActive && !e.IsDeleted &&
                             !string.IsNullOrEmpty(e.EmployeeRole) &&
                             (e.EmployeeRole.ToLower().Contains("driver") || e.EmployeeRole.ToLower().Contains("deliver")))
                 .ToListAsync();
 
+            // PROACTIVE SORTING LOGIC
+            // For a single PO assignment (if id is passed), we sort by PROJECTED load.
+            // If viewing the general list, we'll sort by current workload.
+            decimal targetOrderWeight = 0;
+            if (id.HasValue)
+            {
+                var targetPoForWeight = pos.FirstOrDefault(p => p.Id == id.Value);
+                if (targetPoForWeight != null)
+                {
+                    targetOrderWeight = targetPoForWeight.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0));
+                }
+            }
+
+            // Enhanced sorting with workload awareness
+            var sortedAgents = new List<dynamic>();
+            foreach (var agent in agents)
+            {
+                var activePOs = await _context.PurchaseOrders
+                    .Include(p => p.PurchaseOrderItems)
+                        .ThenInclude(i => i.Product)
+                    .Where(p => p.DeliveryAgentId == agent.Id && 
+                                p.Status != POStatus.Failed)
+                    .ToListAsync();
+
+                decimal currentLoadKg = activePOs.Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+                
+                // Get primary vehicle capacity
+                var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.PrimaryDriverId == agent.Id || v.DeliveryAgents.Any(da => da.Id == agent.Id));
+                decimal capacity = vehicle?.MaxLoadCapacity ?? 100; // fallback
+
+                decimal projectedScore = capacity > 0 ? (currentLoadKg + targetOrderWeight) / capacity : 2; // high score if no capacity
+
+                sortedAgents.Add(new { 
+                    Agent = agent, 
+                    ProjectedScore = projectedScore, 
+                    CurrentLoad = currentLoadKg,
+                    Capacity = capacity,
+                    IsPhysicsViolation = targetOrderWeight > capacity,
+                    VehicleId = vehicle?.Id ?? 0
+                });
+            }
+
+            // Order by Projection (Safe -> Moderate -> High -> Violation), then by Rank
+            ViewBag.SortedAgents = sortedAgents.OrderBy(a => a.IsPhysicsViolation).ThenBy(a => a.ProjectedScore).ToList();
+            ViewBag.Agents = agents; // Keep original for backwards compatibility in view if needed
+
             ViewBag.Vehicles = await _context.Vehicles
-                .Where(v => v.SupplierId == manager.SupplierId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available && v.WarehouseId == wId)
+                .Where(v => v.SupplierId == manager.SupplierId && (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse) && v.WarehouseId == wId)
                 .ToListAsync();
 
             ViewBag.SelectedWarehouseId = wId;
@@ -218,7 +227,7 @@ namespace SCM_System.Controllers
         public async Task<IActionResult> GetVehicleByAgent(int agentId)
         {
             var vehicle = await _context.Vehicles
-                .Where(v => v.PrimaryDriverId == agentId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available)
+                .Where(v => v.PrimaryDriverId == agentId && (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse))
                 .FirstOrDefaultAsync();
 
             if (vehicle == null)
@@ -570,7 +579,7 @@ namespace SCM_System.Controllers
 
         [HttpPost("AssignDelivery")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AssignDelivery(int id, int agentId, int vehicleId)
+        public async Task<IActionResult> AssignDelivery(int id, int agentId, int vehicleId, bool isOverride = false, string overrideReason = null)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
@@ -611,7 +620,7 @@ namespace SCM_System.Controllers
             }
 
             var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == vehicleId && 
-                                                                           v.Status == SCM_System.Models.Enums.VehicleStatus.Available && 
+                                                                           (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse) && 
                                                                            v.WarehouseId == wId);
             if (vehicle == null)
             {
@@ -625,6 +634,66 @@ namespace SCM_System.Controllers
                 TempData["ErrorMessage"] = "Selected vehicle is primarily assigned to another driver. Please use the driver's designated vehicle.";
                 return RedirectToAction(nameof(AssignDelivery), new { id = id });
             }
+            // === SMART LOAD OVERRIDE LOGIC (Strict KG Physics) ===
+            var activeOrders = await _context.PurchaseOrders
+                .Include(p => p.PurchaseOrderItems)
+                    .ThenInclude(i => i.Product)
+                .Where(p => p.DeliveryAgentId == agentId && 
+                            p.Status != POStatus.Delivered &&
+                            p.Status != POStatus.Completed &&
+                            p.Status != POStatus.Failed &&
+                            p.Status != POStatus.Rejected &&
+                            p.Status != POStatus.Expired)
+                .ToListAsync();
+
+            decimal currentLoadKg = activeOrders.Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+            decimal newOrderWeightKg = po.PurchaseOrderItems != null ? po.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)) : 10m;
+            decimal totalProjectedKg = currentLoadKg + newOrderWeightKg;
+            decimal vehicleCapacityKg = vehicle.MaxLoadCapacity;
+
+            // 1. REJECT (Structural Physics Violation)
+            // If the single order is heavier than the truck can physically handle.
+            if (newOrderWeightKg > vehicleCapacityKg)
+            {
+                TempData["ErrorMessage"] = $"PHYSICAL CONSTRAINT ERR: This order ({newOrderWeightKg} KG) is physically too heavy for the selected vehicle ({vehicleCapacityKg} KG). Dispatch restricted.";
+                return RedirectToAction(nameof(AssignDelivery), new { id = id });
+            }
+
+            // 2. OVERLOAD (Operational Efficiency Violation)
+            // If the combined load exceeds capacity, but the single order fits.
+            if (totalProjectedKg > vehicleCapacityKg && !isOverride)
+            {
+                int projectedScore = (int)((totalProjectedKg / vehicleCapacityKg) * 100);
+                TempData["ErrorMessage"] = $"Agent will be overloaded (Projected: {totalProjectedKg} / {vehicleCapacityKg} KG - {projectedScore}%). Assignment restricted. Please select another agent or explicitly override with a stated reason.";
+                return RedirectToAction(nameof(AssignDelivery), new { id = id });
+            }
+
+            // Register the Override
+            if (totalProjectedKg > vehicleCapacityKg && isOverride)
+            {
+                po.IsDispatchOverride = true;
+                po.DispatchOverrideReason = overrideReason;
+                
+                var overrideLog = new DispatchOverrideLog
+                {
+                    PurchaseOrderId = po.Id,
+                    AgentId = agentId,
+                    PerformedByUserId = userId,
+                    Reason = overrideReason ?? "Emergency Capacity Override",
+                    CurrentLoad = (int)totalProjectedKg,
+                    CreatedAt = DateTime.Now
+                };
+                _context.DispatchOverrideLogs.Add(overrideLog);
+
+                await _auditLogService.LogActionAsync(
+                    "DispatchOverride",
+                    po.Id.ToString(),
+                    "Override",
+                    notes: $"Agent overloaded. Dispatch forced. Reason: {overrideReason}",
+                    performedByUserId: userId
+                );
+            }
+            // ================================
 
             // Assign Agent & Vehicle
             po.DeliveryAgentId = agentId;
@@ -844,9 +913,24 @@ namespace SCM_System.Controllers
                 Email = manager.User.Email,
                 Phone = manager.User.PhoneNumber ?? "",
                 ExistingProfileImage = manager.User.ProfileImage,
+                
+                // Operational
+                DefaultWarehouseLocation = manager.DefaultWarehouseLocation,
+                LowStockThreshold = manager.LowStockThreshold,
+                PicklistFormat = manager.PicklistFormat,
+                AutoAcceptPickTasks = manager.AutoAcceptPickTasks,
+                NotifyLowStock = manager.NotifyLowStock,
+                DefaultPackingPriority = manager.DefaultPackingPriority,
+                DailyCutoffTime = manager.DailyCutoffTime,
+                PrintLabelFormat = manager.PrintLabelFormat,
+                EnableVoicePicking = manager.EnableVoicePicking,
+                AssignedZones = string.IsNullOrEmpty(manager.AssignedZones) 
+                    ? new List<string>() 
+                    : JsonSerializer.Deserialize<List<string>>(manager.AssignedZones) ?? new List<string>(),
+
+                // Notifications
                 EnableTaskAlerts = manager.EnableTaskAlerts,
-                EnableReminders = manager.EnableReminders,
-                NotifyLowStock = manager.NotifyLowStock
+                EnableReminders = manager.EnableReminders
             };
 
             // Security Details
@@ -884,12 +968,23 @@ namespace SCM_System.Controllers
             manager.FullName = model.FullName;
             manager.Phone = model.Phone;
             
-            // 2. Notification Preferences
+            // 2. Operational Logic
+            manager.DefaultWarehouseLocation = model.DefaultWarehouseLocation;
+            manager.LowStockThreshold = model.LowStockThreshold;
+            manager.PicklistFormat = model.PicklistFormat;
+            manager.AutoAcceptPickTasks = model.AutoAcceptPickTasks;
+            manager.NotifyLowStock = model.NotifyLowStock;
+            manager.DefaultPackingPriority = model.DefaultPackingPriority;
+            manager.DailyCutoffTime = model.DailyCutoffTime;
+            manager.PrintLabelFormat = model.PrintLabelFormat;
+            manager.EnableVoicePicking = model.EnableVoicePicking;
+            manager.AssignedZones = JsonSerializer.Serialize(model.AssignedZones ?? new List<string>());
+
+            // 3. Notification Preferences
             manager.EnableTaskAlerts = model.EnableTaskAlerts;
             manager.EnableReminders = model.EnableReminders;
-            manager.NotifyLowStock = model.NotifyLowStock;
 
-            // 3. Profile Picture
+            // 4. Profile Picture
             if (model.ProfilePicture != null)
             {
                 string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
@@ -907,7 +1002,7 @@ namespace SCM_System.Controllers
                 manager.ProfilePhotoPath = manager.User.ProfileImage;
             }
 
-            // 4. Password Security
+            // 5. Password Security
             if (!string.IsNullOrEmpty(model.NewPassword))
             {
                 if (string.IsNullOrEmpty(model.CurrentPassword))
@@ -926,7 +1021,7 @@ namespace SCM_System.Controllers
             }
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Account security and profile updated successfully.";
+            TempData["SuccessMessage"] = "Settings updated successfully.";
             return RedirectToAction(nameof(AccountSettings));
         }
 
@@ -1010,6 +1105,42 @@ namespace SCM_System.Controllers
             // Sign out
             HttpContext.Session.Clear();
             return Json(new { success = true });
+        }
+
+        private async Task<int> GetWarehouseIdAsync()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var emp = await _context.SupplierEmployees.FirstOrDefaultAsync(x => x.UserId == userId);
+                return emp?.WarehouseId ?? 0;
+            }
+            return 0;
+        }
+
+        private async Task<SupplierEmployee?> GetCurrentManagerAsync()
+        {
+            var employeeIdStr = User.FindFirstValue("EmployeeId");
+            if (int.TryParse(employeeIdStr, out int employeeId))
+            {
+                return await _context.SupplierEmployees
+                    .Include(e => e.Warehouse)
+                    .Include(e => e.User)
+                    .FirstOrDefaultAsync(e => e.Id == employeeId);
+            }
+            
+            // Fallback to UserId if claim is missing
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                return await _context.SupplierEmployees
+                    .Include(e => e.User)
+                    .Include(e => e.HubAccesses)
+                        .ThenInclude(a => a.Warehouse)
+                    .Include(e => e.WarehouseAssignments)
+                    .FirstOrDefaultAsync(e => e.UserId == userId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
+            }
+            return null;
         }
 
         private string HashPassword(string password)
