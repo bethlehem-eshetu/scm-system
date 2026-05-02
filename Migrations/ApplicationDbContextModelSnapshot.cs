@@ -457,6 +457,43 @@ namespace SCM_System.Migrations
                     b.ToTable("DeliveryTrackings");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.DispatchOverrideLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AgentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CurrentLoad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PerformedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("DispatchOverrideLogs");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.DispatchTask", b =>
                 {
                     b.Property<int>("Id")
@@ -2280,6 +2317,10 @@ namespace SCM_System.Migrations
                     b.Property<decimal>("Discount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("DispatchOverrideReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("ExpectedDeliveryDate")
                         .HasColumnType("datetime2");
 
@@ -2291,8 +2332,14 @@ namespace SCM_System.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("IsDispatchOverride")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsQRVerified")
                         .HasColumnType("bit");
+
+                    b.Property<int>("LoadWeight")
+                        .HasColumnType("int");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
@@ -3871,6 +3918,12 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -4716,6 +4769,25 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.Navigation("Delivery");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.DispatchOverrideLog", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.SupplierEmployee", "Agent")
+                        .WithMany()
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agent");
+
+                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DispatchTask", b =>

@@ -1,4 +1,4 @@
-﻿@model List<SCM_System.Models.ViewModels.AdminMessageViewModel>
+@model List<SCM_System.Models.ViewModels.AdminMessageViewModel>
 
 @{
     ViewData["Title"] = "Message Monitoring";
@@ -6,117 +6,452 @@
 }
 
 <div class="container-fluid py-4">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-envelope-open-text text-primary me-2"></i>Message Monitoring
-        </h1>
         <div>
-            <a asp-action="BlockedMessages" class="btn btn-warning me-2">
-                <i class="fas fa-ban me-1"></i> Blocked Messages
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">
+                <i class="fas fa-envelope-open-text text-primary me-2"></i>Message Monitoring
+            </h1>
+            <p class="text-muted small mb-0">Track and monitor all communications across the platform.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="BlockedMessages" class="btn btn-warning rounded-pill px-4 shadow-sm fw-bold text-dark">
+                <i class="fas fa-ban me-2"></i> Blocked Violations
                 @if (ViewBag.BlockedMessagesCount > 0)
                 {
                     <span class="badge bg-danger ms-1">@ViewBag.BlockedMessagesCount</span>
                 }
             </a>
-            <a asp-action="Dashboard" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            <a asp-action="Dashboard" class="btn btn-light rounded-pill px-4 shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i> Dashboard
             </a>
         </div>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- Enhanced Stats Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card bg-primary text-white shadow-sm">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
+                <div class="card-body text-white p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50 mb-2">Total Messages</h6>
-                            <h3 class="mb-0">@ViewBag.TotalMessagesCount</h3>
+                            <div class="text-white-50 small fw-bold text-uppercase mb-1">Total Messages</div>
+                            <div class="h2 mb-0 fw-bold">@(ViewBag.TotalMessagesCount ?? 0)</div>
                         </div>
-                        <i class="fas fa-envelope fa-3x opacity-50"></i>
+                        <i class="fas fa-envelope fa-2x text-white-50"></i>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-warning text-white shadow-sm">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50 mb-2">Blocked Messages</h6>
-                            <h3 class="mb-0">@ViewBag.BlockedMessagesCount</h3>
+                            <div class="text-warning small fw-bold text-uppercase mb-1">Blocked Violations</div>
+                            <div class="h2 mb-0 fw-bold text-dark">@(ViewBag.BlockedMessagesCount ?? 0)</div>
                         </div>
-                        <i class="fas fa-ban fa-3x opacity-50"></i>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-ban fa-xl text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-danger text-white shadow-sm">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white-50 mb-2">Active Penalties</h6>
-                            <h3 class="mb-0">@ViewBag.ActivePenaltiesCount</h3>
+                            <div class="text-danger small fw-bold text-uppercase mb-1">Active Penalties</div>
+                            <div class="h2 mb-0 fw-bold text-dark">@(ViewBag.ActivePenaltiesCount ?? 0)</div>
                         </div>
-                        <i class="fas fa-gavel fa-3x opacity-50"></i>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-gavel fa-xl text-danger"></i>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Filter Section - NO APPLY BUTTON NEEDED -->
+    <div class="card shadow-sm mb-4 border-0 rounded-4">
+        <div class="card-header bg-white py-3 px-4 border-0">
+            <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-filter me-2 text-primary"></i>Live Filtering</h6>
+        </div>
+        <div class="card-body pt-0 px-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Sender Name</label>
+                    <input type="text" id="liveSenderName" class="form-control form-control-sm border-0 bg-light rounded-3 px-3 py-2"
+                           placeholder="Search by name...">
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Sender Role</label>
+                    <select id="liveSenderRole" class="form-select form-select-sm border-0 bg-light rounded-3 px-3 py-2">
+                        <option value="">All Roles</option>
+                        <option value="Supplier">Supplier</option>
+                        <option value="Retailer">Retailer</option>
+                       
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Date Range</label>
+                    <select id="liveDateFilter" class="form-select form-select-sm border-0 bg-light rounded-3 px-3 py-2">
+                        <option value="all" selected>All Time</option>
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="last7days">Last 7 Days</option>
+                        <option value="last30days">Last 30 Days</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Keyword Search</label>
+                    <input type="text" id="liveKeyword" class="form-control form-control-sm border-0 bg-light rounded-3 px-3 py-2"
+                           placeholder="Search in message content...">
+                </div>
+
+                <div class="col-md-2 text-end">
+                    <button type="button" class="btn btn-light btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px;" onclick="resetLiveFilters()" title="Reset Filters">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Messages Table -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">
-                <i class="fas fa-list me-2 text-primary"></i>Recent Messages
-            </h5>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+            <h6 class="mb-0 fw-bold text-dark">
+                Recent Conversations
+                <span id="filteredCount" class="badge bg-light text-primary border ms-2" style="font-size: 0.75rem;">@Model.Count results</span>
+            </h6>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text bg-light border-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted small"></i></span>
+                    <input type="text" id="liveSearch" class="form-control bg-light border-0 rounded-end-pill pe-3" placeholder="Quick search...">
+                </div>
+                <button class="btn btn-sm btn-light rounded-circle shadow-sm" style="width: 32px; height: 32px;" onclick="exportToCSV()" title="Export CSV">
+                    <i class="fas fa-download small"></i>
+                </button>
+            </div>
         </div>
         <div class="card-body p-0">
             @if (!Model.Any())
             {
                 <div class="text-center py-5">
-                    <i class="fas fa-envelope fa-4x text-muted mb-3"></i>
-                    <h5 class="text-muted">No messages found</h5>
+                    <i class="fas fa-envelope-open fa-4x text-muted opacity-25 mb-3"></i>
+                    <h5 class="text-muted fw-bold">No messages found</h5>
+                    <p class="text-muted small">Try adjusting your filters to see messages.</p>
                 </div>
             }
             else
             {
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Time</th>
-                                <th>Sender</th>
-                                <th>Role</th>
-                                <th>Conversation</th>
-                                <th>Message</th>
-                                <th>Actions</th>
+                    <table class="table table-hover align-middle mb-0" id="messagesTable">
+                        <thead class="bg-light">
+                            <tr class="text-muted small text-uppercase">
+                                <th class="ps-4 py-3" style="cursor: pointer;" onclick="sortTable(0)">Time <i class="fas fa-sort ms-1"></i></th>
+                                <th class="py-3" style="cursor: pointer;" onclick="sortTable(1)">Sender <i class="fas fa-sort ms-1"></i></th>
+                                <th class="py-3">Role</th>
+                                <th class="py-3">Between</th>
+                                <th class="py-3">Message Preview</th>
+                                <th class="pe-4 text-end py-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var msg in Model)
                             {
-                                <tr>
-                                    <td><small>@msg.TimeAgo</small></td>
-                                    <td><strong>@msg.SenderName</strong></td>
-                                    <td><span class="badge bg-@(msg.SenderRole == "Supplier" ? "primary" : "info")">@msg.SenderRole</span></td>
-                                    <td><small>@msg.ConversationBetween</small></td>
-                                    <td>@(msg.Content.Length > 50 ? msg.Content.Substring(0, 50) + "..." : msg.Content)</td>
+                                <tr data-sender-name="@msg.SenderName.ToLower()"
+                                    data-sender-role="@msg.SenderRole"
+                                    data-conversation="@msg.ConversationBetween.ToLower()"
+                                    data-content="@msg.Content.ToLower()"
+                                    data-date="@msg.SentAt.ToString("yyyy-MM-dd")">
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">@msg.TimeAgo</div>
+                                        <div class="text-muted small">@msg.SentAt.ToString("MMM dd, HH:mm")</div>
+                                    </td>
                                     <td>
-                                        <a asp-action="ViewConversation" asp-route-id="@msg.ConversationId"
-                                               class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
+                                        <div class="fw-bold text-dark">@msg.SenderName</div>
+                                        @if (!string.IsNullOrEmpty(msg.SenderEmail))
+                                        {
+                                            <div class="text-muted small">@msg.SenderEmail</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(msg.SenderRole == "Supplier" ? "primary" : msg.SenderRole == "Retailer" ? "info" : "secondary") rounded-pill px-3 py-1">
+                                            @msg.SenderRole
+                                        </span>
+                                    </td>
+                                    <td><div class="small text-muted">@msg.ConversationBetween</div></td>
+                                    <td>
+                                        <div class="message-preview" data-full-message="@Html.Raw(msg.Content?.Replace("\"", "&quot;"))">
+                                            <span class="text-dark">@(msg.Content?.Length > 80 ? msg.Content.Substring(0, 80) + "..." : msg.Content)</span>
+                                            @if ((msg.Content?.Length ?? 0) > 80)
+                                            {
+                                                <a href="#" class="text-primary small ms-1 text-decoration-none fw-bold" onclick="showFullMessage(this); return false;">more</a>
+                                            }
+                                        </div>
+                                        <div class="mt-1">
+                                            @if (msg.ContainsFlaggedWords)
+                                            {
+                                                <span class="badge bg-warning text-dark small me-1"><i class="fas fa-exclamation-triangle me-1"></i>Flagged</span>
+                                            }
+                                            @if (msg.AttachmentCount > 0)
+                                            {
+                                                <span class="badge bg-light text-dark border small"><i class="fas fa-paperclip me-1"></i>@msg.AttachmentCount</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <div class="btn-group btn-group-sm rounded-pill overflow-hidden shadow-sm">
+                                            <a asp-action="ViewConversation" asp-route-id="@msg.ConversationId" class="btn btn-white border-end" title="View Full Conversation">
+                                                <i class="fas fa-eye text-primary"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
+
+                <!-- No results message -->
+                <div id="noResultsMessage" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-search fa-4x text-muted opacity-25 mb-3"></i>
+                    <h5 class="text-muted fw-bold">No matching messages found</h5>
+                    <p class="text-muted small">Try adjusting your filters to see more results.</p>
+                    <button class="btn btn-primary btn-sm rounded-pill px-4 mt-2" onclick="resetLiveFilters()">Reset Filters</button>
+                </div>
             }
         </div>
     </div>
 </div>
+
+<!-- Full Message Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-envelope-open-text me-2 text-primary"></i>Full Message Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="fullMessageText" class="text-muted lh-base mb-0"></p>
+            </div>
+            <div class="modal-footer border-top-0 pb-4 px-4">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+        // Live filtering on all inputs - NO APPLY BUTTON NEEDED
+        $("#liveSenderName, #liveSenderRole, #liveDateFilter, #liveKeyword, #liveSearch").on("keyup change", function() {
+        applyLiveFilters();
+        });
+            
+        // Initial filter application
+        applyLiveFilters();
+        });
+        
+        function applyLiveFilters() {
+        var senderName = $("#liveSenderName").val().toLowerCase().trim();
+        var senderRole = $("#liveSenderRole").val();
+        var dateFilter = $("#liveDateFilter").val();
+        var keyword = $("#liveKeyword").val().toLowerCase().trim();
+        var quickSearch = $("#liveSearch").val().toLowerCase().trim();
+            
+        var visibleCount = 0;
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+            
+        $("#messagesTable tbody tr").each(function() {
+        var $row = $(this);
+        var showRow = true;
+                
+        // Get row data
+        var rowSenderName = $row.attr("data-sender-name") || "";
+        var rowSenderRole = $row.attr("data-sender-role") || "";
+        var rowContent = $row.attr("data-content") || "";
+        var rowDate = $row.attr("data-date") || "";
+        var rowConversation = $row.attr("data-conversation") || "";
+        var rowFullText = rowSenderName + " " + rowContent + " " + rowConversation;
+                
+        // Filter by sender name
+        if (senderName && rowSenderName.indexOf(senderName) === -1) {
+        showRow = false;
+        }
+                
+        // Filter by sender role
+        if (showRow && senderRole && rowSenderRole !== senderRole) {
+        showRow = false;
+        }
+                
+        // Filter by keyword in content
+        if (showRow && keyword && rowContent.indexOf(keyword) === -1) {
+        showRow = false;
+        }
+                
+        // Filter by quick search (searches everything)
+        if (showRow && quickSearch && rowFullText.indexOf(quickSearch) === -1) {
+        showRow = false;
+        }
+                
+        // Filter by date range
+        if (showRow && dateFilter !== "all") {
+        var rowDateObj = new Date(rowDate);
+        var isMatch = false;
+                    
+        switch(dateFilter) {
+        case "today":
+        isMatch = rowDate === today.toISOString().split('T')[0];
+        break;
+        case "yesterday":
+        var yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        isMatch = rowDate === yesterday.toISOString().split('T')[0];
+        break;
+        case "last7days":
+        var sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        isMatch = rowDateObj >= sevenDaysAgo;
+        break;
+        case "last30days":
+        var thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        isMatch = rowDateObj >= thirtyDaysAgo;
+        break;
+        }
+                    
+        if (!isMatch) showRow = false;
+        }
+                
+        // Show/hide row
+        if (showRow) {
+        $row.show();
+        visibleCount++;
+        } else {
+        $row.hide();
+        }
+        });
+            
+        // Update filtered count
+        $("#filteredCount").text(visibleCount + " results");
+            
+        // Show/hide no results message
+        if (visibleCount === 0) {
+        $("#noResultsMessage").show();
+        } else {
+        $("#noResultsMessage").hide();
+        }
+        }
+        
+        function resetLiveFilters() {
+        $("#liveSenderName").val("");
+        $("#liveSenderRole").val("");
+        $("#liveDateFilter").val("all");
+        $("#liveKeyword").val("");
+        $("#liveSearch").val("");
+        applyLiveFilters();
+        }
+        
+        function showFullMessage(element) {
+        const previewDiv = element.closest('.message-preview');
+        const fullMessage = previewDiv.getAttribute('data-full-message');
+        document.getElementById('fullMessageText').innerText = fullMessage;
+        new bootstrap.Modal(document.getElementById('messageModal')).show();
+        }
+        
+        function exportToCSV() {
+        let csv = "Time,Sender,Sender Email,Role,Conversation,Message\n";
+        $("#messagesTable tbody tr:visible").each(function() {
+        var $row = $(this);
+        var cells = $row.find("td");
+                
+        var time = cells.eq(0).find('.text-muted').text().trim();
+        var sender = cells.eq(1).find('.fw-bold').text().trim();
+        var senderEmail = cells.eq(1).find('.text-muted').text().trim();
+        var role = cells.eq(2).text().trim();
+        var conversation = cells.eq(3).text().trim();
+        var message = cells.eq(4).find('.text-dark').text().trim();
+                
+        csv += `"${time}","${sender}","${senderEmail}","${role}","${conversation}","${message.replace(/"/g, '""')}"\n`;
+        });
+            
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `messages_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        }
+
+        let sortDirection = {};
+        
+        function sortTable(columnIndex) {
+        const table = document.getElementById("messagesTable");
+        const tbody = table.querySelector("tbody");
+        const rows = Array.from(tbody.querySelectorAll("tr:visible"));
+            
+        // Toggle sort direction for this column
+        sortDirection[columnIndex] = sortDirection[columnIndex] === "asc" ? "desc" : "asc";
+        const direction = sortDirection[columnIndex];
+            
+        // Sort rows
+        rows.sort((a, b) => {
+        let aValue = "";
+        let bValue = "";
+                
+        if (columnIndex === 0) {
+        // Sort by date
+        aValue = a.cells[columnIndex]?.querySelector('.text-muted')?.innerText || "";
+        bValue = b.cells[columnIndex]?.querySelector('.text-muted')?.innerText || "";
+        } else if (columnIndex === 1) {
+        // Sort by sender name
+        aValue = a.cells[columnIndex]?.querySelector('.fw-bold')?.innerText || "";
+        bValue = b.cells[columnIndex]?.querySelector('.fw-bold')?.innerText || "";
+        } else {
+        aValue = a.cells[columnIndex]?.innerText.trim() || "";
+        bValue = b.cells[columnIndex]?.innerText.trim() || "";
+        }
+                
+        if (direction === "asc") {
+        return aValue.localeCompare(bValue);
+        } else {
+        return bValue.localeCompare(aValue);
+        }
+        });
+            
+        // Reorder rows
+        rows.forEach(row => tbody.appendChild(row));
+            
+        // Update sort icons
+        const headers = table.querySelectorAll("thead th");
+        headers.forEach((header, idx) => {
+        const icon = header.querySelector("i");
+        if (icon) {
+        if (idx === columnIndex) {
+        icon.className = direction === "asc" ? "fas fa-sort-up ms-1" : "fas fa-sort-down ms-1";
+        } else {
+        icon.className = "fas fa-sort ms-1";
+        }
+        }
+        });
+        }
+    </script>
+}

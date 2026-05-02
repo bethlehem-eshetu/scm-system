@@ -40,7 +40,25 @@ namespace SCM_System.Data
                         // Beauty & Personal Care
                         new ProductCategory { CategoryName = "Beauty & Personal Care", Description = "Cosmetics and hygiene", Level = 1 },
                         // Home & Kitchen
-                        new ProductCategory { CategoryName = "Home & Kitchen", Description = "Domestic appliances and decor", Level = 1 }
+                        new ProductCategory { CategoryName = "Home & Kitchen", Description = "Domestic appliances and decor", Level = 1 },
+                        // Health & Wellness
+                        new ProductCategory { CategoryName = "Health & Wellness", Description = "Vitamins, supplements, and fitness", Level = 1 },
+                        // Books & Media
+                        new ProductCategory { CategoryName = "Books & Media", Description = "Educational and entertainment materials", Level = 1 },
+                        // Industrial Machinery
+                        new ProductCategory { CategoryName = "Industrial Machinery", Description = "Heavy equipment and tools", Level = 1 },
+                        // Toys & Games
+                        new ProductCategory { CategoryName = "Toys & Games", Description = "Play and educational items", Level = 1 },
+                        // Sports & Outdoors
+                        new ProductCategory { CategoryName = "Sports & Outdoors", Description = "Athletic gear and outdoor recreation", Level = 1 },
+                        // Pet Supplies
+                        new ProductCategory { CategoryName = "Pet Supplies", Description = "Food, toys, and care for pets", Level = 1 },
+                        // Tools & Hardware
+                        new ProductCategory { CategoryName = "Tools & Hardware", Description = "Power and hand tools, fasteners", Level = 1 },
+                        // Jewelry & Watches
+                        new ProductCategory { CategoryName = "Jewelry & Watches", Description = "Fine and fashion accessories", Level = 1 },
+                        // Footwear
+                        new ProductCategory { CategoryName = "Footwear", Description = "Shoes, boots, and sandals", Level = 1 }
                     };
 
                     context.ProductCategories.AddRange(categories);
@@ -175,10 +193,178 @@ namespace SCM_System.Data
                         new ProductCategory { CategoryName = "Storage & Organization", ParentCategoryId = home.Id, Level = 2 }
                     );
 
+                    // Subcategories for Health & Wellness
+                    var health = categories.First(c => c.CategoryName == "Health & Wellness");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Vitamins & Supplements", ParentCategoryId = health.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fitness Equipment", ParentCategoryId = health.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Personal Care Devices", ParentCategoryId = health.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Books & Media
+                    var books = categories.First(c => c.CategoryName == "Books & Media");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Educational Materials", ParentCategoryId = books.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fiction & Non-Fiction", ParentCategoryId = books.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Digital Media", ParentCategoryId = books.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Industrial Machinery
+                    var industrial = categories.First(c => c.CategoryName == "Industrial Machinery");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Manufacturing Equipment", ParentCategoryId = industrial.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Heavy Tools", ParentCategoryId = industrial.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Packaging Machinery", ParentCategoryId = industrial.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Toys & Games
+                    var toys = categories.First(c => c.CategoryName == "Toys & Games");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Educational Toys", ParentCategoryId = toys.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Board Games", ParentCategoryId = toys.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Outdoor Play", ParentCategoryId = toys.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Sports & Outdoors
+                    var sports = categories.First(c => c.CategoryName == "Sports & Outdoors");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Exercise Equipment", ParentCategoryId = sports.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Outdoor Recreation", ParentCategoryId = sports.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Sports Accessories", ParentCategoryId = sports.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Pet Supplies
+                    var pets = categories.First(c => c.CategoryName == "Pet Supplies");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Pet Food", ParentCategoryId = pets.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Toys & Accessories", ParentCategoryId = pets.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Pet Health", ParentCategoryId = pets.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Tools & Hardware
+                    var tools = categories.First(c => c.CategoryName == "Tools & Hardware");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Power Tools", ParentCategoryId = tools.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Hand Tools", ParentCategoryId = tools.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fasteners & Fittings", ParentCategoryId = tools.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Jewelry & Watches
+                    var jewelry = categories.First(c => c.CategoryName == "Jewelry & Watches");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Fine Jewelry", ParentCategoryId = jewelry.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fashion Jewelry", ParentCategoryId = jewelry.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Watches", ParentCategoryId = jewelry.Id, Level = 2 }
+                    );
+
+                    // Subcategories for Footwear
+                    var footwear = categories.First(c => c.CategoryName == "Footwear");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Men's Shoes", ParentCategoryId = footwear.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Women's Shoes", ParentCategoryId = footwear.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Sports Shoes", ParentCategoryId = footwear.Id, Level = 2 }
+                    );
+
                     context.SaveChanges();
                     Console.WriteLine("=================================");
                     Console.WriteLine("Hierarchical Product Categories seeded!");
                     Console.WriteLine("=================================");
+                }
+                else if (!context.ProductCategories.Any(c => c.CategoryName == "Sports & Outdoors"))
+                {
+                    // Fallback to insert the new additional categories if the main block didn't run
+                    var newCategories = new List<ProductCategory>
+                    {
+                        new ProductCategory { CategoryName = "Sports & Outdoors", Description = "Athletic gear and outdoor recreation", Level = 1 },
+                        new ProductCategory { CategoryName = "Pet Supplies", Description = "Food, toys, and care for pets", Level = 1 },
+                        new ProductCategory { CategoryName = "Tools & Hardware", Description = "Power and hand tools, fasteners", Level = 1 },
+                        new ProductCategory { CategoryName = "Jewelry & Watches", Description = "Fine and fashion accessories", Level = 1 },
+                        new ProductCategory { CategoryName = "Footwear", Description = "Shoes, boots, and sandals", Level = 1 }
+                    };
+                    context.ProductCategories.AddRange(newCategories);
+                    context.SaveChanges();
+
+                    var sports = newCategories.First(c => c.CategoryName == "Sports & Outdoors");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Exercise Equipment", ParentCategoryId = sports.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Outdoor Recreation", ParentCategoryId = sports.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Sports Accessories", ParentCategoryId = sports.Id, Level = 2 }
+                    );
+
+                    var pets = newCategories.First(c => c.CategoryName == "Pet Supplies");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Pet Food", ParentCategoryId = pets.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Toys & Accessories", ParentCategoryId = pets.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Pet Health", ParentCategoryId = pets.Id, Level = 2 }
+                    );
+
+                    var tools = newCategories.First(c => c.CategoryName == "Tools & Hardware");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Power Tools", ParentCategoryId = tools.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Hand Tools", ParentCategoryId = tools.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fasteners & Fittings", ParentCategoryId = tools.Id, Level = 2 }
+                    );
+
+                    var jewelry = newCategories.First(c => c.CategoryName == "Jewelry & Watches");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Fine Jewelry", ParentCategoryId = jewelry.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fashion Jewelry", ParentCategoryId = jewelry.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Watches", ParentCategoryId = jewelry.Id, Level = 2 }
+                    );
+
+                    var footwear = newCategories.First(c => c.CategoryName == "Footwear");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Men's Shoes", ParentCategoryId = footwear.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Women's Shoes", ParentCategoryId = footwear.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Sports Shoes", ParentCategoryId = footwear.Id, Level = 2 }
+                    );
+
+                    context.SaveChanges();
+                    Console.WriteLine("Added additional market-ready categories to existing database.");
+                }
+                else if (!context.ProductCategories.Any(c => c.CategoryName == "Health & Wellness"))
+                {
+                    // Fallback to insert the new categories if the main block didn't run
+                    var newCategories = new List<ProductCategory>
+                    {
+                        new ProductCategory { CategoryName = "Health & Wellness", Description = "Vitamins, supplements, and fitness", Level = 1 },
+                        new ProductCategory { CategoryName = "Books & Media", Description = "Educational and entertainment materials", Level = 1 },
+                        new ProductCategory { CategoryName = "Industrial Machinery", Description = "Heavy equipment and tools", Level = 1 },
+                        new ProductCategory { CategoryName = "Toys & Games", Description = "Play and educational items", Level = 1 }
+                    };
+                    context.ProductCategories.AddRange(newCategories);
+                    context.SaveChanges();
+
+                    var health = newCategories.First(c => c.CategoryName == "Health & Wellness");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Vitamins & Supplements", ParentCategoryId = health.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fitness Equipment", ParentCategoryId = health.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Personal Care Devices", ParentCategoryId = health.Id, Level = 2 }
+                    );
+
+                    var books = newCategories.First(c => c.CategoryName == "Books & Media");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Educational Materials", ParentCategoryId = books.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Fiction & Non-Fiction", ParentCategoryId = books.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Digital Media", ParentCategoryId = books.Id, Level = 2 }
+                    );
+
+                    var industrial = newCategories.First(c => c.CategoryName == "Industrial Machinery");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Manufacturing Equipment", ParentCategoryId = industrial.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Heavy Tools", ParentCategoryId = industrial.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Packaging Machinery", ParentCategoryId = industrial.Id, Level = 2 }
+                    );
+
+                    var toys = newCategories.First(c => c.CategoryName == "Toys & Games");
+                    context.ProductCategories.AddRange(
+                        new ProductCategory { CategoryName = "Educational Toys", ParentCategoryId = toys.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Board Games", ParentCategoryId = toys.Id, Level = 2 },
+                        new ProductCategory { CategoryName = "Outdoor Play", ParentCategoryId = toys.Id, Level = 2 }
+                    );
+
+                    context.SaveChanges();
+                    Console.WriteLine("Added new market-ready categories to existing database.");
                 }
 
                 // Look for any admin user

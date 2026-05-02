@@ -104,5 +104,7 @@ namespace SCM_System.Models.Entities
         public ICollection<Message> SentMessages { get; set; } = new List<Message>();
         public ICollection<Penalty> Penalties { get; set; } = new List<Penalty>();
         public virtual ICollection<UserSession> UserSessions { get; set; } = new List<UserSession>();
+        public string? PasswordResetToken { get; set; }
+        public DateTime? PasswordResetTokenExpiry { get; set; }
     }
 }

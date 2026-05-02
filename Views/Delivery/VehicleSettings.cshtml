@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Vehicle Settings";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mb-1">Vehicle Settings</h2>
+        <p class="text-muted">Configure your hardware telemetry and active vehicle preferences.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+    
+    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+        <div class="card-header bg-white p-4 border-bottom-0 pb-0">
+            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-truck me-2 text-primary"></i>Vehicle Configuration</h5>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="UpdateVehicleSettings" method="post">
+                <div class="row g-4">
+                    <!-- Standard Vehicle Readonly Fields -->
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold text-uppercase mb-1">Assigned Vehicle Model</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-car text-muted"></i></span>
+                            <input type="text" class="form-control bg-light border-start-0" value="Toyota Hilux 2020 Cargo" readonly disabled />
+                        </div>
+                        <div class="form-text">Your system-assigned delivery vehicle. Cannot be changed manually.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold text-uppercase mb-1">Registration Plate</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-id-card text-muted"></i></span>
+                            <input type="text" class="form-control bg-light border-start-0" value="ET-A8824" readonly disabled />
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-satellite-dish text-primary me-2"></i>Telemetry Preferences</h6>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Live GPS Broadcasting</label>
+                        <select class="form-select border-primary" style="border-width: 2px;">
+                            <option value="active" selected>Enabled (High Accuracy Map Updates)</option>
+                            <option value="power-save">Power Save Mode (Updates every 5 minutes)</option>
+                            <option value="offline" disabled>Offline (Dispatch Admin Override Required)</option>
+                        </select>
+                        <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i>Required to be active when holding "In Transit" packages.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Vehicle Status Signal</label>
+                        <select class="form-select">
+                            <option value="good" selected>Fully Operational</option>
+                            <option value="fuel">Refueling Needed</option>
+                            <option value="maintenance">Minor Maintenance Needed after Route</option>
+                            <option value="critical">Critical Fault (Requires Towing)</option>
+                        </select>
+                    </div>
+
+                </div>
+                
+                <div class="mt-5 bg-light p-4 rounded-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-1">Save these profile settings?</h6>
+                        <p class="small text-muted mb-0">Changes apply immediately to your active route tracking system.</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                        <i class="fas fa-save me-2"></i> Apply Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

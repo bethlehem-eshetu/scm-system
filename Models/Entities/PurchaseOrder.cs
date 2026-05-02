@@ -95,6 +95,12 @@ namespace SCM_System.Models.Entities
         [StringLength(500)]
         public string? CancellationReason { get; set; }
 
+        // ERP Overrides & Smart Routing
+        public int LoadWeight { get; set; } = 1;
+        public bool IsDispatchOverride { get; set; } = false;
+        [StringLength(500)]
+        public string? DispatchOverrideReason { get; set; }
+
         // Navigation
         public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = [];
         public ICollection<ReturnRequest> ReturnRequests { get; set; } = [];

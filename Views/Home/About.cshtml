@@ -1,0 +1,278 @@
+﻿@{
+    ViewData["Title"] = "About Us - Empowering Ethiopian SMEs";
+}
+
+<div class="about-hero container-fluid p-0 overflow-hidden position-relative min-vh-100 d-flex align-items-center">
+    <!-- Fullscreen Video Background -->
+    <video class="position-absolute w-100 h-100" autoplay muted loop playsinline style="top: 0; left: 0; object-fit: cover; z-index: 0;">
+        <source src="~/videos/HOME.mp4" type="video/mp4">
+    </video>
+    
+    <!-- Dark Overlay for Better Text Contrast -->
+    <div class="position-absolute w-100 h-100" style="top: 0; left: 0; background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(7, 37, 59, 0.9) 50%, rgba(0, 0, 0, 0.85) 100%); z-index: 1;"></div>
+
+    <div class="container position-relative z-index-2 py-5 mt-5">
+        <div class="text-center mb-5 pb-4" data-aos="fade-up">
+            <div class="d-inline-flex align-items-center bg-white px-4 py-2 rounded-pill mb-4 shadow-sm">
+                <i class="fas fa-store text-primary me-2 fs-5"></i>
+                <span class="fw-bold tracking-wide text-uppercase text-primary small">Built for Ethiopian SMEs</span>
+            </div>
+            <h1 class="display-3 fw-bolder text-white mb-3 hero-title">
+                Digital Solutions for<br />
+                <span style="color: #ffd700;">Growing Businesses</span>
+            </h1>
+            <p class="lead text-white mx-auto fw-light" style="max-width: 800px; font-size: 1.25rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                Helping small retailers, local suppliers, and distributors across Ethiopia digitize their supply chain — no enterprise budget required.
+            </p>
+        </div>
+
+        <div class="row g-5 align-items-center mt-2">
+            <div class="col-lg-6" data-aos="fade-right" data-aos-delay="200">
+                <div class="pe-lg-5">
+                    <h2 class="fw-bold mb-4 display-6" style="color: #ffd700 !important;">Our Mission</h2>
+                    <p class="text-white fw-medium" style="line-height: 1.8; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        EthioChain SCM levels the playing field for Ethiopian small and medium businesses. We replace manual paperwork, phone calls, and lost tracking with a simple digital platform that anyone can use.
+                    </p>
+                    <p class="text-white fw-medium mt-3" style="line-height: 1.8; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        Whether you run a small shop in Addis, a distribution center in Dire Dawa, or a supplier in Bahir Dar — we give you the tools to manage procurement, track deliveries, and grow with confidence.
+                    </p>
+                    
+                    <div class="d-flex align-items-center mt-5 gap-4">
+                        <div class="text-center glass-stat p-3 rounded-4" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,215,0,0.3);">
+                            <h3 class="fw-bolder mb-0" style="color: #ffd700;">1,200+</h3>
+                            <p class="small text-uppercase text-white fw-bold mb-0">SMEs Onboarded</p>
+                        </div>
+                        <div class="bg-white opacity-25" style="width: 2px; height: 40px;"></div>
+                        <div class="text-center glass-stat p-3 rounded-4" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,215,0,0.3);">
+                            <h3 class="fw-bolder mb-0" style="color: #ffd700;">₿100M+</h3>
+                            <p class="small text-uppercase text-white fw-bold mb-0">Transaction Value</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6" data-aos="fade-left" data-aos-delay="400">
+                <div class="glass-panel p-5 rounded-5 shadow-lg" style="background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255,215,0,0.3);">
+                    <h3 class="fw-bold mb-4 d-flex align-items-center" style="color: #ffd700;">
+                        <span class="bg-primary bg-opacity-10 p-3 rounded-circle me-3" style="background: rgba(255,215,0,0.2);"><i class="fas fa-chart-line" style="color: #ffd700;"></i></span>
+                        What We Offer SMEs
+                    </h3>
+                    <div class="core-principle-list">
+                        <div class="d-flex mb-4 principle-item p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.08);">
+                            <div class="icon-wrapper bg-gradient-primary text-white shadow-sm me-4">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-white">Affordable for Small Business</h5>
+                                <p class="text-white-50 mb-0 small">Pay-as-you-grow pricing with no hidden fees or long-term contracts.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-4 principle-item p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.08);">
+                            <div class="icon-wrapper bg-gradient-warning text-white shadow-sm me-4">
+                                <i class="fas fa-language"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-white">Amharic & English Support</h5>
+                                <p class="text-white-50 mb-0 small">Full platform support in both languages with local customer service.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-4 principle-item p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.08);">
+                            <div class="icon-wrapper bg-gradient-info text-white shadow-sm me-4">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-white">Mobile-First Platform</h5>
+                                <p class="text-white-50 mb-0 small">Manage everything from your phone — no expensive hardware needed.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex principle-item p-3 rounded-4 transition-all" style="background: rgba(255,255,255,0.08);">
+                            <div class="icon-wrapper bg-gradient-success text-white shadow-sm me-4">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-white">Faster Payments</h5>
+                                <p class="text-white-50 mb-0 small">Get paid quicker with digital invoicing and bank integration.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SME Success Stories Section -->
+<section class="py-5 bg-white">
+    <div class="container py-5">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="display-5 fw-bold text-dark-blue mb-3">Trusted by Ethiopian Businesses</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 700px;">See how local SMEs are growing with EthioChain</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-store fs-1 text-primary me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-0">Selam Trading</h5>
+                                <small class="text-muted">Retailer, Addis Ababa</small>
+                            </div>
+                        </div>
+                        <p class="text-muted">"EthioChain helped us find reliable suppliers and reduced our procurement time from days to hours. The mobile app is a game-changer for our small team."</p>
+                        <div class="mt-3">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-truck fs-1 text-primary me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-0">Dire Dawa Distributors</h5>
+                                <small class="text-muted">Logistics, Dire Dawa</small>
+                            </div>
+                        </div>
+                        <p class="text-muted">"Tracking deliveries used to be chaos. Now we know exactly where every shipment is. Our customers love the transparency."</p>
+                        <div class="mt-3">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star-half-alt text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-warehouse fs-1 text-primary me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-0">Bahir Dar Agro</h5>
+                                <small class="text-muted">Supplier, Bahir Dar</small>
+                            </div>
+                        </div>
+                        <p class="text-muted">"We've doubled our customer base since joining EthioChain. The bidding system helps us find buyers without expensive marketing."</p>
+                        <div class="mt-3">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5" style="background: linear-gradient(135deg, #0b3d60, #07253b);">
+    <div class="container py-4 text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8" data-aos="zoom-in">
+                <h2 class="display-5 fw-bold text-white mb-3">Ready to grow your business?</h2>
+                <p class="lead text-white text-opacity-75 mb-4">Join hundreds of Ethiopian SMEs already using EthioChain to streamline their supply chain.</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-lg px-5 py-3" style="background: #ffd700; color: #0b3d60; font-weight: bold; border-radius: 50px;">
+                        <i class="fas fa-rocket me-2"></i> Start Free Trial
+                    </a>
+                    <a asp-controller="Home" asp-action="Contact" class="btn btn-lg btn-outline-light px-5 py-3 rounded-pill">
+                        <i class="fas fa-phone me-2"></i> Contact Sales
+                    </a>
+                </div>
+                <p class="text-white text-opacity-50 small mt-4">Free 14-day trial • No credit card required • Cancel anytime</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        .about-hero {
+            background-color: transparent;
+        }
+
+        .hero-title { letter-spacing: -0.02em; }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .icon-wrapper {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .bg-gradient-primary { background: linear-gradient(135deg, #0b3d60, #155e93); }
+        .bg-gradient-warning { background: linear-gradient(135deg, #d4a017, #f0b90b); }
+        .bg-gradient-info { background: linear-gradient(135deg, #0dcaf0, #31d2f2); }
+        .bg-gradient-success { background: linear-gradient(135deg, #198754, #20c997); }
+
+        .transition-all { transition: all 0.3s ease; }
+        .tracking-wide { letter-spacing: 0.1em; }
+        
+        .glass-stat {
+            transition: all 0.3s ease;
+        }
+        
+        .glass-stat:hover {
+            transform: translateY(-5px);
+            border-color: #ffd700;
+        }
+        
+        .principle-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .principle-item:hover {
+            transform: translateX(8px);
+            background: rgba(255,255,255,0.15) !important;
+        }
+        
+        .text-white-50 {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+        
+        .text-dark-blue {
+            color: #0b3d60;
+        }
+        
+        .z-index-2 { z-index: 2; }
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.15) !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+    </script>
+}
