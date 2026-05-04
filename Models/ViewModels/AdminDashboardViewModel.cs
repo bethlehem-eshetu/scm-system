@@ -19,6 +19,7 @@ namespace SCM_System.Models.ViewModels
         public int PendingRetailersCount { get; set; }
         public int RejectedRetailersCount { get; set; }
 
+
         public List<SCM_System.Models.Entities.Supplier> RecentSuppliers { get; set; } = new();
         public List<SCM_System.Models.Entities.Retailer> RecentRetailers { get; set; } = new();
     }

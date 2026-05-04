@@ -47,14 +47,17 @@ namespace SCM_System.Controllers
         {
             if (!IsAdmin())
             {
-                TempData["ErrorMessage"] = "⚠️ Please login as admin to access the dashboard.";
                 return RedirectToAction("Login", "Account");
             }
 
             var model = new AdminDashboardViewModel();
             try
             {
-                var orders = await _context.Orders.ToListAsync() ?? new List<Order>();
+                var orders = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(i => i.Product)
+                            .ThenInclude(p => p.Category)
+                    .ToListAsync() ?? new List<Order>();
                 var suppliers = await _context.Suppliers.ToListAsync() ?? new List<Supplier>();
                 var retailers = await _context.Retailers.Include(r => r.User).ToListAsync() ?? new List<Retailer>();
                 var products = await _context.Products.ToListAsync() ?? new List<Product>();
@@ -95,6 +98,62 @@ namespace SCM_System.Controllers
 
                 ViewBag.TotalProducts = model.TotalProducts;
                 ViewBag.TotalRevenue = model.TotalRevenue;
+                ViewBag.TotalOrders = model.TotalOrders;
+                ViewBag.ActiveSuppliers = model.TotalSuppliers;
+                ViewBag.ActiveRetailers = model.TotalRetailers;
+                ViewBag.PendingSuppliersCount = model.PendingSuppliersCount;
+                ViewBag.PendingRetailersCount = model.PendingRetailersCount;
+
+                // Dummy growth values matching mockup (can be replaced with real calc later)
+                ViewBag.OrderGrowth = 12;
+                ViewBag.RevenueGrowth = 8;
+                ViewBag.SupplierGrowth = model.PendingSuppliersCount + " pending";
+                ViewBag.RetailerGrowth = "1 new";
+
+                // --- Chart Data Logic (30 Day Trend) ---
+                var now = DateTime.Today;
+                var last30Days = Enumerable.Range(0, 30)
+                    .Select(i => now.AddDays(-i))
+                    .OrderBy(d => d)
+                    .ToList();
+
+                var dailyRevenue = last30Days.Select(date => 
+                    commissions.Where(c => c.CreatedAt.Date == date.Date && (c.Status == "Paid" || c.Status == "Success" || c.Status == "OperationComplete"))
+                              .Sum(c => c.CommissionAmount)
+                ).ToList();
+
+                var dailyOrders = last30Days.Select(date => 
+                    orders.Count(o => o.CreatedAt.Date == date.Date)
+                ).ToList();
+
+                ViewBag.Last30DaysLabels = last30Days.Select(d => d.ToString("MMM dd")).ToArray();
+                ViewBag.RevenueData = dailyRevenue.ToArray();
+                ViewBag.OrderData = dailyOrders.ToArray();
+
+                // --- Category Data (Top 5) ---
+                var topCategories = orders
+                    .SelectMany(o => o.OrderItems)
+                    .GroupBy(i => i.Product?.Category?.CategoryName ?? "Uncategorized")
+                    .OrderByDescending(g => g.Count())
+                    .Take(5)
+                    .Select(g => new { 
+                        Name = g.Key, 
+                        Percentage = orders.SelectMany(o => o.OrderItems).Count() > 0 
+                            ? (int)((double)g.Count() / orders.SelectMany(o => o.OrderItems).Count() * 100) 
+                            : 0 
+                    })
+                    .ToList();
+
+                ViewBag.CategoryLabels = topCategories.Select(c => c.Name).ToArray();
+                ViewBag.CategoryData = topCategories.Select(c => c.Percentage).ToArray();
+
+                // --- Recent Suppliers (Last 5 with status) ---
+                ViewBag.RecentSuppliers = suppliers.OrderByDescending(s => s.CreatedAt).Take(5).Select(s => new {
+                    s.CompanyName,
+                    Status = s.VerificationStatus ?? "Pending",
+                    s.CreatedAt
+                }).ToList();
+
 
                 return View(model);
             }
@@ -110,6 +169,36 @@ namespace SCM_System.Controllers
 
                 return View(new AdminDashboardViewModel());
             }
+        }
+
+        // GET: /Admin/GetDashboardStats (AJAX for Dynamic Chart)
+        [HttpGet]
+        public async Task<IActionResult> GetDashboardStats(int range = 7)
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var now = DateTime.Today;
+            var dates = Enumerable.Range(0, range)
+                .Select(i => now.AddDays(-i))
+                .OrderBy(d => d)
+                .ToList();
+
+            var orders = await _context.Orders
+                .Where(o => o.CreatedAt >= now.AddDays(-range))
+                .ToListAsync();
+
+            var commissions = await _context.Commissions
+                .Where(c => c.CreatedAt >= now.AddDays(-range) && (c.Status == "Paid" || c.Status == "Success" || c.Status == "OperationComplete"))
+                .ToListAsync();
+
+            var data = dates.Select(date => new
+            {
+                date = date.ToString("yyyy-MM-dd"),
+                orders = orders.Count(o => o.CreatedAt.Date == date.Date),
+                revenue = commissions.Where(c => c.CreatedAt.Date == date.Date).Sum(c => c.CommissionAmount)
+            });
+
+            return Json(data);
         }
 
         // GET: /Admin/PendingSuppliers
