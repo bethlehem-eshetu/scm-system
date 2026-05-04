@@ -387,7 +387,7 @@ namespace SCM_System.Services
                     {
                         if (item.ProductId.HasValue)
                         {
-                            await CheckAndTriggerReorderAlertAsync(item.ProductId.Value, po.WarehouseId);
+                            await CheckAndTriggerReorderAlertAsync(item.ProductId.Value, po.WarehouseId.Value);
                         }
                     }
                 }
