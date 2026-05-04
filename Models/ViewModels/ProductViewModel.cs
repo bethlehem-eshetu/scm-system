@@ -83,5 +83,13 @@ namespace SCM_System.Models.ViewModels
         public IFormFile? ImageFile { get; set; }
         public string? ExistingImageUrl { get; set; }
         public List<IFormFile>? GalleryImages { get; set; }
+        public List<GalleryImageViewModel>? ExistingGalleryImages { get; set; }
+    }
+
+    public class GalleryImageViewModel
+    {
+        public int Id { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+        public int DisplayOrder { get; set; }
     }
 }

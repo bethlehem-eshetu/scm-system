@@ -94,6 +94,36 @@
                             </div>
                         </div>
                         
+                        <!-- Gallery Images Section -->
+                        <div class="mt-4">
+                            <h5 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-images me-2"></i>Gallery Images</h5>
+                            
+                            @if (ViewBag.GalleryImages != null && ((List<SCM_System.Models.ViewModels.GalleryImageViewModel>)ViewBag.GalleryImages).Any())
+                            {
+                                <div class="d-flex flex-wrap gap-2 mb-3" id="existingGalleryContainer">
+                                    @foreach (var img in (List<SCM_System.Models.ViewModels.GalleryImageViewModel>)ViewBag.GalleryImages)
+                                    {
+                                        <div class="position-relative" id="gallery-img-@img.Id" style="width:100px;height:100px;">
+                                            <img src="@img.ImageUrl" class="rounded-3 shadow-sm" style="width:100px;height:100px;object-fit:cover;" />
+                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle p-0" 
+                                                    style="width:24px;height:24px;line-height:24px;font-size:12px;"
+                                                    onclick="deleteGalleryImage(@img.Id)">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            
+                            <div class="bg-light border-2 border-dashed p-3 rounded-4 text-center position-relative">
+                                <input type="file" name="GalleryImages" class="form-control position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor:pointer;" multiple accept="image/*" onchange="previewNewGallery(this)" />
+                                <i class="fas fa-plus-circle text-muted mb-1"></i>
+                                <p class="mb-0 small fw-bold">Add more images</p>
+                                <small class="text-muted">Max 10 total</small>
+                            </div>
+                            <div id="newGalleryPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                        </div>
+
                         <hr class="mt-4 mb-4" />
                         
                         <div class="d-flex justify-content-between align-items-center">
@@ -134,7 +164,6 @@
                 
                 reader.readAsDataURL(input.files[0]);
             } else {
-                // If user clears the file input, show current image again or hide if none
                 const originalUrl = "@Model.ImageUrl";
                 if (originalUrl) {
                     previewImage.src = originalUrl;
@@ -147,6 +176,39 @@
                     previewContainer.classList.add('d-none');
                     previewImage.src = '#';
                 }
+            }
+        }
+
+        function deleteGalleryImage(imageId) {
+            if (!confirm('Remove this gallery image?')) return;
+            fetch('/Product/DeleteGalleryImage?imageId=' + imageId, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        var el = document.getElementById('gallery-img-' + imageId);
+                        if (el) el.remove();
+                    } else {
+                        alert('Failed to delete image.');
+                    }
+                })
+                .catch(err => alert('Error: ' + err));
+        }
+
+        function previewNewGallery(input) {
+            var container = document.getElementById('newGalleryPreview');
+            container.innerHTML = '';
+            if (input.files) {
+                Array.from(input.files).forEach(function(file) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var div = document.createElement('div');
+                        div.style.width = '80px';
+                        div.style.height = '80px';
+                        div.innerHTML = '<img src="' + e.target.result + '" class="rounded-3 shadow-sm" style="width:80px;height:80px;object-fit:cover;" />';
+                        container.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
             }
         }
     </script>

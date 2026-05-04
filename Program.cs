@@ -5,6 +5,7 @@ using SCM_System.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Add logging configuration
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();

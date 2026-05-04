@@ -36,10 +36,11 @@ namespace SCM_System.Services
         Task<bool> RestockReturnedItemsAsync(int returnRequestId, int performedByUserId);
     }
 
-    public class InventoryService(ApplicationDbContext context, ILogger<InventoryService> logger) : IInventoryService
+    public class InventoryService(ApplicationDbContext context, ILogger<InventoryService> logger, INotificationService notificationService) : IInventoryService
     {
         private readonly ApplicationDbContext _context = context;
         private readonly ILogger<InventoryService> _logger = logger;
+        private readonly INotificationService _notificationService = notificationService;
 
         // ReserveStockAsync removed in favor of BulkReserveStockForPOAsync for better atomicity.
 
@@ -380,6 +381,17 @@ namespace SCM_System.Services
                 await _context.SaveChangesAsync();
                 if (transaction != null) await transaction.CommitAsync();
                 
+                if (po.WarehouseId > 0)
+                {
+                    foreach (var item in po.PurchaseOrderItems)
+                    {
+                        if (item.ProductId.HasValue)
+                        {
+                            await CheckAndTriggerReorderAlertAsync(item.ProductId.Value, po.WarehouseId.Value);
+                        }
+                    }
+                }
+                
                 _logger.LogInformation("Physical stock deduction completed successfully for PO {PurchaseOrderId}.", purchaseOrderId);
                 return true;
             }
@@ -634,6 +646,11 @@ namespace SCM_System.Services
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+                
+                if (adjustment.WarehouseId.HasValue && adjustment.QuantityChange < 0)
+                {
+                    await CheckAndTriggerReorderAlertAsync(adjustment.ProductId, adjustment.WarehouseId.Value);
+                }
             }
             catch (Exception ex)
             {
@@ -665,6 +682,63 @@ namespace SCM_System.Services
             }
             await _context.SaveChangesAsync();
             _logger.LogInformation("Created daily inventory snapshot for {Count} products", products.Count);
+        }
+
+        private async Task CheckAndTriggerReorderAlertAsync(int productId, int warehouseId)
+        {
+            try
+            {
+                var product = await _context.Products.FindAsync(productId);
+                if (product == null || !product.ReorderLevel.HasValue) return;
+
+                var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == productId && i.WarehouseId == warehouseId);
+                if (inventory == null) return;
+
+                int quantityAvailable = inventory.QuantityOnHand - inventory.QuantityReserved;
+
+                if (quantityAvailable <= product.ReorderLevel.Value)
+                {
+                    // Find warehouse manager or fallback to supplier
+                    var warehouse = await _context.Warehouses
+                        .Include(w => w.PrimaryManager)
+                        .FirstOrDefaultAsync(w => w.Id == warehouseId);
+
+                    int? targetUserId = warehouse?.PrimaryManager?.UserId;
+                    
+                    if (!targetUserId.HasValue)
+                    {
+                        var supplier = await _context.Suppliers.FindAsync(product.SupplierId);
+                        targetUserId = supplier?.UserId;
+                    }
+
+                    if (targetUserId.HasValue)
+                    {
+                        string message = $"Stock alert: {product.ProductName} in warehouse '{warehouse?.Name}' has dropped to {quantityAvailable} (Reorder level: {product.ReorderLevel.Value}).";
+                        
+                        // Prevent spamming
+                        bool hasRecentAlert = await _context.Notifications
+                            .AnyAsync(n => n.UserId == targetUserId.Value 
+                                        && !n.IsRead 
+                                        && n.Title == "Low Stock Alert" 
+                                        && n.Message.Contains(product.ProductName));
+
+                        if (!hasRecentAlert)
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                targetUserId.Value,
+                                "Low Stock Alert",
+                                message,
+                                "Warning",
+                                "/Product/MyProducts"
+                            );
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking reorder level for product {ProductId} in warehouse {WarehouseId}", productId, warehouseId);
+            }
         }
 
         private async Task<int> GetAvailableStockFromInventoriesAsync(int productId)
