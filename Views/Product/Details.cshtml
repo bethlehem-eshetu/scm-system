@@ -20,7 +20,7 @@
                 <div class="card-body d-flex flex-column align-items-center justify-content-center bg-light rounded p-4">
                     @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
-                        <img src="@Model.ImageUrl" alt="@Model.ProductName" class="img-fluid rounded shadow" style="max-height: 400px; width: auto; object-fit: contain;" />
+                        <img id="mainProductImage" src="@Model.ImageUrl" alt="@Model.ProductName" class="img-fluid rounded shadow" style="max-height: 400px; width: auto; object-fit: contain; transition: all 0.3s ease;" />
                     }
                     else
                     {
@@ -28,6 +28,27 @@
                             <i class="bi bi-image display-1 mb-3 opacity-50"></i>
                             <h4>No Image Available</h4>
                             <p>Upload an image in the edit screen to help customers see your product.</p>
+                        </div>
+                    }
+
+                    @if (Model.GalleryImages != null && Model.GalleryImages.Any())
+                    {
+                        <div class="mt-4 w-100">
+                            <h6 class="text-muted fw-bold mb-3 border-bottom pb-2">Gallery Images</h6>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                                {
+                                    <div class="position-relative">
+                                        <img src="@Model.ImageUrl" class="rounded-3 shadow-sm border border-2 border-primary" style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;" onclick="document.getElementById('mainProductImage').src=this.src; document.querySelectorAll('.gallery-thumb').forEach(el => el.classList.remove('border', 'border-2', 'border-primary')); this.classList.add('border', 'border-2', 'border-primary');" alt="Main Image" />
+                                    </div>
+                                }
+                                @foreach (var img in Model.GalleryImages)
+                                {
+                                    <div class="position-relative">
+                                        <img src="@img.ImageUrl" class="rounded-3 shadow-sm gallery-thumb" style="width: 70px; height: 70px; object-fit: cover; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="document.getElementById('mainProductImage').src=this.src; document.querySelectorAll('.gallery-thumb, .border-primary').forEach(el => el.classList.remove('border', 'border-2', 'border-primary')); this.classList.add('border', 'border-2', 'border-primary');" alt="Gallery Image" />
+                                    </div>
+                                }
+                            </div>
                         </div>
                     }
                 </div>
