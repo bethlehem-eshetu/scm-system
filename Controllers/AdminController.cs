@@ -385,7 +385,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -480,7 +480,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -579,7 +579,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -688,7 +688,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -884,6 +884,74 @@ namespace SCM_System.Controllers
             return RedirectToAction("PendingUsers");
         }
 
+        // POST: /Admin/RejectApplication (JSON Endpoint for Generic Rejections)
+        [HttpPost]
+        [Route("Admin/RejectApplication")]
+        public async Task<IActionResult> RejectApplication([FromBody] RejectRequest request)
+        {
+            try
+            {
+                if (!IsAdmin()) return Unauthorized(new { message = "Unauthorized access." });
+
+                if (string.IsNullOrWhiteSpace(request.RejectionReason))
+                {
+                    return BadRequest(new { message = "Rejection reason is required." });
+                }
+
+                // Check for user
+                var user = await _context.Users.FindAsync(request.UserId);
+                
+                if (user == null)
+                {
+                    return NotFound(new { message = $"{request.UserType} not found." });
+                }
+
+                user.IsApproved = false;
+                user.AccountStatus = "Rejected";
+                user.RejectionReason = request.RejectionReason;
+                user.ApprovalStatus = "Rejected";
+                user.ApprovalStatusType = "Rejected";
+                user.ApprovalStatusMessage = $"Your account was rejected. Reason: {request.RejectionReason}";
+
+                // Update associated roles
+                if (user.Role == "Supplier")
+                {
+                    var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == user.Id);
+                    if (supplier != null) supplier.VerificationStatus = "Rejected";
+                }
+                else if (user.Role == "Retailer")
+                {
+                    var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == user.Id);
+                    if (retailer != null) retailer.IsVerified = false;
+                }
+
+                // Log audit
+                await LogAudit(user.Id, "Rejected", request.RejectionReason);
+
+                await _context.SaveChangesAsync();
+
+                // Send Email if requested
+                if (request.SendEmail)
+                {
+                    try
+                    {
+                        await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, request.UserType ?? user.Role, request.RejectionReason);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send rejection email to {Email}", user.Email);
+                    }
+                }
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing generic rejection modal for ID: {UserId}", request.UserId);
+                return StatusCode(500, new { message = "An internal error occurred." });
+            }
+        }
+
         private async Task LogAudit(int targetUserId, string action, string? reason)
         {
             try
@@ -1054,6 +1122,235 @@ namespace SCM_System.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SuspendUser([FromBody] SuspendUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Suspended";
+                user.RejectionReason = request.Reason; // Reuse field for suspension reason
+                
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "🔒 Account Suspended",
+                    Message = $"Your account has been suspended. Reason: {request.Reason}",
+                    Type = "Warning",
+                    CreatedAt = DateTime.Now
+                });
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyUser([FromBody] VerifyUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Active";
+                user.IsApproved = true;
+                user.IsFaydaVerified = true;
+                user.FaydaStatus = "Verified";
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "✅ Account Verified",
+                    Message = "Your account has been verified by an administrator.",
+                    Type = "Success",
+                    CreatedAt = DateTime.Now,
+                    ActionUrl = "/Dashboard"
+                });
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectUser([FromBody] RejectUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Rejected";
+                user.RejectionReason = request.Reason;
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "❌ Account Rejected",
+                    Message = $"Your account application was rejected. Reason: {request.Reason}",
+                    Type = "Error",
+                    CreatedAt = DateTime.Now
+                });
+
+                if (request.SendEmail)
+                {
+                    await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, user.Role, request.Reason);
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> BulkVerifyUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Active";
+                    user.IsApproved = true;
+                    user.IsFaydaVerified = true;
+                    user.FaydaStatus = "Verified";
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkSuspendUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Suspended";
+                    user.RejectionReason = request.Reason;
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkRejectUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Rejected";
+                    user.RejectionReason = request.Reason;
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsersPaginated(int page = 1, int pageSize = 10, string searchTerm = "", string role = "All", string status = "All")
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(u => u.FullName.Contains(searchTerm) || u.Email.Contains(searchTerm) || u.Id.ToString() == searchTerm);
+            }
+
+            if (role != "All")
+            {
+                query = query.Where(u => u.Role == role);
+            }
+
+            if (status != "All")
+            {
+                query = query.Where(u => u.AccountStatus == status);
+            }
+
+            var totalCount = await query.CountAsync();
+            var users = await query
+                .OrderByDescending(u => u.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new {
+                    u.Id,
+                    u.FullName,
+                    u.Email,
+                    u.Role,
+                    u.AccountStatus,
+                    LastActive = u.LastLoginAt != null ? u.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never",
+                    CreatedAt = u.CreatedAt.ToString("yyyy-MM-dd")
+                })
+                .ToListAsync();
+
+            return Json(new { totalCount, users });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportUsers(string format = "csv")
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var users = await _context.Users.OrderBy(u => u.CreatedAt).ToListAsync();
+            
+            var csv = new StringBuilder();
+            csv.AppendLine("ID,FullName,Email,Role,Status,LastActive,CreatedAt");
+            foreach (var u in users)
+            {
+                csv.AppendLine($"{u.Id},\"{u.FullName}\",{u.Email},{u.Role},{u.AccountStatus},{(u.LastLoginAt.HasValue ? u.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never")},{u.CreatedAt:yyyy-MM-dd HH:mm}");
+            }
+            
+            byte[] buffer = Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"SCM_Users_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv");
+        }
+
         // GET: /Admin/AllSuppliers
         public async Task<IActionResult> AllSuppliers()
         {
@@ -1088,7 +1385,7 @@ namespace SCM_System.Controllers
 
             if (supplier == null)
             {
-                return NotFound();
+                return View((SCM_System.Models.Entities.Supplier)null);
             }
 
             return View(supplier);
@@ -1111,7 +1408,7 @@ namespace SCM_System.Controllers
 
             if (retailer == null)
             {
-                return NotFound();
+                return View((SCM_System.Models.Entities.Retailer)null);
             }
 
             return View(retailer);
@@ -2636,5 +2933,14 @@ namespace SCM_System.Controllers
             TempData["SuccessMessage"] = $"Fayda identity for {user.FullName} has been rejected.";
             return RedirectToAction("AllUsers");
         }
+    }
+
+    public class RejectRequest
+    {
+        public int UserId { get; set; }
+        public string UserType { get; set; }
+        public string RejectionReason { get; set; }
+        public string AdditionalComments { get; set; }
+        public bool SendEmail { get; set; }
     }
 }
