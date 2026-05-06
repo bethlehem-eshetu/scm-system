@@ -702,6 +702,9 @@ namespace SCM_System.Controllers
             vehicle.Status = SCM_System.Models.Enums.VehicleStatus.InUse;
             vehicle.UpdatedAt = DateTime.Now;
 
+            // Save assignments first so the Service can see them in its own DB lookup
+            await _context.SaveChangesAsync();
+
             await _poService.UpdatePurchaseOrderStatusAsync(id, POStatus.InTransit, userId);
             
             // AUDIT LOG

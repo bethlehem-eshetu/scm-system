@@ -89,18 +89,20 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="payment-status">
-                                    <span class="text-muted small d-block">Payment</span>
-                                    <span class="badge bg-light text-dark border rounded-pill">@order.PaymentStatus</span>
+                                <div class="d-flex align-items-center">
+                                    @if (!isSupplier && !new[] { "Picked", "Packing", "Packed", "Ready Dispatch", "In Transit", "Delivered", "Completed", "Cancelled" }.Contains(order.OrderStatus))
+                                    {
+                                        <button class="btn btn-link text-danger text-decoration-none fw-bold me-2 cancel-order-btn" data-id="@order.Id" data-total="@displayTotal.ToString("C0")">
+                                            Cancel
+                                        </button>
+                                    }
+                                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
+                                        Manage <i class="fas fa-chevron-right ms-1"></i>
+                                    </a>
                                 </div>
-                                <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
-                                    Manage <i class="fas fa-chevron-right ms-1"></i>
-                                </a>
                             </div>
                         </div>
                     </div>
-                </div>
             }
         }
         else
@@ -116,6 +118,44 @@
     </div>
 </div>
 
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-danger text-white border-0 py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-ban fa-4x text-danger opacity-25"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Are you sure?</h5>
+                <p class="text-muted mb-4">You are about to cancel this order. Any reserved stock will be returned to inventory.</p>
+                
+                <div class="bg-light rounded-3 p-3 mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small text-muted">Order Total:</span>
+                        <span class="fw-bold text-dark" id="modalOrderTotal">ETB 0.00</span>
+                    </div>
+                </div>
+                
+                <form id="cancelOrderForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger rounded-pill py-2 fw-bold shadow-sm">
+                            Confirm Cancellation
+                        </button>
+                        <button type="button" class="btn btn-light rounded-pill py-2 fw-bold" data-bs-dismiss="modal">
+                            Keep Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @functions {
     string GetStatusClass(string status)
     {
@@ -126,6 +166,7 @@
             "Processing" => "bg-primary text-white",
             "Delivered" => "bg-success text-white",
             "Completed" => "bg-dark text-white",
+            "Cancelled" => "bg-danger text-white",
             _ => "bg-secondary text-white"
         };
     }
@@ -139,6 +180,7 @@
             "Processing" => "bg-primary",
             "Delivered" => "bg-success",
             "Completed" => "bg-dark",
+            "Cancelled" => "bg-danger",
             _ => "bg-secondary"
         };
     }
@@ -152,6 +194,7 @@
             "Processing" => 70,
             "Delivered" => 90,
             "Completed" => 100,
+            "Cancelled" => 100,
             _ => 10
         };
     }
@@ -160,6 +203,7 @@
     {
         if (status == "Pending") return "Pending";
         if (status == "Completed" || status == "Delivered") return "Completed";
+        if (status == "Cancelled") return "Cancelled";
         return "Active";
     }
 }
@@ -200,6 +244,47 @@
                             card.style.display = 'none';
                         }
                     });
+                });
+            });
+
+            // Cancel Order Logic
+            document.querySelectorAll('.cancel-order-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const orderId = this.dataset.id;
+                    const total = this.dataset.total;
+                    
+                    document.getElementById('modalOrderTotal').textContent = total;
+                    document.getElementById('cancelOrderForm').action = `/Order/CancelOrder/${orderId}`;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+                    modal.show();
+                });
+            });
+
+            document.getElementById('cancelOrderForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const form = this;
+                const url = form.action;
+                const formData = new FormData(form);
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while cancelling the order.');
                 });
             });
         });

@@ -144,6 +144,21 @@
 
         <!-- Route & Support -->
         <div class="col-lg-4">
+            <!-- Logistics Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4 bg-primary text-white" style="border-radius: 16px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;">
+                <div class="card-body p-4 text-center">
+                    <h6 class="fw-bold mb-3 text-white-50 small text-uppercase ls-1">Logistics Intelligence</h6>
+                    <div class="d-grid gap-2">
+                        <a asp-action="RouteItinerary" class="btn btn-white rounded-pill fw-bold shadow-sm py-2 text-primary">
+                            <i class="fas fa-magic me-2"></i> Optimize My Route
+                        </a>
+                        <a asp-action="MyDeliveries" class="btn btn-outline-light rounded-pill fw-bold py-2 border-2">
+                            <i class="fas fa-list-check me-2"></i> My Deliveries
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Map and AI Chatbot Card -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden;">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
@@ -369,10 +384,24 @@
                     if(mapData && mapData.length > 0) {
                         plotBasicRoute();
                     }
-                }, function(error) {
-                    console.log("GPS access denied or unavailable. Using default coordinates.");
-                    if(mapData && mapData.length > 0) plotBasicRoute();
                 });
+
+                // Continuous tracking
+                navigator.geolocation.watchPosition(function(position) {
+                    currentLat = position.coords.latitude;
+                    currentLng = position.coords.longitude;
+                    
+                    if (driverMarker) {
+                        driverMarker.setLatLng([currentLat, currentLng]);
+                    }
+                    
+                    // Update route from new user position
+                    if(mapData && mapData.length > 0) {
+                        updateRouteLineOnly();
+                    }
+                }, function(error) {
+                    console.warn("GPS tracking error:", error);
+                }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
             } else {
                 if(mapData && mapData.length > 0) plotBasicRoute();
             }
@@ -401,14 +430,24 @@
             destMarkers.forEach(m => miniMap.removeLayer(m));
             destMarkers = [];
             
-            const points = [[currentLat, currentLng]];
-            
             mapData.forEach(dest => {
                 const marker = L.marker([dest.lat, dest.lng], { icon: destIcon }).addTo(miniMap);
                 marker.bindPopup(`<b>${dest.businessName}</b><br>${dest.poNumber}<br>${dest.address}`);
                 destMarkers.push(marker);
-                points.push([dest.lat, dest.lng]);
             });
+            
+            updateRouteLineOnly();
+            
+            const points = [[currentLat, currentLng]];
+            mapData.forEach(dest => points.push([dest.lat, dest.lng]));
+            if (points.length > 1) {
+                miniMap.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
+            }
+        }
+
+        function updateRouteLineOnly() {
+            const points = [[currentLat, currentLng]];
+            mapData.forEach(dest => points.push([dest.lat, dest.lng]));
             
             if (mapRouteLine) miniMap.removeLayer(mapRouteLine);
             
@@ -418,10 +457,6 @@
                 opacity: 0.6,
                 dashArray: '5, 5'
             }).addTo(miniMap);
-            
-            if (points.length > 1) {
-                miniMap.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
-            }
             
             document.getElementById('routeDistanceBadge').innerHTML = (points.length * 4.2).toFixed(1) + ' km (Est.)';
         }

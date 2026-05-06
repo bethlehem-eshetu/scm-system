@@ -238,6 +238,18 @@
 
         <!-- Role-Based Action Panel Sidebar -->
         <div class="col-lg-4">
+            @if (isRetailer && !new[] { "Picked", "Packing", "Packed", "Ready Dispatch", "In Transit", "Delivered", "Completed", "Cancelled" }.Contains(currentStatus))
+            {
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border border-danger border-opacity-25" style="border-width: 2px !important; border-color: #dc3545 !important;">
+                    <h5 class="fw-bold text-dark mb-1">Retailer Actions</h5>
+                    <p class="text-muted small mb-3">Manage your order status</p>
+                    
+                    <button class="btn btn-danger w-100 rounded-pill fw-bold py-2 shadow-sm cancel-order-btn" data-id="@Model.Id" data-total="@grandTotal.ToString("N2") ETB">
+                        <i class="fas fa-ban me-1"></i> CANCEL ORDER
+                    </button>
+                    <p class="extra-small text-muted mb-0 mt-2" style="font-size: 0.70rem; line-height: 1.4;">Cancellation is only available before the warehouse picks the items.</p>
+                </div>
+            }
             @if (showAssignPanel)
             {
                 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border border-primary border-opacity-25" style="border-width: 2px !important; border-color: #0d6efd !important;">
@@ -406,6 +418,16 @@
                     </div>
                 </div>
 
+                @if (isRetailer && currentStatus == "In Transit")
+                {
+                    <div class="mt-4 pt-4 border-top text-center animate-slide-up">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-qrcode me-2"></i>Delivery QR Code</h6>
+                        <div id="retailer-qrcode" class="d-inline-block bg-white p-3 rounded-4 shadow-sm border mb-3"></div>
+                        <p class="extra-small text-muted mb-0 px-2" style="font-size: 0.65rem;">Show this code to the Delivery Agent upon arrival to instantly verify your identity and confirm receipt.</p>
+                        <div class="mt-2 fw-bold text-dark badge bg-light border text-dark" style="letter-spacing: 2px;">ORDER-@Model.OrderNumber</div>
+                    </div>
+                }
+
                 @if (isDelivered)
                 {
                     <div class="mt-4 pt-4 border-top">
@@ -505,7 +527,7 @@
             "Accepted" => "bg-primary-subtle text-primary",
             "Delivered" => "bg-success-subtle text-success",
             "Completed" => "bg-success text-white",
-            "Rejected" or "Expired" => "bg-danger-subtle text-danger",
+            "Rejected" or "Expired" or "Cancelled" => "bg-danger-subtle text-danger",
             _ => "bg-warning-subtle text-warning"
         };
     }
@@ -519,3 +541,105 @@
     .fulfillment-stepper { border: 1px solid rgba(0,0,0,0.05); }
     .step-node { z-index: 3; }
 </style>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-danger text-white border-0 py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-ban fa-4x text-danger opacity-25"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Are you sure?</h5>
+                <p class="text-muted mb-4">You are about to cancel this order. Any reserved stock will be returned to inventory.</p>
+                
+                <div class="bg-light rounded-3 p-3 mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small text-muted">Order Total:</span>
+                        <span class="fw-bold text-dark" id="modalOrderTotal">ETB 0.00</span>
+                    </div>
+                </div>
+                
+                <form id="cancelOrderForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger rounded-pill py-2 fw-bold shadow-sm">
+                            Confirm Cancellation
+                        </button>
+                        <button type="button" class="btn btn-light rounded-pill py-2 fw-bold" data-bs-dismiss="modal">
+                            Keep Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cancel Order Logic
+        document.querySelectorAll('.cancel-order-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const orderId = this.dataset.id;
+                const total = this.dataset.total;
+                
+                document.getElementById('modalOrderTotal').textContent = total;
+                document.getElementById('cancelOrderForm').action = `/Order/CancelOrder/${orderId}`;
+                
+                const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+                modal.show();
+            });
+        });
+
+        document.getElementById('cancelOrderForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const url = form.action;
+            const formData = new FormData(form);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/Order/Index';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while cancelling the order.');
+            });
+        });
+    });
+</script>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const qrContainer = document.getElementById('retailer-qrcode');
+            if (qrContainer) {
+                new QRCode(qrContainer, {
+                    text: "ORDER-@Model.OrderNumber",
+                    width: 160,
+                    height: 160,
+                    colorDark : "#1e1b4b",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+        });
+    </script>
+}

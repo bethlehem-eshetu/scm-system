@@ -97,47 +97,19 @@ namespace SCM_System.Controllers
             return View(model);
         }
 
-        public class QRCodeRequest
-        {
-            public int purchaseOrderId { get; set; }
-            public string qrCode { get; set; }
-            public bool? isManual { get; set; }
-        }
-
-        [HttpPost]
         [Authorize(Roles = "DeliveryAgent")]
-        public async Task<IActionResult> VerifyQRCode([FromBody] QRCodeRequest request)
+        public async Task<IActionResult> RouteItinerary()
         {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Json(new { success = false, message = "Unauthorized" });
+            var employeeId = await GetEmployeeIdAsync();
+            if (employeeId == 0) return Unauthorized();
 
-            var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == userId);
-            if (employee == null) return Json(new { success = false, message = "Employee profile not found" });
+            var activeDeliveries = await _context.PurchaseOrders
+                .Include(po => po.Order)
+                    .ThenInclude(o => o.Retailer)
+                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
+                .ToListAsync();
 
-            var po = await _context.PurchaseOrders
-                .Include(p => p.Order)
-                .FirstOrDefaultAsync(p => p.Id == request.purchaseOrderId && p.DeliveryAgentId == employee.Id);
-
-            if (po == null)
-            {
-                return Json(new { success = false, message = "Purchase order not found or not assigned to you." });
-            }
-
-            // Expected QR format: "ORDER-{OrderNumber}"
-            var expectedQR = $"ORDER-{po.Order.OrderNumber}";
-
-            if (request.isManual == true)
-            {
-                // Manual confirmation, don't verify strict format, just return success so form can submit
-                return Json(new { success = true });
-            }
-
-            if (!string.IsNullOrEmpty(request.qrCode) && request.qrCode.Trim().Equals(expectedQR, StringComparison.OrdinalIgnoreCase))
-            {
-                return Json(new { success = true, message = "QR Code verified successfully." });
-            }
-
-            return Json(new { success = false, message = "Invalid QR Code for this order." });
+            return View(activeDeliveries);
         }
 
         [HttpPost]
@@ -562,13 +534,22 @@ namespace SCM_System.Controllers
                 // Check if QR code matches the order
                 bool isValid = false;
 
-                if (po.Order != null && !string.IsNullOrEmpty(po.Order.QRCodeValue))
+                if (po.Order != null)
                 {
-                    isValid = (po.Order.QRCodeValue == request.QRCode);
+                    // Check against OrderNumber (what is displayed to user)
+                    if (request.QRCode == $"ORDER-{po.Order.OrderNumber}")
+                    {
+                        isValid = true;
+                    }
+                    // Check against the stored QRCodeValue if exists
+                    else if (!string.IsNullOrEmpty(po.Order.QRCodeValue) && po.Order.QRCodeValue == request.QRCode)
+                    {
+                        isValid = true;
+                    }
                 }
 
-                // Also check against a simple expected value for testing
-                if (!isValid && request.QRCode == $"ORDER-{po.OrderId}-DELIVERY")
+                // Also check against common patterns for robustness
+                if (!isValid && (request.QRCode == $"ORDER-{po.OrderId}-DELIVERY" || request.QRCode == $"PO-{po.Id}"))
                 {
                     isValid = true;
                 }

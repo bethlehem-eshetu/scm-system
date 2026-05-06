@@ -166,18 +166,9 @@
                                         }
                                         else if (po.Status == "Ready for Pickup")
                                         {
-                                            <form asp-action="AssignDelivery" method="post" class="d-inline-flex gap-2 align-items-center">
-                                                <input type="hidden" name="id" value="@po.Id" />
-                                                <select name="agentId" class="form-select form-select-sm rounded-pill border-primary" style="width: 150px;" required>
-                                                    <option value="">Select Agent...</option>
-                                                    @foreach (var agent in ViewBag.DeliveryAgents as List<SCM_System.Models.Entities.SupplierEmployee>)
-                                                    {
-                                                        <option value="@agent.Id">@agent.User?.FullName (@agent.Phone)</option>
-                                                    }
-                                                </select>
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3"><i class="fas fa-truck me-1"></i>Assign</button>
-                                            </form>
+                                            <a asp-action="AssignDelivery" asp-route-id="@po.Id" class="btn btn-sm btn-primary rounded-pill px-3">
+                                                <i class="fas fa-truck me-1"></i> Assign Delivery
+                                            </a>
                                         }
                                     </td>
                                 </tr>

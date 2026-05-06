@@ -730,7 +730,7 @@ namespace SCM_System.Controllers
         // POST: /Account/ForgotPassword
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordRequest request)
         {
             try
             {

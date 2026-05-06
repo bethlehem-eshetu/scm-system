@@ -1,279 +1,527 @@
 @model SCM_System.Models.ViewModels.LoginViewModel
 @{
-    ViewData["Title"] = "Secure Portal Access";
+    ViewData["Title"] = "Login - EthioChain SCM";
     Layout = "_Layout";
 }
 
-<div class="login-wrapper d-flex min-vh-100 position-relative overflow-hidden">
-    <!-- Video Background -->
-    <video class="video-bg" autoplay muted loop playsinline>
-        <source src="~/videos/HOME.mp4" type="video/mp4">
-        </video>
-        <div class="overlay"></div>
-
-        <!-- Two Column Layout with proper spacing -->
-        <div class="container-fluid position-relative z-3">
-            <div class="row g-0 min-vh-100">
-            
-                <!-- LEFT COLUMN - Hero (simplified) -->
-                <div class="col-lg-6 d-none d-lg-flex flex-column justify-content-center px-5 text-white">
-                    <div>
-                        <!-- Headline -->
-                        <h1 class="display-5 fw-bold mb-4">Digital Backbone for<br><span class="text-warning">African Supply Chains</span></h1>
-                    
-                        <!-- Features -->
-                        <div class="mb-4">
-                            <div class="d-flex gap-3 mb-3">
-                                <i class="fas fa-shield-alt text-warning fs-5 mt-1"></i>
-                                <div><strong>Fayda Verified</strong><br><small class="text-white-50">Legally vetted businesses</small></div>
-                            </div>
-                            <div class="d-flex gap-3">
-                                <i class="fas fa-route text-warning fs-5 mt-1"></i>
-                                <div><strong>Live Tracking</strong><br><small class="text-white-50">Real-time visibility</small></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            
-                <!-- RIGHT COLUMN - Login Form -->
-                <div class="col-lg-6 d-flex align-items-center justify-content-center p-4">
-                    <div class="card border-0 rounded-4 shadow-xxl" style="max-width: 440px; width: 100%;">
-                        <div class="card-body p-4 p-md-5">
-                        
-                            <!-- Mobile Logo -->
-                            <div class="d-lg-none text-center mb-4">
-                                <img src="~/images/ethiochain-logo.jpg" alt="EthioChain" style="width: 50px; height: 50px; object-fit: contain; border-radius: 12px;" />
-                                <h3 class="fw-bold mt-2">Welcome Back</h3>
-                            </div>
-                        
-                            <!-- Desktop Title -->
-                            <div class="text-center mb-4">
-                                <h3 class="fw-bold mb-1">Welcome Back</h3>
-                                <p class="text-muted small">Sign in to continue</p>
-                            </div>
-
-                            @if (TempData["ErrorMessage"] != null)
-                            {
-                                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 rounded-3 mb-4">
-                                    <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
-                                </div>
-                            }
-
-                            @if (TempData["SuccessMessage"] != null)
-                            {
-                                <div class="alert alert-success bg-success bg-opacity-10 border-0 rounded-3 mb-4">
-                                    <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
-                                </div>
-                            }
-
-                            <form asp-action="Login" method="post">
-                                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
-                            
-                                <div class="mb-3">
-                                    <label asp-for="Email" class="form-label fw-semibold mb-1">Email</label>
-                                    <input asp-for="Email" class="form-control form-control-lg rounded-3"
-                                           placeholder="name@company.com" />
-                                    <span asp-validation-for="Email" class="text-danger small"></span>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label asp-for="Password" class="form-label fw-semibold mb-1">Password</label>
-                                    <div class="position-relative">
-                                        <input asp-for="Password" id="password" type="password"
-                                               class="form-control form-control-lg rounded-3 pe-5"
-                                               placeholder="••••••••" />
-                                        <button type="button" class="btn p-0 position-absolute end-0 top-50 translate-middle-y me-3"
-                                                id="togglePassword" style="background: none; border: none;">
-                                            <i class="fas fa-eye-slash text-muted"></i>
-                                        </button>
-                                    </div>
-                                    <span asp-validation-for="Password" class="text-danger small"></span>
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <div class="form-check">
-                                        <input asp-for="RememberMe" class="form-check-input" />
-                                        <label asp-for="RememberMe" class="form-check-label small">Remember me</label>
-                                    </div>
-                                    <a href="#" class="small text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
-                                        Forgot password?
-                                    </a>
-                                </div>
-
-                                <button type="submit" class="btn w-100 py-3 fw-bold rounded-3 mb-3" style="background: #0b3d60; color: white;">
-                                    Sign In
-                                </button>
-
-                                <div class="text-center">
-                                    <span class="small text-muted">New user?</span>
-                                    <a asp-action="Register" class="small fw-bold text-decoration-none ms-1">Create Account</a>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+<div class="login-page">
+    <div class="login-container">
+        <!-- Left Pane: Illustration -->
+        <div class="login-left">
+            <div class="brand-logo">
+                <img src="/images/ethiochain-logo.jpg" alt="EthioChain Logo" />
+                <div class="brand-text">
+                    <span class="brand-main">ETHIOCHAIN</span>
+                    <span class="brand-sub">SCM SYSTEM</span>
                 </div>
             </div>
-        </div>
-    </div>
+            
+            <div class="illustration-container">
+                <img src="/images/hero-illustration.png" alt="Supply Chain Illustration" class="illustration-img" />
+            </div>
 
-    <!-- Forgot Password Modal -->
-    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-dark">Reset Your Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <p class="text-muted small mb-4">
-                        Enter your email address and we'll send you a link to reset your password.
-                    </p>
-                    <form asp-controller="Account" asp-action="ForgotPassword" method="post" id="forgotPasswordForm">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small">Email Address</label>
-                            <input type="email" name="Email" id="resetEmail" class="form-control form-control-lg rounded-3"
-                                   placeholder="name@company.com" required />
-                        </div>
-                        <div id="resetMessage" class="alert d-none mb-3"></div>
-                        <button type="submit" class="btn w-100 py-3 fw-bold rounded-3" style="background: #0b3d60; color: white;">
-                            <i class="fas fa-paper-plane me-2"></i> Send Reset Link
-                        </button>
-                    </form>
-                </div>
+            <div class="footer-note">
+                <p>&copy; @DateTime.Now.Year EthioChain SCM. All rights reserved.</p>
+                <p class="small">Powered by SCM Tech</p>
             </div>
         </div>
-    </div>
 
-    @section Styles {
-        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-        <style>
-            .video-bg {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                z-index: 0;
-            }
-    
-            .overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(135deg, rgba(7, 37, 59, 0.88) 0%, rgba(11, 61, 96, 0.8) 100%);
-                z-index: 1;
-            }
-    
-            .z-3 {
-                z-index: 3;
-            }
-    
-            .shadow-xxl {
-                box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.4);
-            }
-    
-            .form-control {
-                border: 1px solid #e9ecef;
-                background: #f8f9fa;
-            }
-    
-                .form-control:focus {
-                    border-color: #0b3d60;
-                    background: white;
-                    box-shadow: 0 0 0 3px rgba(11, 61, 96, 0.1);
+        <!-- Right Pane: Login Form -->
+        <div class="login-right">
+            <div class="login-form-wrapper">
+                <h1 class="login-title">Login</h1>
+                
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger custom-alert">
+                        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                    </div>
                 }
-    
-            .btn:hover {
-                transform: translateY(-2px);
-                transition: all 0.2s;
-                filter: brightness(1.05);
-            }
-    
-            .text-white-50 {
-                color: rgba(255, 255, 255, 0.6);
-            }
-        
-            .modal-content {
-                border: none;
-            }
-        </style>
-    }
 
-    @section Scripts {
-        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-        <script>
-            AOS.init({ duration: 600, once: true });
-    
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success custom-alert">
+                        <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                    </div>
+                }
+
+                <form asp-action="Login" method="post" id="loginForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <div class="input-group-custom">
+                        <label asp-for="Email">Username or Email</label>
+                        <input asp-for="Email" placeholder="Enter your email" required />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <label asp-for="Password">Password</label>
+                        <div class="password-wrapper">
+                            <input asp-for="Password" type="password" id="password" placeholder="Enter your password" required />
+                            <button type="button" id="togglePassword" class="toggle-password-btn">
+                                <i class="fas fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <div class="forgot-link-wrapper">
+                            <a href="#" class="forgot-password-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="RememberMe" class="form-check-input custom-checkbox" />
+                        <label asp-for="RememberMe" class="form-check-label text-light small">Remember me</label>
+                    </div>
+
+                    <button type="submit" class="login-submit-btn">Login to Portal</button>
+
+                    <div class="register-link">
+                        <span>Don't have an account?</span>
+                        <a asp-action="Register">Register Now</a>
+                    </div>
+
+                    <div class="bottom-links">
+                        <a href="#">Terms and Services</a>
+                    </div>
+
+                    <div class="contact-support">
+                        <span>Have a problem? Contact us at</span>
+                        <a href="mailto:support@ethiochain.com">support@ethiochain.com</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-dark-green text-white border-0 py-4">
+                <h5 class="modal-title fw-bold">Reset Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-5">
+                <p class="text-muted mb-4">Enter your registered email address and we'll send you a link to reset your password.</p>
+                
+                <div id="forgotPasswordMessage" class="alert d-none mb-4"></div>
+
+                <form id="forgotPasswordForm">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Email Address</label>
+                        <input type="email" name="Email" class="form-control form-control-lg rounded-3 border-2" placeholder="name@company.com" required />
+                    </div>
+                    <button type="submit" id="forgotPasswordSubmit" class="btn btn-dark-green w-100 py-3 fw-bold rounded-3 transition-all">
+                        <span class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true"></span>
+                        Send Reset Link
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        :root {
+            --dark-green: #1a3d31;
+            --accent-green: #5e9e94;
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --white-glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+
+        .login-page {
+            background-color: var(--dark-green);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 1000px;
+            height: 650px;
+            background-color: var(--dark-green);
+            border-radius: 40px;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Left side: White area with curve */
+        .login-left {
+            flex: 1;
+            background-color: #ffffff;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+            /* Curve shape using clip-path for an organic look */
+            clip-path: ellipse(90% 100% at 10% 50%);
+            /* Fallback or additional curve depth */
+        }
+
+        .login-left::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -100px;
+            bottom: 0;
+            width: 200px;
+            background: white;
+            border-radius: 100%;
+            z-index: -1;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo img {
+            height: 50px;
+            width: 50px;
+            object-fit: contain;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-main {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--dark-green);
+            letter-spacing: 1px;
+        }
+
+        .brand-sub {
+            font-size: 0.7rem;
+            color: #666;
+            letter-spacing: 2px;
+        }
+
+        .illustration-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .illustration-img {
+            max-width: 80%;
+            max-height: 300px;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+        }
+
+        .footer-note {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .footer-note p {
+            margin: 2px 0;
+        }
+
+        /* Right side: Green area */
+        .login-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .login-form-wrapper {
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .login-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        .input-group-custom {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group-custom label {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .input-group-custom input {
+            background: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group-custom input:focus {
+            background: rgba(0,0,0,0.3);
+            border-color: var(--accent-green);
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 45px;
+        }
+
+        .toggle-password-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+        }
+
+        .forgot-link-wrapper {
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .forgot-password-link {
+            color: var(--accent-green);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+
+        .forgot-password-link:hover {
+            color: white;
+        }
+
+        .custom-checkbox {
+            background-color: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .custom-checkbox:checked {
+            background-color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .login-submit-btn {
+            width: 100%;
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(94, 158, 148, 0.4);
+        }
+
+        .login-submit-btn:hover {
+            background-color: #4f8b82;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(94, 158, 148, 0.6);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 25px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .register-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 5px;
+            border-bottom: 1px solid white;
+            padding-bottom: 2px;
+        }
+
+        .bottom-links {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .bottom-links a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.75rem;
+        }
+
+        .contact-support {
+            text-align: right;
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            color: #888;
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .contact-support a {
+            color: var(--accent-green);
+            text-decoration: none;
+        }
+
+        .custom-alert {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        /* Modal Styles */
+        .bg-dark-green {
+            background-color: var(--dark-green);
+        }
+
+        .btn-dark-green {
+            background-color: var(--dark-green);
+            color: white;
+        }
+
+        .btn-dark-green:hover {
+            background-color: #122a22;
+            color: white;
+        }
+
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+        @@media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                height: auto;
+                max-width: 450px;
+            }
+            .login-left {
+                clip-path: none;
+                padding: 30px;
+                text-align: center;
+            }
+            .login-left::after {
+                display: none;
+            }
+            .illustration-container {
+                padding: 20px 0;
+            }
+            .illustration-img {
+                max-height: 150px;
+            }
+            .brand-logo {
+                justify-content: center;
+            }
+            .contact-support {
+                position: static;
+                margin-top: 30px;
+                align-items: center;
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password toggle
             const toggleBtn = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('password');
-    
-            if (toggleBtn && passwordInput) {
-            toggleBtn.addEventListener('click', function() {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            const icon = this.querySelector('i');
-            icon.classList.toggle('fa-eye');
-            icon.classList.toggle('fa-eye-slash');
+
+            toggleBtn?.addEventListener('click', () => {
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                toggleBtn.querySelector('i').classList.toggle('fa-eye');
+                toggleBtn.querySelector('i').classList.toggle('fa-eye-slash');
             });
-            }
-        
-            // Forgot Password Form Submission with AJAX
+
+            // Forgot Password AJAX
             const forgotForm = document.getElementById('forgotPasswordForm');
-            const resetMessage = document.getElementById('resetMessage');
-        
-            if (forgotForm) {
-            forgotForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+            const forgotMessage = document.getElementById('forgotPasswordMessage');
+            const forgotSubmit = document.getElementById('forgotPasswordSubmit');
+            const spinner = forgotSubmit.querySelector('.spinner-border');
+
+            forgotForm?.addEventListener('submit', async function(e) {
+                e.preventDefault();
                 
-            const email = document.getElementById('resetEmail').value;
-            const submitBtn = forgotForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
+                // Reset state
+                forgotMessage.classList.add('d-none');
+                forgotMessage.className = 'alert mb-4';
+                forgotSubmit.disabled = true;
+                spinner.classList.remove('d-none');
+
+                const formData = new FormData(this);
                 
-            // Disable button and show loading
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Sending...';
-                
-            try {
-            const response = await fetch('/Account/ForgotPassword', {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-            },
-            body: JSON.stringify({ email: email })
+                try {
+                    const response = await fetch('/Account/ForgotPassword', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    forgotMessage.innerText = result.message;
+                    forgotMessage.classList.remove('d-none');
+                    
+                    if (result.success) {
+                        forgotMessage.classList.add('alert-success');
+                        this.reset();
+                    } else {
+                        forgotMessage.classList.add('alert-danger');
+                    }
+                } catch (error) {
+                    console.error('Forgot password error:', error);
+                    forgotMessage.innerText = 'An unexpected error occurred. Please try again later.';
+                    forgotMessage.classList.remove('d-none');
+                    forgotMessage.classList.add('alert-danger');
+                } finally {
+                    forgotSubmit.disabled = false;
+                    spinner.classList.add('d-none');
+                }
             });
-                    
-            const result = await response.json();
-                    
-            resetMessage.classList.remove('d-none', 'alert-danger', 'alert-success');
-                    
-            if (result.success) {
-            resetMessage.classList.add('alert-success');
-            resetMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i> ' + result.message;
-            document.getElementById('resetEmail').value = '';
-            // Close modal after 3 seconds
-            setTimeout(() => {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
-            if (modal) modal.hide();
-            resetMessage.classList.add('d-none');
-            }, 3000);
-            } else {
-            resetMessage.classList.add('alert-danger');
-            resetMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> ' + result.message;
-            }
-            } catch (error) {
-            resetMessage.classList.remove('d-none');
-            resetMessage.classList.add('alert-danger');
-            resetMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> Something went wrong. Please try again.';
-            } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-            }
-            });
-            }
-        </script>
-        <partial name="_ValidationScriptsPartial" />
-    }
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

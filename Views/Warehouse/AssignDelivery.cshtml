@@ -244,6 +244,11 @@
                     form.find('button[type="submit"]').prop('disabled', true).removeClass('btn-danger').html('Overloaded');
                 }
             });
+
+            // Trigger change on load if an agent is pre-selected
+            if ($('select[name="agentId"]').val()) {
+                $('select[name="agentId"]').trigger('change');
+            }
         });
     </script>
 }

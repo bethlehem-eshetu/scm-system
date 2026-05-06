@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,6 +10,7 @@ namespace SCM_System.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+/*
             migrationBuilder.DropForeignKey(
                 name: "FK_Commissions_PurchaseOrders_PurchaseOrderId",
                 table: "Commissions");
@@ -17,6 +18,7 @@ namespace SCM_System.Data.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_Commissions_PurchaseOrderId",
                 table: "Commissions");
+*/
 
             migrationBuilder.AlterColumn<int>(
                 name: "PurchaseOrderId",
@@ -26,19 +28,20 @@ namespace SCM_System.Data.Migrations
                 oldClrType: typeof(int),
                 oldType: "int");
 
+            migrationBuilder.Sql("IF EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Commissions_PurchaseOrderId' AND object_id = OBJECT_ID('Commissions')) DROP INDEX IX_Commissions_PurchaseOrderId ON Commissions");
             migrationBuilder.CreateIndex(
                 name: "IX_Commissions_PurchaseOrderId",
                 table: "Commissions",
-                column: "PurchaseOrderId",
-                unique: true,
-                filter: "[PurchaseOrderId] IS NOT NULL");
+                column: "PurchaseOrderId");
 
+/*
             migrationBuilder.AddForeignKey(
                 name: "FK_Commissions_PurchaseOrders_PurchaseOrderId",
                 table: "Commissions",
                 column: "PurchaseOrderId",
                 principalTable: "PurchaseOrders",
                 principalColumn: "Id");
+*/
         }
 
         /// <inheritdoc />
