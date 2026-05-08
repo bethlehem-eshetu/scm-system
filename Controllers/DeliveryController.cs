@@ -152,6 +152,10 @@ namespace SCM_System.Controllers
                     await model.ProfilePicture.CopyToAsync(stream);
                 }
                 employee.ProfilePhotoPath = $"/uploads/profiles/{fileName}";
+                employee.User.ProfileImage = employee.ProfilePhotoPath;
+
+                // Sync Session for real-time header update
+                HttpContext.Session.SetString("ProfileImg", employee.User.ProfileImage ?? "/img/avatars/default.png");
             }
 
             // Update Password if requested
@@ -185,6 +189,13 @@ namespace SCM_System.Controllers
             employee.UpdatedBy = User.Identity?.Name ?? "System";
 
             await _context.SaveChangesAsync();
+
+            // Update Session for real-time UI reflect
+            HttpContext.Session.SetString("UserName", employee.User.FullName ?? "");
+            if (!string.IsNullOrEmpty(employee.ProfilePhotoPath))
+            {
+                HttpContext.Session.SetString("ProfileImg", employee.ProfilePhotoPath);
+            }
 
             TempData["SuccessMessage"] = "Settings updated successfully.";
             return RedirectToAction(nameof(Settings));
@@ -278,24 +289,46 @@ namespace SCM_System.Controllers
             return View(employee);
         }
 
-        public async Task<IActionResult> MyDeliveries()
+        public async Task<IActionResult> MyDeliveries(string? searchTerm = null, string? status = null)
         {
             var employeeId = await GetEmployeeIdAsync();
             if (employeeId == 0) return Unauthorized();
 
-            // Fetch POs assigned to this delivery agent
-            var assignedPOs = await _context.PurchaseOrders
+            // Fetch POs assigned to this delivery agent with filtering
+            var query = _context.PurchaseOrders
                 .Include(po => po.Order)
                     .ThenInclude(o => o.Retailer)
                         .ThenInclude(r => r.User)
+                .Include(po => po.Supplier)
                 .Include(po => po.PurchaseOrderItems)
                     .ThenInclude(i => i.Product)
-                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Completed")
+                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Completed");
+
+            // Apply Search Filter
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var search = searchTerm.ToLower();
+                query = query.Where(po => po.PONumber.ToLower().Contains(search) || 
+                                        po.Order.Retailer.BusinessName.ToLower().Contains(search) ||
+                                        po.Supplier.CompanyName.ToLower().Contains(search));
+            }
+
+            // Apply Status Filter
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(po => po.Status == status);
+            }
+
+            var assignedPOs = await query
                 .OrderByDescending(po => po.CreatedAt)
                 .ToListAsync();
 
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.Status = status;
+
             return View(assignedPOs);
         }
+
 
 
         [HttpPost]

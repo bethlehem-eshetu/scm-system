@@ -14,17 +14,26 @@
 
     <style>
         :root {
-            /* Light Theme Variables */
+            /* Premium Green Theme Variables */
             --sidebar-width: 280px;
-            --sidebar-bg: linear-gradient(180deg, #1e1b4b 0%, #111827 100%);
-            --sidebar-hover: rgba(255, 255, 255, 0.05);
-            --sidebar-color: #94a3b8;      /* Slate 400 */
+            --sidebar-bg: #1a3d31;
+            --sidebar-hover: rgba(212, 240, 109, 0.1);
+            --sidebar-color: rgba(255, 255, 255, 0.6);
             --sidebar-active: #ffffff;
-            --bg-color: #f8fafc;
-            --text-color: #333333;
+            --sidebar-active-bg: #d4f06d;
+            --sidebar-active-color: #1a3d31;
+            --bg-color: #f7f9f9;
+            --text-color: #1a3d31;
             --card-bg: #ffffff;
-            --border-color: rgba(0, 0, 0, 0.125);
+            --border-color: #edf2f2;
             --top-nav-bg: #ffffff;
+            --primary-color: #1a3d31;
+            --bs-primary: #1a3d31;
+            --bs-primary-rgb: 26, 61, 49;
+            --accent-color: #d4f06d;
+            --accent-green: #d4f06d;
+            --faint-green: #f2f6f6;
+            --sidebar-bg: #1a3d31;
         }
 
         /* Dark Theme Variables */
@@ -74,17 +83,18 @@
 
         #sidebar {
             width: var(--sidebar-width);
-            background: var(--sidebar-bg);
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #122921 100%);
             color: var(--sidebar-color);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
             position: fixed;
             height: 100vh;
             left: 0;
             top: 0;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         #sidebar.active {
@@ -92,31 +102,34 @@
         }
 
         .sidebar-header {
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.1);
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 2rem 1.5rem;
+            background: transparent;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
         }
 
         .sidebar-header .brand {
             color: white;
-            font-weight: 700;
-            font-size: 1.25rem;
+            font-weight: 800;
+            font-size: 1.5rem;
             text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
+            justify-content: flex-start;
+            gap: 15px;
+            letter-spacing: -0.5px;
         }
         
-        .sidebar-header .brand img {
-            height: 32px;
-            width: 32px;
-            border-radius: 8px;
+        .sidebar-header .brand div {
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header .brand:hover div {
+            transform: rotate(15deg) scale(1.1);
         }
 
         .sidebar-menu {
-            padding: 1rem 0;
+            padding: 1.5rem 0.75rem;
             list-style: none;
             margin: 0;
             flex-grow: 1;
@@ -124,79 +137,128 @@
         }
 
         .sidebar-menu::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
+            background: rgba(212, 240, 109, 0.1);
             border-radius: 10px;
         }
 
         .menu-label {
-            padding: 0.5rem 1.5rem;
-            font-size: 0.75rem;
+            padding: 1.5rem 1.25rem 0.5rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(255,255,255,0.4);
-            font-weight: 600;
-            margin-top: 1rem;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.3);
+            font-weight: 700;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 4px;
         }
 
         .sidebar-menu li a {
-            padding: 0.8rem 1.5rem;
-            font-size: 0.95rem;
+            padding: 0.9rem 1.25rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
             color: var(--sidebar-color);
             text-decoration: none;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+            position: relative;
+            font-weight: 500;
         }
 
         .sidebar-menu li a i {
-            width: 24px;
+            width: 28px;
             font-size: 1.1rem;
-            margin-right: 10px;
+            margin-right: 12px;
             text-align: center;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            opacity: 0.7;
         }
 
-        .sidebar-menu li a:hover,
-        .sidebar-menu li.active > a {
-            background: var(--sidebar-hover);
-            color: var(--sidebar-active);
-            border-left-color: var(--primary-color);
+        .sidebar-menu li a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            padding-left: 1.5rem;
         }
 
         .sidebar-menu li a:hover i {
-            transform: translateX(3px);
-            color: #818cf8;
+            opacity: 1;
+            transform: scale(1.1);
+            color: var(--accent-green);
         }
+
+        .sidebar-menu li.active > a {
+            background: var(--sidebar-active-bg);
+            color: var(--sidebar-active-color) !important;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(212, 240, 109, 0.2);
+        }
+
+        .sidebar-menu li.active > a i {
+            color: var(--sidebar-active-color) !important;
+            opacity: 1;
+        }
+
+        .sidebar-menu li.active > a::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            width: 6px;
+            height: 6px;
+            background: var(--sidebar-active-color);
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+
 
         /* User Profile in Sidebar */
         .sidebar-user {
             padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.2);
             border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: auto;
         }
         
         .sidebar-user .user-info {
             display: flex;
             align-items: center;
+            gap: 12px;
         }
         
         .sidebar-user .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: var(--primary-color);
-            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: var(--accent-green);
+            color: var(--sidebar-active-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-right: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
         }
+
+        .sidebar-user .user-details .name {
+            display: block;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-user .user-details .role {
+            display: block;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
 
         /* Content Area */
         #content {
@@ -248,10 +310,29 @@
         .main-container {
             padding: 2rem;
             flex-grow: 1;
+            width: 100%;
         }
 
-        /* Responsive */
-        @@media (max-width: 768px) {
+        /* Overlay for Mobile Sidebar */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            z-index: 999;
+            top: 0;
+            left: 0;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Responsive Breakpoints */
+        @@media (max-width: 991.98px) {
             #sidebar {
                 margin-left: calc(-1 * var(--sidebar-width));
             }
@@ -259,16 +340,32 @@
                 margin-left: 0;
             }
             #content {
-                width: 100%;
+                width: 100% !important;
+                margin-left: 0 !important;
             }
-            #content.active {
-                /* When sidebar is active on mobile, push content slightly or overlay */
-                transform: translateX(var(--sidebar-width));
+            .top-navbar {
+                padding: 0.75rem 1rem;
             }
             .main-container {
                 padding: 1rem;
             }
         }
+
+        @@media (max-width: 575.98px) {
+            .top-navbar {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .navbar-actions {
+                width: 100%;
+                justify-content: space-between;
+                order: 2;
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+                border-top: 1px solid var(--border-color);
+            }
+        }
+
         
         /* Dashboard Cards & Aesthetic Utilities */
         .card {
@@ -282,14 +379,37 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
         }
         
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+        .upgrade-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
         }
         
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
+        .upgrade-icon {
+            font-size: 1.5rem;
+            color: var(--sidebar-active-bg);
+        }
+        
+        .x-small { font-size: 0.7rem; }
+        .hover-white:hover { color: white !important; }
+
+        .btn-accent-green {
+            background-color: var(--sidebar-active-bg);
+            border: none;
+            color: var(--sidebar-active-color);
+            transition: all 0.3s ease;
+        }
+
+        .btn-accent-green:hover {
+            background-color: #ffffff;
+            color: var(--sidebar-active-color);
+            transform: translateY(-2px);
+        }
+
+        /* Top Navbar Refinement */
+        .search-bar-premium input:focus {
+            background-color: #ffffff !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
         }
     </style>
 
@@ -299,18 +419,23 @@
     <div class="wrapper">
         <!-- Sidebar -->
         <nav id="sidebar">
-            <div class="sidebar-header">
-                <a href="/" class="brand">
-                    <img src="~/images/ethiochain-logo.jpg" alt="Logo" />
-                    <span>EthioChain SCM</span>
+            <div class="sidebar-header border-0 mt-3">
+                <a href="/" class="brand d-flex align-items-center gap-3 ps-3">
+                    <div class="bg-accent-green text-dark-green rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <span class="fs-4 fw-bold text-white tracking-tight">SCM</span>
                 </a>
             </div>
 
+            @{
+                var role = Context.Session.GetString("UserRole");
+            }
+
             <ul class="sidebar-menu">
-                <li class="menu-label">Menu</li>
-                
-                @{
-                    var role = Context.Session.GetString("UserRole");
+                @if (role != "DeliveryAgent")
+                {
+                    <li class="menu-label">Menu</li>
                 }
 
                 @if (role == "Admin")
@@ -409,7 +534,7 @@
                         <a asp-controller="Message" asp-action="Inbox"><i class="fas fa-comment-dots"></i> Messaging Hub</a>
                     </li>
                     <li>
-                        <a asp-controller="Warehouse" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
+                        <a asp-controller="Warehouse" asp-action="Settings"><i class="fas fa-user-cog"></i> Account Settings</a>
                     </li>
                     <li>
                         <a asp-controller="Warehouse" asp-action="Reports"><i class="fas fa-chart-line"></i> Performance Reports</a>
@@ -418,53 +543,28 @@
                         <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
                     </li>
                     <li>
-                        <a asp-controller="Warehouse" asp-action="AccountSettings"><i class="fas fa-user-shield"></i> Security Settings</a>
+                        <a asp-controller="Warehouse" asp-action="Settings"><i class="fas fa-user-shield"></i> Security Settings</a>
                     </li>
                 }
                 else if (role == "DeliveryAgent")
                 {
+                    <li class="menu-label">Main Menu</li>
                     <li>
-                        <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                        <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
                     </li>
                     <li>
-                        <a asp-controller="Delivery" asp-action="MyDeliveries"><i class="fas fa-route"></i> My Deliveries</a>
+                        <a asp-controller="Delivery" asp-action="MyDeliveries"><i class="fas fa-truck-loading"></i> Active Deliveries</a>
                     </li>
+                    
+                    <li class="menu-label">Navigation</li>
                     <li>
-                        <a asp-controller="Delivery" asp-action="RouteItinerary"><i class="fas fa-magic"></i> Route Optimization</a>
-                    </li>
-                    <li class="menu-label">Account</li>
-                    <li>
-                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Delivery" asp-action="Settings"><i class="fas fa-user-cog"></i> Settings</a>
+                        <a asp-controller="Delivery" asp-action="RouteItinerary"><i class="fas fa-map-marked-alt"></i> Smart Route</a>
                     </li>
                 }
-            </ul>
 
-            <div class="sidebar-user">
-                <div class="user-info">
-                    <div class="avatar shadow-sm border border-2 border-white border-opacity-10 overflow-hidden">
-                        @{
-                            var name = Context.Session.GetString("UserName") ?? "U";
-                            var pImg = Context.Session.GetString("ProfileImg");
-                            if (!string.IsNullOrEmpty(pImg))
-                            {
-                                <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
-                            }
-                            else
-                            {
-                                @name.Substring(0, 1).ToUpper()
-                            }
-                        }
-                    </div>
-                    <div>
-                        <div class="text-white fw-bold" style="font-size: 0.9rem;">@name</div>
-                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">@role</div>
-                    </div>
-                </div>
-            </div>
+            </ul>
         </nav>
+
 
         <!-- Page Content -->
         <div id="content">
@@ -509,15 +609,47 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" aria-labelledby="notifDropdown" style="width: 340px; max-height: 420px; overflow-y: auto;" id="notifDropdownMenu">
                             <li class="px-2 py-1 mb-1 d-flex justify-content-between align-items-center">
                                 <span class="fw-bold small">Notifications</span>
-                                <a href="/Notification/Index" class="text-primary small text-decoration-none">View All</a>
+                                <a href="/Notification/Index" class="text-dark-green fw-bold small text-decoration-none">View All</a>
                             </li>
                             <li><hr class="dropdown-divider my-1"></li>
                             <div id="notifDropdownItems"><li class="text-center py-3 text-muted small"><i class="fas fa-spinner fa-spin"></i> Loading...</li></div>
                         </ul>
                     </div>
-                    <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
-                        <i class="fas fa-sign-out-alt me-1"></i> Logout
-                    </a>
+
+                    <!-- User Profile in Top Bar -->
+                    <div class="dropdown">
+                        <button class="btn btn-light border-0 shadow-sm p-1 rounded-pill d-flex align-items-center gap-2 pe-3" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <div class="avatar shadow-sm border-0 overflow-hidden d-flex align-items-center justify-content-center bg-dark-green" style="width: 34px; height: 34px; border-radius: 50%;">
+                                @{
+                                    var uName = Context.Session.GetString("UserName") ?? "User";
+                                    var profileImg = Context.Session.GetString("ProfileImg");
+                                    var finalImg = !string.IsNullOrEmpty(profileImg) ? profileImg : "/img/avatars/default.png";
+                                }
+                                <img src="@finalImg?v=@DateTime.Now.Ticks" 
+                                     class="img-fluid h-100 w-100 object-fit-cover @(string.IsNullOrEmpty(profileImg) ? "opacity-50" : "")" 
+                                     alt="User" 
+                                     onerror="this.src='/img/avatars/default.png'"/>
+                            </div>
+                            <span class="small fw-bold text-dark-green d-none d-md-inline">@uName</span>
+                            <i class="fas fa-chevron-down extra-small text-muted opacity-50"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2" aria-labelledby="userDropdown">
+                            @{
+                                string settingsController = role switch {
+                                    "Supplier" => "Supplier",
+                                    "Retailer" => "Retailer",
+                                    "WarehouseManager" => "Warehouse",
+                                    "DeliveryAgent" => "Delivery",
+                                    "Admin" => "Admin",
+                                    _ => "Account"
+                                };
+                            }
+                            <li><a class="dropdown-item py-2" asp-controller="@settingsController" asp-action="Settings"><i class="fas fa-user-cog me-2 text-dark-green"></i>Settings</a></li>
+                            <li><a class="dropdown-item py-2" asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt me-2 text-dark-green"></i>Support</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2 text-danger" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
                 </div>
             </nav>
 
@@ -542,6 +674,10 @@
             </main>
         </div>
     </div>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay"></div>
+
 
     <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -550,10 +686,12 @@
     
     <script>
         $(document).ready(function () {
-            $('#sidebarCollapse').on('click', function () {
+            $('#sidebarCollapse, .sidebar-overlay').on('click', function () {
                 $('#sidebar').toggleClass('active');
                 $('#content').toggleClass('active');
+                $('.sidebar-overlay').toggleClass('active');
             });
+
             
             // Highlight active menu item based on current URL path
             var path = window.location.pathname;
@@ -576,7 +714,7 @@
                         res.items.forEach(function(n) {
                             let url = n.actionUrl || '/Notification/Index';
                             html += `<li>
-                                <a class="dropdown-item rounded-3 py-2 px-3 mb-1 notif-item ${n.isRead ? '' : 'bg-primary-subtle'}" href="${url}">
+                                <a class="dropdown-item rounded-3 py-2 px-3 mb-1 notif-item ${n.isRead ? '' : 'bg-faint-green'}" href="${url}">
                                     <div class="d-flex align-items-start gap-2">
                                         <i class="fas fa-bell text-warning mt-1 flex-shrink-0"></i>
                                         <div class="flex-grow-1 overflow-hidden">

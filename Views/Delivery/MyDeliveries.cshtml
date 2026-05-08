@@ -7,27 +7,56 @@
 
 <div class="container-fluid px-4 py-4">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Logistics Operations</h2>
-            <p class="text-muted mb-0">Professional delivery fulfillment and verification hub.</p>
+            <h1 class="h2 fw-bold text-dark-green mb-1">Logistics Operations</h1>
+            <p class="text-muted small mb-0">Professional delivery fulfillment and verification hub.</p>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <a asp-action="RouteItinerary" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold d-none d-lg-flex align-items-center">
-                <i class="fas fa-magic me-2"></i> OPEN SMART ROUTE
+            <a asp-action="RouteItinerary" class="btn btn-accent-green rounded-pill px-4 shadow-sm fw-bold d-none d-lg-flex align-items-center text-dark-green">
+                <i class="fas fa-magic me-2"></i> SMART ROUTE
             </a>
-            <div class="text-end d-none d-md-block">
-                <div class="small fw-bold text-dark">@User.Identity.Name</div>
-                <div class="smaller text-muted">Delivery Professional</div>
-            </div>
-            <div class="bg-primary bg-opacity-10 p-2 rounded-3">
-                <i class="fas fa-truck text-primary fa-lg"></i>
+            <div class="bg-faint-green p-2 rounded-circle shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-truck text-dark-green"></i>
             </div>
         </div>
     </div>
 
+    <!-- Advanced Filtering Section -->
+    <div class="card border-0 shadow-premium rounded-5 mb-5 overflow-hidden bg-white">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-lg-5">
+                    <div class="input-group input-group-lg bg-faint-green rounded-pill px-3 py-1 border-0">
+                        <span class="input-group-text bg-transparent border-0 text-muted"><i class="fas fa-search"></i></span>
+                        <input type="text" name="searchTerm" class="form-control bg-transparent border-0 shadow-none text-dark-green small fw-medium" 
+                               placeholder="Search Retailer, Supplier, or PO#..." value="@ViewBag.SearchTerm">
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <select name="status" class="form-select form-select-lg bg-faint-green border-0 rounded-pill px-4 py-2 text-dark-green small fw-medium shadow-none">
+                        <option value="">All Statuses</option>
+                        <option value="@POStatus.Ready" selected="@(ViewBag.Status == POStatus.Ready)">Ready to Ship</option>
+                        <option value="@POStatus.InTransit" selected="@(ViewBag.Status == POStatus.InTransit)">In Transit</option>
+                        <option value="@POStatus.Failed" selected="@(ViewBag.Status == POStatus.Failed)">Failed</option>
+                        <option value="@POStatus.Delivered" selected="@(ViewBag.Status == POStatus.Delivered)">Delivered</option>
+                    </select>
+                </div>
+                <div class="col-lg-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark-green rounded-pill px-4 fw-bold flex-grow-1 shadow-sm">
+                        <i class="fas fa-filter me-2"></i> Apply Filter
+                    </button>
+                    <a asp-action="MyDeliveries" class="btn btn-white border rounded-pill px-3 fw-bold text-muted shadow-sm">
+                        <i class="fas fa-redo"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <!-- Active Delivery Cards -->
-    <div class="row g-4">
+    <div class="row g-4" id="deliveryCardsContainer">
         @if (Model != null && Model.Any())
         {
             foreach (var po in Model)
@@ -35,60 +64,66 @@
                 var isFailed = po.Status == POStatus.Failed;
                 var isDelivered = po.Status == POStatus.Delivered || po.Status == POStatus.Completed;
                 
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="col-12 delivery-card" 
+                     data-retailer="@(po.Order?.Retailer?.BusinessName?.ToLower() ?? "")" 
+                     data-supplier="@(po.Supplier?.CompanyName?.ToLower() ?? "")" 
+                     data-ponumber="@po.PONumber.ToLower()" 
+                     data-status="@po.Status">
+                    <div class="card border-0 shadow-premium rounded-5 overflow-hidden mb-4 bg-white">
+
                         <div class="card-body p-0">
                             <div class="row g-0">
                                 <!-- Status Line -->
-                                <div class="col-12" style="height: 4px; background: @(isFailed ? "var(--bs-danger)" : (isDelivered ? "var(--bs-success)" : "var(--bs-primary)"));"></div>
+                                <div class="col-12" style="height: 6px; background: @(isFailed ? "#dc3545" : (isDelivered ? "#198754" : "var(--dark-green)"));"></div>
                                 
                                 <!-- Info Panel -->
-                                <div class="col-lg-4 p-4 border-end bg-light bg-opacity-25">
+                                <div class="col-lg-4 p-4 border-end bg-faint-green bg-opacity-50">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
-                                            <span class="badge bg-indigo bg-opacity-10 text-#17a2b8 rounded-pill px-3 mb-2">@po.PONumber</span>
-                                            <h4 class="fw-bold text-dark mb-0">@po.Order?.Retailer?.BusinessName</h4>
+                                            <span class="badge bg-white text-dark-green border border-light rounded-pill px-3 mb-2 small fw-bold">#@po.PONumber</span>
+                                            <h4 class="fw-bold text-dark-green mb-0">@po.Order?.Retailer?.BusinessName</h4>
                                         </div>
                                         @if (isFailed)
                                         {
-                                            <span class="badge bg-danger rounded-pill px-3"><i class="fas fa-exclamation-circle me-1"></i> FAILED</span>
+                                            <span class="status-badge bg-soft-danger text-danger"><i class="fas fa-exclamation-circle me-1"></i> FAILED</span>
                                         }
                                         else
                                         {
-                                            <span class="badge @(po.Status == POStatus.InTransit ? "bg-primary" : "bg-warning") rounded-pill px-3">@po.Status</span>
+                                            <span class="status-badge @(po.Status == POStatus.InTransit ? "bg-soft-success text-success" : "bg-soft-warning text-warning")">@po.Status</span>
                                         }
                                     </div>
                                     
                                     <div class="space-y-3 mt-4">
-                                        <div class="d-flex align-items-center text-muted">
-                                            <div class="bg-white shadow-sm p-2 rounded-3 me-3" style="width: 38px; text-align: center;">
-                                                <i class="fas fa-map-marker-alt text-primary"></i>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-white shadow-sm p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-map-marker-alt text-dark-green"></i>
                                             </div>
                                             <div>
-                                                <div class="smaller text-uppercase fw-bold ls-1">Delivery Address</div>
-                                                <div class="text-dark fw-medium small">@po.DeliveryAddress</div>
+                                                <div class="x-small text-uppercase fw-bold text-muted ls-1">Delivery Address</div>
+                                                <div class="text-dark-green fw-bold small">@po.DeliveryAddress</div>
                                             </div>
                                         </div>
                                         
-                                        <div class="d-flex align-items-center text-muted mt-3">
-                                            <div class="bg-white shadow-sm p-2 rounded-3 me-3" style="width: 38px; text-align: center;">
-                                                <i class="fas fa-user-circle text-info"></i>
+                                        <div class="d-flex align-items-center mt-3">
+                                            <div class="bg-white shadow-sm p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-accent-green"></i>
                                             </div>
                                             <div>
-                                                <div class="smaller text-uppercase fw-bold ls-1">Recipient</div>
-                                                <div class="text-dark fw-medium small">@po.Order?.Retailer?.User?.FullName (@po.Order?.Retailer?.User?.PhoneNumber)</div>
+                                                <div class="x-small text-uppercase fw-bold text-muted ls-1">Recipient</div>
+                                                <div class="text-dark-green fw-bold small">@po.Order?.Retailer?.User?.FullName</div>
+                                                <div class="x-small text-muted">@po.Order?.Retailer?.User?.PhoneNumber</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="mt-4 pt-4 border-top">
+                                    <div class="mt-4 pt-4 border-top border-light">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="text-muted small">Items Count</span>
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">@po.PurchaseOrderItems?.Count Items</span>
+                                            <span class="badge bg-white text-dark-green rounded-pill px-2 py-1 small border border-light">@po.PurchaseOrderItems?.Count Items</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mt-2">
                                             <span class="text-muted small">Total Value</span>
-                                            <span class="fw-bold text-dark">@po.TotalAmount.ToString("N2") ETB</span>
+                                            <span class="fw-bold text-dark-green">@po.TotalAmount.ToString("N2") ETB</span>
                                         </div>
                                     </div>
                                 </div>
@@ -106,7 +141,7 @@
                                             <div class="step-label">Picked</div>
                                         </div>
                                         <div class="timeline-step @(po.Status == POStatus.Packed ? "active" : (po.PackedAt.HasValue ? "completed" : "pending"))">
-                                            <div class="step-icon"><i class="fas fa-box shadow-sm"></i></div>
+                                            <div class="step-icon"><i class="fas fa-box"></i></div>
                                             <div class="step-label">Packed</div>
                                         </div>
                                         <div class="timeline-step @(po.Status == POStatus.InTransit ? "active" : (isDelivered ? "completed" : "pending"))">
@@ -126,24 +161,24 @@
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="purchaseOrderId" value="@po.Id" />
                                                 <input type="hidden" name="status" value="@POStatus.InTransit" />
-                                                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
-                                                    <i class="fas fa-play me-2"></i> START OUT FOR DELIVERY
+                                                <button type="submit" class="btn btn-dark-green btn-lg rounded-pill px-5 shadow-premium fw-bold">
+                                                    <i class="fas fa-play me-2"></i> START DELIVERY
                                                 </button>
                                             </form>
                                         }
                                         else if (po.Status == POStatus.InTransit)
                                         {
-                                            <button class="btn btn-outline-danger btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#failModal-@po.Id">
-                                                <i class="fas fa-times-circle me-2"></i> Report Failure
+                                            <button class="btn btn-faint-green text-danger btn-lg rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#failModal-@po.Id">
+                                                <i class="fas fa-times-circle me-2"></i> Fail
                                             </button>
-                                            <button class="btn btn-success btn-lg rounded-pill px-5 shadow-sm" data-bs-toggle="modal" data-bs-target="#deliverModal-@po.Id">
-                                                <i class="fas fa-check-double me-2"></i> COMPLETE DELIVERY
+                                            <button class="btn btn-accent-green text-dark-green btn-lg rounded-pill px-5 shadow-premium fw-bold" data-bs-toggle="modal" data-bs-target="#deliverModal-@po.Id">
+                                                <i class="fas fa-check-double me-2"></i> COMPLETE
                                             </button>
                                         }
                                         else if (isFailed)
                                         {
-                                            <div class="alert alert-soft-danger py-2 px-3 rounded-pill mb-0">
-                                                <i class="fas fa-info-circle me-1"></i> Awaiting manager reassignment. Reasoning: @po.FailureReason
+                                            <div class="alert bg-soft-danger text-danger border-0 py-2 px-4 rounded-pill mb-0 small fw-bold">
+                                                <i class="fas fa-info-circle me-2"></i> Awaiting reassignment. Reasoning: @po.FailureReason
                                             </div>
                                         }
                                     </div>
@@ -153,12 +188,12 @@
                     </div>
                 </div>
 
-                <!-- DELIVERY SUCCESS MODAL (ELITE) -->
+                <!-- DELIVERY SUCCESS MODAL -->
                 <div class="modal fade" id="deliverModal-@po.Id" tabindex="-1">
                     <div class="modal-dialog modal-lg modal-dialog-centered">
-                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                            <div class="modal-header bg-success text-white py-3 px-4">
-                                <h5 class="modal-title fw-bold"><i class="fas fa-check-circle me-2"></i>Complete Delivery - @po.PONumber</h5>
+                        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden">
+                            <div class="modal-header bg-dark-green text-white py-4 px-4 border-0">
+                                <h5 class="modal-title fw-bold"><i class="fas fa-check-circle me-2"></i>Complete Delivery - #@po.PONumber</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
                             <form asp-action="UpdateStatus" method="post" enctype="multipart/form-data" id="form-@po.Id">
@@ -174,7 +209,7 @@
                                             <div class="p-3 border rounded-4 h-100 bg-light bg-opacity-50">
                                                 <label class="form-label fw-bold small text-muted text-uppercase ls-1">Step 1: Identity Verification</label>
                                                 <div class="d-grid gap-2">
-                                                    <button type="button" class="btn btn-white border shadow-sm rounded-pill text-primary fw-bold" 
+                                                    <button type="button" class="btn btn-white border shadow-sm rounded-pill text-dark-green fw-bold" 
                                                             data-bs-toggle="modal" data-bs-target="#qrScannerModal-@po.Id">
                                                         <i class="fas fa-qrcode me-2"></i> Scan Customer QR
                                                     </button>
@@ -204,36 +239,36 @@
                                     </div>
 
                                     <!-- 2. Evidence Section -->
-                                    <div class="row g-4">
-                                        <div class="col-md-7">
-                                            <div class="p-3 border rounded-4 bg-light bg-opacity-50">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <label class="form-label fw-bold small text-muted text-uppercase ls-1 mb-0">Step 3: Digital Signature</label>
-                                                    <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none" onclick="clearSignature(@po.Id)">Clear</button>
-                                                </div>
-                                                <canvas id="pad-@po.Id" class="bg-white border rounded-3 w-100 shadow-inner" style="height: 180px; cursor: crosshair;"></canvas>
-                                                <div class="smaller text-muted mt-1">Please ask the customer to sign above</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <div class="p-3 border rounded-4 bg-light bg-opacity-50 h-100">
-                                                <label class="form-label fw-bold small text-muted text-uppercase ls-1">Step 4: Photo Proof</label>
-                                                <div class="border-dashed-custom rounded-3 text-center py-4 bg-white" onclick="document.getElementById('img-@po.Id').click()" style="cursor: pointer;">
-                                                    <input type="file" name="proofImage" id="img-@po.Id" class="d-none" accept="image/*" onchange="previewImg(@po.Id)">
-                                                    <div id="previewBox-@po.Id">
-                                                        <i class="fas fa-camera fa-2x text-muted mb-2"></i>
-                                                        <div class="smaller fw-bold text-primary">UPLOAD PHOTO</div>
-                                                    </div>
-                                                    <img id="previewImg-@po.Id" src="#" class="img-fluid rounded d-none" style="max-height: 120px;">
-                                                </div>
-                                                <textarea name="deliveryNotes" class="form-control form-control-sm mt-3 border-0 bg-white" rows="2" placeholder="Delivery notes (optional)..."></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
+                                     <div class="row g-4">
+                                         <div class="col-md-7">
+                                             <div class="p-3 border rounded-4 bg-light bg-opacity-50">
+                                                 <div class="d-flex justify-content-between align-items-center mb-2">
+                                                     <label class="form-label fw-bold small text-muted text-uppercase ls-1 mb-0">Step 3: Digital Signature</label>
+                                                     <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none x-small" onclick="clearSignature(@po.Id)">Clear</button>
+                                                 </div>
+                                                <canvas id="pad-@po.Id" class="bg-white border rounded-4 w-100 shadow-sm" style="height: 180px; cursor: crosshair;"></canvas>
+                                                <div class="x-small text-muted mt-2">Please ask the customer to sign above</div>
+                                             </div>
+                                         </div>
+                                         <div class="col-md-5">
+                                             <div class="p-3 border rounded-4 bg-light bg-opacity-50 h-100">
+                                                 <label class="form-label fw-bold small text-muted text-uppercase ls-1">Step 4: Photo Proof</label>
+                                                <div class="border-dashed-custom rounded-4 text-center py-4 bg-white" onclick="document.getElementById('img-@po.Id').click()" style="cursor: pointer;">
+                                                     <input type="file" name="proofImage" id="img-@po.Id" class="d-none" accept="image/*" onchange="previewImg(@po.Id)">
+                                                     <div id="previewBox-@po.Id">
+                                                         <i class="fas fa-camera fa-2x text-muted mb-2"></i>
+                                                        <div class="x-small fw-bold text-dark-green">UPLOAD PHOTO</div>
+                                                     </div>
+                                                     <img id="previewImg-@po.Id" src="#" class="img-fluid rounded d-none" style="max-height: 120px;">
+                                                 </div>
+                                                <textarea name="deliveryNotes" class="form-control form-control-sm mt-3 border-0 bg-white rounded-3 p-3" rows="2" placeholder="Delivery notes..."></textarea>
+                                             </div>
+                                         </div>
+                                     </div>
                                 </div>
-                                <div class="modal-footer bg-light border-0 px-4 py-3">
-                                    <button type="button" class="btn btn-white border rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-success rounded-pill px-5 shadow-sm" onclick="return finalizeDelivery(@po.Id)">
+                                <div class="modal-footer bg-faint-green border-0 px-4 py-4">
+                                    <button type="button" class="btn btn-white border-0 rounded-pill px-4 text-muted small fw-bold" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-dark-green rounded-pill px-5 shadow-premium fw-bold" onclick="return finalizeDelivery(@po.Id)">
                                         <i class="fas fa-check-double me-2"></i>SUBMIT COMPLETE DELIVERY
                                     </button>
                                 </div>
@@ -245,7 +280,7 @@
                 <!-- DELIVERY FAILURE MODAL -->
                 <div class="modal fade" id="failModal-@po.Id" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content border-0 shadow rounded-4">
+                        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden">
                             <div class="modal-header bg-danger text-white border-0">
                                 <h5 class="modal-title fw-bold">Report Delivery Failure</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -254,8 +289,8 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="purchaseOrderId" value="@po.Id" />
                                 <div class="modal-body p-4">
-                                    <label class="form-label fw-bold">Reason for Failure</label>
-                                    <select name="reason" class="form-select border-0 bg-light" required>
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Reason for Failure</label>
+                                    <select name="reason" class="form-select border-0 bg-faint-green rounded-3 p-3" required>
                                         <option value="">Select a reason...</option>
                                         <option value="Customer Unavailable">Customer Unavailable</option>
                                         <option value="Wrong Address">Wrong Address/Address Not Found</option>
@@ -263,11 +298,11 @@
                                         <option value="Vehicle Breakdown">Logistics/Vehicle Failure</option>
                                         <option value="Safety Issue">Safety/Security Issue</option>
                                     </select>
-                                    <div class="form-text mt-3">This will hold the order for reassignment or retry by your manager.</div>
+                                    <div class="x-small text-muted mt-3">This will hold the order for reassignment or retry by your manager.</div>
                                 </div>
-                                <div class="modal-footer border-0">
-                                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">Confirm Failure</button>
+                                <div class="modal-footer bg-faint-green border-0 px-4 py-3">
+                                    <button type="button" class="btn btn-white border-0 rounded-pill px-4 text-muted small fw-bold" data-bs-modal="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm fw-bold">Confirm Failure</button>
                                 </div>
                             </form>
                         </div>
@@ -281,9 +316,9 @@
         else
         {
             <div class="col-12 text-center py-5">
-                <div class="bg-light bg-opacity-50 p-5 rounded-5 border border-dashed-custom">
-                    <i class="fas fa-clipboard-list fa-4x text-muted mb-4"></i>
-                    <h4 class="fw-bold text-dark">No Active Route Found</h4>
+                <div class="bg-faint-green p-5 rounded-5 border border-dashed-custom">
+                    <i class="fas fa-clipboard-list fa-4x text-dark-green opacity-25 mb-4"></i>
+                    <h4 class="fw-bold text-dark-green">No Active Route Found</h4>
                     <p class="text-muted">You have no pending deliveries assigned. Enjoy your break!</p>
                 </div>
             </div>
@@ -292,11 +327,33 @@
 </div>
 
 <style>
-    .bg-indigo { background: #4f46e5; }
-    .text-indigo { color: #4f46e5; }
+    :root {
+        --dark-green: #1a3d31;
+        --accent-green: #d4f06d;
+        --faint-green: #f2f6f6;
+    }
+
+    .text-dark-green { color: var(--dark-green) !important; }
+    .bg-dark-green { background-color: var(--dark-green) !important; }
+    .bg-accent-green { background-color: var(--accent-green) !important; }
+    .text-accent-green { color: var(--accent-green) !important; }
+    .bg-faint-green { background-color: var(--faint-green) !important; }
+    .shadow-premium { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important; }
+    .rounded-5 { border-radius: 24px !important; }
+    .x-small { font-size: 0.7rem; }
+
     .ls-1 { letter-spacing: 1px; }
-    .smaller { font-size: 0.75rem; }
     .space-y-3 > * + * { margin-top: 0.75rem; }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
 
     /* Timeline Styling */
     .delivery-timeline {
@@ -311,7 +368,7 @@
         left: 50px;
         right: 50px;
         height: 2px;
-        background: #e5e7eb;
+        background: var(--faint-green);
         z-index: 0;
     }
     .timeline-step {
@@ -327,7 +384,7 @@
         height: 40px;
         border-radius: 50%;
         background: white;
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--faint-green);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -335,16 +392,16 @@
         transition: all 0.3s ease;
         margin-bottom: 8px;
     }
-    .step-label { font-size: 0.7rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
+    .step-label { font-size: 0.65rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .timeline-step.completed .step-icon { background: #10b981; border-color: #10b981; color: white; }
-    .timeline-step.completed .step-label { color: #10b981; }
+    .timeline-step.completed .step-icon { background: var(--dark-green); border-color: var(--dark-green); color: white; }
+    .timeline-step.completed .step-label { color: var(--dark-green); }
     
-    .timeline-step.active .step-icon { background: #4f46e5; border-color: #4f46e5; color: white; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-    .timeline-step.active .step-label { color: #4f46e5; }
+    .timeline-step.active .step-icon { background: var(--accent-green); border-color: var(--accent-green); color: var(--dark-green); box-shadow: 0 0 0 4px rgba(212, 240, 109, 0.2); }
+    .timeline-step.active .step-label { color: var(--dark-green); }
 
-    .border-dashed-custom { border: 2px dashed #e5e7eb; transition: all 0.2s; }
-    .border-dashed-custom:hover { border-color: #4f46e5; background: #f9fafb !important; }
+    .border-dashed-custom { border: 2px dashed var(--faint-green); transition: all 0.2s; }
+    .border-dashed-custom:hover { border-color: var(--dark-green); background: white !important; }
 
     canvas { touch-action: none; }
 </style>
@@ -481,5 +538,79 @@
                 // Trigger auto-submit maybe? No, let user confirm notes/checklist.
             }
         };
+
+        // Live Filtering Logic
+        $(document).ready(function() {
+            const $searchInput = $('input[name="searchTerm"]');
+            const $statusSelect = $('select[name="status"]');
+            const $cards = $('.delivery-card');
+            const $container = $('#deliveryCardsContainer');
+            
+            // Create No Results element if it doesn't exist
+            if ($('.no-results').length === 0) {
+                const noResultsHtml = `
+                    <div class="col-12 text-center py-5 no-results" style="display:none;">
+                        <div class="bg-faint-green p-5 rounded-5 border border-dashed-custom">
+                            <i class="fas fa-search fa-4x text-dark-green opacity-25 mb-4"></i>
+                            <h4 class="fw-bold text-dark-green">No matches found</h4>
+                            <p class="text-muted">Try adjusting your search or filters.</p>
+                        </div>
+                    </div>`;
+                $container.append(noResultsHtml);
+            }
+            
+            const $noResults = $('.no-results');
+
+            function filterCards() {
+                const term = ($searchInput.val() || "").toLowerCase().trim();
+                const status = ($statusSelect.val() || "").trim();
+                let visibleCount = 0;
+
+                $cards.each(function() {
+                    const $card = $(this);
+                    const retailer = ($card.attr('data-retailer') || "").toLowerCase();
+                    const supplier = ($card.attr('data-supplier') || "").toLowerCase();
+                    const poNumber = ($card.attr('data-ponumber') || "").toLowerCase();
+                    const cardStatus = $card.attr('data-status') || "";
+
+                    const matchesSearch = term === "" || 
+                                          retailer.indexOf(term) !== -1 || 
+                                          supplier.indexOf(term) !== -1 || 
+                                          poNumber.indexOf(term) !== -1;
+                    
+                    const matchesStatus = status === "" || cardStatus === status;
+
+                    if (matchesSearch && matchesStatus) {
+                        $card.show();
+                        visibleCount++;
+                    } else {
+                        $card.hide();
+                    }
+                });
+
+                if (visibleCount === 0 && $cards.length > 0) {
+                    $noResults.show();
+                } else {
+                    $noResults.hide();
+                }
+            }
+
+            // Bind events for live filtering
+            $searchInput.on('input keyup change', filterCards);
+            $statusSelect.on('change', filterCards);
+            
+            // Prevent form submission for GET forms to keep it live
+            $('form').on('submit', function(e) {
+                if ($(this).attr('method')?.toLowerCase() === 'get') {
+                    e.preventDefault();
+                    filterCards();
+                }
+            });
+
+            // Run once on load
+            filterCards();
+        });
     </script>
+
+
 }

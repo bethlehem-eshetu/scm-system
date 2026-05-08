@@ -1,319 +1,362 @@
 @model SCM_System.Models.ViewModels.SupplierDashboardViewModel
 
 @{
-    ViewData["Title"] = "Supplier Financial Command Center";
+    ViewData["Title"] = "Supplier Financial Pulse";
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4 bg-light min-vh-100">
+<div class="container-fluid py-4 px-4">
+    <!-- Premium Header (SCM Style) -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
+        <div>
+            <h1 class="h2 fw-bold text-dark-green mb-1">Welcome back, @(Context.Session.GetString("UserName") ?? "Supplier")</h1>
+            <p class="text-muted small mb-0">Your financial command center is updated and ready.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 gap-sm-3 align-items-center">
+            <div class="search-bar-premium position-relative flex-grow-1 flex-md-grow-0">
+                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm w-100" placeholder="Search transactions..." style="min-width: 250px; height: 45px;">
+            </div>
+            <button class="btn btn-white rounded-circle shadow-sm p-0 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 45px; height: 45px;" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                <i class="fas fa-wallet text-dark-green"></i>
+            </button>
+        </div>
+    </div>
+
     @if (ViewBag.ApprovalStatusMessage != null)
     {
-        var alertClass = ViewBag.ApprovalStatusType == "Approved" ? "alert-success" : "alert-danger";
-        var alertIcon = ViewBag.ApprovalStatusType == "Approved" ? "fa-check-circle" : "fa-exclamation-triangle";
-        
-        <div class="alert @alertClass alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4 p-4 animate-slide-up" role="alert">
+        <div class="alert bg-dark-green text-white border-0 rounded-5 shadow-premium mb-5 p-4 animate-slide-up d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center">
-                <div class="alert-icon-container me-3 bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                    <i class="fas @alertIcon fs-4 text-white"></i>
+                <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3 d-none d-sm-block">
+                    <i class="fas fa-info-circle fs-4"></i>
                 </div>
-                <div>
-                    <h5 class="alert-heading fw-bold mb-1">Account Update</h5>
-                    <p class="mb-0 text-white">@ViewBag.ApprovalStatusMessage</p>
+                <div class="text-center text-sm-start">
+                    <h6 class="fw-bold mb-0">Account Update</h6>
+                    <p class="mb-0 small opacity-75">@ViewBag.ApprovalStatusMessage</p>
                 </div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white position-static" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <!-- Premium Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="fw-bold text-dark mb-1">Marketplace Financial Pulse</h1>
-            <p class="text-muted small mb-0">Real-time earnings, commission settlement, and payout tracking.</p>
-        </div>
-        <div class="d-flex gap-2">
-             <button class="btn btn-white shadow-sm border rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#withdrawModal">
-                <i class="fas fa-wallet me-2 text-primary"></i>Withdraw Earnings
-            </button>
-            <div class="dropdown">
-                <button class="btn btn-primary shadow-sm rounded-pill px-4 dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="fas fa-plus me-2"></i>Quick Actions
-                </button>
-                <ul class="dropdown-menu border-0 shadow">
-                    <li><a class="dropdown-item" asp-controller="Product" asp-action="Create">Add New Product</a></li>
-                    <li><a class="dropdown-item" asp-controller="Workforce" asp-action="AddEmployee">Register Employee</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tier 1 KPIs: Financial Liquidity -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-primary h-100" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-shopping-cart fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">Lifetime</span>
+    <!-- Tier 1: KPI Cards (SCM Style) -->
+    <div class="row g-3 g-md-4 mb-5">
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 rounded-5 bg-dark-green text-white shadow-premium h-100 overflow-hidden">
+                <div class="card-body p-3 p-md-4 position-relative">
+                    <div class="bg-white bg-opacity-10 rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3">
+                        <i class="fas fa-shopping-cart text-accent-green"></i>
                     </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Gross Marketplace Sales</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.GrossSales.ToString("C")</h2>
+                    <p class="text-white-50 small text-uppercase fw-bold ls-1 mb-1">Gross Sales</p>
+                    <h3 class="fw-bold mb-0">@ViewBag.GrossSales.ToString("C0")</h3>
+                    <div class="mt-2 mt-md-3 d-flex flex-wrap align-items-center gap-2">
+                        <span class="badge bg-accent-green text-dark-green rounded-pill x-small">+12.5%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-success h-100" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-hand-holding-usd fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">Net Profit</span>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-body p-3 p-md-4">
+                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green">
+                        <i class="fas fa-hand-holding-usd"></i>
                     </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Total Net Earnings</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.NetEarnings.ToString("C")</h2>
+                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Net Profit</p>
+                    <h3 class="text-dark-green fw-bold mb-0">@ViewBag.NetEarnings.ToString("C0")</h3>
+                    <div class="mt-2 mt-md-3 d-flex flex-wrap align-items-center gap-2">
+                        <span class="badge bg-soft-success text-success rounded-pill x-small">+8.2%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-info h-100" style="background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-university fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">In Clearance</span>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-body p-3 p-md-4">
+                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green">
+                        <i class="fas fa-university"></i>
                     </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Pending Payouts</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.PendingPayouts.ToString("C")</h2>
+                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Pending</p>
+                    <h3 class="text-dark-green fw-bold mb-0">@ViewBag.PendingPayouts.ToString("C0")</h3>
+                    <div class="mt-2 mt-md-3">
+                        <span class="badge bg-soft-warning text-warning rounded-pill x-small">In Review</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-danger h-100" style="background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-percent fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">Fees Paid</span>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-body p-3 p-md-4">
+                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green">
+                        <i class="fas fa-percent"></i>
                     </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Platform Commission</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.CommissionsPaid.ToString("C")</h2>
+                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Fees</p>
+                    <h3 class="text-dark-green fw-bold mb-0">@ViewBag.CommissionsPaid.ToString("C0")</h3>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tier 2: Earnings Analytics & Intelligence -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0 text-dark">Net Earnings Trend (6-Month Dynamics)</h5>
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">+15.2% vs Last Month</span>
-                    </div>
-                </div>
-                <div class="card-body p-4">
-                    <canvas id="earningsTrendChart" style="min-height: 320px;"></canvas>
-                </div>
-            </div>
-        </div>
+
+    <!-- Tier 2: SCM Visualizations -->
+    <div class="row g-4 mb-5">
+        <!-- Fulfillment Volume (Project-style Bar Chart) -->
         <div class="col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white py-3 border-0">
-                    <h5 class="fw-bold mb-0 text-dark">Payout Health</h5>
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark-green">Fulfillment Volume</h6>
+                    <span class="text-muted small">Monthly</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-end gap-2 mb-4">
+                        <h3 class="fw-bold mb-0">25%</h3>
+                        <span class="text-danger small fw-bold"><i class="fas fa-arrow-down me-1"></i>18.6%</span>
+                    </div>
+                    <div style="height: 200px;">
+                        <canvas id="fulfillmentBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Earnings Analytics (Income-style Smooth Line) -->
+        <div class="col-xl-4">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark-green">Earnings Dynamics</h6>
+                    <span class="text-muted small">Trend</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-end gap-2 mb-4">
+                        <h3 class="fw-bold mb-0">67%</h3>
+                        <span class="text-success small fw-bold"><i class="fas fa-arrow-up me-1"></i>21.1%</span>
+                    </div>
+                    <div style="height: 200px;">
+                        <canvas id="earningsSmoothChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Status (Horizontal Bars) -->
+        <div class="col-xl-4">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0 text-dark-green">Operation Status</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="space-y-4">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted fw-bold">Inventory Capacity</span>
+                                <span class="text-dark-green fw-bold">85/100</span>
+                            </div>
+                            <div class="progress rounded-pill shadow-sm" style="height: 10px; background-color: var(--faint-green);">
+                                <div class="progress-bar bg-dark-green rounded-pill" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted fw-bold">Active Fleet</span>
+                                <span class="text-dark-green fw-bold">22/40</span>
+                            </div>
+                            <div class="progress rounded-pill shadow-sm" style="height: 10px; background-color: var(--faint-green);">
+                                <div class="progress-bar bg-accent-green rounded-pill" style="width: 55%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted fw-bold">Order Fulfillment</span>
+                                <span class="text-dark-green fw-bold">92/100</span>
+                            </div>
+                            <div class="progress rounded-pill shadow-sm" style="height: 10px; background-color: var(--faint-green);">
+                                <div class="progress-bar bg-success rounded-pill" style="width: 92%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted fw-bold">Returns Rate</span>
+                                <span class="text-dark-green fw-bold">5/100</span>
+                            </div>
+                            <div class="progress rounded-pill shadow-sm" style="height: 10px; background-color: var(--faint-green);">
+                                <div class="progress-bar bg-danger rounded-pill" style="width: 5%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Analytics (Multi-column bar chart) -->
+        <div class="col-xl-8">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0 text-dark-green">Weekly Performance Analytics</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 300px;">
+                        <canvas id="weeklyAnalyticsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leads (Donut chart) -->
+        <div class="col-xl-4">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h6 class="fw-bold mb-0 text-dark-green">Market Share Distribution</h6>
                 </div>
                 <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center">
                     <div style="max-width: 250px; width: 100%;">
-                        <canvas id="payoutPieChart"></canvas>
+                        <canvas id="marketShareChart"></canvas>
                     </div>
-                    <div class="mt-4 w-100">
-                        <div class="d-flex justify-content-between small mb-1 text-muted fw-bold">
-                            <span>Available to Withdraw</span>
-                            <span class="text-success">@ViewBag.NetEarnings.ToString("C0")</span>
-                        </div>
-                        <div class="progress rounded-pill mb-3" style="height: 6px;">
-                            <div class="progress-bar bg-success" style="width: 80%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between small mb-1 text-muted fw-bold">
-                            <span>Pending Processing</span>
-                            <span class="text-warning">@ViewBag.PendingPayouts.ToString("C0")</span>
-                        </div>
-                        <div class="progress rounded-pill" style="height: 6px;">
-                            <div class="progress-bar bg-warning" style="width: 20%"></div>
-                        </div>
+                    <div class="mt-4 text-center">
+                        <span class="badge bg-soft-success text-success rounded-pill px-3 py-2 mb-2">+2.5% vs Yesterday</span>
+                        <p class="text-muted x-small">Retailer network expanded to 240+ outlets.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tier 3: Operation & Financial Ledger -->
-    <div class="row g-4 mb-4">
-        <!-- Left: Per-Order Financial Ledger -->
-        <div class="col-xl-9">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-                    <h5 class="fw-bold mb-0 text-dark">Financial Settlement Ledger</h5>
-                    <a asp-action="Payments" class="btn btn-sm btn-light rounded-pill border">View History</a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4 text-muted small fw-bold">ORDER</th>
-                                <th class="text-muted small fw-bold text-end">GROSS AMOUNT</th>
-                                <th class="text-muted small fw-bold text-end">COMMISSION</th>
-                                <th class="text-muted small fw-bold text-end">NET EARNINGS</th>
-                                <th class="text-muted small fw-bold text-center">PAYOUT STATUS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var entry in (dynamic)ViewBag.FinancialLedger)
-                            {
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">#@entry.OrderNumber</div>
-                                        <small class="text-muted">Retailer: @entry.Retailer</small>
-                                    </td>
-                                    <td class="text-end fw-bold">@entry.Amount.ToString("C")</td>
-                                    <td class="text-end text-danger">-@entry.Commission.ToString("C")</td>
-                                    <td class="text-end text-success fw-bold">+@entry.Net.ToString("C")</td>
-                                    <td class="text-center">
-                                        @if (entry.PayoutStatus == "Paid") { <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Released</span> }
-                                        else if (entry.PayoutStatus == "Pending") { <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">Pending</span> }
-                                        else { <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">@entry.PayoutStatus</span> }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- Tier 3: Financial Settlement Ledger -->
+    <div class="card border-0 rounded-5 bg-white shadow-premium overflow-hidden">
+        <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-dark-green">Financial Settlement Ledger</h5>
+            <a asp-action="Payments" class="btn btn-faint-green text-dark-green rounded-pill px-4 fw-bold small shadow-sm">View All History</a>
         </div>
-
-        <!-- Right: Recent Activity / Logistics -->
-        <div class="col-xl-3">
-             <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white py-3 border-0 border-bottom">
-                    <h5 class="fw-bold mb-0 text-dark">Top Retailers</h5>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @foreach (var r in (dynamic)ViewBag.TopRetailers)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom mx-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
-                                        <i class="fas fa-store"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold small">@r.Name</h6>
-                                        <small class="text-muted extra-small">Key Partner</small>
-                                    </div>
-                                </div>
-                                <span class="fw-bold text-primary small">@r.Amount.ToString("C0")</span>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
+        <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0">
+                <thead class="bg-faint-green border-top border-bottom border-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-muted small text-uppercase fw-bold ls-1">Order #</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold ls-1">Retailer</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end">Gross</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end">Fees</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end">Net Profit</th>
+                        <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-center">Payout</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in (dynamic)ViewBag.FinancialLedger)
+                    {
+                        <tr>
+                            <td class="ps-4 py-3 fw-bold text-dark-green">#@entry.OrderNumber</td>
+                            <td class="py-3 text-muted small">@entry.Retailer</td>
+                            <td class="py-3 text-end fw-bold text-dark-green">@entry.Amount.ToString("C")</td>
+                            <td class="py-3 text-end text-danger small">-@entry.Commission.ToString("C")</td>
+                            <td class="py-3 text-end text-success fw-bold">+@entry.Net.ToString("C")</td>
+                            <td class="py-3 text-center">
+                                @if (entry.PayoutStatus == "Paid") { <span class="status-badge bg-soft-success text-success">Released</span> }
+                                else if (entry.PayoutStatus == "Pending") { <span class="status-badge bg-soft-warning text-warning">In Review</span> }
+                                else { <span class="status-badge bg-soft-secondary text-secondary">@entry.PayoutStatus</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    </div>
-
-    <!-- Logistics Block (Existing functionality) -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-3 me-3">
-                        <i class="fas fa-truck-moving"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted small mb-0">Active Fleet</p>
-                        <h4 class="fw-bold mb-0">@Model.ActiveVehiclesCount</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-         <div class="col-xl-3 col-sm-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-shape bg-info bg-opacity-10 text-info rounded-3 me-3">
-                        <i class="fas fa-warehouse"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted small mb-0">Hub Usage</p>
-                        <h4 class="fw-bold mb-0">@Model.HubUtilizationPercent%</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- ... other legacy operational cards ... -->
     </div>
 </div>
 
 <!-- Withdraw Modal -->
 <div class="modal fade" id="withdrawModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Request Payout</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden">
+            <div class="modal-header bg-dark-green text-white py-4 px-4 border-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-wallet me-2"></i> Request Payout</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
-                <div class="p-4 bg-light rounded-4 text-center mb-4 border border-dashed">
+            <div class="modal-body p-4 text-center">
+                <div class="bg-faint-green rounded-5 p-4 mb-4 border-dashed-custom">
                     <p class="text-muted small mb-1">Available for Withdrawal</p>
-                    <h2 class="fw-bold text-success">@ViewBag.NetEarnings.ToString("C")</h2>
+                    <h2 class="fw-bold text-dark-green">@ViewBag.NetEarnings.ToString("C")</h2>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-bold">Withdrawal Amount</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-0 bg-light fw-bold">$</span>
-                        <input type="number" class="form-control border-0 bg-light fw-bold" value="@ViewBag.NetEarnings" readonly>
-                    </div>
+                
+                <div class="alert bg-soft-info text-info border-0 rounded-4 small mb-4 text-start">
+                    <i class="fas fa-info-circle me-2"></i> Funds will be transferred to your primary bank account within 48 hours.
                 </div>
-                <div class="alert alert-info border-0 rounded-3 small">
-                    <i class="fas fa-info-circle me-2"></i> Payouts are processed to your linked bank account within 2-3 business days.
-                </div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="alert('Payout request submitted successfully!'); $('#withdrawModal').modal('hide');">Submit Request</button>
+                
+                <button class="btn btn-dark-green w-100 rounded-pill py-3 fw-bold shadow-premium" onclick="alert('Payout request submitted!'); $('#withdrawModal').modal('hide');">
+                    Confirm Payout
+                </button>
             </div>
         </div>
     </div>
 </div>
 
+@section Styles {
+    <style>
+        :root {
+            --dark-green: #1a3d31;
+            --accent-green: #d4f06d;
+            --faint-green: #f2f6f6;
+        }
+
+        .text-dark-green { color: var(--dark-green) !important; }
+        .bg-dark-green { background-color: var(--dark-green) !important; }
+        .bg-accent-green { background-color: var(--accent-green) !important; }
+        .text-accent-green { color: var(--accent-green) !important; }
+        .bg-faint-green { background-color: var(--faint-green) !important; }
+        .btn-accent-green { background-color: var(--accent-green); border-color: var(--accent-green); color: var(--dark-green); }
+        .btn-faint-green { background-color: var(--faint-green); border: none; color: var(--dark-green); }
+
+        .rounded-5 { border-radius: 24px !important; }
+        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
+        .ls-1 { letter-spacing: 1px; }
+        .x-small { font-size: 0.7rem; }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1); }
+
+        .border-dashed-custom { border: 2px dashed #e2e8f0; }
+
+        .search-bar-premium input:focus {
+            background-color: var(--faint-green) !important;
+            box-shadow: none;
+            border: 1px solid var(--accent-green) !important;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+}
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
 
-        // Earnings Trend Chart
-        const trendCtx = document.getElementById('earningsTrendChart').getContext('2d');
-        const trendGradient = trendCtx.createLinearGradient(0, 0, 0, 400);
-        trendGradient.addColorStop(0, 'rgba(28, 200, 138, 0.2)');
-        trendGradient.addColorStop(1, 'rgba(28, 200, 138, 0)');
-
-        new Chart(trendCtx, {
-            type: 'line',
+        // 1. Fulfillment Bar Chart (Projects style)
+        new Chart(document.getElementById('fulfillmentBarChart'), {
+            type: 'bar',
             data: {
-                labels: @Html.Raw(Json.Serialize(ViewBag.EarningsTrendLabels)),
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                 datasets: [{
-                    label: 'Net Earnings',
-                    data: @Html.Raw(Json.Serialize(ViewBag.EarningsTrendValues)),
-                    borderColor: '#1cc88a',
-                    borderWidth: 3,
-                    fill: true,
-                    backgroundColor: trendGradient,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#1cc88a'
+                    data: [45, 59, 80, 81, 56, 55],
+                    backgroundColor: 'rgba(212, 240, 109, 0.8)',
+                    borderRadius: 8,
+                    barThickness: 20
                 }]
             },
             options: {
@@ -321,44 +364,113 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, grid: { borderDash: [5, 5], drawBorder: false } },
-                    x: { grid: { display: false } }
+                    x: { grid: { display: false }, border: { display: false } },
+                    y: { display: false }
                 }
             }
         });
 
-        // Payout Status Chart
-        new Chart(document.getElementById('payoutPieChart').getContext('2d'), {
-            type: 'doughnut',
+        // 2. Earnings Smooth Chart (Income style)
+        const incomeCtx = document.getElementById('earningsSmoothChart').getContext('2d');
+        const incomeGradient = incomeCtx.createLinearGradient(0, 0, 0, 200);
+        incomeGradient.addColorStop(0, 'rgba(26, 61, 49, 0.1)');
+        incomeGradient.addColorStop(1, 'rgba(26, 61, 49, 0)');
+
+        new Chart(incomeCtx, {
+            type: 'line',
             data: {
-                labels: @Html.Raw(Json.Serialize(ViewBag.PayoutStatusLabels)),
+                labels: @Html.Raw(Json.Serialize(ViewBag.EarningsTrendLabels)),
                 datasets: [{
-                    data: @Html.Raw(Json.Serialize(ViewBag.PayoutStatusValues)),
-                    backgroundColor: ['#1cc88a', '#f6c23e'],
-                    borderWidth: 0,
-                    hoverOffset: 10
+                    data: @Html.Raw(Json.Serialize(ViewBag.EarningsTrendValues)),
+                    borderColor: '#1a3d31',
+                    borderWidth: 3,
+                    fill: true,
+                    backgroundColor: incomeGradient,
+                    tension: 0.4,
+                    pointRadius: 0
                 }]
             },
             options: {
-                cutout: '75%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                }
+            }
+        });
+
+        // 3. Weekly Analytics (Multi-bar)
+        new Chart(document.getElementById('weeklyAnalyticsChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [
+                    {
+                        label: 'Revenue',
+                        data: [65, 59, 80, 81, 56, 55, 40],
+                        backgroundColor: '#1a3d31',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Orders',
+                        data: [28, 48, 40, 19, 86, 27, 90],
+                        backgroundColor: '#d4f06d',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } 
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { borderDash: [5, 5], drawBorder: false } }
+                }
+            }
+        });
+
+        // 4. Market Share (Polar Area - SCM Premium Style)
+        new Chart(document.getElementById('marketShareChart'), {
+            type: 'polarArea',
+            data: {
+                labels: ['Tier 1 Retailers', 'New Markets', 'Direct Sales'],
+                datasets: [{
+                    data: [60, 45, 30],
+                    backgroundColor: [
+                        'rgba(26, 61, 49, 0.9)', 
+                        'rgba(42, 82, 65, 0.8)', 
+                        'rgba(60, 107, 84, 0.7)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        angleLines: { display: false },
+                        ticks: { display: false }
+                    }
+                },
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { 
+                            usePointStyle: true, 
+                            padding: 20,
+                            font: { size: 11, weight: '600' }
+                        } 
+                    }
                 }
             }
         });
     </script>
 }
-
-<style>
-    .bg-gradient-primary { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
-    .bg-gradient-success { background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); }
-    .bg-gradient-info { background: linear-gradient(135deg, #36b9cc 0%, #258391 100%); }
-    .bg-gradient-danger { background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%); }
-    
-    .card { transition: transform 0.2s; }
-    .card:hover { transform: translateY(-5px); }
-    
-    .extra-small { font-size: 0.7rem; }
-    .icon-shape { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
-    .border-dashed { border-style: dashed !important; }
-</style>
