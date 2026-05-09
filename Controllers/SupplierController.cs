@@ -434,6 +434,7 @@ namespace SCM_System.Controllers
                 }
 
                 supplier.CompanyLogo = "/uploads/suppliers/" + uniqueFileName;
+                supplier.User.ProfileImage = supplier.CompanyLogo;
             }
 
             // Update User Info
@@ -463,6 +464,12 @@ namespace SCM_System.Controllers
             await _context.SaveChangesAsync();
 
             await _auditLogService.LogActionAsync("Supplier", supplier.Id.ToString(), "UpdateSettings", notes: "Profile and company info updated", performedByUserId: userId);
+
+            // Update session for immediate UI reflect
+            if (!string.IsNullOrEmpty(supplier.CompanyLogo))
+            {
+                HttpContext.Session.SetString("ProfileImg", supplier.CompanyLogo);
+            }
 
             TempData["SuccessMessage"] = "Settings updated successfully.";
             return RedirectToAction(nameof(Settings));

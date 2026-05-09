@@ -1,18 +1,18 @@
 @model SCM_System.Models.Entities.SupplierEmployee
 @{
-    ViewData["Title"] = "Delivery Portal";
+    ViewData["Title"] = "Delivery Fulfillment Center";
     Layout = "_DashboardLayout";
 }
 
 <div class="container-fluid py-4 pb-5 px-4">
     <!-- Premium Header (SCM Style) -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5 animate-slide-up">
         <div>
             <h1 class="h2 fw-bold text-dark-green mb-1">Delivery Fulfillment Center</h1>
             <p class="text-muted small mb-0"><i class="fas fa-id-card me-2"></i>Agent: @Model.User.FullName | System synced for active dispatch.</p>
         </div>
         <div class="d-flex flex-wrap gap-2 gap-sm-3 align-items-center">
-            <button class="btn btn-white rounded-pill shadow-sm px-4 fw-bold text-dark-green" data-bs-toggle="modal" data-bs-target="#contactDispatchModal">
+            <button class="btn btn-white rounded-pill shadow-sm px-4 fw-bold text-dark-green border" data-bs-toggle="modal" data-bs-target="#contactDispatchModal">
                 <i class="fas fa-headset me-2"></i> Dispatch
             </button>
             <a asp-action="MyDeliveries" class="btn btn-dark-green rounded-pill shadow-premium px-4 fw-bold text-white">
@@ -31,12 +31,13 @@
                     </div>
                     <div>
                         <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Assigned</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.AssignedDeliveries</h3>
+                        <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.AssignedDeliveries</h3>
                     </div>
                 </div>
-                <div class="x-small text-muted">Pending Pickup/Ready</div>
+                <div class="x-small text-muted fw-bold">Pending Pickup / Ready</div>
             </div>
         </div>
+        
         <div class="col-xl-4 col-md-6">
             <div class="card border-0 rounded-5 bg-dark-green text-white shadow-premium h-100 p-4">
                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -45,12 +46,13 @@
                     </div>
                     <div>
                         <p class="text-white-50 small text-uppercase fw-bold ls-1 mb-0">In Transit</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.InTransitDeliveries</h3>
+                        <h3 class="fw-bold mb-0 text-accent-green">@ViewBag.InTransitDeliveries</h3>
                     </div>
                 </div>
-                <div class="x-small text-white-50">Live on the Road</div>
+                <div class="x-small text-white-50 fw-bold">Live on the Road</div>
             </div>
         </div>
+
         <div class="col-xl-4 col-md-12">
             <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -59,15 +61,15 @@
                     </div>
                     <div>
                         <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Completed</p>
-                        <h3 class="fw-bold mb-0">@ViewBag.CompletedDeliveries</h3>
+                        <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.CompletedDeliveries</h3>
                     </div>
                 </div>
-                <div class="x-small text-muted">Successfully Fulfilled</div>
+                <div class="x-small text-muted fw-bold">Successfully Fulfilled</div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
         <!-- Assigned Deliveries Table -->
         <div class="col-lg-8">
             <div class="card border-0 rounded-5 bg-white shadow-premium overflow-hidden">
@@ -77,43 +79,52 @@
                         <p class="x-small text-muted mb-0">Immediate tasks and route details</p>
                     </div>
                     <div class="status-badge bg-soft-info text-info">
-                        <i class="fas fa-info-circle me-1"></i> POD Required
+                        Live Tracking Active
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle table-hover mb-0">
                         <thead class="bg-faint-green">
                             <tr>
-                                <th class="ps-4 py-3 text-muted x-small text-uppercase fw-bold ls-1">PO Number</th>
+                                <th class="ps-4 py-3 text-muted x-small text-uppercase fw-bold ls-1">PO Details</th>
+                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Recipient</th>
                                 <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Destination</th>
                                 <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Status</th>
-                                <th class="text-end pe-4 py-3 text-muted x-small text-uppercase fw-bold ls-1">Action</th>
+                                <th class="pe-4 py-3 text-muted x-small text-uppercase fw-bold ls-1 text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @if (ViewBag.RecentDeliveries != null && ViewBag.RecentDeliveries.Count > 0)
+                            @if (ViewBag.ActiveDeliveries != null && ((IEnumerable<dynamic>)ViewBag.ActiveDeliveries).Any())
                             {
-                                foreach (var delivery in ViewBag.RecentDeliveries)
+                                foreach (var del in ViewBag.ActiveDeliveries)
                                 {
                                     <tr>
-                                        <td class="ps-4 py-3 fw-bold text-dark-green">#@delivery.PONumber</td>
-                                        <td class="py-3">
-                                            <div class="fw-bold small">@delivery.Destination</div>
+                                        <td class="ps-4 py-4">
+                                            <div class="fw-bold text-dark-green">#@del.PurchaseOrder.PONumber</div>
+                                            <div class="x-small text-muted">@del.PurchaseOrder.CreatedAt.ToString("MMM dd, HH:mm")</div>
                                         </td>
-                                        <td class="py-3">
+                                        <td>
+                                            <div class="fw-bold text-dark-green">@del.PurchaseOrder.Retailer.BusinessName</div>
+                                            <div class="x-small text-muted">@del.PurchaseOrder.Retailer.Phone</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark-green">@del.PurchaseOrder.Warehouse.City</div>
+                                            <div class="x-small text-muted text-truncate" style="max-width: 150px;">@del.PurchaseOrder.Warehouse.Region</div>
+                                        </td>
+                                        <td>
                                             @{
-                                                var (badgeClass, textColor) = delivery.Status switch {
-                                                    "In Transit" => ("bg-soft-success", "text-success"),
-                                                    "Ready" => ("bg-soft-warning", "text-warning"),
-                                                    "Packed" => ("bg-soft-info", "text-info"),
+                                                var (badgeClass, textColor) = del.Status switch {
+                                                    "Assigned" => ("bg-soft-warning", "text-warning"),
+                                                    "In Transit" => ("bg-soft-primary", "text-primary"),
+                                                    "Delivered" => ("bg-soft-success", "text-success"),
                                                     _ => ("bg-soft-secondary", "text-secondary")
                                                 };
                                             }
-                                            <span class="status-badge @badgeClass @textColor">@delivery.Status</span>
+                                            <span class="status-badge @badgeClass @textColor">@del.Status</span>
                                         </td>
-                                        <td class="text-end pe-4 py-3">
-                                            <a asp-action="MyDeliveries" class="btn btn-faint-green text-dark-green rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">
-                                                <i class="fas fa-eye x-small"></i>
+                                        <td class="pe-4 text-end">
+                                            <a asp-action="Tracking" asp-route-id="@del.Id" class="btn btn-dark-green rounded-pill px-3 py-1 fw-bold extra-small shadow-sm">
+                                                Track & Update
                                             </a>
                                         </td>
                                     </tr>
@@ -122,10 +133,10 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="4" class="text-center py-5 opacity-50">
-                                        <i class="fas fa-truck fa-3x mb-3 text-dark-green"></i>
-                                        <h6 class="fw-bold">No active assignments</h6>
-                                        <p class="x-small mb-0">New tasks will appear here when assigned by dispatch.</p>
+                                    <td colspan="5" class="text-center py-5 opacity-50">
+                                         <i class="fas fa-truck fa-3x mb-3 text-dark-green"></i>
+                                         <h6 class="fw-bold text-dark-green">No active assignments</h6>
+                                         <p class="small text-muted mb-0">Wait for dispatch to assign new routes.</p>
                                     </td>
                                 </tr>
                             }
@@ -135,94 +146,56 @@
             </div>
         </div>
 
-        <!-- Route Assistant & Maps (Merged from Dev) -->
+        <!-- AI Route Assistant Widget (Themed Green) -->
         <div class="col-lg-4">
-            <div class="d-flex flex-column gap-4">
-                <!-- Logistics Quick Actions -->
-                <div class="card border-0 rounded-5 shadow-premium text-white p-4" style="background: linear-gradient(135deg, #1a3d31 0%, #0a2e24 100%);">
-                    <h6 class="fw-bold mb-3 text-white-50 x-small text-uppercase ls-1">Logistics Intelligence</h6>
-                    <div class="d-grid gap-2">
-                        <a asp-action="RouteItinerary" class="btn btn-accent-green rounded-pill fw-bold shadow-sm py-2">
-                            <i class="fas fa-magic me-2"></i> Optimize My Route
-                        </a>
-                        <a asp-action="MyDeliveries" class="btn btn-outline-light rounded-pill fw-bold py-2 border-2">
-                            <i class="fas fa-list-check me-2"></i> My Deliveries
-                        </a>
+            <div class="card border-0 rounded-5 bg-white shadow-premium p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="bg-dark-green text-accent-green p-3 rounded-circle shadow-sm">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark-green mb-0">Route Assistant</h6>
+                        <span class="badge bg-soft-success text-success x-small">AI-Powered</span>
                     </div>
                 </div>
+                
+                <div class="assistant-content p-3 bg-faint-green rounded-4 mb-4 border border-faint shadow-inner">
+                    <p class="small text-dark-green mb-0 fw-bold">
+                        <i class="fas fa-info-circle me-2 opacity-50"></i>
+                        Optimizing sequence for @(ViewBag.AssignedDeliveries) pending stops. Weather: Clear. Traffic: Moderate in Central Region.
+                    </p>
+                </div>
 
-                <!-- Map and Assistant -->
-                <div class="card border-0 rounded-5 bg-white shadow-premium overflow-hidden">
-                    <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-                        <h6 class="fw-bold mb-0 text-dark-green">
-                            <i class="fas fa-location-arrow me-2"></i>Route Assistant
-                        </h6>
-                        <span class="status-badge bg-soft-success text-success" id="routeDistanceBadge">Initializing...</span>
-                    </div>
-                    <div class="card-body p-0 position-relative">
-                        <div id="miniRouteMap" style="height: 380px; width: 100%; z-index: 1;"></div>
-                        
-                        <!-- AI Assistant Overlay (Themed) -->
-                        <div id="aiChatbotWidget" class="position-absolute bottom-0 start-0 w-100 p-3" style="z-index: 1000; display: none;">
-                            <div class="bg-white rounded-4 shadow-lg overflow-hidden animate-slide-up border border-faint-green">
-                                <div class="p-2 px-3 d-flex justify-content-between align-items-center bg-dark-green text-white">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fas fa-robot text-accent-green"></i>
-                                        <span class="x-small fw-bold text-uppercase">Route Intelligence</span>
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white btn-sm" onclick="closeAiWidget()"></button>
-                                </div>
-                                <div class="p-3">
-                                    <div class="d-flex gap-2 mb-3">
-                                        <div class="small fw-medium text-dark-green" id="aiChatMessage">
-                                            Optimize your delivery sequence to save time.
-                                        </div>
-                                    </div>
-                                    <div class="d-flex gap-2" id="aiChatButtons">
-                                        <button class="btn btn-sm btn-faint-green text-dark-green flex-grow-1 rounded-pill fw-bold" onclick="closeAiWidget()">Later</button>
-                                        <button class="btn btn-sm btn-dark-green text-white flex-grow-1 rounded-pill shadow-sm fw-bold" onclick="runOptimization()">
-                                            <i class="fas fa-bolt me-1"></i> Optimize
-                                        </button>
-                                    </div>
-                                </div>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-white border border-faint shadow-sm">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-dark-green opacity-50">
+                                <i class="fas fa-gas-pump"></i>
                             </div>
+                            <div class="fw-bold small text-dark-green">Nearest Fuel</div>
                         </div>
+                        <div class="fw-bold text-dark-green small">2.4 km</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-white border border-faint shadow-sm">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-dark-green opacity-50">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="fw-bold small text-dark-green">Est. Completion</div>
+                        </div>
+                        <div class="fw-bold text-dark-green small">@DateTime.Now.AddHours(3).ToString("HH:mm")</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Modals -->
-<div class="modal fade" id="contactDispatchModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-5 shadow-premium overflow-hidden">
-            <div class="modal-header bg-dark-green text-white p-4">
-                <h5 class="modal-title fw-bold"><i class="fas fa-headset me-2"></i> Central Dispatch</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4 text-center">
-                <div class="bg-faint-green text-dark-green rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
-                    <i class="fas fa-phone-volume fa-2x"></i>
-                </div>
-                <h4 class="fw-bold text-dark-green">Contact Support</h4>
-                <p class="text-muted small mb-4">Our logistics team is available 24/7 for active delivery assistance.</p>
-                <div class="d-grid gap-3">
-                    <a href="tel:+251123456789" class="btn btn-dark-green rounded-pill py-3 fw-bold shadow-premium">
-                        <i class="fas fa-phone-alt me-2"></i> Call Dispatch
-                    </a>
-                    <a href="mailto:logistics@scm.com" class="btn btn-faint-green text-dark-green rounded-pill py-3 fw-bold">
-                        <i class="fas fa-envelope me-2"></i> Email Support
-                    </a>
-                </div>
+                <button class="btn btn-dark-green w-100 py-3 mt-4 fw-bold rounded-pill shadow-premium">
+                    <i class="fas fa-map-marked-alt me-2 text-accent-green"></i> Start Optimized Route
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 @section Styles {
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             --dark-green: #1a3d31;
@@ -235,147 +208,26 @@
         .bg-accent-green { background-color: var(--accent-green) !important; }
         .text-accent-green { color: var(--accent-green) !important; }
         .bg-faint-green { background-color: var(--faint-green) !important; }
-        
+        .btn-dark-green { background-color: var(--dark-green); color: white; border: none; }
+        .btn-dark-green:hover { background-color: #244d3e; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn-white { background-color: white; color: var(--dark-green); border: 1px solid #eee; }
+
         .rounded-5 { border-radius: 24px !important; }
         .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
+        .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
         .ls-1 { letter-spacing: 1px; }
         .x-small { font-size: 0.75rem; }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
+        .extra-small { font-size: 0.7rem; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
         .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-primary { background-color: rgba(26, 61, 49, 0.1); }
         .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1); }
 
-        .animate-slide-up { animation: slideUp 0.5s ease-out; }
-        @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        .driver-marker { width: 16px; height: 16px; background-color: var(--dark-green); border-radius: 50%; box-shadow: 0 0 0 rgba(26, 61, 49, 0.4); animation: pulse-green 1.5s infinite; border: 2px solid white; }
-        @@keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(26, 61, 49, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(26, 61, 49, 0); } 100% { box-shadow: 0 0 0 0 rgba(26, 61, 49, 0); } }
+        .animate-slide-up { animation: slideUp 0.6s ease-out; }
+        @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .border-faint { border-color: rgba(0,0,0,0.03) !important; }
     </style>
-}
-
-@section Scripts {
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        var mapData = @Html.Raw(ViewBag.MapData ?? "[]");
-        let miniMap;
-        let driverMarker;
-        let mapRouteLine;
-        let destMarkers = [];
-        let currentLat = 9.03;
-        let currentLng = 38.74;
-
-        function initMiniMap() {
-            miniMap = L.map('miniRouteMap').setView([currentLat, currentLng], 12);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(miniMap);
-            
-            const driverIcon = L.divIcon({ className: 'driver-marker', iconSize: [16, 16] });
-            driverMarker = L.marker([currentLat, currentLng], { icon: driverIcon }).addTo(miniMap);
-            
-            // Request actual GPS location
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    currentLat = position.coords.latitude;
-                    currentLng = position.coords.longitude;
-                    miniMap.setView([currentLat, currentLng], 13);
-                    driverMarker.setLatLng([currentLat, currentLng]);
-                    if(mapData && mapData.length > 0) plotBasicRoute();
-                });
-
-                navigator.geolocation.watchPosition(function(position) {
-                    currentLat = position.coords.latitude;
-                    currentLng = position.coords.longitude;
-                    if (driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
-                    if(mapData && mapData.length > 0) updateRouteLineOnly();
-                }, null, { enableHighAccuracy: true });
-            } else {
-                if(mapData && mapData.length > 0) plotBasicRoute();
-            }
-            
-            if(mapData && mapData.length > 0) {
-                plotBasicRoute();
-                setTimeout(() => { if(mapData.length > 1) $('#aiChatbotWidget').fadeIn(); }, 1500);
-            } else {
-                $('#routeDistanceBadge').text('No Active Route').addClass('bg-soft-secondary text-secondary');
-            }
-        }
-
-        function plotBasicRoute() {
-            const destIcon = L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            });
-            
-            destMarkers.forEach(m => miniMap.removeLayer(m));
-            destMarkers = [];
-            
-            mapData.forEach(dest => {
-                const marker = L.marker([dest.lat, dest.lng], { icon: destIcon }).addTo(miniMap);
-                marker.bindPopup(`<b>${dest.businessName}</b><br>${dest.poNumber}`);
-                destMarkers.push(marker);
-            });
-            
-            updateRouteLineOnly();
-            
-            const points = [[currentLat, currentLng]];
-            mapData.forEach(dest => points.push([dest.lat, dest.lng]));
-            if (points.length > 1) {
-                miniMap.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
-            }
-        }
-
-        function updateRouteLineOnly() {
-            const points = [[currentLat, currentLng]];
-            mapData.forEach(dest => points.push([dest.lat, dest.lng]));
-            if (mapRouteLine) miniMap.removeLayer(mapRouteLine);
-            mapRouteLine = L.polyline(points, { color: '#1a3d31', weight: 3, opacity: 0.6, dashArray: '5, 5' }).addTo(miniMap);
-            $('#routeDistanceBadge').text((points.length * 4.2).toFixed(1) + ' km (Est.)');
-        }
-
-        function runOptimization() {
-            $('#aiChatMessage').html('<i class="fas fa-spinner fa-spin me-2"></i> Optimizing sequence...');
-            $('#aiChatButtons').hide();
-            
-            const requestData = {
-                CurrentPoints: mapData.map(d => ({ Lat: d.lat, Lng: d.lng, PoId: d.id }))
-            };
-
-            $.ajax({
-                url: '/Delivery/OptimizeRoute',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(requestData),
-                success: function(response) {
-                    if (response.success) {
-                        $('#aiChatMessage').html('✅ <b>Sequence Optimized!</b><br>Path updated for maximum efficiency.');
-                        $('#aiChatButtons').html('<button class="btn btn-sm btn-dark-green text-white rounded-pill px-4 w-100" onclick="closeAiWidget()">Excellent</button>').show();
-                        if (mapRouteLine) mapRouteLine.setStyle({ color: '#d4f06d', dashArray: null, weight: 4, opacity: 0.8 });
-                    } else {
-                        $('#aiChatMessage').html('❌ <b>Optimization Failed!</b>');
-                        $('#aiChatButtons').show();
-                    }
-                },
-                error: function() {
-                    $('#aiChatMessage').html('❌ <b>Connection Error!</b>');
-                    $('#aiChatButtons').show();
-                }
-            });
-        }
-
-        function closeAiWidget() { $('#aiChatbotWidget').fadeOut(); }
-
-        $(document).ready(() => initMiniMap());
-    </script>
 }

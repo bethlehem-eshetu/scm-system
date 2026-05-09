@@ -1,56 +1,56 @@
 @model SCM_System.Models.Entities.Retailer
 @{
-    ViewData["Title"] = "Retailer Dashboard";
+    ViewData["Title"] = "Retailer Procurement Control";
     Layout = "_DashboardLayout";
     var recentOrders = ViewBag.RecentOrders as IEnumerable<SCM_System.Models.Entities.Order>;
     var recentNotes = ViewBag.RecentNotifications as IEnumerable<SCM_System.Models.Entities.Notification>;
 }
 
-<div class="container-fluid py-4 pb-5">
+<div class="container-fluid py-4 pb-5 px-4">
     @if (ViewBag.ApprovalStatusMessage != null)
     {
-        var alertClass = ViewBag.ApprovalStatusType == "Approved" ? "alert-success" : "alert-danger";
+        var alertClass = ViewBag.ApprovalStatusType == "Approved" ? "bg-dark-green" : "bg-danger";
         var alertIcon = ViewBag.ApprovalStatusType == "Approved" ? "fa-check-circle" : "fa-exclamation-triangle";
         
-        <div class="alert @alertClass alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4 p-4 animate-slide-up" role="alert" style="border-left: 5px solid @(ViewBag.ApprovalStatusType == "Approved" ? "#2E9C7A" : "#E05A5A") !important;">
+        <div class="alert @alertClass text-white border-0 rounded-5 shadow-premium mb-5 p-4 animate-slide-up d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center">
-                <div class="alert-icon-container me-3 bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3 d-none d-sm-block">
                     <i class="fas @alertIcon fs-4"></i>
                 </div>
-                <div>
-                    <h5 class="alert-heading fw-bold mb-1">Account Update</h5>
-                    <p class="mb-0 opacity-90">@ViewBag.ApprovalStatusMessage</p>
+                <div class="text-center text-sm-start">
+                    <h6 class="fw-bold mb-0">Account Update</h6>
+                    <p class="mb-0 small opacity-75">@ViewBag.ApprovalStatusMessage</p>
                 </div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white position-static" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <!-- Premium Enhanced Header -->
+    <!-- Premium Enhanced Header (SCM Style) -->
     <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-premium border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, #1a3d31 0%, #0a2e24 100%);">
                 <div class="banner-overlay"></div>
                 <div class="banner-glow"></div>
                 
                 <div class="row align-items-center position-relative z-index-2">
-                    <div class="col-lg-7 mb-4 mb-lg-0">
+                    <div class="col-lg-7 mb-4 mb-lg-0 text-white">
                         <nav aria-label="breadcrumb" class="mb-3">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="#" class="text-white text-opacity-50 text-decoration-none small fw-bold text-uppercase tracking-widest">Retailer</a></li>
                                 <li class="breadcrumb-item active small fw-bold text-uppercase tracking-widest text-white" aria-current="page">Overview</li>
                             </ol>
                         </nav>
-                        <h1 class="display-5 fw-bold text-white mb-2">
-                            Welcome back, <span class="text-gradient-gold">@Model.BusinessName</span>
+                        <h1 class="display-5 fw-bold mb-2">
+                            Hello, <span class="text-accent-green">@Model.BusinessName</span> 👋
                             @if (Model.User.IsFaydaVerified) { 
                                 <span class="verified-badge ms-2" title="Fayda Verified Business">
-                                    <i class="fas fa-check-circle"></i>
+                                    <i class="fas fa-check-circle text-accent-green"></i>
                                 </span>
                             }
                         </h1>
                         <p class="text-white text-opacity-75 mb-0 fs-5">
-                            <i class="fas fa-map-marker-alt me-2 text-info"></i>@Model.City, @Model.Region 
+                            <i class="fas fa-map-marker-alt me-2 text-accent-green"></i>@Model.City, @Model.Region 
                             <span class="mx-2 opacity-25">|</span>
                             <i class="fas fa-sync-alt me-2 text-success"></i>System synced at @DateTime.Now.ToString("HH:mm")
                         </p>
@@ -67,8 +67,8 @@
                                 </div>
                             </a>
                             <div class="dropdown">
-                                <button class="btn btn-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg" type="button" data-bs-toggle="dropdown">
-                                    <div class="btn-icon bg-black bg-opacity-20 rounded-3">
+                                <button class="btn btn-accent-green px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg border-0" type="button" data-bs-toggle="dropdown" style="color: #1a3d31;">
+                                    <div class="btn-icon bg-black bg-opacity-10 rounded-3">
                                         <i class="fas fa-bolt"></i>
                                     </div>
                                     <div class="text-start">
@@ -76,9 +76,9 @@
                                         <div class="text-black">Quick Hub</div>
                                     </div>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-2xl p-2 mt-2" style="border-radius: 20px; min-width: 240px;">
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-premium p-2 mt-2" style="border-radius: 20px; min-width: 240px;">
                                     <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Procurement</h6></li>
-                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search me-2 text-primary"></i> Browse Marketplace</a></li>
+                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search me-2 text-dark-green"></i> Browse Marketplace</a></li>
                                     <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle me-2 text-warning"></i> Initiate New Tender</a></li>
                                     <li><hr class="dropdown-divider opacity-10"></li>
                                     <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Logistics</h6></li>
@@ -92,77 +92,92 @@
         </div>
     </div>
 
-    <!-- Main KPI Grid -->
+    <!-- Stat Cards Section (SCM Style) -->
     <div class="row g-4 mb-5">
-        <div class="col-xl-3 col-md-6">
-            <div class="kpi-card">
-                <div class="kpi-icon-box bg-primary-soft text-primary">
-                    <i class="fas fa-shopping-bag"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <div class="kpi-label">Total Orders</div>
-                    <div class="kpi-value">@ViewBag.TotalOrders</div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-success fw-bold"><i class="fas fa-caret-up me-1"></i>12%</span>
-                    <span class="ms-1">from last month</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="kpi-card">
-                <div class="kpi-icon-box bg-warning-soft text-warning">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <div class="kpi-label">Active Orders</div>
-                    <div class="kpi-value">@ViewBag.ActiveOrders</div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-muted">@ViewBag.StatusPending pending start</span>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="bg-faint-green p-3 rounded-4 text-dark-green">
+                            <i class="fas fa-shopping-basket fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Total Orders</p>
+                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.TotalOrders</h3>
+                        </div>
+                    </div>
+                    <div class="progress bg-faint-green" style="height: 6px;">
+                        <div class="progress-bar bg-dark-green" style="width: 70%;"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="kpi-card">
-                <div class="kpi-icon-box bg-info-soft text-info">
-                    <i class="fas fa-truck-loading"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <div class="kpi-label">In Transit</div>
-                    <div class="kpi-value">@ViewBag.DeliveriesInProgress</div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-info fw-bold">Live tracking active</span>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="bg-soft-warning p-3 rounded-4 text-warning">
+                            <i class="fas fa-clock fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Active</p>
+                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.ActiveOrders</h3>
+                        </div>
+                    </div>
+                    <div class="progress bg-faint-green" style="height: 6px;">
+                        <div class="progress-bar bg-warning" style="width: 45%;"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="kpi-card">
-                <div class="kpi-icon-box bg-success-soft text-success">
-                    <i class="fas fa-wallet"></i>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="bg-soft-info p-3 rounded-4 text-info">
+                            <i class="fas fa-file-invoice-dollar fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">POs</p>
+                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.TotalPurchaseOrders</h3>
+                        </div>
+                    </div>
+                    <div class="progress bg-faint-green" style="height: 6px;">
+                        <div class="progress-bar bg-info" style="width: 80%;"></div>
+                    </div>
                 </div>
-                <div class="ms-auto text-end">
-                    <div class="kpi-label">Total Spent</div>
-                    <div class="kpi-value" style="font-size: 1.5rem;">@ViewBag.TotalSpent.ToString("N0") <span class="small">ETB</span></div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-muted">Avg: @ViewBag.AverageOrderValue.ToString("N0") / order</span>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="bg-soft-success p-3 rounded-4 text-success">
+                            <i class="fas fa-truck fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Deliveries</p>
+                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.DeliveriesInProgress</h3>
+                        </div>
+                    </div>
+                    <div class="progress bg-faint-green" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: 25%;"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Analytics Overview -->
-    <div class="row g-4 mb-5 animate-slide-up">
+    <!-- Analytics & Activity Row -->
+    <div class="row g-4 mb-5">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1">Spend Analytics</h6>
-                        <h4 class="fw-bold mb-0">Purchasing Trends</h4>
+                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1 text-dark-green">Spend Analytics</h6>
+                        <h4 class="fw-bold mb-0 text-dark-green">Purchasing Trends</h4>
                     </div>
-                    <select id="spendRangeFilter" class="form-select form-select-sm border-0 bg-light fw-bold" style="width: 140px; border-radius: 8px;">
+                    <select id="spendRangeFilter" class="form-select form-select-sm border-0 bg-faint-green fw-bold rounded-pill px-3" style="width: 140px;">
                         <option value="6" selected>Last 6 Months</option>
                         <option value="12">Last 12 Months</option>
                     </select>
@@ -173,19 +188,19 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Order Distribution</h6>
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green">Order Distribution</h6>
                 <div style="height: 250px; width: 100%;">
                     <canvas id="orderStatusChart"></canvas>
                 </div>
                 <div class="mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="small text-muted"><i class="fas fa-circle text-success me-2" style="font-size: 8px;"></i> Completed</span>
-                        <span class="small fw-bold">@ViewBag.StatusDelivered</span>
+                        <span class="small fw-bold text-dark-green">@ViewBag.StatusDelivered</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="small text-muted"><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i> Pending</span>
-                        <span class="small fw-bold">@ViewBag.StatusPending</span>
+                        <span class="small fw-bold text-dark-green">@ViewBag.StatusPending</span>
                     </div>
                 </div>
             </div>
@@ -195,81 +210,81 @@
     <!-- Performance Metrics Row -->
     <div class="row g-4 mb-5">
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Delivery Performance</h6>
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green">Delivery Performance</h6>
                 <div class="d-flex align-items-center mb-4">
-                    <div class="display-5 fw-bold text-primary">@ViewBag.OnTimeDeliveryRate%</div>
+                    <div class="display-5 fw-bold text-dark-green">@ViewBag.OnTimeDeliveryRate%</div>
                     <div class="ms-3">
-                        <div class="fw-bold text-dark">Success Rate</div>
+                        <div class="fw-bold text-dark-green">Success Rate</div>
                         <div class="small text-muted">On-time fulfillment</div>
                     </div>
                 </div>
-                <div class="progress rounded-pill bg-light mb-3" style="height: 10px;">
-                    <div class="progress-bar bg-primary rounded-pill" style="width: @ViewBag.OnTimeDeliveryRate%;"></div>
+                <div class="progress rounded-pill bg-faint-green mb-3" style="height: 10px;">
+                    <div class="progress-bar bg-dark-green rounded-pill" style="width: @ViewBag.OnTimeDeliveryRate%;"></div>
                 </div>
                 <p class="small text-muted mb-0">Calculated based on the last @ViewBag.TotalOrders orders completed.</p>
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Procurement Mix</h6>
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green">Procurement Mix</h6>
                 <div class="d-flex flex-column gap-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="small fw-bold"><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i>Direct Purchase</div>
-                        <div class="small fw-bold">75%</div>
+                        <div class="small fw-bold text-dark-green"><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i>Direct Purchase</div>
+                        <div class="small fw-bold text-dark-green">75%</div>
                     </div>
-                    <div class="progress rounded-pill bg-light" style="height: 6px;">
+                    <div class="progress rounded-pill bg-faint-green" style="height: 6px;">
                         <div class="progress-bar bg-warning rounded-pill" style="width: 75%;"></div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="small fw-bold"><i class="fas fa-circle text-info me-2" style="font-size: 8px;"></i>Tenders</div>
-                        <div class="small fw-bold">25%</div>
+                        <div class="small fw-bold text-dark-green"><i class="fas fa-circle text-info me-2" style="font-size: 8px;"></i>Tenders</div>
+                        <div class="small fw-bold text-dark-green">25%</div>
                     </div>
-                    <div class="progress rounded-pill bg-light" style="height: 6px;">
+                    <div class="progress rounded-pill bg-faint-green" style="height: 6px;">
                         <div class="progress-bar bg-info rounded-pill" style="width: 25%;"></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Supplier Loyalty</h6>
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green">Supplier Loyalty</h6>
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle bg-success bg-opacity-10 text-success p-3">
+                    <div class="rounded-circle bg-faint-green text-dark-green p-3">
                         <i class="fas fa-star fa-2x"></i>
                     </div>
                     <div>
-                        <div class="h4 fw-bold mb-0">@ViewBag.AverageRatingGiven.ToString("F1") / 5.0</div>
+                        <div class="h4 fw-bold mb-0 text-dark-green">@ViewBag.AverageRatingGiven.ToString("F1") / 5.0</div>
                         <div class="small text-muted">Avg Rating Given</div>
                     </div>
                 </div>
                 <div class="mt-auto">
-                    <button class="btn btn-sm btn-outline-card w-100 py-2 fw-bold" style="border-radius: 10px;">Review Recent Orders</button>
+                    <button class="btn btn-dark-green w-100 py-2 fw-bold rounded-pill" style="border-radius: 10px;">Review Recent Orders</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Procurements Table (Full Width) -->
+    <!-- Recent Procurements Table -->
     <div class="row g-4 mb-5">
         <div class="col-12">
-            <div class="section-card">
-                <div class="d-flex justify-content-between align-items-center p-4">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white">
+                <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="fw-bold mb-0">Recent Procurements</h5>
-                        <p class="extra-small text-muted mb-0">Track your ongoing orders and historical acquisitions</p>
+                        <h5 class="fw-bold mb-0 text-dark-green">Recent Procurements</h5>
+                        <p class="x-small text-muted mb-0">Track your ongoing orders and historical acquisitions</p>
                     </div>
-                    <a asp-action="OrderTracking" class="btn btn-sm btn-outline-card px-4 py-2 fw-bold" style="border-radius: 10px;">View Full History</a>
+                    <a asp-action="OrderTracking" class="btn btn-faint-green text-dark-green rounded-pill px-4 py-2 fw-bold small">View Full History</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="admin-table table-hover mb-0">
-                        <thead>
+                    <table class="table align-middle table-hover mb-0">
+                        <thead class="bg-faint-green">
                             <tr>
-                                <th class="ps-4">Order Details</th>
-                                <th>Supplier</th>
-                                <th>Status</th>
-                                <th class="text-end">Total Amount</th>
-                                <th class="pe-4 text-end">Action</th>
+                                <th class="ps-4 py-3 text-muted x-small text-uppercase fw-bold ls-1">Order Details</th>
+                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Supplier</th>
+                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Status</th>
+                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1 text-end">Total Amount</th>
+                                <th class="pe-4 py-3 text-muted x-small text-uppercase fw-bold ls-1 text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -277,38 +292,37 @@
                             {
                                 foreach (var o in recentOrders)
                                 {
-                                    var statusBadge = o.OrderStatus switch
+                                    var (badgeClass, textColor) = o.OrderStatus switch
                                     {
-                                        "Pending" => "badge-soft-warning",
-                                        "Processing" => "badge-soft-info",
-                                        "In Transit" => "badge-soft-primary",
-                                        "Partially Delivered" => "badge-soft-info",
-                                        "Delivered" => "badge-soft-success",
-                                        "Completed" => "badge-soft-success",
-                                        "Rejected" => "badge-soft-danger",
-                                        _ => "badge-soft-secondary"
+                                        "Pending" => ("bg-soft-warning", "text-warning"),
+                                        "Processing" => ("bg-soft-info", "text-info"),
+                                        "In Transit" => ("bg-soft-primary", "text-primary"),
+                                        "Delivered" => ("bg-soft-success", "text-success"),
+                                        "Completed" => ("bg-soft-success", "text-success"),
+                                        "Rejected" => ("bg-soft-danger", "text-danger"),
+                                        _ => ("bg-soft-secondary", "text-secondary")
                                     };
                                     
                                     <tr onclick="window.location.href='/Order/Details/@o.Id'" style="cursor: pointer;">
-                                        <td class="ps-4">
-                                            <div class="fw-bold text-dark">#@o.OrderNumber</div>
-                                            <div class="extra-small text-muted">@o.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                        <td class="ps-4 py-4">
+                                            <div class="fw-bold text-dark-green">#@o.OrderNumber</div>
+                                            <div class="x-small text-muted">@o.CreatedAt.ToString("MMM dd, yyyy")</div>
                                         </td>
                                         <td>
-                                            <div class="fw-bold small">@o.Supplier?.CompanyName</div>
-                                            <div class="extra-small text-muted">@o.Supplier?.City</div>
+                                            <div class="fw-bold text-dark-green">@o.Supplier?.CompanyName</div>
+                                            <div class="x-small text-muted">@o.Supplier?.City</div>
                                         </td>
                                         <td>
-                                            <span class="badge-soft @statusBadge">
+                                            <span class="status-badge @badgeClass @textColor">
                                                 <i class="fas fa-circle me-1" style="font-size: 6px;"></i> @o.OrderStatus
                                             </span>
                                         </td>
-                                        <td class="text-end fw-bold text-dark">
-                                            @o.TotalAmount.ToString("N2") <span class="extra-small">ETB</span>
+                                        <td class="text-end fw-bold text-dark-green">
+                                            @o.TotalAmount.ToString("N2") <span class="x-small">ETB</span>
                                         </td>
                                         <td class="pe-4 text-end">
-                                            <button class="btn btn-sm btn-icon-sm btn-outline-card">
-                                                <i class="fas fa-arrow-right"></i>
+                                            <button class="btn btn-faint-green text-dark-green rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                                                <i class="fas fa-arrow-right x-small"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -317,13 +331,10 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="5" class="text-center py-5">
-                                        <div class="empty-state py-4 text-center">
-                                            <i class="fas fa-shopping-basket opacity-25 fa-3x mb-3 text-primary"></i>
-                                            <h5 class="fw-bold">No Recent Procurements</h5>
-                                            <p class="text-muted small mb-4">Start sourcing high-quality products from our verified suppliers.</p>
-                                            <a asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">Browse Catalog</a>
-                                        </div>
+                                    <td colspan="5" class="text-center py-5 opacity-50">
+                                        <i class="fas fa-shopping-basket fa-3x mb-3 text-dark-green"></i>
+                                        <h5 class="fw-bold text-dark-green">No Recent Procurements</h5>
+                                        <a asp-action="BrowseCatalog" class="btn btn-dark-green rounded-pill px-5 py-2 fw-bold mt-3">Browse Catalog</a>
                                     </td>
                                 </tr>
                             }
@@ -333,259 +344,108 @@
             </div>
         </div>
     </div>
-
-    <!-- Secondary Insights Row -->
-    <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card h-100">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Live Activity Feed</h6>
-                <div class="activity-timeline">
-                    @if (recentNotes != null && recentNotes.Any())
-                    {
-                        foreach (var n in recentNotes)
-                        {
-                            <div class="timeline-item d-flex gap-3 mb-4">
-                                <div class="timeline-icon bg-@(n.Type == "Success" ? "success" : (n.Type == "Error" ? "danger" : "primary"))-soft">
-                                    <i class="fas @(n.Type == "Success" ? "fa-check" : (n.Type == "Error" ? "fa-times" : "fa-bell")) small"></i>
-                                </div>
-                                <div class="timeline-content">
-                                    <div class="fw-bold small text-dark">@n.Title</div>
-                                    <div class="extra-small text-muted line-clamp-2">@n.Message</div>
-                                    <div class="extra-small text-muted opacity-50 mt-1">@n.CreatedAt.ToString("MMM dd, HH:mm")</div>
-                                </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <div class="text-center py-5">
-                            <i class="fas fa-stream opacity-10 fa-3x mb-3"></i>
-                            <p class="small text-muted">Your activity feed is currently empty.</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card h-100">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-0">Active Conversations</h6>
-                    <a href="@Url.Action("Inbox", "Message")" class="extra-small text-primary text-decoration-none fw-bold tracking-widest">INBOX</a>
-                </div>
-                @if (ViewBag.RecentConversations != null && ViewBag.RecentConversations.Count > 0)
-                {
-                    <div class="d-flex flex-column gap-3">
-                        @foreach (var conv in (dynamic)ViewBag.RecentConversations)
-                        {
-                            <a href="@Url.Action("Conversation", "Message", new { id = conv.OtherUserId })" class="text-decoration-none">
-                                <div class="conversation-item p-3 rounded-4 border transition">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
-                                            @conv.OtherUserName.Substring(0, 1)
-                                        </div>
-                                        <div class="flex-grow-1 min-w-0">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div class="fw-bold small text-dark text-truncate">@conv.OtherUserName</div>
-                                                <div class="extra-small text-muted">@conv.LastMessageAt.ToString("MMM dd")</div>
-                                            </div>
-                                            <div class="extra-small text-muted text-truncate">@conv.LastMessage</div>
-                                        </div>
-                                        @if (conv.UnreadCount > 0)
-                                        {
-                                            <span class="badge bg-danger rounded-circle p-1" style="width: 18px; height: 18px; font-size: 10px;">@conv.UnreadCount</span>
-                                        }
-                                    </div>
-                                </div>
-                            </a>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="text-center py-5">
-                        <i class="fas fa-comments opacity-10 fa-3x mb-3"></i>
-                        <h6 class="fw-bold small text-dark">No active chats</h6>
-                        <p class="extra-small text-muted mb-4">Connect with suppliers to discuss products and orders.</p>
-                        <a href="@Url.Action("Inbox", "Message")" class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">Start Chatting</a>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
 </div>
 
-<style>
-    /* Premium Enhanced Header Styles */
-    .welcome-banner { background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%); border: 1px solid rgba(255, 255, 255, 0.1); }
-    .banner-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.05; z-index: 1; }
-    .banner-glow { position: absolute; top: -50%; right: -20%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%); filter: blur(50px); z-index: 1; }
-    .text-gradient-gold { background: linear-gradient(to right, #f1c40f, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
-    .verified-badge { color: #3498db; font-size: 1.5rem; filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.3)); }
-    .btn-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; border-radius: 16px; }
-    .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); color: white; }
-    .btn-gold { background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%); border: none; color: #000; transition: all 0.3s ease; border-radius: 16px; }
-    .btn-gold:hover { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3); }
-    .btn-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    .z-index-2 { z-index: 2; }
-    .tracking-widest { letter-spacing: 2px; }
+@section Styles {
+    <style>
+        :root {
+            --dark-green: #1a3d31;
+            --accent-green: #d4f06d;
+            --faint-green: #f2f6f6;
+        }
 
-    /* Dashboard Logic */
-    .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 24px; display: flex; flex-wrap: wrap; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s, box-shadow 0.2s; }
-    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-    .kpi-icon-box { width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-    .kpi-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
-    .kpi-value { font-size: 1.85rem; font-weight: 700; color: var(--text-color); line-height: 1.2; }
-    .kpi-footer { width: 100%; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-muted); }
-    .section-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; overflow: hidden; }
+        .text-dark-green { color: var(--dark-green) !important; }
+        .bg-dark-green { background-color: var(--dark-green) !important; }
+        .bg-accent-green { background-color: var(--accent-green) !important; }
+        .text-accent-green { color: var(--accent-green) !important; }
+        .bg-faint-green { background-color: var(--faint-green) !important; }
+        .btn-dark-green { background-color: var(--dark-green); color: white; }
+        .btn-faint-green { background-color: var(--faint-green); color: var(--dark-green); border: none; }
 
-    .bg-primary-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
-    .bg-warning-soft { background: rgba(230, 126, 34, 0.1); color: #E67E22; }
-    .bg-info-soft { background: rgba(91, 143, 249, 0.1); color: #5B8FF9; }
-    .bg-success-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
-    .bg-danger-soft { background: rgba(224, 90, 90, 0.1); color: #E05A5A; }
+        .welcome-banner { position: relative; border-radius: 40px !important; }
+        .banner-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.05; z-index: 1; }
+        .banner-glow { position: absolute; top: -50%; right: -20%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212, 240, 109, 0.1) 0%, transparent 70%); filter: blur(50px); z-index: 1; }
+        .btn-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; border-radius: 20px; transition: all 0.3s; }
+        .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
 
-    .timeline-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .conversation-item:hover { background: var(--hover-state); border-color: var(--primary-color) !important; }
-    .extra-small { font-size: 0.75rem; }
-    .tracking-wider { letter-spacing: 1px; }
-    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .rounded-5 { border-radius: 24px !important; }
+        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
+        .ls-1 { letter-spacing: 1px; }
+        .x-small { font-size: 0.75rem; }
+        .tracking-widest { letter-spacing: 2px; }
 
-    /* Dark Mode overrides */
-    .dark-mode .section-card, .dark-mode .kpi-card { box-shadow: none; }
-    .dark-mode .bg-light { background-color: var(--hover-state) !important; }
-</style>
+        .status-badge { padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-primary { background-color: rgba(26, 61, 49, 0.1); }
+        .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
+
+        .animate-slide-up { animation: slideUp 0.6s ease-out; }
+        @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+}
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function () {
-            loadCounts();
-            setInterval(loadCounts, 30000);
-
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#64748B';
 
             const ctxSpend = document.getElementById('spendAnalyticsChart').getContext('2d');
-            let spendChart;
+            const accentColor = '#1a3d31';
+            const gradient = ctxSpend.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(26, 61, 49, 0.1)');
+            gradient.addColorStop(1, 'rgba(26, 61, 49, 0)');
 
-            function initSpendChart(data) {
-                const isDark = $('html').hasClass('dark-mode');
-                const accentColor = '#2E9C7A';
-                if(spendChart) spendChart.destroy();
-                spendChart = new Chart(ctxSpend, {
-                    type: 'line',
-                    data: {
-                        labels: data.map(x => x.month),
-                        datasets: [{
-                            label: 'Spend (ETB)',
-                            data: data.map(x => x.amount),
-                            borderColor: accentColor,
-                            backgroundColor: 'rgba(46, 156, 122, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: accentColor,
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { backgroundColor: isDark ? '#1A1F1D' : '#0B3B2F', padding: 12, cornerRadius: 10 }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
-                            x: { grid: { display: false } }
-                        }
+            new Chart(ctxSpend, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Spend (ETB)',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        borderColor: accentColor,
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: accentColor,
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
                     }
-                });
-            }
-
-            function loadSpendData(months) {
-                $.get('/Retailer/GetSpendStats?months=' + months, function(res) { initSpendChart(res); });
-            }
-
-            $('#spendRangeFilter').on('change', function() { loadSpendData($(this).val()); });
-            loadSpendData(6);
+                }
+            });
 
             const ctxStatus = document.getElementById('orderStatusChart').getContext('2d');
             new Chart(ctxStatus, {
                 type: 'doughnut',
                 data: {
-                    labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels)),
+                    labels: ['Delivered', 'Pending', 'In Transit'],
                     datasets: [{
-                        data: @Html.Raw(Json.Serialize(ViewBag.StatusData)),
-                        backgroundColor: ['#2E9C7A', '#E67E22', '#5B8FF9', '#E05A5A', '#A3B3AC'],
-                        borderWidth: 0,
-                        hoverOffset: 10
+                        data: [@ViewBag.StatusDelivered, @ViewBag.StatusPending, @ViewBag.DeliveriesInProgress],
+                        backgroundColor: ['#1a3d31', '#d4f06d', '#4da699'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '75%',
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0B3B2F', cornerRadius: 8 } }
+                    plugins: { legend: { display: false } }
                 }
             });
-
-            const observer = new MutationObserver(function() {
-                if(spendChart) {
-                    const isDark = $('html').hasClass('dark-mode');
-                    spendChart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                    spendChart.options.plugins.tooltip.backgroundColor = isDark ? '#1A1F1D' : '#0B3B2F';
-                    spendChart.update();
-                }
-            });
-            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         });
-
-        function loadCounts() {
-            $.get('/Notification/GetUnreadCount', function (data) { if (data.count > 0) $('#notificationBadge').text(data.count).show(); else $('#notificationBadge').hide(); });
-            $.get('/Message/GetUnreadCount', function (data) { if (data > 0) $('#messageBadge').text(data).show(); else $('#messageBadge').hide(); });
-            loadActivityFeed();
-        }
-
-        function loadActivityFeed() {
-            $.get('/Notification/GetRecentJson', function (data) {
-                if (data && data.items && data.items.length > 0) {
-                    let html = '';
-                    data.items.forEach(function (n) {
-                        let typeColor = n.type === 'Success' ? 'success' : (n.type === 'Error' ? 'danger' : 'primary');
-                        let icon = n.type === 'Success' ? 'fa-check' : (n.type === 'Error' ? 'fa-times' : 'fa-bell');
-                        
-                        // Simple date formatting
-                        let dateObj = new Date(n.createdAt);
-                        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + 
-                                      dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-                        
-                        html += `
-                            <div class="timeline-item d-flex gap-3 mb-4 animate-slide-up">
-                                <div class="timeline-icon bg-${typeColor}-soft">
-                                    <i class="fas ${icon} small text-${typeColor}"></i>
-                                </div>
-                                <div class="timeline-content">
-                                    <div class="fw-bold small text-dark">${n.title}</div>
-                                    <div class="extra-small text-muted line-clamp-2">${n.message}</div>
-                                    <div class="extra-small text-muted opacity-50 mt-1">${dateStr}</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    $('.activity-timeline').html(html);
-                } else {
-                    $('.activity-timeline').html(`
-                        <div class="text-center py-5">
-                            <i class="fas fa-stream opacity-10 fa-3x mb-3"></i>
-                            <p class="small text-muted">Your activity feed is currently empty.</p>
-                        </div>
-                    `);
-                }
-            });
-        }
     </script>
 }

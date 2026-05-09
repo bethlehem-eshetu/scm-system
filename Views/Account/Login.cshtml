@@ -4,93 +4,76 @@
     Layout = "_Layout";
 }
 
-<div class="login-page">
-    <div class="login-container">
-        <!-- Left Pane: Illustration -->
-        <div class="login-left">
-            <div class="brand-logo">
-                <img src="/images/ethiochain-logo.jpg" alt="EthioChain Logo" />
-                <div class="brand-text">
-                    <span class="brand-main">ETHIOCHAIN</span>
-                    <span class="brand-sub">SCM SYSTEM</span>
-                </div>
-            </div>
-            
-            <div class="illustration-container">
-                <img src="/images/green-hero.png" alt="Supply Chain Illustration" class="illustration-img" />
-            </div>
-
-            <div class="footer-note">
-                <p>&copy; @DateTime.Now.Year EthioChain SCM. All rights reserved.</p>
-                <p class="small">Powered by SCM Tech</p>
-            </div>
+<div class="login-page-wrapper">
+    <!-- Left Section: Illustration & Organic Blobs -->
+    <div class="left-section">
+        <div class="blobs">
+            <div class="blob blob-lg"></div>
+            <div class="blob blob-md"></div>
+            <div class="blob blob-sm"></div>
+            <div class="blob blob-xs"></div>
         </div>
 
-        <!-- Right Pane: Login Form -->
-        <div class="login-right">
-            <div class="login-form-wrapper">
-                <h1 class="login-title">Login</h1>
+        <img src="/images/login-illustration.png" alt="Illustration" class="illustration bounce-effect" />
+
+        <div class="wave-divider">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M100,0 C80,10 60,30 60,50 C60,70 80,90 100,100 Z" fill="#0b2e24"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Right Section: Dark Form -->
+    <div class="right-section">
+        <div class="login-card">
+            <h1>LOGIN</h1>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger border-0 rounded-4 mb-4 py-3" style="background: rgba(220, 53, 69, 0.2); color: #ff8e9b;">
+                    <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <form asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
                 
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert alert-danger custom-alert">
-                        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
-                    </div>
-                }
-
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success custom-alert">
-                        <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
-                    </div>
-                }
-
-                <form asp-action="Login" method="post" id="loginForm">
-                    @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
-
-                    <div class="input-group-custom">
-                        <label asp-for="Email">Username or Email</label>
-                        <input asp-for="Email" placeholder="Enter your email" required />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
-                    </div>
-
-                    <div class="input-group-custom">
-                        <label asp-for="Password">Password</label>
-                        <div class="password-wrapper">
-                            <input asp-for="Password" type="password" id="password" placeholder="Enter your password" required />
-                            <button type="button" id="togglePassword" class="toggle-password-btn">
-                                <i class="fas fa-eye-slash"></i>
-                            </button>
+                <div class="form-group">
+                    <label asp-for="Email">Username</label>
+                    <div class="input-pill">
+                        <div class="icon-box">
+                            <i class="fas fa-user"></i>
                         </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                        <div class="forgot-link-wrapper">
-                            <a href="#" class="forgot-password-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                        <input asp-for="Email" placeholder="Username" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Password">Password</label>
+                    <div class="input-pill">
+                        <div class="icon-box">
+                            <i class="fas fa-lock"></i>
                         </div>
+                        <input asp-for="Password" type="password" placeholder="Password" required />
                     </div>
+                </div>
 
-                    <div class="form-check mb-4">
-                        <input asp-for="RememberMe" class="form-check-input custom-checkbox" />
-                        <label asp-for="RememberMe" class="form-check-label text-light small">Remember me</label>
+                <div class="d-flex justify-content-between px-3 mt-2" style="font-size: 0.8rem;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="RememberMe" id="rememberMe" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">
+                        <label class="form-check-label text-white-50" for="rememberMe">Remember me</label>
                     </div>
+                    <a href="#" class="text-white-50 text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot?</a>
+                </div>
 
-                    <button type="submit" class="login-submit-btn">Login to Portal</button>
+                <div class="btn-submit-container">
+                    <button type="submit" class="btn-login">LOGIN</button>
+                </div>
 
-                    <div class="register-link">
-                        <span>Don't have an account?</span>
-                        <a asp-action="Register">Register Now</a>
-                    </div>
-
-                    <div class="bottom-links">
-                        <a href="#">Terms and Services</a>
-                    </div>
-
-                    <div class="contact-support">
-                        <span>Have a problem? Contact us at</span>
-                        <a href="mailto:support@ethiochain.com">support@ethiochain.com</a>
-                    </div>
-                </form>
-            </div>
+                <div class="extra-links">
+                    Don't have an account? <a asp-action="Register">Create Account</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -98,26 +81,20 @@
 <!-- Forgot Password Modal -->
 <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header bg-dark-green text-white border-0 py-4">
-                <h5 class="modal-title fw-bold">Reset Password</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+        <div class="modal-content border-0 rounded-5 shadow-lg" style="background: #0b2e24;">
             <div class="modal-body p-5">
-                <p class="text-muted mb-4">Enter your registered email address and we'll send you a link to reset your password.</p>
-                
+                <h3 class="text-white fw-bold mb-4">Reset Password</h3>
                 <div id="forgotPasswordMessage" class="alert d-none mb-4"></div>
-
                 <form id="forgotPasswordForm">
                     @Html.AntiForgeryToken()
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold">Email Address</label>
-                        <input type="email" name="Email" class="form-control form-control-lg rounded-3 border-2" placeholder="name@company.com" required />
+                    <div class="form-group mb-4">
+                        <label class="text-white-50 ms-3">Email Address</label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-envelope"></i></div>
+                            <input type="email" name="Email" placeholder="Enter email" required />
+                        </div>
                     </div>
-                    <button type="submit" id="forgotPasswordSubmit" class="btn btn-dark-green w-100 py-3 fw-bold rounded-3 transition-all">
-                        <span class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true"></span>
-                        Send Reset Link
-                    </button>
+                    <button type="submit" id="forgotPasswordSubmit" class="btn-login w-100">SEND LINK</button>
                 </form>
             </div>
         </div>
@@ -126,339 +103,180 @@
 
 @section Styles {
     <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
         :root {
-            --dark-green: #1a3d31;
-            --accent-green: #5e9e94;
-            --input-bg: rgba(0, 0, 0, 0.2);
-            --white-glass: rgba(255, 255, 255, 0.05);
+            --deep-dark-green: #0b2e24;
+            --mid-green: #1a3d31;
+            --accent-teal: #4da699;
+            --blob-light: #e0f2ef;
+            --blob-mid: #a3d8d1;
+            --text-white: #ffffff;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow: hidden;
-        }
+        /* Adjust Layout conflicts */
+        main { padding: 0 !important; }
+        .footer { margin-top: 0 !important; }
 
-        .login-page {
-            background-color: var(--dark-green);
-            min-height: 100vh;
+        .login-page-wrapper {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .login-container {
+            min-height: 85vh;
             width: 100%;
-            max-width: 1000px;
-            height: 650px;
-            background-color: var(--dark-green);
-            border-radius: 40px;
-            display: flex;
             position: relative;
+            background: white;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-top: 70px; /* Offset for layout navbar */
         }
 
-        /* Left side: White area with curve */
-        .login-left {
-            flex: 1;
+        /* Left Section */
+        .left-section {
+            flex: 1.2;
             background-color: #ffffff;
-            padding: 40px;
+            position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            z-index: 2;
-            /* Curve shape using clip-path for an organic look */
-            clip-path: ellipse(90% 100% at 10% 50%);
-            /* Fallback or additional curve depth */
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 40px;
         }
 
-        .login-left::after {
-            content: '';
+        .blob { position: absolute; border-radius: 50%; z-index: 1; opacity: 0.6; }
+        .blob-lg { width: 450px; height: 450px; background: var(--blob-mid); top: 5%; left: -10%; border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%; }
+        .blob-md { width: 280px; height: 280px; background: var(--blob-light); bottom: -5%; left: 15%; border-radius: 50% 50% 30% 70% / 50% 50% 70% 30%; }
+        .blob-sm { width: 120px; height: 120px; background: var(--blob-mid); top: 40%; left: 60%; }
+        .blob-xs { width: 60px; height: 60px; background: var(--blob-light); top: 15%; left: 45%; }
+
+        .illustration {
+            position: relative;
+            z-index: 5;
+            max-width: 75%;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.1));
+        }
+
+        /* Bounce Animation */
+        .bounce-effect {
+            animation: floatBounce 4s ease-in-out infinite;
+        }
+
+        @@keyframes floatBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .wave-divider {
             position: absolute;
             top: 0;
-            right: -100px;
-            bottom: 0;
+            right: -1px;
+            height: 100%;
             width: 200px;
-            background: white;
-            border-radius: 100%;
-            z-index: -1;
+            z-index: 8;
+            pointer-events: none;
         }
+        .wave-divider svg { height: 100%; width: 100%; }
 
-        .brand-logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .brand-logo img {
-            height: 50px;
-            width: 50px;
-            object-fit: contain;
-        }
-
-        .brand-text {
+        /* Right Section */
+        .right-section {
+            flex: 1;
+            background-color: var(--deep-dark-green);
             display: flex;
             flex-direction: column;
-        }
-
-        .brand-main {
-            font-weight: 800;
-            font-size: 1.2rem;
-            color: var(--dark-green);
-            letter-spacing: 1px;
-        }
-
-        .brand-sub {
-            font-size: 0.7rem;
-            color: #666;
-            letter-spacing: 2px;
-        }
-
-        .illustration-container {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
             justify-content: center;
-        }
-
-        .illustration-img {
-            max-width: 80%;
-            max-height: 300px;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
-        }
-
-        .footer-note {
-            color: #888;
-            font-size: 0.8rem;
-        }
-
-        .footer-note p {
-            margin: 2px 0;
-        }
-
-        /* Right side: Green area */
-        .login-right {
-            flex: 1;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 40px;
-            position: relative;
+            padding: 60px;
+            z-index: 9;
         }
 
-        .login-form-wrapper {
-            width: 100%;
-            max-width: 360px;
-        }
-
-        .login-title {
+        .login-card { width: 100%; max-width: 320px; }
+        .login-card h1 {
             color: white;
             font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 30px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 40px;
+            letter-spacing: 4px;
         }
 
-        .input-group-custom {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-group-custom label {
-            color: #ccc;
-            font-size: 0.9rem;
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
             margin-bottom: 8px;
+            margin-left: 15px;
         }
 
-        .input-group-custom input {
-            background: var(--input-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: white;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .input-group-custom input:focus {
-            background: rgba(0,0,0,0.3);
-            border-color: var(--accent-green);
-        }
-
-        .password-wrapper {
-            position: relative;
+        .input-pill {
+            background: rgba(255,255,255,0.08);
+            border-radius: 50px;
             display: flex;
+            align-items: center;
+            padding: 5px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .input-pill:focus-within {
+            background: rgba(255,255,255,0.12);
+            border-color: var(--accent-teal);
         }
 
-        .password-wrapper input {
-            width: 100%;
-            padding-right: 45px;
+        .icon-box {
+            width: 38px;
+            height: 38px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            margin-right: 10px;
         }
 
-        .toggle-password-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
+        .input-pill input {
             background: none;
             border: none;
-            color: rgba(255,255,255,0.5);
-            cursor: pointer;
-        }
-
-        .forgot-link-wrapper {
-            text-align: right;
-            margin-top: 5px;
-        }
-
-        .forgot-password-link {
-            color: var(--accent-green);
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: color 0.3s;
-        }
-
-        .forgot-password-link:hover {
             color: white;
-        }
-
-        .custom-checkbox {
-            background-color: var(--input-bg);
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .custom-checkbox:checked {
-            background-color: var(--accent-green);
-            border-color: var(--accent-green);
-        }
-
-        .login-submit-btn {
+            padding: 8px 5px;
             width: 100%;
-            background-color: var(--accent-green);
+            outline: none;
+            font-size: 0.95rem;
+        }
+        .input-pill input::placeholder { color: rgba(255,255,255,0.2); }
+
+        .btn-submit-container { text-align: center; margin-top: 30px; }
+        .btn-login {
+            background-color: var(--mid-green);
             color: white;
             border: none;
-            border-radius: 25px;
-            padding: 14px;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-top: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 14px rgba(94, 158, 148, 0.4);
-        }
-
-        .login-submit-btn:hover {
-            background-color: #4f8b82;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(94, 158, 148, 0.6);
-        }
-
-        .register-link {
-            text-align: center;
-            margin-top: 25px;
-            color: #ccc;
+            border-radius: 50px;
+            padding: 12px 50px;
+            font-weight: 700;
             font-size: 0.9rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .btn-login:hover {
+            background-color: var(--accent-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
         }
 
-        .register-link a {
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            margin-left: 5px;
-            border-bottom: 1px solid white;
-            padding-bottom: 2px;
-        }
-
-        .bottom-links {
+        .extra-links {
+            margin-top: 30px;
             text-align: center;
-            margin-top: 40px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
         }
+        .extra-links a { color: white; text-decoration: none; font-weight: 700; margin-left: 5px; }
 
-        .bottom-links a {
-            color: #888;
-            text-decoration: none;
-            font-size: 0.75rem;
-        }
-
-        .contact-support {
-            text-align: right;
-            position: absolute;
-            bottom: 20px;
-            right: 40px;
-            color: #888;
-            font-size: 0.7rem;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .contact-support a {
-            color: var(--accent-green);
-            text-decoration: none;
-        }
-
-        .custom-alert {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 0.85rem;
-            margin-bottom: 20px;
-        }
-
-        /* Modal Styles */
-        .bg-dark-green {
-            background-color: var(--dark-green);
-        }
-
-        .btn-dark-green {
-            background-color: var(--dark-green);
-            color: white;
-        }
-
-        .btn-dark-green:hover {
-            background-color: #122a22;
-            color: white;
-        }
-
-        .transition-all {
-            transition: all 0.3s ease;
-        }
-
-        @@media (max-width: 768px) {
-            .login-container {
-                flex-direction: column;
-                height: auto;
-                max-width: 450px;
-            }
-            .login-left {
-                clip-path: none;
-                padding: 30px;
-                text-align: center;
-            }
-            .login-left::after {
-                display: none;
-            }
-            .illustration-container {
-                padding: 20px 0;
-            }
-            .illustration-img {
-                max-height: 150px;
-            }
-            .brand-logo {
-                justify-content: center;
-            }
-            .contact-support {
-                position: static;
-                margin-top: 30px;
-                align-items: center;
-                width: 100%;
-            }
+        @@media (max-width: 992px) {
+            .wave-divider { display: none; }
+            .left-section { display: none; }
+            .right-section { flex: 1; width: 100%; padding: 60px 20px; }
         }
     </style>
 }
@@ -466,59 +284,31 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Password toggle
-            const toggleBtn = document.getElementById('togglePassword');
-            const passwordInput = document.getElementById('password');
-
-            toggleBtn?.addEventListener('click', () => {
-                const type = passwordInput.type === 'password' ? 'text' : 'password';
-                passwordInput.type = type;
-                toggleBtn.querySelector('i').classList.toggle('fa-eye');
-                toggleBtn.querySelector('i').classList.toggle('fa-eye-slash');
-            });
-
-            // Forgot Password AJAX
             const forgotForm = document.getElementById('forgotPasswordForm');
             const forgotMessage = document.getElementById('forgotPasswordMessage');
             const forgotSubmit = document.getElementById('forgotPasswordSubmit');
-            const spinner = forgotSubmit.querySelector('.spinner-border');
 
             forgotForm?.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
-                // Reset state
                 forgotMessage.classList.add('d-none');
-                forgotMessage.className = 'alert mb-4';
                 forgotSubmit.disabled = true;
-                spinner.classList.remove('d-none');
-
                 const formData = new FormData(this);
-                
                 try {
                     const response = await fetch('/Account/ForgotPassword', {
                         method: 'POST',
                         body: formData
                     });
-
                     const result = await response.json();
-                    
                     forgotMessage.innerText = result.message;
                     forgotMessage.classList.remove('d-none');
-                    
-                    if (result.success) {
-                        forgotMessage.classList.add('alert-success');
-                        this.reset();
-                    } else {
-                        forgotMessage.classList.add('alert-danger');
-                    }
+                    forgotMessage.className = `alert mb-4 ${result.success ? 'alert-success' : 'alert-danger'}`;
+                    if (result.success) this.reset();
                 } catch (error) {
-                    console.error('Forgot password error:', error);
-                    forgotMessage.innerText = 'An unexpected error occurred. Please try again later.';
+                    forgotMessage.innerText = 'Error occurred. Try again.';
                     forgotMessage.classList.remove('d-none');
-                    forgotMessage.classList.add('alert-danger');
+                    forgotMessage.className = 'alert alert-danger mb-4';
                 } finally {
                     forgotSubmit.disabled = false;
-                    spinner.classList.add('d-none');
                 }
             });
         });

@@ -1,31 +1,31 @@
 @model IEnumerable<SCM_System.Models.Entities.Order>
 
 @{
-    ViewData["Title"] = "Order Monitoring Hub";
+    ViewData["Title"] = "Logistics Monitoring Intelligence";
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h3 class="fw-bold text-primary mb-1"><i class="fas fa-truck-loading me-2"></i>Order Monitoring Hub</h3>
-            <p class="text-muted mb-0">Track real-time progress across warehouses and delivery agents</p>
+            <h1 class="h2 fw-bold text-dark-green mb-1"><i class="fas fa-truck-loading me-2 text-accent-green"></i>Monitoring Intelligence</h1>
+            <p class="text-muted small mb-0 mt-1">Track real-time asset movement across warehouses and global delivery networks.</p>
         </div>
-        <div class="d-flex gap-2">
-            <div class="input-group shadow-sm border rounded-pill overflow-hidden bg-white">
-                <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="orderSearch" class="form-control border-0" placeholder="Search Order ID or Retailer...">
+        <div class="d-flex gap-3 align-items-center">
+            <div class="search-bar-premium position-relative">
+                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" id="orderSearch" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm" placeholder="Search Order ID or Retailer..." style="width: 300px; height: 45px;">
             </div>
         </div>
     </div>
 
-    <!-- Quick Filters -->
-    <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
-        <button class="btn btn-primary rounded-pill px-4 filter-btn active" data-filter="all">All Orders</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="Processing">Processing</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="Packed">Packed</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="In Transit">In Transit</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4 filter-btn" data-filter="Delivered">Delivered</button>
+    <!-- Quick Status Filters (SCM Style) -->
+    <div class="d-flex gap-2 mb-5 overflow-auto pb-2 scrollbar-hidden">
+        <button class="btn btn-dark-green rounded-pill px-4 py-2 nexus-filter-btn active small fw-bold" data-filter="all">All Monitoring</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="Processing">Processing</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="Packed">Packed</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="In Transit">In Transit</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="Delivered">Delivered</button>
     </div>
 
     <div class="row g-4" id="ordersGrid">
@@ -34,42 +34,44 @@
             foreach (var order in Model)
             {
                 <div class="col-xl-6 order-card" data-status="@order.OrderStatus">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden hover-lift">
-                        <div class="card-header border-0 bg-light p-3 d-flex justify-content-between align-items-center">
+                    <div class="card border-0 shadow-premium rounded-5 h-100 overflow-hidden hover-lift bg-white">
+                        <div class="card-header border-0 bg-faint-green p-4 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-primary rounded-pill me-2">#ORD-@order.Id</span>
-                                <span class="text-muted small">@order.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                <span class="badge bg-dark-green text-white rounded-pill px-3 py-2 fw-bold ls-1 me-3">#ORD-@order.Id</span>
+                                <span class="text-muted extra-small fw-bold">Initiated: @order.CreatedAt.ToString("MMM dd, yyyy")</span>
                             </div>
-                            <span class="badge @GetStatusBadgeClass(order.OrderStatus) rounded-pill px-3 py-2">@order.OrderStatus</span>
+                            <span class="status-badge @GetStatusBadgeClass(order.OrderStatus)">@order.OrderStatus</span>
                         </div>
                         <div class="card-body p-4">
-                            <div class="row mb-4">
-                                <div class="col-6 border-end">
-                                    <p class="text-muted small fw-bold text-uppercase mb-1">Retailer</p>
-                                    <h6 class="fw-bold mb-0">@order.Retailer?.BusinessName</h6>
-                                    <p class="text-muted small mb-0">@order.Retailer?.City</p>
+                            <div class="row g-0 mb-4 bg-faint-green rounded-4 p-4">
+                                <div class="col-6 border-end border-light">
+                                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-2">Retailer Client</p>
+                                    <h6 class="fw-bold text-dark-green mb-1">@order.Retailer?.BusinessName</h6>
+                                    <p class="text-muted extra-small mb-0"><i class="fas fa-map-marker-alt me-1"></i> @order.Retailer?.City</p>
                                 </div>
                                 <div class="col-6 ps-4">
-                                    <p class="text-muted small fw-bold text-uppercase mb-1">Fulfillment</p>
-                                    <h6 class="fw-bold mb-0">@order.PurchaseOrders.Count Warehouses</h6>
-                                    <p class="text-muted small mb-0">@order.TotalAmount.ToString("C")</p>
+                                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-2">Fulfillment Density</p>
+                                    <h6 class="fw-bold text-dark-green mb-1">@order.PurchaseOrders.Count Warehouses</h6>
+                                    <p class="text-dark-green fw-bold extra-small mb-0">Value: @order.TotalAmount.ToString("C0")</p>
                                 </div>
                             </div>
 
-                            <!-- Progress Visualization -->
-                            <div class="mb-4 order-status-container" data-order-id="@order.Id">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="small fw-bold">Current Logistics Progress</span>
-                                    <span class="small text-primary fw-bold status-text">@order.OrderStatus</span>
+                            <!-- Progress Intelligence -->
+                            <div class="mb-4 px-2 order-status-container" data-order-id="@order.Id">
+                                <div class="d-flex justify-content-between mb-3 align-items-center">
+                                    <span class="extra-small fw-bold text-muted text-uppercase ls-1">Logistics Pipeline</span>
+                                    <span class="badge bg-accent-green text-dark-green rounded-pill px-3 py-1 extra-small fw-bold status-text">@order.OrderStatus</span>
                                 </div>
                                 
                                 <partial name="_OrderTrackingTimeline" model="order.OrderStatus" />
                             </div>
                         </div>
-                        <div class="card-footer border-0 bg-transparent p-3 pt-0 d-flex gap-2">
-                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary flex-grow-1 rounded-pill fw-bold">View Global Details</a>
-                            <a asp-controller="Message" asp-action="StartOrderChat" asp-route-orderId="@order.Id" class="btn btn-light rounded-pill px-3 shadow-sm" title="Message Retailer">
-                                <i class="fas fa-comment-medical text-primary"></i>
+                        <div class="card-footer border-0 bg-transparent p-4 pt-0 d-flex gap-3">
+                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" class="btn btn-dark-green flex-grow-1 rounded-pill fw-bold py-2 shadow-premium">
+                                Audit Tracking Details <i class="fas fa-chevron-right ms-2 text-accent-green"></i>
+                            </a>
+                            <a asp-controller="Message" asp-action="StartOrderChat" asp-route-orderId="@order.Id" class="btn btn-faint-green rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;" title="Communicate">
+                                <i class="fas fa-comment-dots text-dark-green"></i>
                             </a>
                         </div>
                     </div>
@@ -79,10 +81,10 @@
         else
         {
             <div class="col-12 text-center py-5">
-                <div class="py-5 bg-light rounded-4 border-2 border-dashed">
-                    <i class="fas fa-search-location fa-4x text-muted mb-3 opacity-25"></i>
-                    <h5>No Active Monitoring Subscriptions</h5>
-                    <p class="text-muted">Currently there are no orders being tracked through the logistics pipeline.</p>
+                <div class="py-5 bg-faint-green rounded-5 border-dashed-custom">
+                    <i class="fas fa-search-location fa-4x text-dark-green opacity-10 mb-4"></i>
+                    <h5 class="fw-bold text-dark-green">No Monitoring Active</h5>
+                    <p class="text-muted small">There are currently no orders in the active monitoring pipeline.</p>
                 </div>
             </div>
         }
@@ -94,89 +96,70 @@
     {
         return status switch
         {
-            "Pending" => "bg-warning text-dark",
-            "Accepted" => "bg-info text-dark",
-            "Processing" => "bg-primary text-white",
-            "Packed" => "bg-purple text-white",
-            "In Transit" => "bg-indigo text-white",
-            "Delivered" => "bg-success text-white",
-            "Completed" => "bg-dark text-white",
-            _ => "bg-secondary"
+            "Pending" => "bg-soft-warning text-warning",
+            "Accepted" => "bg-soft-info text-info",
+            "Processing" => "bg-soft-primary text-primary",
+            "Packed" => "bg-soft-indigo text-indigo",
+            "In Transit" => "bg-soft-primary text-primary",
+            "Delivered" => "bg-soft-success text-success",
+            "Completed" => "bg-soft-dark text-dark",
+            _ => "bg-soft-secondary text-secondary"
         };
-    }
-
-    int GetProgressPercentage(string status)
-    {
-        return status switch
-        {
-            "Pending" => 5,
-            "Accepted" => 20,
-            "Processing" => 40,
-            "Packed" => 60,
-            "In Transit" => 80,
-            "Delivered" => 95,
-            "Completed" => 100,
-            _ => 0
-        };
-    }
-
-    string GetProgressColor(string status)
-    {
-        if (status == "Delivered" || status == "Completed") return "bg-success";
-        if (status == "Pending" || status == "Accepted") return "bg-warning";
-        return "bg-primary";
-    }
-
-    bool IsCompleted(string currentStatus, string targetStatus)
-    {
-        var statuses = new List<string> { "Pending", "Accepted", "Processing", "Packed", "In Transit", "Delivered", "Completed" };
-        return statuses.IndexOf(currentStatus) >= statuses.IndexOf(targetStatus);
     }
 }
 
 @section Styles {
     <style>
-        .bg-purple { background-color: #6f42c1 !important; }
-        .bg-indigo { background-color: #6610f2 !important; }
+        :root {
+            --dark-green: #1a3d31;
+            --accent-green: #d4f06d;
+            --faint-green: #f2f6f6;
+        }
+
+        .text-dark-green { color: var(--dark-green) !important; }
+        .bg-dark-green { background-color: var(--dark-green) !important; }
+        .bg-faint-green { background-color: var(--faint-green) !important; }
+        .btn-dark-green { background-color: var(--dark-green); color: white; border: none; }
+        .btn-dark-green:hover { background-color: #244d3e; color: white; }
+        .bg-accent-green { background-color: var(--accent-green) !important; }
+        .text-accent-green { color: var(--accent-green) !important; }
+
+        .rounded-5 { border-radius: 24px !important; }
+        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
+        .ls-1 { letter-spacing: 1px; }
+        .extra-small { font-size: 0.7rem; }
         
-        .timeline-connector {
-            position: absolute;
-            top: 50%;
-            left: 10px;
-            right: 10px;
-            height: 2px;
-            background: #e5e7eb;
-            z-index: 0;
-            transform: translateY(-50%);
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .timeline-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            z-index: 1;
-            position: relative;
-            border: 2px solid white;
-            box-shadow: 0 0 0 1px #e5e7eb;
-        }
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-primary { background-color: rgba(37, 99, 235, 0.1); }
+        .bg-soft-indigo { background-color: rgba(111, 66, 193, 0.1); }
+        .text-indigo { color: #6f42c1 !important; }
+        .bg-soft-dark { background-color: rgba(0, 0, 0, 0.05); }
+        .bg-soft-secondary { background-color: rgba(0, 0, 0, 0.02); }
 
-        .timeline-dot.active {
-            background: #0d6efd;
-            box-shadow: 0 0 0 1px #0d6efd, 0 0 8px rgba(13, 110, 253, 0.5);
-        }
+        .border-dashed-custom { border: 2px dashed rgba(26, 61, 49, 0.1); }
 
-        .hover-lift {
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
-        }
-        .hover-lift:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
-        }
+        .nexus-filter-btn { border: none; transition: all 0.3s ease; }
+        .nexus-filter-btn.active { background-color: var(--dark-green) !important; color: var(--accent-green) !important; box-shadow: 0 4px 12px rgba(26,61,49,0.2); }
 
-        .filter-btn.active {
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
-        }
+        .hover-lift { transition: all 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-10px); }
+
+        .scrollbar-hidden::-webkit-scrollbar { display: none; }
+        .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .animate-slide-up { animation: slideUp 0.5s ease-out; }
+        @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 }
 
@@ -184,17 +167,16 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('orderSearch');
-            const filterBtns = document.querySelectorAll('.filter-btn');
+            const filterBtns = document.querySelectorAll('.nexus-filter-btn');
             const orderCards = document.querySelectorAll('.order-card');
 
             function filterOrders() {
                 const searchTerm = searchInput.value.toLowerCase();
-                const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+                const activeFilter = document.querySelector('.nexus-filter-btn.active').dataset.filter;
 
                 orderCards.forEach(card => {
                     const status = card.dataset.status;
                     const text = card.innerText.toLowerCase();
-                    
                     const matchesSearch = text.includes(searchTerm);
                     const matchesFilter = activeFilter === 'all' || status === activeFilter;
 
@@ -210,17 +192,15 @@
 
             filterBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
-                    filterBtns.forEach(b => b.classList.remove('active', 'btn-primary'));
-                    filterBtns.forEach(b => b.classList.add('btn-outline-secondary'));
+                    filterBtns.forEach(b => b.classList.remove('active', 'btn-dark-green'));
+                    filterBtns.forEach(b => b.classList.add('btn-white'));
                     
-                    this.classList.remove('btn-outline-secondary');
-                    this.classList.add('active', 'btn-primary');
-                    
+                    this.classList.remove('btn-white');
+                    this.classList.add('active', 'btn-dark-green');
                     filterOrders();
                 });
             });
 
-            // Polling for status updates
             setInterval(function() {
                 document.querySelectorAll('.order-status-container').forEach(container => {
                     const orderId = container.dataset.orderId;
@@ -229,15 +209,11 @@
                         .then(data => {
                             const statusText = container.querySelector('.status-text');
                             if (statusText.innerText !== data.status) {
-                                // Status changed! Refresh the page or update UI partially
-                                // For simplicity and robustness, we can update the status badge and reload if needed
-                                // but ideally we'd swap the timeline partial content.
-                                // Let's just update the status text and reload the timeline if it changes.
-                                location.reload(); // Simple refresh for now to ensure all partials update
+                                location.reload();
                             }
                         });
                 });
-            }, 5000); // Poll every 5 seconds
+            }, 10000); // Increased to 10s for performance
         });
     </script>
 }

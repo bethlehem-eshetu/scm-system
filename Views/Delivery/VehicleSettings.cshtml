@@ -4,78 +4,106 @@
 }
 
 <div class="container-fluid px-4 py-3">
-    <div class="mb-4">
-        <h2 class="fw-bold text-dark mb-1">Vehicle Settings</h2>
-        <p class="text-muted">Configure your hardware telemetry and active vehicle preferences.</p>
+    <div class="mb-5">
+        <h1 class="h2 fw-bold text-dark-green mb-1">Vehicle Settings</h1>
+        <p class="text-muted small">Configure your hardware telemetry and active vehicle preferences.</p>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4">
+        <div class="alert bg-soft-success text-success border-0 shadow-sm rounded-5 mb-4 px-4 py-3 animate-slide-down">
             <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
         </div>
     }
     
-    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-        <div class="card-header bg-white p-4 border-bottom-0 pb-0">
-            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-truck me-2 text-primary"></i>Vehicle Configuration</h5>
+    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
+        <div class="card-header bg-white p-4 border-0">
+            <h5 class="fw-bold mb-0 text-dark-green"><i class="fas fa-truck me-3 text-accent-green"></i>Vehicle Configuration</h5>
         </div>
-        <div class="card-body p-4">
+        <div class="card-body p-4 pt-0">
             <form asp-action="UpdateVehicleSettings" method="post">
                 <div class="row g-4">
                     <!-- Standard Vehicle Readonly Fields -->
                     <div class="col-md-6">
-                        <label class="form-label text-muted small fw-bold text-uppercase mb-1">Assigned Vehicle Model</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-car text-muted"></i></span>
-                            <input type="text" class="form-control bg-light border-start-0" value="Toyota Hilux 2020 Cargo" readonly disabled />
+                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1 mb-2">Assigned Model</label>
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden">
+                            <span class="input-group-text bg-faint-green border-0 px-3"><i class="fas fa-car text-dark-green opacity-50"></i></span>
+                            <input type="text" class="form-control bg-faint-green border-0 p-3 text-dark-green fw-bold" value="Toyota Hilux 2020 Cargo" readonly disabled />
                         </div>
-                        <div class="form-text">Your system-assigned delivery vehicle. Cannot be changed manually.</div>
+                        <div class="x-small text-muted mt-2 ps-2">System-assigned hardware. Cannot be changed manually.</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-muted small fw-bold text-uppercase mb-1">Registration Plate</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-id-card text-muted"></i></span>
-                            <input type="text" class="form-control bg-light border-start-0" value="ET-A8824" readonly disabled />
+                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1 mb-2">License Plate</label>
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden">
+                            <span class="input-group-text bg-faint-green border-0 px-3"><i class="fas fa-id-card text-dark-green opacity-50"></i></span>
+                            <input type="text" class="form-control bg-faint-green border-0 p-3 text-dark-green fw-bold" value="ET-A8824" readonly disabled />
                         </div>
                     </div>
 
-                    <div class="col-12 mt-4">
-                        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-satellite-dish text-primary me-2"></i>Telemetry Preferences</h6>
+                    <div class="col-12 mt-5">
+                        <h6 class="fw-bold text-dark-green border-bottom border-light pb-3 mb-4"><i class="fas fa-satellite-dish text-accent-green me-2"></i>Telemetry & Status</h6>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Live GPS Broadcasting</label>
-                        <select class="form-select border-primary" style="border-width: 2px;">
+                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1 mb-2">Live GPS Broadcasting</label>
+                        <select class="form-select rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold">
                             <option value="active" selected>Enabled (High Accuracy Map Updates)</option>
                             <option value="power-save">Power Save Mode (Updates every 5 minutes)</option>
                             <option value="offline" disabled>Offline (Dispatch Admin Override Required)</option>
                         </select>
-                        <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i>Required to be active when holding "In Transit" packages.</div>
+                        <div class="x-small text-muted mt-2 ps-2"><i class="fas fa-info-circle me-1"></i>Required when holding "In Transit" packages.</div>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Vehicle Status Signal</label>
-                        <select class="form-select">
+                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1 mb-2">Vehicle Status Signal</label>
+                        <select class="form-select rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold">
                             <option value="good" selected>Fully Operational</option>
                             <option value="fuel">Refueling Needed</option>
-                            <option value="maintenance">Minor Maintenance Needed after Route</option>
+                            <option value="maintenance">Minor Maintenance Needed</option>
                             <option value="critical">Critical Fault (Requires Towing)</option>
                         </select>
                     </div>
 
                 </div>
                 
-                <div class="mt-5 bg-light p-4 rounded-3 d-flex justify-content-between align-items-center">
+                <div class="mt-5 bg-faint-green p-4 rounded-5 d-flex justify-content-between align-items-center shadow-sm">
                     <div>
-                        <h6 class="fw-bold mb-1">Save these profile settings?</h6>
-                        <p class="small text-muted mb-0">Changes apply immediately to your active route tracking system.</p>
+                        <h6 class="fw-bold mb-1 text-dark-green">Apply hardware updates?</h6>
+                        <p class="x-small text-muted mb-0">Changes apply immediately to your active route tracking system.</p>
                     </div>
-                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
-                        <i class="fas fa-save me-2"></i> Apply Settings
+                    <button type="submit" class="btn btn-dark-green rounded-pill px-5 py-2 fw-bold shadow-premium">
+                        <i class="fas fa-save me-2"></i> APPLY CHANGES
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --dark-green: #1a3d31;
+        --accent-green: #d4f06d;
+        --faint-green: #f2f6f6;
+    }
+    .text-dark-green { color: var(--dark-green) !important; }
+    .bg-dark-green { background-color: var(--dark-green) !important; }
+    .bg-accent-green { background-color: var(--accent-green) !important; }
+    .text-accent-green { color: var(--accent-green) !important; }
+    .bg-faint-green { background-color: var(--faint-green) !important; }
+    .shadow-premium { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important; }
+    .rounded-5 { border-radius: 24px !important; }
+    .x-small { font-size: 0.7rem; }
+    .ls-1 { letter-spacing: 1px; }
+
+    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+    
+    .animate-slide-down {
+        animation: slideDown 0.4s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

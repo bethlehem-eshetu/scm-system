@@ -269,8 +269,8 @@ namespace SCM_System.Controllers
             return View(notifications);
         }
 
-        // GET: /Retailer/AccountSettings
-        public async Task<IActionResult> AccountSettings()
+        // GET: /Retailer/Settings
+        public async Task<IActionResult> Settings()
         {
             if (!IsRetailer()) return RedirectToAction("Login", "Account");
 
@@ -604,11 +604,11 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> UploadProfilePicture(IFormFile profilePicture)
         {
-            if (!IsRetailer()) return RedirectToAction("AccountSettings");
+            if (!IsRetailer()) return RedirectToAction("Settings");
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            if (retailer == null || profilePicture == null) return RedirectToAction("AccountSettings");
+            if (retailer == null || profilePicture == null) return RedirectToAction("Settings");
 
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(profilePicture.FileName);
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/profiles", fileName);
@@ -620,10 +620,17 @@ namespace SCM_System.Controllers
             }
 
             retailer.BusinessLogo = "/uploads/profiles/" + fileName;
+            if (retailer.User != null)
+            {
+                retailer.User.ProfileImage = retailer.BusinessLogo;
+            }
             await _context.SaveChangesAsync();
 
+            // Update session for immediate UI reflect
+            HttpContext.Session.SetString("ProfileImg", retailer.BusinessLogo);
+
             TempData["SuccessMessage"] = "Profile picture updated!";
-            return RedirectToAction("AccountSettings");
+            return RedirectToAction("Settings");
         }
 
         [HttpPost]
