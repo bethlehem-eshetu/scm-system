@@ -26,64 +26,97 @@
         </div>
     }
 
-    <!-- Premium Enhanced Header -->
+    <!-- Luxury Emerald Header -->
     <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
-                <!-- Background Decorative Elements -->
-                <div class="banner-overlay"></div>
-                <div class="banner-glow"></div>
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-2xl border-0 position-relative overflow-hidden">
+                <!-- Background Decorative Elements (Luxury Mesh) -->
+                <div class="banner-mesh"></div>
+                <div class="banner-circle-1"></div>
+                <div class="banner-circle-2"></div>
                 
                 <div class="row align-items-center position-relative z-index-2">
                     <div class="col-lg-7 mb-4 mb-lg-0">
-                        <nav aria-label="breadcrumb" class="mb-3">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="#" class="text-white text-opacity-50 text-decoration-none small fw-bold text-uppercase tracking-widest">Retailer</a></li>
-                                <li class="breadcrumb-item active small fw-bold text-uppercase tracking-widest text-white" aria-current="page">Overview</li>
-                            </ol>
-                        </nav>
-                        <h1 class="display-5 fw-bold text-white mb-2">
-                            Welcome back, <span class="text-gradient-gold">@Model.BusinessName</span>
+                        <div class="d-inline-flex align-items-center px-3 py-1 rounded-pill bg-white bg-opacity-10 border border-white border-opacity-10 mb-3 mb-lg-4">
+                            <span class="text-white text-opacity-75 small fw-bold text-uppercase tracking-widest" style="font-size: 10px;">
+                                <i class="fas fa-shield-alt me-2 text-info"></i>Retailer Portal
+                            </span>
+                            <span class="mx-2 text-white text-opacity-25">|</span>
+                            <span class="text-white text-opacity-75 small fw-bold text-uppercase tracking-widest" style="font-size: 10px;">Overview</span>
+                        </div>
+                        
+                        <h1 class="display-4 fw-bold text-white mb-3 tracking-tight">
+                            Hello, <span class="text-gradient-gold">@Model.BusinessName</span>
                             @if (Model.User.IsFaydaVerified) { 
-                                <span class="verified-badge ms-2" title="Fayda Verified Business">
-                                    <i class="fas fa-check-circle"></i>
+                                <span class="premium-badge ms-2" title="Fayda Verified Business">
+                                    <i class="fas fa-certificate"></i>
+                                    <i class="fas fa-check small-check"></i>
                                 </span>
                             }
                         </h1>
-                        <p class="text-white text-opacity-75 mb-0 fs-5">
-                            <i class="fas fa-map-marker-alt me-2 text-info"></i>@Model.City, @Model.Region 
-                            <span class="mx-2 opacity-25">|</span>
-                            <i class="fas fa-sync-alt me-2 text-success"></i>System synced at @DateTime.Now.ToString("HH:mm")
-                        </p>
+                        
+                        <div class="d-flex flex-wrap align-items-center gap-4 text-white text-opacity-75">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-circle-sm bg-info bg-opacity-20 me-2">
+                                    <i class="fas fa-map-marker-alt text-info"></i>
+                                </div>
+                                <span class="fw-medium">@Model.City, @Model.Region</span>
+                            </div>
+                            <div class="vr opacity-25 d-none d-md-block" style="height: 20px;"></div>
+                            <div class="d-flex align-items-center">
+                                <div class="pulse-container me-2">
+                                    <div class="pulse-dot"></div>
+                                </div>
+                                <span class="fw-medium">System synced at @DateTime.Now.ToString("HH:mm")</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-lg-5 text-lg-end">
                         <div class="d-flex flex-wrap justify-content-lg-end gap-3">
-                            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
-                                <div class="btn-icon bg-white bg-opacity-10 rounded-3">
-                                    <i class="fas fa-shopping-cart text-white"></i>
+                            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-luxury-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
+                                <div class="luxury-icon-box">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    @if(ViewBag.CartItemCount > 0) {
+                                        <span class="luxury-badge-dot"></span>
+                                    }
                                 </div>
                                 <div class="text-start">
-                                    <div class="extra-small text-white text-opacity-50 text-uppercase">Your Cart</div>
+                                    <div class="extra-small opacity-50 text-uppercase tracking-wider" style="font-size: 9px;">Active Cart</div>
                                     <div class="text-white">View Items</div>
                                 </div>
                             </a>
+                            
                             <div class="dropdown">
-                                <button class="btn btn-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg" type="button" data-bs-toggle="dropdown">
-                                    <div class="btn-icon bg-black bg-opacity-20 rounded-3">
-                                        <i class="fas fa-bolt"></i>
+                                <button class="btn btn-luxury-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg" type="button" data-bs-toggle="dropdown">
+                                    <div class="luxury-icon-box-gold">
+                                        <i class="fas fa-plus"></i>
                                     </div>
-                                    <div class="text-start">
-                                        <div class="extra-small text-black text-opacity-50 text-uppercase">Actions</div>
-                                        <div class="text-black">Quick Hub</div>
+                                    <div class="text-start text-dark">
+                                        <div class="extra-small opacity-60 text-uppercase tracking-wider" style="font-size: 9px;">Quick Action</div>
+                                        <div class="fw-bold">Create Order</div>
                                     </div>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-2xl p-2 mt-2" style="border-radius: 20px; min-width: 240px;">
-                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Procurement</h6></li>
-                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search me-2 text-primary"></i> Browse Marketplace</a></li>
-                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle me-2 text-warning"></i> Initiate New Tender</a></li>
-                                    <li><hr class="dropdown-divider opacity-10"></li>
-                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Logistics</h6></li>
-                                    <li><a class="dropdown-item py-2 px-3 rounded-4" asp-action="OrderTracking"><i class="fas fa-truck-loading me-2 text-success"></i> Active Shipments</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-2xl p-2 mt-3 animate-fade-in" style="border-radius: 24px; min-width: 260px; backdrop-filter: blur(20px); background: rgba(255,255,255,0.95);">
+                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3 text-muted" style="font-size: 10px;">Main Procurement</h6></li>
+                                    <li><a class="dropdown-item py-3 px-4 rounded-4 mb-1 d-flex align-items-center" asp-controller="Retailer" asp-action="BrowseCatalog">
+                                        <div class="icon-sq-sm bg-primary bg-opacity-10 text-primary me-3"><i class="fas fa-search"></i></div>
+                                        <div>
+                                            <div class="fw-bold text-dark">Browse Marketplace</div>
+                                            <div class="extra-small text-muted">Order from 500+ suppliers</div>
+                                        </div>
+                                    </a></li>
+                                    <li><a class="dropdown-item py-3 px-4 rounded-4 mb-1 d-flex align-items-center" asp-controller="Tender" asp-action="Create">
+                                        <div class="icon-sq-sm bg-warning bg-opacity-10 text-warning me-3"><i class="fas fa-file-signature"></i></div>
+                                        <div>
+                                            <div class="fw-bold text-dark">New Tender</div>
+                                            <div class="extra-small text-muted">Get custom bids for bulk</div>
+                                        </div>
+                                    </a></li>
+                                    <li><hr class="dropdown-divider mx-3 opacity-10"></li>
+                                    <li><a class="dropdown-item py-3 px-4 rounded-4 d-flex align-items-center text-success" asp-action="OrderTracking">
+                                        <div class="icon-sq-sm bg-success bg-opacity-10 text-success me-3"><i class="fas fa-truck-moving"></i></div>
+                                        <div class="fw-bold">Track Shipments</div>
+                                    </a></li>
                                 </ul>
                             </div>
                         </div>
@@ -414,65 +447,134 @@
 </div>
 
 <style>
-    /* Premium Enhanced Header Styles */
     .welcome-banner {
-        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, #05261F 0%, #0B3B2F 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
     }
-    .banner-overlay {
+    .banner-mesh {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: url('https://www.transparenttextures.com/patterns/cubes.png');
-        opacity: 0.05; z-index: 1;
+        background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        opacity: 0.2; z-index: 1;
     }
-    .banner-glow {
-        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
-        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
-        filter: blur(50px); z-index: 1;
+    .banner-circle-1 {
+        position: absolute; top: -100px; right: -100px; width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(46, 156, 122, 0.3) 0%, transparent 70%);
+        border-radius: 50%; z-index: 1;
+        filter: blur(40px);
+    }
+    .banner-circle-2 {
+        position: absolute; bottom: -150px; left: -100px; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, transparent 70%);
+        border-radius: 50%; z-index: 1;
+        filter: blur(60px);
     }
     .text-gradient-gold {
-        background: linear-gradient(to right, #f1c40f, #f39c12);
+        background: linear-gradient(135deg, #FFE8A3 0%, #FFD700 45%, #B8860B 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
     }
-    .verified-badge {
-        color: #3498db;
-        font-size: 1.5rem;
-        filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.3));
+    .premium-badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #FFD700;
+        font-size: 1.8rem;
+        vertical-align: middle;
+        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
     }
-    .btn-glass {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+    .small-check {
+        position: absolute;
+        font-size: 0.7rem;
+        color: #05261F;
+        top: 52%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .btn-luxury-glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         color: white;
-        transition: all 0.3s ease;
-        border-radius: 16px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-radius: 20px;
     }
-    .btn-glass:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateY(-2px);
+    .btn-luxury-glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
         color: white;
     }
-    .btn-gold {
-        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+    .btn-luxury-gold {
+        background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
         border: none;
-        color: #000;
-        transition: all 0.3s ease;
-        border-radius: 16px;
+        color: #05261F;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(218, 165, 32, 0.3);
     }
-    .btn-gold:hover {
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
+    .btn-luxury-gold:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(218, 165, 32, 0.4);
+        color: #05261F;
     }
-    .btn-icon {
-        width: 38px; height: 38px;
+    .luxury-icon-box {
+        width: 44px; height: 44px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        position: relative;
+    }
+    .luxury-icon-box-gold {
+        width: 44px; height: 44px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+    }
+    .luxury-badge-dot {
+        position: absolute; top: -2px; right: -2px;
+        width: 10px; height: 10px;
+        background: #FF4B2B;
+        border: 2px solid #0B3B2F;
+        border-radius: 50%;
+    }
+    .icon-circle-sm {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem;
+    }
+    .icon-sq-sm {
+        width: 40px; height: 40px;
+        border-radius: 12px;
         display: flex; align-items: center; justify-content: center;
         font-size: 1.1rem;
     }
-    .z-index-2 { z-index: 2; }
-    .tracking-widest { letter-spacing: 2px; }
+    .pulse-container {
+        width: 12px; height: 12px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .pulse-dot {
+        width: 8px; height: 8px;
+        background: #2ecc71;
+        border-radius: 50%;
+        box-shadow: 0 0 0 rgba(46, 204, 113, 0.4);
+        animation: pulse 2s infinite;
+    }
+    @@keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+    }
+    .tracking-tight { letter-spacing: -1.5px; }
+    .shadow-2xl { box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.5); }
 
     /* Premium Dashboard Styles */
     .kpi-card {
