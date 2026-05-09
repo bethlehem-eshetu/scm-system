@@ -1,644 +1,317 @@
 @model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
 @using SCM_System.Models.Constants
-@using System.Text.Json
 @{
     ViewData["Title"] = "Warehouse Operational Hub";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
     var manager = ViewBag.Manager as SCM_System.Models.Entities.SupplierEmployee;
     var warehouse = ViewBag.Warehouse as SCM_System.Models.Entities.Warehouse;
-    var lowStockProducts = ViewBag.LowStockProducts as IEnumerable<SCM_System.Models.Entities.Inventory>;
-    var lightestAgent = ViewBag.LightestAgent as SCM_System.Models.Entities.SupplierEmployee;
-    var nextPackedOrder = ViewBag.NextPackedOrder as SCM_System.Models.Entities.PurchaseOrder;
 }
 
-<div class="dashboard-wrapper pb-5" style="background: #F7F9FC; min-height: 100vh; margin: -2rem;">
-    <!-- Top Header -->
-    <div class="header-banner bg-white border-bottom px-4 py-3 mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="fw-bold mb-0" style="color: #2C3E50;">@(warehouse?.Name ?? "Hub Operations")</h4>
-                <p class="text-muted small mb-0"><i class="fas fa-map-marker-alt me-1"></i> @(ViewBag.WarehouseLocation)</p>
-            </div>
+<div class="container-fluid px-4 py-3">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1 fs-3">Operational Hub: @(warehouse?.Name ?? "Facility")</h2>
             <div class="d-flex align-items-center gap-3">
-                <div class="text-end d-none d-md-block">
-                    <div class="fw-bold small" style="color: #2C3E50;">@manager?.User?.FullName</div>
-                    <div class="text-muted" style="font-size: 0.75rem;">@manager?.EmployeeRole</div>
+                <p class="text-muted small mb-0 fw-medium">
+                    <i class="fas fa-map-marker-alt text-primary me-1"></i> @(ViewBag.WarehouseLocation ?? $"{warehouse?.City}, {warehouse?.Region}")
+                </p>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill border py-2 px-3">
+                    <i class="fas fa-barcode me-1"></i> Hub Code: @warehouse?.WarehouseCode
+                </span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            @if (manager?.HubAccesses?.Count > 1)
+            {
+                <a asp-action="Dashboard" asp-route-warehouseId="" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-exchange-alt me-2"></i> Switch Hub
+                </a>
+            }
+            <div class="bg-white border rounded-pill px-3 py-2 shadow-sm d-flex align-items-center">
+                <div class="avatar-xs bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                    <i class="fas fa-user-shield" style="font-size: 0.7rem;"></i>
                 </div>
-                <div class="bg-light p-2 rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-user-shield text-primary"></i>
+                <span class="small fw-bold text-dark">@manager?.User?.FullName</span>
+            </div>
+            <a asp-action="AddStock" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="fas fa-plus me-2"></i> New Stock In
+            </a>
+        </div>
+    </div>
+
+    <!-- 1️⃣ Summary Section Tiles -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-body p-4 bg-gradient-light">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                            <i class="fas fa-clipboard-list fs-4"></i>
+                        </div>
+                        <span class="badge bg-light text-primary border rounded-pill">Hub Load</span>
+                    </div>
+                    <h2 class="fw-bold mb-1">@(ViewBag.TotalOrders ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">Active Purchase Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden border-start border-4 border-warning">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                            <i class="fas fa-hourglass-half fs-4"></i>
+                        </div>
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">Picking Depth</span>
+                    </div>
+                    <h2 class="fw-bold mb-1">@(ViewBag.PendingPrep ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">Needs Picking/Packing</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden border-start border-4 border-success">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-success bg-opacity-10 text-success rounded-3 p-3">
+                            <i class="fas fa-box-check fs-4"></i>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Staging Area</span>
+                    </div>
+                    <h2 class="fw-bold mb-1">@(ViewBag.ReadyForPickup ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">Packed & Awaiting Courier</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden border-start border-4 border-info">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-info bg-opacity-10 text-info rounded-3 p-3">
+                            <i class="fas fa-truck-moving fs-4"></i>
+                        </div>
+                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill">Outbound</span>
+                    </div>
+                    <h2 class="fw-bold mb-1">@(ViewBag.InProgress ?? 0)</h2>
+                    <p class="text-muted smaller mb-0 fw-bold">In Transit / Delivering</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="container-fluid px-4">
-        <!-- KPI Row -->
-        <div class="row g-4 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="kpi-card">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="kpi-icon" style="background: rgba(32, 201, 151, 0.1); color: #20C997;">
-                            <i class="fas fa-clipboard-list"></i>
+    <div class="row g-4">
+        <!-- 2️⃣ Orders Management Section -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Hub Worklist & SLA Tracking</h5>
+                    <div class="d-flex gap-2">
+                        <div class="input-group input-group-sm" style="width: 200px;">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control bg-light border-0" placeholder="PO # or Retailer...">
                         </div>
-                        <span class="text-muted small fw-bold">Orders to Pick</span>
-                    </div>
-                    <h3 class="fw-bold mb-1" style="color: #2C3E50;">@(ViewBag.PendingPrep ?? 0)</h3>
-                    <p class="text-muted smaller mb-0">Assigned & Pending</p>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="kpi-card">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="kpi-icon" style="background: rgba(44, 125, 160, 0.1); color: #2C7DA0;">
-                            <i class="fas fa-box-open"></i>
-                        </div>
-                        <span class="text-muted small fw-bold">Packing</span>
-                    </div>
-                    <h3 class="fw-bold mb-1" style="color: #2C3E50;">@(ViewBag.PackingInProgress ?? 0)</h3>
-                    <p class="text-muted smaller mb-0">At Packing Stations</p>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="kpi-card">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="kpi-icon" style="background: rgba(32, 201, 151, 0.1); color: #20C997;">
-                            <i class="fas fa-check-double"></i>
-                        </div>
-                        <span class="text-muted small fw-bold">Ready</span>
-                    </div>
-                    <h3 class="fw-bold mb-1" style="color: #2C3E50;">@(ViewBag.PackedAndReady ?? 0)</h3>
-                    <p class="text-muted smaller mb-0">Awaiting Dispatch</p>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="kpi-card overflow-hidden">
-                    <div class="d-flex justify-content-between mb-2">
-                        <div class="kpi-icon" style="background: rgba(44, 125, 160, 0.1); color: #2C7DA0;">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <span class="text-muted small fw-bold">Stock Value</span>
-                    </div>
-                    <h3 class="fw-bold mb-0" style="color: #2C3E50;">$@(ViewBag.TotalStockValue?.ToString("N0") ?? "0")</h3>
-                    <div class="sparkline-container" style="height: 30px; margin: 0 -1rem -1rem -1rem;">
-                        <canvas id="stockSparkline"></canvas>
+                        <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-primary rounded-pill px-3">Full List</a>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Hub Action Bar (Ergonomic Placement) -->
-        <div class="d-flex justify-content-end gap-3 mb-4 mt-2">
-            <button class="btn action-icon-btn @(manager?.EnableVoicePicking == true ? "active" : "")" id="voicePickingBtn" title="Voice Picking (Toggle)" data-bs-toggle="tooltip">
-                <i class="fas fa-microphone-alt"></i>
-            </button>
-            <button class="btn action-icon-btn" id="printPickingBtn" title="Print Worklist (PDF)" data-bs-toggle="tooltip">
-                <i class="fas fa-file-pdf"></i>
-            </button>
-            <button class="btn action-icon-btn" id="barcodeBtn" title="Scan Barcode" data-bs-toggle="tooltip">
-                <i class="fas fa-camera"></i>
-            </button>
-            <button class="btn action-icon-btn active" id="toggleChartBtn" title="Toggle Hourly Analytics" data-bs-toggle="tooltip">
-                <i class="fas fa-chart-line"></i>
-            </button>
-        </div>
-
-        <div class="row g-4">
-            <!-- Left Column -->
-            <div class="col-lg-8">
-                <!-- Hourly Picking Trend -->
-                <div class="card mb-4" id="chartCard">
-                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0" style="color: #2C3E50;">Today's Picking Pace</h6>
-                        <span class="badge" style="background: rgba(32, 201, 151, 0.1); color: #20C997;">8 AM - 6 PM</span>
-                    </div>
-                    <div class="card-body">
-                        <div style="height: 250px;">
-                            <canvas id="hourlyPickingChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hub Worklist -->
-                <div class="card">
-                    <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0" style="color: #2C3E50;">Worklist & SLA Tracking</h6>
-                        <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-secondary rounded-pill px-3">View All</a>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light text-muted fw-bold" style="font-size: 0.7rem;">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 border-0">
+                            <thead class="bg-light text-muted fw-bold" style="font-size: 0.75rem;">
+                                <tr>
+                                    <th class="ps-4 py-3">PO DETAILS</th>
+                                    <th>STATUS</th>
+                                    <th>SLA VELOCITY</th>
+                                    <th>RETAILER</th>
+                                    <th class="text-end pe-4">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var po in Model.OrderByDescending(p => p.CreatedAt).Take(8))
+                                {
+                                    var timeOpen = DateTime.Now - po.CreatedAt;
+                                    var minutesOpen = timeOpen.TotalMinutes;
+                                    var slaClass = minutesOpen > 120 ? "danger" : (minutesOpen > 30 ? "warning" : "success");
+                                    var slaLabel = minutesOpen < 60 ? $"{(int)minutesOpen}m" : $"{(timeOpen.TotalHours):F1}h";
+                                    
                                     <tr>
-                                        <th class="ps-4">PO DETAILS</th>
-                                        <th>STATUS</th>
-                                        <th>RETAILER</th>
-                                        <th class="text-end pe-4">ACTION</th>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">#@po.PONumber</div>
+                                            <div class="text-muted extra-small">Received @po.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                                        </td>
+                                        <td>
+                                            @{
+                                                var (bg, txt) = po.Status switch {
+                                                    POStatus.Issued => ("bg-warning-soft", "text-warning"),
+                                                    POStatus.Processing => ("bg-primary-soft", "text-primary"),
+                                                    POStatus.Picked => ("bg-info-soft", "text-info"),
+                                                    POStatus.Packed => ("bg-success-soft", "text-success"),
+                                                    POStatus.InTransit => ("bg-info", "text-white"),
+                                                    POStatus.Delivered => ("bg-dark", "text-white"),
+                                                    _ => ("bg-light", "text-muted")
+                                                };
+                                            }
+                                            <span class="badge @bg @txt rounded-pill px-3">@po.Status</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-@slaClass me-2" style="width: 8px; height: 8px;" title="SLA Intensity"></div>
+                                                <div class="small fw-bold @(slaClass == "danger" ? "text-danger" : "")">@slaLabel</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold small">@po.Retailer?.BusinessName</div>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex justify-content-end gap-1">
+                                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-light rounded-circle shadow-sm" title="View Details">
+                                                    <i class="fas fa-eye text-primary"></i>
+                                                </a>
+                                                @if (po.Status == POStatus.Issued || po.Status == POStatus.Accepted || po.Status == POStatus.Picking) 
+                                                {
+                                                    var nextStatus = po.Status == POStatus.Picking ? POStatus.Picked : POStatus.Picking;
+                                                    var btnIcon = po.Status == POStatus.Picking ? "fa-check-double" : "fa-hand-holding-box";
+                                                    var btnTitle = po.Status == POStatus.Picking ? "Mark as Picked" : "Start Picking";
+                                                    var btnClass = po.Status == POStatus.Picking ? "text-info" : "text-warning";
+
+                                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                        <input type="hidden" name="id" value="@po.Id" />
+                                                        <input type="hidden" name="status" value="@nextStatus" />
+                                                        <input type="hidden" name="returnAction" value="Dashboard" />
+                                                        <button type="submit" class="btn btn-sm btn-light rounded-circle shadow-sm" title="@btnTitle">
+                                                            <i class="fas @btnIcon @btnClass"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var po in Model.OrderByDescending(p => p.CreatedAt).Take(5))
-                                    {
-                                        <tr>
-                                            <td class="ps-4">
-                                                <div class="fw-bold text-dark">#@po.PONumber</div>
-                                                <div class="text-muted smaller">@po.CreatedAt.ToString("MMM dd, HH:mm")</div>
-                                            </td>
-                                            <td>
-                                                <span class="status-badge status-@po.Status.ToString().ToLower()">@po.Status</span>
-                                            </td>
-                                            <td><div class="fw-bold small">@po.Retailer?.BusinessName</div></td>
-                                            <td class="text-end pe-4">
-                                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-light rounded-pill px-3 fw-bold" style="font-size: 0.75rem;">Manage</a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3️⃣ Stock & Fleet Summary -->
+        <div class="col-lg-4">
+            <!-- Reserved Stock Summary -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border-top border-4 border-primary">
+                <div class="card-header bg-white border-0 py-4 px-4 border-start border-4 border-primary">
+                    <h6 class="fw-bold mb-0">Inventory Capacity & Reserved Stock</h6>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="d-flex align-items-center justify-content-between mb-2 pt-3">
+                        <div class="text-muted small">Hub Utilization</div>
+                        <div class="fw-bold fs-5 text-primary">
+                            @{
+                                double capUsed = warehouse?.MaxCapacity > 0 ? (double)(ViewBag.TotalOnHand ?? 0) / warehouse.MaxCapacity * 100 : 0;
+                            }
+                            @capUsed.ToString("F0")%
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="text-muted small">Total Committed Items</div>
+                        <div class="fw-bold fs-5 text-primary">@(ViewBag.TotalReserved ?? 0)</div>
+                    </div>
+                    <div class="progress mb-4" style="height: 10px; border-radius: 5px; background: rgba(0,0,0,0.05);">
+                        <div class="progress-bar @(capUsed > 85 ? "bg-danger" : "bg-primary")" style="width: @capUsed%;"></div>
+                    </div>
+                    <div class="row text-center g-2 mb-4">
+                        <div class="col-6 border-end">
+                            <h4 class="fw-bold mb-0">@(ViewBag.TotalOnHand ?? 0)</h4>
+                            <span class="text-muted smaller">Units On Hand</span>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="fw-bold mb-0 @((ViewBag.LowStockAlertCount ?? 0) > 0 ? "text-danger" : "text-success")">@(ViewBag.LowStockAlertCount ?? 0)</h4>
+                            <span class="text-muted smaller">Replenish Alerts</span>
+                        </div>
+                    </div>
+                    <a asp-action="Inventory" class="btn btn-outline-primary w-100 rounded-pill fw-bold small">Manage Inventory</a>
+                </div>
+            </div>
+
+            <!-- Quick Stats: Fleet & Staff -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-4">Logistics Resources</h6>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-truck fa-sm"></i>
+                                </div>
+                                <span class="small fw-bold">Available Fleet</span>
+                            </div>
+                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.AvailableVehicles ?? 0) Units</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user-tie fa-sm"></i>
+                                </div>
+                                <span class="small fw-bold">Active Agents</span>
+                            </div>
+                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.ActiveAgents ?? 0) Online</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-light rounded-4 d-flex align-items-center">
+                        <div class="me-3 fs-3 text-primary opacity-50">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="smaller text-muted fw-normal">
+                            All resources are currently synced with the supplier's main pool.
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column -->
-            <div class="col-lg-4">
-                <!-- Capacity Gauge -->
-                <div class="card mb-4">
-                    <div class="card-body text-center p-4">
-                        <h6 class="fw-bold mb-4" style="color: #2C3E50;">Hub Capacity Utilization</h6>
-                        @{
-                            double capUsed = warehouse?.MaxCapacity > 0 ? (double)(ViewBag.TotalOnHand ?? 0) / warehouse.MaxCapacity * 100 : 0;
-                            if (capUsed > 100) capUsed = 100;
-                            var ringColor = capUsed > 90 ? "#dc3545" : (capUsed > 75 ? "#ffc107" : "#20C997");
-                        }
-                        <div class="gauge-wrap position-relative mb-3" data-bs-toggle="tooltip" title="Remaining space: @(warehouse.MaxCapacity - ViewBag.TotalOnHand) Pallets">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke="@ringColor" stroke-dasharray="@capUsed, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <text x="18" y="20.35" class="percentage">@capUsed.ToString("F0")%</text>
-                            </svg>
-                        </div>
-                        <div class="fw-bold fs-5 mb-0" style="color: #2C3E50;">@(ViewBag.TotalOnHand ?? 0) / @(warehouse?.MaxCapacity ?? 0)</div>
-                        <div class="text-muted smaller fw-bold">TOTAL PALLETS STORED</div>
-                    </div>
+            <!-- Hub Operational Log (Audit-Driven) -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-history me-2"></i> Hub Activity Log</h6>
+                    <span class="badge bg-primary">Live</span>
                 </div>
-
-                <!-- Recommended Dispatch -->
-                <div class="card mb-4" style="border-left: 4px solid #2C7DA0 !important;">
-                    <div class="card-body p-4">
-                        <h6 class="fw-bold mb-3" style="color: #2C3E50;"><i class="fas fa-truck-loading me-2" style="color: #2C7DA0;"></i> Recommended Dispatch</h6>
-                        @if (lightestAgent != null && nextPackedOrder != null)
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                        @if (ViewBag.RecentLogs != null && ((IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs).Any())
                         {
-                            <div class="mb-3">
-                                <div class="small fw-bold text-dark">Order #@nextPackedOrder.PONumber (@(ViewBag.NextPackedOrderWeight ?? 0) kg)</div>
-                                <div class="text-muted smaller">Assign to <strong>@lightestAgent.User?.FullName</strong> (Current load: @(lightestAgent.AssignedTasks.Count(t => t.Status == "In Progress"))/5)</div>
-                            </div>
-                            <button class="btn w-100 rounded-pill fw-bold" style="background: #2C7DA0; color: white;" 
-                                    onclick="assignDispatch(@nextPackedOrder.Id, @lightestAgent.Id)">
-                                Assign Now
-                            </button>
+                            @foreach (var log in (IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs)
+                            {
+                                <div class="list-group-item p-3 border-0 border-bottom">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-bold small text-primary">@log.ActionType</span>
+                                        <span class="text-muted extra-small">@log.PerformedAtUtc.ToLocalTime().ToString("HH:mm")</span>
+                                    </div>
+                                    <p class="text-muted mb-0 extra-small">@log.Notes</p>
+                                    <div class="mt-1 extra-small text-info">
+                                        <i class="fas fa-check-double me-1"></i> Hub Verified
+                                    </div>
+                                </div>
+                            }
                         }
                         else
                         {
-                            <div class="text-center py-3 opacity-50">
-                                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                                <div class="smaller fw-bold">NO PENDING DISPATCHES</div>
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-clipboard-list fa-2x mb-2 opacity-25"></i>
+                                <p class="small">No hub activity recorded yet.</p>
                             </div>
                         }
                     </div>
                 </div>
-
-                <!-- Replenishment Alerts -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h6 class="fw-bold mb-0" style="color: #2C3E50;">Replenishment Alerts</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="alert-list px-4 pb-4" style="max-height: 300px; overflow-y: auto;">
-                            @if (lowStockProducts != null && lowStockProducts.Any())
-                            {
-                                @foreach (var item in lowStockProducts)
-                                {
-                                    <div class="py-3 border-bottom d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <div class="fw-bold small">@item.Product?.ProductName</div>
-                                            <div class="smaller text-muted">Stock: <span class="text-danger fw-bold">@item.QuantityOnHand</span> | Threshold: @(manager?.LowStockThreshold ?? 20)</div>
-                                        </div>
-                                        <button class="btn btn-sm fw-bold px-3 rounded-pill" style="background: #20C997; color: white; font-size: 0.7rem;" 
-                                                onclick="openReplenishModal(@item.ProductId, '@item.Product?.ProductName', @item.QuantityOnHand)">
-                                            Request
-                                        </button>
-                                    </div>
-                                }
-                            }
-                            else
-                            {
-                                <div class="text-center py-4">
-                                    <p class="text-muted smaller mb-2">No low stock alerts. Your inventory is optimal.</p>
-                                    <a asp-action="Inventory" class="btn btn-sm btn-link text-decoration-none fw-bold" style="color: #20C997;">Manage Inventory</a>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Live Activity Feed -->
-                <div class="card">
-                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0" style="color: #2C3E50;">Live Activity Feed</h6>
-                        <span class="pulse-dot"></span>
-                    </div>
-                    <div class="card-body p-4">
-                        <ul class="timeline" id="activityFeed">
-                            <!-- Populated via AJAX -->
-                            <li class="text-center py-5 text-muted smaller">Syncing operational data...</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Replenishment Modal -->
-<div class="modal fade" id="replenishModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow-lg">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" style="color: #2C3E50;">Request Replenishment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="replenishForm">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="productId" id="modalProductId" />
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Source Warehouse</label>
-                        <select name="sourceWarehouseId" class="form-select border-0 bg-light" required>
-                            <option value="1">Central Hub (Main)</option>
-                            <option value="2">North Regional Cluster</option>
-                            <option value="3">East Port Storage</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label small fw-bold">Quantity</label>
-                            <input type="number" name="quantity" class="form-control border-0 bg-light" value="50" min="1" required />
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label small fw-bold">Current Stock</label>
-                            <input type="text" class="form-control border-0 bg-light" id="modalCurrentStock" readonly />
-                        </div>
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label small fw-bold text-muted">Internal Notes</label>
-                        <textarea name="remarks" class="form-control border-0 bg-light" rows="3" placeholder="Special handling requirements..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0 pb-4">
-                    <button type="submit" class="btn w-100 rounded-pill fw-bold" style="background: #20C997; color: white;">Submit Request</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Barcode Scan Modal -->
-<div class="modal fade" id="barcodeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-            <div class="modal-body p-5 text-center">
-                <div class="mb-4">
-                    <i class="fas fa-barcode fa-4x" style="color: #2C7DA0;"></i>
-                </div>
-                <h5 class="fw-bold mb-3">Scan Item Barcode</h5>
-                <p class="text-muted smaller mb-4">Input the barcode manually or use a peripheral scanner.</p>
-                <input type="text" class="form-control form-control-lg text-center mb-3" id="barcodeInput" placeholder="000000000000" autofocus>
-                <button class="btn w-100 rounded-pill fw-bold" style="background: #2C7DA0; color: white;" onclick="processBarcode()">Validate Barcode</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <style>
-    .kpi-card {
-        background: #FFFFFF;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border: none;
-        height: 100%;
-        transition: transform 0.2s;
-    }
-    .kpi-card:hover { transform: translateY(-5px); }
-    .kpi-icon {
-        width: 45px;
-        height: 45px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-    }
-    /* Action Icons Bar */
-    .action-icon-btn {
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        border: none;
-        background: white;
-        color: #2C3E50;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-    }
-    .action-icon-btn:hover {
-        background: #20C997;
-        color: white;
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px rgba(32, 201, 151, 0.2);
-    }
-    .action-icon-btn.active {
-        background: rgba(32, 201, 151, 0.1);
-        color: #20C997;
-        border: 1px solid rgba(32, 201, 151, 0.2);
-    }
-    .action-icon-btn.active:hover {
-        background: #20C997;
-        color: white;
-    }
-    .card {
-        background: #FFFFFF;
-        border-radius: 1rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border: none;
-    }
-    .smaller { font-size: 0.75rem; }
-    .status-badge {
-        font-size: 0.65rem;
-        font-weight: 800;
-        padding: 0.25rem 0.75rem;
-        border-radius: 50px;
-        text-transform: uppercase;
-    }
-    .status-poissued { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
-    .status-accepted { background: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
-    .status-processing { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
-    .status-picked { background: rgba(102, 16, 242, 0.1); color: #6610f2; }
-    .status-packed { background: rgba(32, 201, 151, 0.1); color: #20C997; }
-    .status-readyforpickup { background: rgba(25, 135, 84, 0.1); color: #198754; }
-    .status-delivered, .status-completed { background: rgba(32, 201, 151, 0.2); color: #0f5132; }
-    .status-intransit { background: rgba(44, 125, 160, 0.1); color: #2C7DA0; }
-    .status-cancelled { background: rgba(220, 53, 69, 0.1); color: #dc3545; }
-
-    /* Timeline */
-    .timeline {
-        list-style: none;
-        padding: 0;
-        position: relative;
-    }
-    .timeline-item {
-        position: relative;
-        padding-left: 30px;
-        margin-bottom: 20px;
-    }
-    .timeline-item:before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: -20px;
-        width: 2px;
-        background: #e9ecef;
-    }
-    .timeline-item:last-child:before { display: none; }
-    .timeline-dot {
-        position: absolute;
-        left: -4px;
-        top: 0;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-    }
-
-    /* Gauge */
-    .circular-chart { display: block; margin: 10px auto; max-width: 150px; max-height: 150px; }
-    .circle-bg { fill: none; stroke: #eee; stroke-width: 3.8; }
-    .circle { fill: none; stroke-width: 2.8; stroke-linecap: round; animation: progress 1s ease-out forwards; }
-    .percentage { fill: #2C3E50; font-family: 'Inter', sans-serif; font-size: 0.5em; text-anchor: middle; font-weight: 700; }
-    @@keyframes progress { 0% { stroke-dasharray: 0 100; } }
-
-    .pulse-dot {
-        width: 10px;
-        height: 10px;
-        background: #20C997;
-        border-radius: 50%;
-        animation: pulse-green 2s infinite;
-    }
-    @@keyframes pulse-green {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(32, 201, 151, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(32, 201, 151, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(32, 201, 151, 0); }
-    }
-</style>
-
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+    .bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 1. Stock Value Sparkline
-            const sparkCtx = document.getElementById('stockSparkline').getContext('2d');
-            const sparkData = @Html.Raw(ViewBag.StockValueTrend ?? "[300, 320, 310, 340, 360, 350, 380]");
-            new Chart(sparkCtx, {
-                type: 'line',
-                data: {
-                    labels: ['', '', '', '', '', '', ''],
-                    datasets: [{
-                        data: sparkData,
-                        borderColor: '#2C7DA0',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        fill: true,
-                        backgroundColor: 'rgba(44, 125, 160, 0.05)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: { x: { display: false }, y: { display: false } }
-                }
-            });
-
-            // 2. Hourly Picking Pace Chart
-            const hourlyCtx = document.getElementById('hourlyPickingChart').getContext('2d');
-            const hourlyRaw = @Html.Raw(ViewBag.HourlyPickingData ?? "[]");
-            const labels = hourlyRaw.map(d => d.Hour + ":00");
-            const data = hourlyRaw.map(d => d.Count);
-
-            const pickingChart = new Chart(hourlyCtx, {
-                type: 'line',
-                data: {
-                    labels: labels.length ? labels : ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
-                    datasets: [{
-                        label: 'Orders Picked',
-                        data: data.length ? data : [0, 0, 0, 0, 0, 0],
-                        borderColor: '#20C997',
-                        backgroundColor: 'rgba(32, 201, 151, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#20C997',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-
-            // 3. Chart Visibility Toggle
-            const toggleBtn = document.getElementById('toggleChartBtn');
-            const chartCard = document.getElementById('chartCard');
-            
-            function updateChartVisibility() {
-                const isHidden = localStorage.getItem('hideDashboardChart') === 'true';
-                if (isHidden) {
-                    chartCard.style.display = 'none';
-                    toggleBtn.classList.remove('active');
-                } else {
-                    chartCard.style.display = 'block';
-                    toggleBtn.classList.add('active');
-                }
-            }
-
-            updateChartVisibility();
-
-            toggleBtn.addEventListener('click', function() {
-                const isHidden = localStorage.getItem('hideDashboardChart') === 'true';
-                localStorage.setItem('hideDashboardChart', !isHidden);
-                updateChartVisibility();
-            });
-
-            // 4. Live Activity Refresh
-            function refreshActivity() {
-                fetch('/Warehouse/GetActivityLog')
-                    .then(r => r.json())
-                    .then(logs => {
-                        const container = document.getElementById('activityFeed');
-                        if (!logs.length) {
-                            container.innerHTML = '<li class="text-center py-3 text-muted smaller">No recent activity.</li>';
-                            return;
-                        }
-                        container.innerHTML = logs.map(log => `
-                            <li class="timeline-item">
-                                <span class="timeline-dot bg-${log.color || 'primary'}"></span>
-                                <div class="d-flex justify-content-between">
-                                    <div class="fw-bold small text-dark">${log.actionType}</div>
-                                    <div class="smaller text-muted">${log.time}</div>
-                                </div>
-                                <p class="text-muted smaller mb-0">${log.notes}</p>
-                            </li>
-                        `).join('');
-                    });
-            }
-            refreshActivity();
-            setInterval(refreshActivity, 15000);
-
-            // 5. Voice Picking Toggle
-            document.getElementById('voicePickingBtn').addEventListener('click', function() {
-                const isActive = this.classList.contains('active');
-                fetch('/Warehouse/ToggleVoicePicking', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(!isActive)
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        this.classList.toggle('active');
-                        toastr.success('Voice picking preference updated.');
-                    }
-                });
-            });
-
-            // 6. Print PDF Stub
-            document.getElementById('printPickingBtn').addEventListener('click', function() {
-                window.open('/Warehouse/PrintPickingList/0', '_blank');
-            });
-
-            // 7. Barcode Scan
-            document.getElementById('barcodeBtn').addEventListener('click', () => {
-                const modal = new bootstrap.Modal(document.getElementById('barcodeModal'));
-                modal.show();
-            });
-
-            // 8. Tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
-        });
-
-        // 9. Assign Dispatch
-        function assignDispatch(orderId, agentId) {
-            $.post('/Warehouse/AssignDispatch', { orderId: orderId, agentId: agentId }, function(res) {
-                if (res.success) {
-                    toastr.success(res.message);
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    toastr.error(res.message);
-                }
-            });
-        }
-
-        // 10. Replenishment Modal
-        function openReplenishModal(id, name, stock) {
-            document.getElementById('modalProductId').value = id;
-            document.getElementById('modalCurrentStock').value = stock;
-            const modal = new bootstrap.Modal(document.getElementById('replenishModal'));
-            modal.show();
-        }
-
-        document.getElementById('replenishForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            $.ajax({
-                url: '/InventoryTransfer/Create',
-                type: 'POST',
-                data: $(this).serialize(),
-                success: function() {
-                    toastr.success('Replenishment request submitted.');
-                    bootstrap.Modal.getInstance(document.getElementById('replenishModal')).hide();
-                    setTimeout(() => location.reload(), 1000);
-                }
-            });
-        });
-
-        function processBarcode() {
-            const code = document.getElementById('barcodeInput').value;
-            if (code) {
-                toastr.info('Validating barcode: ' + code);
-                window.lastScannedBarcode = code;
-                setTimeout(() => {
-                    bootstrap.Modal.getInstance(document.getElementById('barcodeModal')).hide();
-                }, 1000);
-            }
-        }
-    </script>
-}
+    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .extra-small { font-size: 0.75rem; }
+</style>
