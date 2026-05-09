@@ -15,26 +15,73 @@ using System.Text.Json;
 namespace SCM_System.Controllers
 {
     [Authorize(Roles = "Warehouse,WarehouseManager")]
-    [Route("WarehouseManager")]
-    public class WarehouseController(
-        ApplicationDbContext context, 
-        IPurchaseOrderService poService, 
-        IAuditLogService auditLogService, 
-        ISupplierService supplierService, 
-        IInventoryService inventoryService,
-        ILogger<WarehouseController> logger,
-        IWebHostEnvironment env) : Controller
+    [Route("Warehouse")]
+    public class WarehouseController : Controller
     {
-        private readonly ApplicationDbContext _context = context;
-        private readonly IPurchaseOrderService _poService = poService;
-        private readonly IAuditLogService _auditLogService = auditLogService;
-        private readonly ISupplierService _supplierService = supplierService;
-        private readonly IInventoryService _inventoryService = inventoryService;
-        private readonly ILogger<WarehouseController> _logger = logger;
-        private readonly IWebHostEnvironment _env = env;
+        private readonly ApplicationDbContext _context;
+        private readonly IPurchaseOrderService _poService;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ISupplierService _supplierService;
+        private readonly ILogger<WarehouseController> _logger;
+        private readonly IWebHostEnvironment _env;
+
+        public WarehouseController(
+            ApplicationDbContext context, 
+            IPurchaseOrderService poService, 
+            IAuditLogService auditLogService, 
+            ISupplierService supplierService,
+            ILogger<WarehouseController> logger,
+            IWebHostEnvironment env)
+        {
+            _context = context;
+            _poService = poService;
+            _auditLogService = auditLogService;
+            _supplierService = supplierService;
+            _logger = logger;
+            _env = env;
+        }
 
         [Route("")]
         [Route("Index")]
+        public IActionResult Index() => RedirectToAction(nameof(Dashboard));
+
+
+        private async Task<int> GetWarehouseIdAsync()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var emp = await _context.SupplierEmployees.FirstOrDefaultAsync(x => x.UserId == userId);
+                return emp?.WarehouseId ?? 0;
+            }
+            return 0;
+        }
+
+        private async Task<SupplierEmployee?> GetCurrentManagerAsync()
+        {
+            var employeeIdStr = User.FindFirstValue("EmployeeId");
+            if (int.TryParse(employeeIdStr, out int employeeId))
+            {
+                return await _context.SupplierEmployees
+                    .Include(e => e.Warehouse)
+                    .Include(e => e.User)
+                    .FirstOrDefaultAsync(e => e.Id == employeeId);
+            }
+            
+            // Fallback to UserId if claim is missing
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                return await _context.SupplierEmployees
+                    .Include(e => e.User)
+                    .Include(e => e.HubAccesses)
+                        .ThenInclude(a => a.Warehouse)
+                    .Include(e => e.WarehouseAssignments)
+                    .FirstOrDefaultAsync(e => e.UserId == userId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
+            }
+            return null;
+        }
+
         [Route("Dashboard/{warehouseId?}")]
         public async Task<IActionResult> Dashboard(int? warehouseId)
         {
@@ -77,10 +124,7 @@ namespace SCM_System.Controllers
                     .Include(p => p.Retailer)
                     .Include(p => p.PurchaseOrderItems)
                         .ThenInclude(i => i.Product)
-                    .Include(p => p.DeliveryAgent)
-                        .ThenInclude(da => da.User)
-                    .Include(p => p.Vehicle)
-                    .Where(p => p.WarehouseId == wId)
+                    .Where(p => p.WarehouseId == wId && p.Status != POStatus.Cancelled)
                     .ToListAsync();
 
                 ViewBag.Manager = manager;
@@ -90,30 +134,78 @@ namespace SCM_System.Controllers
                 
                 // Comprehensive Metrics
                 ViewBag.TotalOrders = pos.Count;
-                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Picking);
+                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted);
+                ViewBag.PackingInProgress = pos.Count(p => p.Status == POStatus.Processing);
+                ViewBag.PackedAndReady = pos.Count(p => p.Status == POStatus.Packed);
                 ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
                 ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
                 ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
                 
                 // Stock Summary
                 var inventories = await _context.Inventories
+                    .Include(i => i.Product)
                     .Where(i => i.WarehouseId == wId)
                     .ToListAsync();
                 
                 ViewBag.TotalReserved = inventories.Sum(i => i.QuantityReserved);
                 ViewBag.TotalOnHand = inventories.Sum(i => i.QuantityOnHand);
-                ViewBag.LowStockCount = inventories.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 20);
-                ViewBag.LowStockAlertCount = inventories.Count(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 20));
+                ViewBag.TotalStockValue = inventories.Sum(i => i.QuantityOnHand * (i.Product.CostPrice ?? i.Product.BasePrice));
+                
+                // Mock Stock Value Trend (last 7 days)
+                var rand = new Random();
+                var stockTrend = Enumerable.Range(0, 7).Select(_ => rand.Next(100000, 500000)).ToList();
+                ViewBag.StockValueTrend = JsonSerializer.Serialize(stockTrend);
+
+                ViewBag.LowStockCount = inventories.Count(i => (i.QuantityOnHand - i.QuantityReserved) < (manager?.LowStockThreshold ?? 5));
+                ViewBag.LowStockAlertCount = inventories.Count(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 5));
+                ViewBag.LowStockProducts = inventories.Where(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 5)).ToList();
 
                 // Audit Logs for this Warehouse
                 ViewBag.RecentLogs = await _auditLogService.GetLogsForEntityAsync("Warehouse", wId.ToString());
 
                 // Quick Stats (Fleet & Staff)
-                ViewBag.ActiveAgents = await _context.SupplierEmployees
-                    .CountAsync(e => e.SupplierId == sId && (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person") && e.IsActive);
+                var activeAgents = await _context.SupplierEmployees
+                    .Include(e => e.User)
+                    .Include(e => e.AssignedTasks)
+                    .Where(e => e.SupplierId == sId && (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person") && e.IsActive)
+                    .ToListAsync();
                 
+                ViewBag.ActiveAgents = activeAgents.Count;
                 ViewBag.AvailableVehicles = await _context.Vehicles
                     .CountAsync(v => v.SupplierId == sId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available);
+
+                // Recommended Next Dispatch
+                var lightestAgent = activeAgents
+                    .OrderBy(e => e.AssignedTasks.Count(t => t.Status == "Pending" || t.Status == "In Progress"))
+                    .FirstOrDefault();
+                ViewBag.LightestAgent = lightestAgent;
+
+                var nextPackedOrder = await _context.PurchaseOrders
+                    .Include(p => p.Retailer)
+                    .Include(p => p.PurchaseOrderItems)
+                        .ThenInclude(i => i.Product)
+                    .Where(p => p.WarehouseId == wId && p.Status == POStatus.Packed)
+                    .OrderBy(p => p.UpdatedAt)
+                    .FirstOrDefaultAsync();
+                
+                if (nextPackedOrder != null)
+                {
+                    ViewBag.NextPackedOrderWeight = nextPackedOrder.PurchaseOrderItems.Sum(i => (i.Product.ShippingWeight ?? 0) * i.Quantity);
+                }
+                ViewBag.NextPackedOrder = nextPackedOrder;
+
+                // Chart Data: Orders picked per hour for current day (8 AM - 6 PM)
+                var today = DateTime.Today;
+                var pickingLogs = await _context.AuditLogs
+                    .Where(l => l.ActionType == "StatusUpdate" && l.PerformedAtUtc >= today.ToUniversalTime() && l.Notes.Contains("moved to Picked"))
+                    .ToListAsync();
+
+                var hourlyStats = Enumerable.Range(8, 11).Select(h => new {
+                    Hour = h,
+                    Count = pickingLogs.Count(l => l.PerformedAtUtc.ToLocalTime().Hour == h)
+                }).ToList();
+
+                ViewBag.HourlyPickingData = JsonSerializer.Serialize(hourlyStats);
 
                 // Notifications (Recent updates)
                 ViewBag.RecentAlerts = pos.OrderByDescending(p => p.UpdatedAt).Take(5).ToList();
@@ -123,8 +215,7 @@ namespace SCM_System.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading Warehouse Dashboard");
-                TempData["ErrorMessage"] = "Error loading dashboard: " + ex.Message;
-                return RedirectToAction("Login", "Account");
+                return Content($"An error occurred while loading the dashboard: {ex.Message}. Check logs for details.");
             }
         }
 
@@ -134,16 +225,8 @@ namespace SCM_System.Controllers
             var manager = await GetCurrentManagerAsync();
             if (manager == null) return Unauthorized();
 
+            // For now use first accessible warehouse if not specified
             int wId = manager.WarehouseId ?? manager.HubAccesses.FirstOrDefault()?.WarehouseId ?? 0;
-
-            if (id.HasValue)
-            {
-                var targetPO = await _context.PurchaseOrders.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id.Value);
-                if (targetPO != null && targetPO.WarehouseId.HasValue)
-                {
-                    wId = targetPO.WarehouseId.Value;
-                }
-            }
             
             var pos = await _context.PurchaseOrders
                 .Include(p => p.Order)
@@ -153,92 +236,22 @@ namespace SCM_System.Controllers
                 .Where(p => p.WarehouseId == wId && p.Status == POStatus.Packed)
                 .ToListAsync();
 
-            // Calculate Order Weights for each PO in the list
-            // We'll store these in a temporary dictionary or dynamic object if needed, 
-            // but for now, the View can handle it since we Inclulde Items.
+            // Smart Dispatch Suggestions
+            ViewBag.SuggestedVehicles = await _supplierService.GetSmartDispatchSuggestionsAsync(wId);
+            ViewBag.SuggestedDrivers = await _supplierService.GetSmartDriverSuggestionsAsync(wId);
 
-            // Fetch agents with their vehicles for workload calculation
-            var agents = await _context.SupplierEmployees
+            ViewBag.Agents = await _context.SupplierEmployees
                 .Include(e => e.User)
-                .Include(e => e.VehicleAssignments)
-                    .ThenInclude(va => va.Vehicle) // Fixed navigation path
-                .Where(e => e.SupplierId == manager.SupplierId && 
-                            e.IsActive && !e.IsDeleted &&
-                            !string.IsNullOrEmpty(e.EmployeeRole) &&
-                            (e.EmployeeRole.ToLower().Contains("driver") || e.EmployeeRole.ToLower().Contains("deliver")))
+                .Where(e => e.SupplierId == manager.SupplierId && e.EmployeeRole == "DeliveryAgent" && e.IsActive && e.WarehouseId == wId)
                 .ToListAsync();
 
-            // PROACTIVE SORTING LOGIC
-            // For a single PO assignment (if id is passed), we sort by PROJECTED load.
-            // If viewing the general list, we'll sort by current workload.
-            decimal targetOrderWeight = 0;
-            if (id.HasValue)
-            {
-                var targetPoForWeight = pos.FirstOrDefault(p => p.Id == id.Value);
-                if (targetPoForWeight != null)
-                {
-                    targetOrderWeight = targetPoForWeight.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0));
-                }
-            }
-
-            // Enhanced sorting with workload awareness
-            var sortedAgents = new List<dynamic>();
-            foreach (var agent in agents)
-            {
-                var activePOs = await _context.PurchaseOrders
-                    .Include(p => p.PurchaseOrderItems)
-                        .ThenInclude(i => i.Product)
-                    .Where(p => p.DeliveryAgentId == agent.Id && 
-                                p.Status != POStatus.Failed)
-                    .ToListAsync();
-
-                decimal currentLoadKg = activePOs.Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
-                
-                // Get primary vehicle capacity
-                var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.PrimaryDriverId == agent.Id || v.DeliveryAgents.Any(da => da.Id == agent.Id));
-                decimal capacity = vehicle?.MaxLoadCapacity ?? 100; // fallback
-
-                decimal projectedScore = capacity > 0 ? (currentLoadKg + targetOrderWeight) / capacity : 2; // high score if no capacity
-
-                sortedAgents.Add(new { 
-                    Agent = agent, 
-                    ProjectedScore = projectedScore, 
-                    CurrentLoad = currentLoadKg,
-                    Capacity = capacity,
-                    IsPhysicsViolation = targetOrderWeight > capacity,
-                    VehicleId = vehicle?.Id ?? 0
-                });
-            }
-
-            // Order by Projection (Safe -> Moderate -> High -> Violation), then by Rank
-            ViewBag.SortedAgents = sortedAgents.OrderBy(a => a.IsPhysicsViolation).ThenBy(a => a.ProjectedScore).ToList();
-            ViewBag.Agents = agents; // Keep original for backwards compatibility in view if needed
-
             ViewBag.Vehicles = await _context.Vehicles
-                .Where(v => v.SupplierId == manager.SupplierId && (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse) && v.WarehouseId == wId)
+                .Where(v => v.SupplierId == manager.SupplierId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available && v.WarehouseId == wId)
                 .ToListAsync();
 
             ViewBag.SelectedWarehouseId = wId;
             ViewBag.PicklistFormat = manager.PicklistFormat ?? "Detailed";
             return View(pos);
-        }
-
-        [HttpGet("GetVehicleByAgent")]
-        public async Task<IActionResult> GetVehicleByAgent(int agentId)
-        {
-            var vehicle = await _context.Vehicles
-                .Where(v => v.PrimaryDriverId == agentId && (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse))
-                .FirstOrDefaultAsync();
-
-            if (vehicle == null)
-                return Json(new { vehicleId = 0 });
-
-            return Json(new
-            {
-                vehicleId = vehicle.Id,
-                plate = vehicle.LicensePlate,
-                type = vehicle.VehicleType.ToString()
-            });
         }
 
         [HttpGet]
@@ -334,9 +347,6 @@ namespace SCM_System.Controllers
 
             var pos = await _context.PurchaseOrders
                 .Include(p => p.Retailer)
-                .Include(p => p.PurchaseOrderItems)
-                    .ThenInclude(i => i.Product)
-                .Include(p => p.InventoryReservations)
                 .Where(p => p.WarehouseId == wId && p.Status == POStatus.Picked)
                 .ToListAsync();
 
@@ -353,9 +363,6 @@ namespace SCM_System.Controllers
 
             var pos = await _context.PurchaseOrders
                 .Include(p => p.Retailer)
-                .Include(p => p.PurchaseOrderItems)
-                    .ThenInclude(i => i.Product)
-                .Include(p => p.InventoryReservations)
                 .Where(p => p.WarehouseId == wId && p.Status == POStatus.Packed)
                 .ToListAsync();
 
@@ -372,10 +379,7 @@ namespace SCM_System.Controllers
 
             var pos = await _context.PurchaseOrders
                 .Include(p => p.Retailer)
-                .Include(p => p.PurchaseOrderItems)
-                    .ThenInclude(i => i.Product)
-                .Include(p => p.InventoryReservations)
-                .Where(p => p.WarehouseId == wId && (p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Picking))
+                .Where(p => p.WarehouseId == wId && (p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Processing))
                 .ToListAsync();
 
             return View(pos);
@@ -391,7 +395,7 @@ namespace SCM_System.Controllers
             var threshold = manager.LowStockThreshold;
             var lowStock = await _context.Inventories
                 .Include(i => i.Product)
-                .Where(i => i.WarehouseId == wId.Value && (i.QuantityOnHand - i.QuantityReserved) < (threshold > 0 ? threshold : 20))
+                .Where(i => i.WarehouseId == wId.Value && i.QuantityOnHand <= (threshold > 0 ? threshold : 20))
                 .ToListAsync();
 
             ViewBag.Threshold = threshold;
@@ -467,7 +471,7 @@ namespace SCM_System.Controllers
             {
                 TotalFulfilled = await _context.PurchaseOrders.CountAsync(p => p.WarehouseId == wId.Value && p.Status == POStatus.Completed),
                 CurrentDispatches = await _context.PurchaseOrders.CountAsync(p => p.WarehouseId == wId.Value && p.Status == POStatus.InTransit),
-                LowStockItems = await _context.Inventories.CountAsync(i => i.WarehouseId == wId.Value && (i.QuantityOnHand - i.QuantityReserved) < (manager.LowStockThreshold > 0 ? manager.LowStockThreshold : 20)),
+                LowStockItems = await _context.Inventories.CountAsync(i => i.WarehouseId == wId.Value && i.QuantityOnHand <= (manager.LowStockThreshold > 0 ? manager.LowStockThreshold : 20)),
                 WarehouseName = warehouse?.Name ?? "Main Warehouse"
             };
 
@@ -490,12 +494,6 @@ namespace SCM_System.Controllers
             if (po == null) return Unauthorized();
 
             await _poService.UpdatePurchaseOrderStatusAsync(id, status, userId);
-
-            // Phase 2: Permanent stock deduction on Pick
-            if (status == POStatus.Picked)
-            {
-                await _inventoryService.DeductStockOnPickAsync(id);
-            }
 
             // AUDIT LOG
             await _auditLogService.LogActionAsync(
@@ -534,7 +532,39 @@ namespace SCM_System.Controllers
 
         [HttpPost("UpdateInventory")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateInventory(int productId, int change, string action, string? reason, string? adjustmentType)
+        public async Task<IActionResult> UpdateInventory(int productId, int change, string action)
+        {
+            var manager = await GetCurrentManagerAsync();
+            int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
+            if (manager == null || !wId.HasValue) return Unauthorized();
+
+            var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.WarehouseId == wId.Value && i.ProductId == productId);
+            if (inv != null)
+            {
+                if (action == "add") inv.QuantityOnHand += change;
+                else if (action == "sub") inv.QuantityOnHand = Math.Max(0, inv.QuantityOnHand - change);
+                
+                inv.LastUpdated = DateTime.Now;
+                await _context.SaveChangesAsync();
+
+                // AUDIT LOG
+                await _auditLogService.LogActionAsync(
+                    "Inventory", 
+                    inv.Id.ToString(), 
+                    "Update", 
+                    notes: $"Manual inventory {action}: {change} units of {inv.Product?.ProductName ?? "Product ID: " + productId}",
+                    performedByUserId: manager.UserId
+                );
+
+                TempData["SuccessMessage"] = "Inventory updated successfully.";
+            }
+
+            return RedirectToAction(nameof(Inventory));
+        }
+
+        [HttpPost("AssignDelivery")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignDelivery(int id, int agentId, int vehicleId)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
@@ -543,157 +573,25 @@ namespace SCM_System.Controllers
             int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
             if (manager == null || !wId.HasValue) return Unauthorized();
 
-            var adj = new InventoryAdjustment
-            {
-                ProductId = productId,
-                WarehouseId = wId.Value,
-                QuantityChange = action == "add" ? Math.Abs(change) : -Math.Abs(change),
-                AdjustmentType = adjustmentType ?? (action == "add" ? "Correction" : "Loss"),
-                Reason = reason ?? $"Manual {action} of {change} units",
-                PerformedById = userId,
-                CreatedAt = DateTime.Now
-            };
-
-            try
-            {
-                await _inventoryService.AdjustInventoryAsync(adj);
-
-                // AUDIT LOG
-                await _auditLogService.LogActionAsync(
-                    "Inventory", 
-                    productId.ToString(), 
-                    "Adjust", 
-                    notes: $"Manual adjustment ({action}): {change} units. Type: {adj.AdjustmentType}. Reason: {adj.Reason}",
-                    performedByUserId: userId
-                );
-
-                TempData["SuccessMessage"] = "Inventory adjusted successfully.";
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = "Could not adjust inventory: " + ex.Message;
-            }
-
-            return RedirectToAction(nameof(Inventory));
-        }
-
-        [HttpPost("AssignDelivery")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AssignDelivery(int id, int agentId, int vehicleId, bool isOverride = false, string overrideReason = null)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var manager = await GetCurrentManagerAsync();
-            if (manager == null) return Unauthorized();
-
-            // Load PO first to determine which hub we are dealing with
             var po = await _context.PurchaseOrders
                 .Include(p => p.Order)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id && p.WarehouseId == wId.Value);
 
             if (po == null) return NotFound();
 
-            // Verify Manager has access to this Hub
-            var hubAccesses = manager.WarehouseAssignments.Where(a => a.IsActive).Select(a => a.WarehouseId).ToList();
-            if (manager.WarehouseId.HasValue) hubAccesses.Add(manager.WarehouseId.Value);
-
-            if (!po.WarehouseId.HasValue || !hubAccesses.Contains(po.WarehouseId.Value))
-            {
-                TempData["ErrorMessage"] = "You do not have authorization to dispatch orders from this warehouse.";
-                return RedirectToAction(nameof(Ready));
-            }
-
-            int wId = po.WarehouseId ?? 0;
-
-            var agent = await _context.SupplierEmployees
-                .FirstOrDefaultAsync(e => e.Id == agentId && 
-                                          e.SupplierId == manager.SupplierId &&
-                                          e.IsActive && !e.IsDeleted &&
-                                          !string.IsNullOrEmpty(e.EmployeeRole) &&
-                                          (e.EmployeeRole.ToLower().Contains("deliver") || e.EmployeeRole.ToLower().Contains("driver")));
-                                          
+            var agent = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.Id == agentId && e.EmployeeRole == "DeliveryAgent" && e.WarehouseId == wId.Value);
             if (agent == null)
             {
-                TempData["ErrorMessage"] = "Invalid delivery agent or agent is not authorized for this supplier.";
-                return RedirectToAction(nameof(AssignDelivery), new { id = id });
+                TempData["ErrorMessage"] = "Invalid delivery agent or agent not assigned to this hub.";
+                return RedirectToAction(nameof(AssignDelivery));
             }
 
-            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == vehicleId && 
-                                                                           (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse) && 
-                                                                           v.WarehouseId == wId);
+            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == vehicleId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available && v.WarehouseId == wId.Value);
             if (vehicle == null)
             {
                 TempData["ErrorMessage"] = "Selected vehicle is unavailable or not assigned to this hub.";
-                return RedirectToAction(nameof(AssignDelivery), new { id = id });
+                return RedirectToAction(nameof(AssignDelivery));
             }
-
-            // ENFORCE PAIRING (Critical Rule)
-            if (vehicle.PrimaryDriverId.HasValue && vehicle.PrimaryDriverId != agentId)
-            {
-                TempData["ErrorMessage"] = "Selected vehicle is primarily assigned to another driver. Please use the driver's designated vehicle.";
-                return RedirectToAction(nameof(AssignDelivery), new { id = id });
-            }
-            // === SMART LOAD OVERRIDE LOGIC (Strict KG Physics) ===
-            var activeOrders = await _context.PurchaseOrders
-                .Include(p => p.PurchaseOrderItems)
-                    .ThenInclude(i => i.Product)
-                .Where(p => p.DeliveryAgentId == agentId && 
-                            p.Status != POStatus.Delivered &&
-                            p.Status != POStatus.Completed &&
-                            p.Status != POStatus.Failed &&
-                            p.Status != POStatus.Rejected &&
-                            p.Status != POStatus.Expired)
-                .ToListAsync();
-
-            decimal currentLoadKg = activeOrders.Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
-            decimal newOrderWeightKg = po.PurchaseOrderItems != null ? po.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)) : 10m;
-            decimal totalProjectedKg = currentLoadKg + newOrderWeightKg;
-            decimal vehicleCapacityKg = vehicle.MaxLoadCapacity;
-
-            // 1. REJECT (Structural Physics Violation)
-            // If the single order is heavier than the truck can physically handle.
-            if (newOrderWeightKg > vehicleCapacityKg)
-            {
-                TempData["ErrorMessage"] = $"PHYSICAL CONSTRAINT ERR: This order ({newOrderWeightKg} KG) is physically too heavy for the selected vehicle ({vehicleCapacityKg} KG). Dispatch restricted.";
-                return RedirectToAction(nameof(AssignDelivery), new { id = id });
-            }
-
-            // 2. OVERLOAD (Operational Efficiency Violation)
-            // If the combined load exceeds capacity, but the single order fits.
-            if (totalProjectedKg > vehicleCapacityKg && !isOverride)
-            {
-                int projectedScore = (int)((totalProjectedKg / vehicleCapacityKg) * 100);
-                TempData["ErrorMessage"] = $"Agent will be overloaded (Projected: {totalProjectedKg} / {vehicleCapacityKg} KG - {projectedScore}%). Assignment restricted. Please select another agent or explicitly override with a stated reason.";
-                return RedirectToAction(nameof(AssignDelivery), new { id = id });
-            }
-
-            // Register the Override
-            if (totalProjectedKg > vehicleCapacityKg && isOverride)
-            {
-                po.IsDispatchOverride = true;
-                po.DispatchOverrideReason = overrideReason;
-                
-                var overrideLog = new DispatchOverrideLog
-                {
-                    PurchaseOrderId = po.Id,
-                    AgentId = agentId,
-                    PerformedByUserId = userId,
-                    Reason = overrideReason ?? "Emergency Capacity Override",
-                    CurrentLoad = (int)totalProjectedKg,
-                    CreatedAt = DateTime.Now
-                };
-                _context.DispatchOverrideLogs.Add(overrideLog);
-
-                await _auditLogService.LogActionAsync(
-                    "DispatchOverride",
-                    po.Id.ToString(),
-                    "Override",
-                    notes: $"Agent overloaded. Dispatch forced. Reason: {overrideReason}",
-                    performedByUserId: userId
-                );
-            }
-            // ================================
 
             // Assign Agent & Vehicle
             po.DeliveryAgentId = agentId;
@@ -703,7 +601,7 @@ namespace SCM_System.Controllers
             vehicle.UpdatedAt = DateTime.Now;
 
             await _poService.UpdatePurchaseOrderStatusAsync(id, POStatus.InTransit, userId);
-            
+
             // AUDIT LOG
             await _auditLogService.LogActionAsync(
                 "PurchaseOrder", 
@@ -748,105 +646,8 @@ namespace SCM_System.Controllers
             }
 
             TempData["SuccessMessage"] = $"Order #{po.PONumber} assigned to {agent.User?.FullName} and Vehicle {vehicle.LicensePlate}. Status: In Transit.";
-            TempData["SuccessMessage"] = $"Order #{po.PONumber} assigned to {agent.User?.FullName} and Vehicle {vehicle.LicensePlate}. Status: In Transit.";
             return RedirectToAction(nameof(History));
         }
-
-        [Route("Inbound")]
-        public async Task<IActionResult> Inbound()
-        {
-            var manager = await GetCurrentManagerAsync();
-            int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
-            if (manager == null || !wId.HasValue) return Unauthorized();
-
-            var shipments = await _context.InboundShipments
-                .Include(s => s.Items)
-                    .ThenInclude(i => i.Product)
-                .Where(s => s.WarehouseId == wId.Value)
-                .OrderByDescending(s => s.CreatedAt)
-                .ToListAsync();
-
-            ViewBag.SelectedWarehouseId = wId.Value;
-            return View(shipments);
-        }
-
-        [Route("ReceiveInbound/{id}")]
-        public async Task<IActionResult> ReceiveInbound(int id)
-        {
-            var manager = await GetCurrentManagerAsync();
-            int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
-            if (manager == null || !wId.HasValue) return Unauthorized();
-
-            var shipment = await _context.InboundShipments
-                .Include(s => s.Items)
-                    .ThenInclude(i => i.Product)
-                .FirstOrDefaultAsync(s => s.Id == id && s.WarehouseId == wId.Value);
-
-            if (shipment == null) return NotFound();
-            if (shipment.Status == "Received") return RedirectToAction(nameof(Inbound));
-
-            return View(shipment);
-        }
-
-        [HttpPost("ProcessInbound")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessInbound(int id, List<InboundItemReceiptViewModel> receipts)
-        {
-            var manager = await GetCurrentManagerAsync();
-            int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
-            if (manager == null || !wId.HasValue) return Unauthorized();
-
-            foreach (var r in receipts)
-            {
-                await _inventoryService.ReceiveInboundItemAsync(id, r.ProductId, r.ReceivedQty, r.DamagedQty, r.BatchNumber, r.ExpiryDate);
-            }
-
-            TempData["SuccessMessage"] = "Shipment items updated. Click Finalize to putaway.";
-            return RedirectToAction(nameof(ReceiveInbound), new { id });
-        }
-
-        [HttpPost("FinalizeInbound")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FinalizeInbound(int id)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var success = await _inventoryService.FinalizeInboundShipmentAsync(id, userId);
-
-            if (success)
-            {
-                TempData["SuccessMessage"] = "Shipment received and inventory updated.";
-                return RedirectToAction(nameof(Inbound));
-            }
-
-            TempData["ErrorMessage"] = "Failed to finalize shipment.";
-            return RedirectToAction(nameof(ReceiveInbound), new { id });
-        }
-
-        [HttpPost("ReconcileInventory")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReconcileInventory()
-        {
-            var manager = await GetCurrentManagerAsync();
-            int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
-            if (manager == null || !wId.HasValue) return Unauthorized();
-
-            await _inventoryService.RecalculateInventoryAsync(wId.Value);
-
-            TempData["SuccessMessage"] = "Inventory reconciliation complete. QuantityReserved has been synced with the reservation ledger.";
-            return RedirectToAction(nameof(Dashboard));
-        }
-
-    public class InboundItemReceiptViewModel
-    {
-        public int ProductId { get; set; }
-        public int ReceivedQty { get; set; }
-        public int DamagedQty { get; set; }
-        public string? BatchNumber { get; set; }
-        public DateTime? ExpiryDate { get; set; }
-    }
-
         [Route("OperationalSettings")]
         public async Task<IActionResult> OperationalSettings()
         {
@@ -1025,6 +826,136 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(AccountSettings));
         }
 
+        [HttpGet("GetActivityLog")]
+        public async Task<IActionResult> GetActivityLog()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            int wId = manager.WarehouseId ?? manager.HubAccesses.FirstOrDefault()?.WarehouseId ?? 0;
+            
+            // Query OrderStatusHistory, StockAlerts, and DispatchTasks for events
+            var events = new List<object>();
+
+            var poUpdates = await _context.PurchaseOrders
+                .Include(p => p.Retailer)
+                .Where(p => p.WarehouseId == wId)
+                .OrderByDescending(p => p.UpdatedAt)
+                .Take(5)
+                .Select(p => new {
+                    actionType = "OrderUpdate",
+                    status = p.Status,
+                    time = p.UpdatedAt.ToLocalTime().ToString("HH:mm"),
+                    notes = $"Order #{p.PONumber} for {p.Retailer.BusinessName} is now {p.Status}.",
+                    color = p.Status == POStatus.Delivered ? "success" : (p.Status == POStatus.Processing ? "info" : "warning"),
+                    icon = "fa-box"
+                }).ToListAsync();
+            
+            events.AddRange(poUpdates);
+
+            // Add some mock logs if empty
+            if (!events.Any())
+            {
+                events.Add(new { actionType = "System", time = DateTime.Now.ToString("HH:mm"), notes = "Hub operational feed started.", color = "info", icon = "fa-info-circle" });
+            }
+
+            return Json(events.OrderByDescending(e => ((dynamic)e).time).Take(10));
+        }
+
+        [HttpGet("GetReplenishmentAlerts")]
+        public async Task<IActionResult> GetReplenishmentAlerts()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            int wId = manager.WarehouseId ?? manager.HubAccesses.FirstOrDefault()?.WarehouseId ?? 0;
+            var lowStock = await _context.Inventories
+                .Include(i => i.Product)
+                .Where(i => i.WarehouseId == wId && i.QuantityOnHand <= manager.LowStockThreshold)
+                .Select(i => new {
+                    id = i.ProductId,
+                    name = i.Product.ProductName,
+                    stock = i.QuantityOnHand,
+                    threshold = manager.LowStockThreshold
+                }).ToListAsync();
+
+            return Json(lowStock);
+        }
+
+        [HttpGet("GetHourlyPicks")]
+        public async Task<IActionResult> GetHourlyPicks()
+        {
+            var today = DateTime.Today;
+            var pickingLogs = await _context.AuditLogs
+                .Where(l => l.ActionType == "StatusUpdate" && l.PerformedAtUtc >= today.ToUniversalTime() && l.Notes.Contains("moved to Picked"))
+                .ToListAsync();
+
+            var hourlyStats = Enumerable.Range(8, 11).Select(h => new {
+                hour = $"{h}:00",
+                count = pickingLogs.Count(l => l.PerformedAtUtc.ToLocalTime().Hour == h)
+            }).ToList();
+
+            return Json(hourlyStats);
+        }
+
+        [HttpPost("AssignDispatch")]
+        public async Task<IActionResult> AssignDispatch(int orderId, int agentId)
+        {
+            var po = await _context.PurchaseOrders.FindAsync(orderId);
+            if (po == null) return Json(new { success = false, message = "Order not found." });
+
+            var agent = await _context.SupplierEmployees.FindAsync(agentId);
+            if (agent == null) return Json(new { success = false, message = "Agent not found." });
+
+            po.Status = POStatus.InTransit;
+            po.DeliveryAgentId = agentId;
+            po.UpdatedAt = DateTime.Now;
+
+            // Create Dispatch Task
+            var task = new DispatchTask
+            {
+                OrderId = po.OrderId, // PurchaseOrder has OrderId
+                DeliveryAgentId = agentId,
+                HubId = po.WarehouseId,
+                Status = "In Progress",
+                CreatedAt = DateTime.Now,
+                Notes = $"Automatically assigned via Warehouse Dashboard recommendation."
+            };
+
+            _context.DispatchTasks.Add(task);
+            
+            // Audit Log
+            await _auditLogService.LogActionAsync("PurchaseOrder", po.Id.ToString(), "DispatchAssigned", notes: $"Order #{po.PONumber} assigned to {agent.User?.FullName ?? "Agent"}");
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = $"Order #{po.PONumber} assigned to {agent.User?.FullName}." });
+        }
+
+        [HttpPost("ToggleVoicePicking")]
+        public async Task<IActionResult> ToggleVoicePicking([FromBody] bool enabled)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Json(new { success = false });
+
+            manager.EnableVoicePicking = enabled;
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [Route("PrintPickingList/{id}")]
+        public async Task<IActionResult> PrintPickingList(int id)
+        {
+            var po = await _context.PurchaseOrders
+                .Include(p => p.PurchaseOrderItems)
+                .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (po == null) return NotFound();
+
+            // Mock PDF generation - in a real app, use a library like Rotativa or QuestPDF
+            return Content("Picking List PDF stub for Order #" + po.PONumber);
+        }
         [HttpPost("Toggle2FA")]
         public async Task<IActionResult> Toggle2FA(bool enable)
         {
@@ -1044,7 +975,6 @@ namespace SCM_System.Controllers
             manager.User.TwoFactorSecret = secret;
             await _context.SaveChangesAsync();
 
-            // Using Google.Authenticator library
             var tfa = new Google.Authenticator.TwoFactorAuthenticator();
             var setupInfo = tfa.GenerateSetupCode("SCM System", manager.User.Email, secret, false, 3);
             
@@ -1107,42 +1037,6 @@ namespace SCM_System.Controllers
             return Json(new { success = true });
         }
 
-        private async Task<int> GetWarehouseIdAsync()
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                var emp = await _context.SupplierEmployees.FirstOrDefaultAsync(x => x.UserId == userId);
-                return emp?.WarehouseId ?? 0;
-            }
-            return 0;
-        }
-
-        private async Task<SupplierEmployee?> GetCurrentManagerAsync()
-        {
-            var employeeIdStr = User.FindFirstValue("EmployeeId");
-            if (int.TryParse(employeeIdStr, out int employeeId))
-            {
-                return await _context.SupplierEmployees
-                    .Include(e => e.Warehouse)
-                    .Include(e => e.User)
-                    .FirstOrDefaultAsync(e => e.Id == employeeId);
-            }
-            
-            // Fallback to UserId if claim is missing
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                return await _context.SupplierEmployees
-                    .Include(e => e.User)
-                    .Include(e => e.HubAccesses)
-                        .ThenInclude(a => a.Warehouse)
-                    .Include(e => e.WarehouseAssignments)
-                    .FirstOrDefaultAsync(e => e.UserId == userId && (e.EmployeeRole == "WarehouseManager" || e.EmployeeRole == "warehouse_manager"));
-            }
-            return null;
-        }
-
         private string HashPassword(string password)
         {
             using (var sha256 = System.Security.Cryptography.SHA256.Create())
@@ -1156,5 +1050,6 @@ namespace SCM_System.Controllers
                 return builder.ToString();
             }
         }
+
     }
 }
