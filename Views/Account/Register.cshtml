@@ -802,6 +802,21 @@
                     $('#BusinessProfileSection').hide();
                 }
             });
+            
+            // Password Toggle Logic
+            $('#toggleRegPassword').click(function() {
+                const passwordInput = $('#regPassword');
+                const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+                passwordInput.attr('type', type);
+                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+            });
+
+            $('#toggleRegConfirmPassword').click(function() {
+                const confirmPasswordInput = $('#regConfirmPassword');
+                const type = confirmPasswordInput.attr('type') === 'password' ? 'text' : 'password';
+                confirmPasswordInput.attr('type', type);
+                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+            });
 
             // Re-trigger if model error
             if ($('#RoleHidden').val()) {
