@@ -185,7 +185,7 @@ namespace SCM_System.Services
                             ProductName = p.ProductName,
                             Stock = p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved),
                             Reserved = p.Inventories.Sum(i => i.QuantityReserved),
-                            Warehouse = p.Inventories.FirstOrDefault().Warehouse.Name
+                            Warehouse = p.Inventories.Select(i => i.Warehouse.Name).FirstOrDefault() ?? "N/A"
                         })
                         .ToListAsync()
                 },

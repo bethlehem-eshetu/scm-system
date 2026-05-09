@@ -88,37 +88,67 @@ namespace SCM_System.Controllers
                 ViewBag.SelectedWarehouseId = wId;
                 ViewBag.WarehouseLocation = manager.DefaultWarehouseLocation ?? warehouse?.Address ?? "Not Set";
                 
-                // Comprehensive Metrics
-                ViewBag.TotalOrders = pos.Count;
-                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Picking);
-                ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
-                ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
-                ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
+                // Comprehensive Metrics for the New Premium Dashboard
+                ViewBag.OrdersToPick = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Picking);
+                ViewBag.PackingInProgress = pos.Count(p => p.Status == POStatus.Processing);
+                ViewBag.PackedAndReady = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
+                ViewBag.InTransit = pos.Count(p => p.Status == POStatus.InTransit);
+                ViewBag.DeliveredCount = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
                 
-                // Stock Summary
+                // Stock Summary & Financials
                 var inventories = await _context.Inventories
+                    .Include(i => i.Product)
                     .Where(i => i.WarehouseId == wId)
                     .ToListAsync();
                 
-                ViewBag.TotalReserved = inventories.Sum(i => i.QuantityReserved);
-                ViewBag.TotalOnHand = inventories.Sum(i => i.QuantityOnHand);
-                ViewBag.LowStockCount = inventories.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 20);
-                ViewBag.LowStockAlertCount = inventories.Count(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 20));
+                ViewBag.TotalCommittedItems = inventories.Sum(i => i.QuantityReserved);
+                ViewBag.OnHandUnits = inventories.Sum(i => i.QuantityOnHand);
+                ViewBag.StockValue = inventories.Sum(i => i.QuantityOnHand * (i.Product.CostPrice ?? i.Product.BasePrice));
+                
+                // Hub Utilization (Gauge Data)
+                ViewBag.TotalCapacity = warehouse?.MaxCapacity ?? 1000;
+                ViewBag.HubUtilization = warehouse?.MaxCapacity > 0 
+                    ? (int)Math.Round((double)ViewBag.OnHandUnits / warehouse.MaxCapacity * 100) 
+                    : 0;
 
-                // Audit Logs for this Warehouse
-                ViewBag.RecentLogs = await _auditLogService.GetLogsForEntityAsync("Warehouse", wId.ToString());
+                // Low Stock Alerts (Replenishment)
+                ViewBag.LowStockProducts = inventories
+                    .Where(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 20))
+                    .Select(i => new { i.Id, Name = i.Product.ProductName, Stock = i.QuantityOnHand })
+                    .ToList();
 
-                // Quick Stats (Fleet & Staff)
+                // Logistics & Fleet Resources
                 ViewBag.ActiveAgents = await _context.SupplierEmployees
                     .CountAsync(e => e.SupplierId == sId && (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person") && e.IsActive);
                 
-                ViewBag.AvailableVehicles = await _context.Vehicles
+                ViewBag.AvailableFleet = await _context.Vehicles
                     .CountAsync(v => v.SupplierId == sId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available);
 
-                // Notifications (Recent updates)
-                ViewBag.RecentAlerts = pos.OrderByDescending(p => p.UpdatedAt).Take(5).ToList();
+                // Activity Log Formatting
+                var rawLogs = await _auditLogService.GetLogsForEntityAsync("Warehouse", wId.ToString());
+                ViewBag.ActivityLogs = rawLogs.Take(8).Select(l => {
+                    dynamic expando = new System.Dynamic.ExpandoObject();
+                    expando.Timestamp = l.PerformedAtUtc.ToLocalTime();
+                    expando.Description = l.Notes;
+                    expando.Icon = l.ActionType switch { "StatusUpdate" => "fa-sync", "Inventory" => "fa-boxes", _ => "fa-info-circle" };
+                    return expando;
+                }).ToList();
 
-                return View(pos);
+                // Hourly Picking Trend (Mock for Chart.js)
+                ViewBag.HourlyLabels = new[] { "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM" };
+                ViewBag.HourlyPicks = new[] { 12, 19, 3, 5, 2, 3, 10, 15, 20, 14 }; // In a real app, this would be queried from logs
+
+                // Smart Dispatch Suggestion
+                var nextReady = pos.FirstOrDefault(p => p.Status == POStatus.Packed);
+                ViewBag.RecommendedDispatchMessage = nextReady != null 
+                    ? $"Order #{nextReady.PONumber} for {nextReady.Retailer?.BusinessName} is ready for loading."
+                    : "No pending dispatches. All orders are currently processing or delivered.";
+                ViewBag.HasPendingDispatch = nextReady != null;
+
+                // PurchaseOrders for Worklist
+                ViewBag.PurchaseOrders = pos.OrderByDescending(p => p.UpdatedAt).Take(10).ToList();
+
+                return View();
             }
             catch (Exception ex)
             {
@@ -1116,6 +1146,62 @@ namespace SCM_System.Controllers
                 return emp?.WarehouseId ?? 0;
             }
             return 0;
+        }
+
+        [HttpPost]
+        [Route("ToggleVoicePicking")]
+        public async Task<IActionResult> ToggleVoicePicking()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Json(new { success = false, message = "Unauthorized" });
+
+            manager.EnableVoicePicking = !manager.EnableVoicePicking;
+            _context.Update(manager);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync("Warehouse", manager.WarehouseId.ToString(), 
+                "SettingsUpdate", $"Voice picking turned {(manager.EnableVoicePicking ? "ON" : "OFF")}", User.Identity.Name);
+
+            return Json(new { success = true, message = $"Voice picking {(manager.EnableVoicePicking ? "ON" : "OFF")}" });
+        }
+
+        [HttpGet]
+        [Route("PrintWorklist")]
+        public IActionResult PrintWorklist()
+        {
+            // Mock PDF generation - in real scenario use a library like Rotativa or QuestPDF
+            return Content("Worklist PDF would be generated here with all pending 'Picking' and 'Processing' orders.");
+        }
+
+        [HttpGet]
+        [Route("ScanBarcode")]
+        public async Task<IActionResult> ScanBarcode(string barcode)
+        {
+            if (string.IsNullOrEmpty(barcode)) return RedirectToAction(nameof(Dashboard));
+
+            // Logic to find item or PO by barcode
+            var po = await _context.PurchaseOrders.FirstOrDefaultAsync(p => p.PONumber == barcode);
+            if (po != null) return RedirectToAction("Details", new { id = po.Id });
+
+            TempData["ErrorMessage"] = $"No entity found for barcode: {barcode}";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        [HttpGet]
+        [Route("GetActivityLog")]
+        public async Task<IActionResult> GetActivityLog()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            var logs = await _auditLogService.GetLogsForEntityAsync("Warehouse", (manager.WarehouseId ?? 0).ToString());
+            var formattedLogs = logs.Take(10).Select(l => new {
+                time = l.PerformedAtUtc.ToLocalTime().ToString("HH:mm"),
+                text = l.Notes,
+                icon = l.ActionType switch { "StatusUpdate" => "fa-sync", "Inventory" => "fa-boxes", _ => "fa-info-circle" }
+            });
+
+            return Json(formattedLogs);
         }
 
         private async Task<SupplierEmployee?> GetCurrentManagerAsync()
