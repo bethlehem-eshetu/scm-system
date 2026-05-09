@@ -147,6 +147,50 @@ namespace SCM_System.Controllers
                 .ToListAsync();
             ViewBag.RecentConversations = recentConversations;
 
+            // --- Chart Data Calculations ---
+            
+            // 1. Spending Trend (Last 6 Months)
+            var sixMonthsAgo = DateTime.Now.AddMonths(-5);
+            sixMonthsAgo = new DateTime(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
+            
+            var spendingTrend = await _context.Orders
+                .Where(o => o.RetailerId == retailer.Id && o.OrderStatus == "Completed" && o.CreatedAt >= sixMonthsAgo)
+                .GroupBy(o => new { o.CreatedAt.Year, o.CreatedAt.Month })
+                .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, Total = g.Sum(o => o.TotalAmount) })
+                .ToListAsync();
+
+            var monthlyLabels = new List<string>();
+            var monthlyData = new List<decimal>();
+            for (int i = 0; i < 6; i++)
+            {
+                var date = sixMonthsAgo.AddMonths(i);
+                monthlyLabels.Add(date.ToString("MMM yyyy"));
+                var match = spendingTrend.FirstOrDefault(x => x.Year == date.Year && x.Month == date.Month);
+                monthlyData.Add(match?.Total ?? 0);
+            }
+            ViewBag.MonthlySpendingLabels = monthlyLabels;
+            ViewBag.MonthlySpendingData = monthlyData;
+
+            // 2. Order Status Distribution
+            ViewBag.OrderStatusLabels = new List<string> { "Pending", "Processing", "In Transit", "Delivered" };
+            ViewBag.OrderStatusData = new List<int> { 
+                ViewBag.StatusPending, 
+                ViewBag.StatusProcessing, 
+                ViewBag.StatusInTransit, 
+                ViewBag.StatusDelivered 
+            };
+
+            // 3. Procurement Mix (Tenders vs Direct)
+            var totalSpend = (decimal)ViewBag.TotalSpent;
+            var tenderSpend = orders.Where(o => o.OrderStatus == "Completed" && o.TenderId != null).Sum(o => o.TotalAmount);
+            var directSpend = totalSpend - tenderSpend;
+            
+            ViewBag.ProcurementMixLabels = new List<string> { "Direct Purchase", "Tenders" };
+            ViewBag.ProcurementMixData = new List<decimal> { 
+                totalSpend > 0 ? (directSpend / totalSpend) * 100 : 0,
+                totalSpend > 0 ? (tenderSpend / totalSpend) * 100 : 0
+            };
+
             ViewBag.AllCategories = await _context.ProductCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.CategoryName)
