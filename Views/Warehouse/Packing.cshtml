@@ -5,10 +5,10 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid px-4 py-3">
+<div class="content-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Packing & Processing</h2>
+            <h2 class="fw-bold mb-1">Packing & Processing</h2>
             <p class="text-muted mb-0">Step 2: Carefully pack identified items and prepare for courier pickup.</p>
         </div>
         <div class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2 border border-info border-opacity-25">
@@ -18,7 +18,7 @@
 
     @if (!Model.Any())
     {
-        <div class="card border-0 shadow-sm rounded-4 py-5 text-center">
+        <div class="dashboard-card py-5 text-center">
             <div class="opacity-25 mb-3">
                 <i class="fas fa-box-open fa-4x text-muted"></i>
             </div>
@@ -32,36 +32,36 @@
             @foreach (var po in Model)
             {
                 <div class="col-xl-4 col-md-6">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden d-flex flex-column">
-                        <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-dark">Order #@po.PONumber</span>
+                    <div class="dashboard-card h-100 overflow-hidden d-flex flex-column">
+                        <div class="card-header bg-transparent border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-theme">Order #@po.PONumber</span>
                             <span class="badge bg-info bg-opacity-10 text-info rounded-pill">@po.Status</span>
                         </div>
                         <div class="card-body px-4 py-0 flex-grow-1">
                             <div class="mb-3">
                                 <label class="smaller text-muted d-block">RETAILER</label>
-                                <div class="fw-bold fs-6">@po.Retailer?.BusinessName</div>
+                                <div class="fw-bold fs-6 text-theme">@po.Retailer?.BusinessName</div>
                             </div>
                             
-                            <div class="alert alert-info border-0 rounded-4 py-2 mb-3">
+                            <div class="alert alert-info border-0 rounded-4 py-2 mb-3 bg-opacity-10">
                                 <div class="d-flex align-items-center">
                                     <div class="spinner-grow spinner-grow-sm text-info me-2" role="status"></div>
-                                    <span class="smaller fw-bold">Packing in progress...</span>
+                                    <span class="smaller fw-bold text-info">Packing in progress...</span>
                                 </div>
                             </div>
 
                             <label class="smaller text-muted d-block mb-2">MANIFEST</label>
-                            <div class="list-group list-group-flush rounded-4 overflow-hidden border mb-3">
+                            <div class="list-group list-group-flush rounded-4 overflow-hidden border border-theme mb-3">
                                 @foreach (var item in po.PurchaseOrderItems)
                                 {
-                                    <div class="list-group-item bg-light bg-opacity-50 py-2 px-3 border-0 border-bottom d-flex justify-content-between align-items-center">
-                                        <div class="small fw-medium">@item.Product?.ProductName</div>
-                                        <div class="badge bg-white text-dark border">x@item.Quantity</div>
+                                    <div class="list-group-item bg-soft-secondary py-2 px-3 border-0 border-bottom border-theme d-flex justify-content-between align-items-center">
+                                        <div class="small fw-medium text-theme">@item.Product?.ProductName</div>
+                                        <div class="badge bg-card-theme text-theme border border-theme">x@item.Quantity</div>
                                     </div>
                                 }
                             </div>
                         </div>
-                        <div class="card-footer bg-white border-0 p-4 pt-2">
+                        <div class="card-footer bg-transparent border-0 p-4 pt-2">
                             <form asp-action="UpdateStatus" method="post" class="d-grid shadow-sm">
                                 <input type="hidden" name="id" value="@po.Id" />
                                 <input type="hidden" name="status" value="@POStatus.Packed" />
@@ -82,5 +82,43 @@
 </div>
 
 <style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .bg-card-theme { background-color: var(--bg-card) !important; }
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
     .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 </style>

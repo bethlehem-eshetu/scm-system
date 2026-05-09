@@ -5,24 +5,150 @@
     var userRole = Context.Session.GetString("UserRole");
 }
 
-<div class="container-fluid py-4">
+<style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-sidebar: #0B3B2F;
+        --bg-input: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --bg-hover: #F0F4F2;
+        --text-primary: #1A2C26;
+        --text-secondary: #4A5C55;
+        --text-muted: #6F7E78;
+        --text-white: #FFFFFF;
+        --border-light: #E2E8E4;
+        --border-medium: #CDD6D1;
+        --success: #2E9C7A;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-sidebar: #06261E;
+        --bg-input: #252B28;
+        --bg-table-header: #252B28;
+        --bg-hover: #252B28;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+        --text-muted: #8A9B92;
+        --border-light: #2A3530;
+        --border-medium: #3A4840;
+        --shadow-sm: none;
+    }
+
+    .support-page-wrapper {
+        background-color: var(--bg-page);
+        min-height: 100vh;
+        padding: 24px;
+        color: var(--text-primary);
+        transition: background-color 0.3s ease;
+    }
+
+    .page-title {
+        color: var(--text-primary);
+        font-weight: 700;
+    }
+
+    .ticket-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border-light) !important;
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .custom-table {
+        margin-bottom: 0;
+        color: var(--text-secondary) !important;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .custom-table thead th {
+        background-color: var(--bg-table-header) !important;
+        color: var(--text-primary) !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        padding: 16px;
+        border-bottom: 1px solid var(--border-light) !important;
+    }
+
+    .custom-table tbody td {
+        padding: 16px;
+        background-color: var(--bg-card) !important;
+        color: var(--text-secondary) !important;
+        border-bottom: 1px solid var(--border-light) !important;
+        vertical-align: middle;
+    }
+
+    .custom-table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    /* Hover effect override */
+    .custom-table tbody tr:hover td {
+        background-color: var(--bg-hover) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .btn-new-ticket {
+        background-color: var(--success) !important;
+        border: none !important;
+        color: white !important;
+        padding: 10px 24px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.2s;
+    }
+
+    .btn-new-ticket:hover {
+        background-color: #247A5E !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(46, 156, 122, 0.2);
+    }
+
+    .ticket-id {
+        color: var(--text-muted);
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 13px;
+    }
+
+    .status-badge {
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+
+    /* Override any bootstrap text-muted in dark mode */
+    body.dark-mode .text-muted {
+        color: var(--text-muted) !important;
+    }
+</style>
+
+<div class="support-page-wrapper">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Support Tickets</h2>
+            <h2 class="page-title mb-0">Support Tickets</h2>
             <p class="text-muted">@(userRole == "Admin" ? "Manage all user support tickets and feedback." : "View the status of your feedback and support requests.")</p>
         </div>
         @if (userRole != "Admin")
         {
-            <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="$('#chatbot-toggle').click()">
+            <button class="btn btn-new-ticket" onclick="$('#chatbot-toggle').click()">
                 <i class="fas fa-plus me-2"></i>New Ticket
             </button>
         }
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="ticket-card">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light bg-opacity-50">
+            <table class="table align-middle mb-0 custom-table">
+                <thead>
                     <tr>
                         <th class="ps-4">Ticket ID</th>
                         @if (userRole == "Admin")
@@ -44,13 +170,13 @@
                             {
                                 "Open" => "bg-warning text-dark",
                                 "InProgress" => "bg-info text-dark",
-                                "Resolved" => "bg-success",
-                                "Closed" => "bg-secondary",
-                                _ => "bg-primary"
+                                "Resolved" => "bg-success text-white",
+                                "Closed" => "bg-secondary text-white",
+                                _ => "bg-primary text-white"
                             };
 
                             <tr>
-                                <td class="ps-4 fw-bold text-muted">#TKT-@ticket.Id.ToString("D4")</td>
+                                <td class="ps-4 ticket-id">#TKT-@ticket.Id.ToString("D4")</td>
                                 @if (userRole == "Admin")
                                 {
                                     <td>
@@ -65,7 +191,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge rounded-pill @statusBadge px-3">@ticket.Status</span>
+                                    <span class="badge status-badge @statusBadge">@ticket.Status</span>
                                 </td>
                                 <td class="text-end pe-4 text-muted small">
                                     @ticket.CreatedAt.ToString("MMM dd, yyyy HH:mm")

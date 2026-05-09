@@ -517,7 +517,8 @@ namespace SCM_System.Controllers
 
             // Verify PO belongs to this manager's warehouse
             var po = await _context.PurchaseOrders.FirstOrDefaultAsync(p => p.Id == id && p.WarehouseId == wId.Value);
-            if (po == null) return Unauthorized();
+            
+            if (po == null) return NotFound();
 
             await _poService.UpdatePurchaseOrderStatusAsync(id, status, userId);
 
@@ -1159,7 +1160,7 @@ namespace SCM_System.Controllers
             _context.Update(manager);
             await _context.SaveChangesAsync();
 
-            await _auditLogService.LogActionAsync("Warehouse", manager.WarehouseId.ToString(), 
+            await _auditLogService.LogActionAsync("Warehouse", manager.WarehouseId?.ToString() ?? "unknown", 
                 "SettingsUpdate", $"Voice picking turned {(manager.EnableVoicePicking ? "ON" : "OFF")}", User.Identity.Name);
 
             return Json(new { success = true, message = $"Voice picking {(manager.EnableVoicePicking ? "ON" : "OFF")}" });
@@ -1241,6 +1242,76 @@ namespace SCM_System.Controllers
                 }
                 return builder.ToString();
             }
+        }
+        [HttpPost]
+        [Route("UpdateProfile")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(int id, string name, string address, string city, string region, string? phone, string? email, string? workingDays, string? operatingHoursFrom, string? operatingHoursTo)
+        {
+            var warehouse = await _context.Warehouses
+                .Include(w => w.PrimaryManager)
+                .ThenInclude(pm => pm.User)
+                .FirstOrDefaultAsync(w => w.Id == id);
+            
+            if (warehouse == null) return NotFound();
+
+            warehouse.Name = name;
+            warehouse.Address = address;
+            warehouse.City = city;
+            warehouse.Region = region;
+            warehouse.WorkingDays = workingDays;
+            
+            if (TimeSpan.TryParse(operatingHoursFrom, out var fromTime)) warehouse.OperatingHoursFrom = fromTime;
+            if (TimeSpan.TryParse(operatingHoursTo, out var toTime)) warehouse.OperatingHoursTo = toTime;
+
+            if (warehouse.PrimaryManager != null)
+            {
+                warehouse.PrimaryManager.Phone = phone ?? "";
+                if (warehouse.PrimaryManager.User != null)
+                {
+                    warehouse.PrimaryManager.User.Email = email ?? "";
+                }
+            }
+
+            warehouse.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Profile updated successfully.";
+            return RedirectToAction("Details");
+        }
+
+        [HttpGet]
+        [Route("ExportProfile")]
+        public async Task<IActionResult> ExportProfile()
+        {
+            var manager = await GetCurrentManagerAsync();
+            int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
+            if (manager == null || !wId.HasValue) return Unauthorized();
+
+            var warehouse = await _context.Warehouses
+                .Include(w => w.Supplier)
+                .Include(w => w.PrimaryManager)
+                .ThenInclude(pm => pm.User)
+                .FirstOrDefaultAsync(w => w.Id == wId.Value);
+
+            if (warehouse == null) return NotFound();
+
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Field,Value");
+            csv.AppendLine($"Warehouse Name,{warehouse.Name}");
+            csv.AppendLine($"Warehouse ID,{warehouse.Id}");
+            csv.AppendLine($"Status,{warehouse.Status}");
+            csv.AppendLine($"Address,{warehouse.Address}, {warehouse.City}, {warehouse.Region}");
+            csv.AppendLine($"Manager,{warehouse.PrimaryManager?.User?.FullName ?? "N/A"}");
+            csv.AppendLine($"Phone,{warehouse.PrimaryManager?.Phone ?? "N/A"}");
+            csv.AppendLine($"Email,{warehouse.PrimaryManager?.User?.Email ?? "N/A"}");
+            csv.AppendLine($"Capacity,{warehouse.MaxCapacity}");
+            csv.AppendLine($"Working Days,{warehouse.WorkingDays ?? "N/A"}");
+            csv.AppendLine($"Operating Hours,{warehouse.OperatingHoursFrom?.ToString() ?? "N/A"} - {warehouse.OperatingHoursTo?.ToString() ?? "N/A"}");
+            csv.AppendLine($"Exported At,{DateTime.Now}");
+
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"Warehouse_Profile_{warehouse.Id}.csv");
         }
     }
 }

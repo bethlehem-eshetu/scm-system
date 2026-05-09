@@ -8,7 +8,7 @@
     <!-- Glass Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="glass-panel p-4 position-relative overflow-hidden shadow-lg border-0" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); border-radius: 1.5rem;">
+            <div class="glass-panel p-4 position-relative overflow-hidden shadow-lg border-0" style="border-radius: 1.5rem;">
                 <div class="position-relative z-index-1 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
                         <h2 class="text-white mb-1 fw-bold"><i class="fas fa-tools me-2"></i>Control Center</h2>
@@ -39,9 +39,9 @@
         <!-- Sidebar Navigation -->
         <div class="col-lg-3">
             <div class="card border-0 shadow-sm rounded-4 sticky-top overflow-hidden" style="top: 20px;">
-                <div class="p-4 text-center border-bottom border-light bg-light-subtle">
+                <div class="p-4 text-center border-bottom" style="border-color: var(--border-color) !important; background-color: var(--hover-state);">
                     <div class="position-relative d-inline-block mb-3">
-                        <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 110px; height: 110px; border: 4px solid #fff;">
+                        <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 110px; height: 110px; border: 4px solid var(--border-color); background-color: var(--card-bg);">
                             @if (!string.IsNullOrEmpty(Model.ExistingProfileImage))
                             {
                                 <img src="@Model.ExistingProfileImage" id="sidebarProfilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
@@ -86,14 +86,14 @@
                     <!-- 1. Identity & Profile -->
                     <div class="tab-pane fade show active" id="v-pills-identity" role="tabpanel">
                         <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-header bg-white py-3 border-bottom border-light">
+                            <div class="card-header py-3">
                                 <h5 class="mb-0 fw-bold text-primary">Identity & Profile</h5>
                             </div>
                             <div class="card-body p-4">
                                 <div class="row g-4">
                                     <div class="col-12 text-center mb-4">
                                         <div class="position-relative d-inline-block">
-                                            <div class="bg-light rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 130px; height: 130px; border: 5px solid #fff;">
+                                            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 130px; height: 130px; border: 5px solid var(--border-color); background-color: var(--hover-state);">
                                                 @if (!string.IsNullOrEmpty(Model.ExistingProfileImage))
                                                 {
                                                     <img src="@Model.ExistingProfileImage" id="mainProfilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
@@ -114,16 +114,16 @@
 
                                     <div class="col-md-6">
                                         <label asp-for="FullName" class="form-label small fw-bold text-muted">Legal Full Name</label>
-                                        <input asp-for="FullName" class="form-control rounded-pill bg-light border-0 px-4" />
+                                        <input asp-for="FullName" class="form-control rounded-pill px-4" />
                                         <span asp-validation-for="FullName" class="text-danger extra-small"></span>
                                     </div>
                                     <div class="col-md-6">
                                         <label asp-for="Email" class="form-label small fw-bold text-muted">System Email (Read Only)</label>
-                                        <input asp-for="Email" class="form-control rounded-pill bg-light border-0 px-4" readonly />
+                                        <input asp-for="Email" class="form-control rounded-pill px-4" readonly />
                                     </div>
                                     <div class="col-md-6">
                                         <label asp-for="Phone" class="form-label small fw-bold text-muted">Contact Number</label>
-                                        <input asp-for="Phone" class="form-control rounded-pill bg-light border-0 px-4" />
+                                        <input asp-for="Phone" class="form-control rounded-pill px-4" />
                                         <span asp-validation-for="Phone" class="text-danger extra-small"></span>
                                     </div>
                                     <div class="col-md-6">
@@ -147,22 +147,22 @@
                     <!-- 2. Operational Logic -->
                     <div class="tab-pane fade" id="v-pills-operational" role="tabpanel">
                         <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-header bg-white py-3 border-bottom border-light">
+                            <div class="card-header py-3">
                                 <h5 class="mb-0 fw-bold text-warning">Warehouse Operational Logic</h5>
                             </div>
                             <div class="card-body p-4">
                                 <div class="row g-4">
                                     <div class="col-md-6">
                                         <label asp-for="DefaultWarehouseLocation" class="form-label small fw-bold text-muted">Default Intake Zone</label>
-                                        <input asp-for="DefaultWarehouseLocation" class="form-control rounded-pill bg-light border-0 px-4" placeholder="e.g. Zone A-1" />
+                                        <input asp-for="DefaultWarehouseLocation" class="form-control rounded-pill px-4" placeholder="e.g. Zone A-1" />
                                     </div>
                                     <div class="col-md-3">
                                         <label asp-for="LowStockThreshold" class="form-label small fw-bold text-muted">Low Stock Trigger</label>
-                                        <input asp-for="LowStockThreshold" type="number" class="form-control rounded-pill bg-light border-0 px-4 text-center fw-bold" />
+                                        <input asp-for="LowStockThreshold" type="number" class="form-control rounded-pill px-4 text-center fw-bold" />
                                     </div>
                                     <div class="col-md-3">
                                         <label asp-for="PicklistFormat" class="form-label small fw-bold text-muted">Picklist Format</label>
-                                        <select asp-for="PicklistFormat" class="form-select rounded-pill bg-light border-0 px-4">
+                                        <select asp-for="PicklistFormat" class="form-select rounded-pill px-4">
                                             <option value="Detailed">Detailed</option>
                                             <option value="Summary">Summary</option>
                                             <option value="Minimal">Minimal</option>
@@ -171,7 +171,7 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold text-muted mb-3">Zone Responsibilities</label>
-                                        <div class="p-3 bg-light rounded-4 border border-white">
+                                        <div class="p-3 rounded-4 border" style="background-color: var(--hover-state); border-color: var(--border-color) !important;">
                                             <div class="row g-2">
                                                 @foreach (var zone in new[] { "Cold Storage", "Bulk Area", "Packing Station", "Loading Dock", "Hazardous Goods" })
                                                 {
@@ -229,7 +229,7 @@
                             <!-- Password & Theme -->
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm rounded-4">
-                                    <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <div class="card-header py-3">
                                         <h5 class="mb-0 fw-bold text-dark">Security & Preferences</h5>
                                     </div>
                                     <div class="card-body p-4">
@@ -241,15 +241,15 @@
                                         <div class="row g-3">
                                             <div class="col-12">
                                                 <label asp-for="CurrentPassword" class="form-label small fw-bold text-muted">Current Password</label>
-                                                <input asp-for="CurrentPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" placeholder="Required for security changes" />
+                                                <input asp-for="CurrentPassword" type="password" class="form-control rounded-pill px-4" placeholder="Required for security changes" />
                                             </div>
                                             <div class="col-md-6">
                                                 <label asp-for="NewPassword" class="form-label small fw-bold text-muted">New Password</label>
-                                                <input asp-for="NewPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                                <input asp-for="NewPassword" type="password" class="form-control rounded-pill px-4" />
                                             </div>
                                             <div class="col-md-6">
                                                 <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted">Confirm New Password</label>
-                                                <input asp-for="ConfirmPassword" type="password" class="form-control rounded-pill bg-light border-0 px-4" />
+                                                <input asp-for="ConfirmPassword" type="password" class="form-control rounded-pill px-4" />
                                             </div>
                                         </div>
                                     </div>
@@ -259,7 +259,7 @@
                             <!-- 2FA & Sessions -->
                             <div class="col-md-6">
                                 <div class="card border-0 shadow-sm rounded-4 h-100">
-                                    <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <div class="card-header py-3">
                                         <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-shield-alt me-2"></i>Two-Factor Auth</h5>
                                     </div>
                                     <div class="card-body p-4 text-center">
@@ -275,7 +275,7 @@
                                             </label>
                                         </div>
 
-                                        <div id="tfaSetupArea" class="mt-4 p-3 bg-light rounded-4 d-none">
+                                        <div id="tfaSetupArea" class="mt-4 p-3 rounded-4 d-none" style="background-color: var(--hover-state);">
                                             <p class="small fw-bold mb-3">Scan QR Code</p>
                                             <img id="qrCodeImg" src="" class="img-fluid rounded shadow-sm mb-3" style="max-width: 150px;" />
                                             <div class="input-group input-group-sm mb-3">
@@ -293,7 +293,7 @@
 
                             <div class="col-md-6">
                                 <div class="card border-0 shadow-sm rounded-4 h-100">
-                                    <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <div class="card-header py-3">
                                         <h5 class="mb-0 fw-bold text-info"><i class="fas fa-desktop me-2"></i>Active Sessions</h5>
                                     </div>
                                     <div class="card-body p-0">
@@ -327,13 +327,13 @@
 
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm rounded-4">
-                                    <div class="card-header bg-white py-3 border-bottom border-light">
+                                    <div class="card-header py-3">
                                         <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-history me-2"></i>Login History</h5>
                                     </div>
                                     <div class="card-body p-0">
                                         <div class="table-responsive">
                                             <table class="table table-sm table-hover align-middle mb-0">
-                                                <thead class="bg-light">
+                                                <thead style="background-color: var(--hover-state);">
                                                     <tr>
                                                         <th class="px-4 py-3 border-0 small text-muted text-uppercase">Time (UTC)</th>
                                                         <th class="py-3 border-0 small text-muted text-uppercase">IP Address</th>
@@ -364,7 +364,7 @@
                     <!-- 4. Danger Zone -->
                     <div class="tab-pane fade" id="v-pills-danger" role="tabpanel">
                         <div class="card border-0 shadow-sm rounded-4 border-top border-danger border-4">
-                            <div class="card-header bg-white py-3 border-bottom border-light">
+                            <div class="card-header py-3">
                                 <h5 class="mb-0 fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Critical Actions</h5>
                             </div>
                             <div class="card-body p-4">
@@ -408,7 +408,7 @@
 <div class="modal fade" id="deactivateModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header bg-danger text-white rounded-top-4">
+            <div class="modal-header text-white rounded-top-4" style="background-color: #D32F2F;">
                 <h5 class="modal-title fw-bold">Confirm Suspension</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -420,7 +420,7 @@
                 <p class="text-muted">This will revoke your access to the Warehouse Management System immediately.</p>
                 <div class="mb-4 text-start">
                     <label class="form-label small fw-bold text-muted">Verify with Password</label>
-                    <input type="password" id="deactivatePwd" class="form-control rounded-pill bg-light border-0 px-4" placeholder="Enter password" />
+                    <input type="password" id="deactivatePwd" class="form-control rounded-pill px-4" placeholder="Enter password" />
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-light rounded-pill flex-grow-1 py-2 fw-bold" data-bs-dismiss="modal">Cancel</button>
@@ -434,35 +434,68 @@
 @section Styles {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
-        :root { --bs-primary-rgb: 13, 110, 253; }
-        .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
-        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
-        .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
-        .glass-panel { border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+        .glass-panel { 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); 
+            background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%) !important;
+        }
+        
         .nav-pills-custom .nav-link {
             border-radius: 0.75rem;
             padding: 0.8rem 1.2rem;
-            color: #6c757d;
+            color: var(--text-muted);
             font-weight: 500;
             transition: all 0.3s ease;
+            background: transparent;
+            border: 1px solid transparent;
         }
-        .nav-pills-custom .nav-link:hover { background-color: #f8f9fa; color: var(--bs-primary); }
+        .nav-pills-custom .nav-link:hover { 
+            background-color: var(--hover-state); 
+            color: var(--primary-color); 
+        }
         .nav-pills-custom .nav-link.active {
-            background-color: var(--bs-primary);
-            color: white;
-            box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.2);
+            background-color: var(--primary-color) !important;
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(46, 156, 122, 0.2);
         }
+
+        .bg-soft-primary { background-color: rgba(46, 156, 122, 0.1); color: var(--primary-color); }
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
+
         .w-20px { width: 20px; display: inline-block; }
         .extra-small { font-size: 0.75rem; }
         .object-fit-cover { object-fit: cover; }
         .icon-shape { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
-        .form-control:focus, .form-select:focus {
-            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
-            background-color: #fff !important;
+        
+        .form-control, .form-select {
+            background-color: var(--input-bg) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-color) !important;
         }
+        
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(46, 156, 122, 0.1);
+            border-color: var(--primary-color) !important;
+        }
+        
+        .card-header {
+            background-color: transparent !important;
+            border-bottom: 1px solid var(--border-color) !important;
+        }
+
         .hvr-grow { transition: transform .2s ease-in-out; }
         .hvr-grow:hover { transform: scale(1.02); }
+
+        .btn-white {
+            background-color: white;
+            color: #0B3B2F;
+            border: none;
+        }
+        .btn-white:hover {
+            background-color: #f8f9fa;
+        }
     </style>
 }
 

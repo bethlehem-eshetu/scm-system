@@ -4,10 +4,10 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid px-4 py-3">
+<div class="content-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Warehouse Fulfillment</h2>
+            <h2 class="fw-bold mb-1">Warehouse Fulfillment</h2>
             <p class="text-muted mb-0">Manage picking, packing, and delivery dispatch</p>
         </div>
         <div>
@@ -15,109 +15,147 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4 py-3 text-uppercase small fw-bold">PO #</th>
-                            <th class="text-uppercase small fw-bold">Retailer</th>
-                            <th class="text-uppercase small fw-bold">Items</th>
-                            <th class="text-uppercase small fw-bold">Status</th>
-                            <th class="text-uppercase small fw-bold">Date</th>
-                            <th class="text-end pe-4 text-uppercase small fw-bold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
+    <div class="dashboard-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 border-0">
+                <thead class="bg-soft-secondary text-muted">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase small fw-bold">PO #</th>
+                        <th class="text-uppercase small fw-bold">Retailer</th>
+                        <th class="text-uppercase small fw-bold">Items</th>
+                        <th class="text-uppercase small fw-bold">Status</th>
+                        <th class="text-uppercase small fw-bold">Date</th>
+                        <th class="text-end pe-4 text-uppercase small fw-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var po in Model)
                         {
-                            foreach (var po in Model)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-bold text-primary">@po.PONumber</td>
-                                    <td>
-                                        <div class="fw-medium">@po.Order?.Retailer?.BusinessName</div>
-                                        <div class="text-muted small">@po.Order?.Retailer?.City</div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-                                            @po.PurchaseOrderItems?.Count Items
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge @(po.Status == "PO Issued" ? "bg-info" : (po.Status == "In Progress" ? "bg-warning" : "bg-primary")) rounded-pill px-3">
-                                            @po.Status
-                                        </span>
-                                    </td>
-                                    <td>@po.CreatedAt.ToString("MMM dd, yyyy")</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#packModal-@po.Id">
-                                            <i class="fas fa-box-open me-1"></i> Pack & Dispatch
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                <!-- Pack Modal -->
-                                <div class="modal fade" id="packModal-@po.Id" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header border-0 pb-0">
-                                                <h5 class="modal-title fw-bold">Pack PO @po.PONumber</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form asp-action="MarkReady" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="purchaseOrderId" value="@po.Id" />
-                                                <div class="modal-body p-4">
-                                                    <div class="mb-4">
-                                                        <label class="form-label small fw-bold text-uppercase">Items to Pack</label>
-                                                        <ul class="list-group list-group-flush">
-                                                            @foreach (var item in po.PurchaseOrderItems)
-                                                            {
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                                                    <span>@item.Product?.ProductName</span>
-                                                                    <span class="fw-bold">x @item.Quantity</span>
-                                                                </li>
-                                                            }
-                                                        </ul>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold text-uppercase">Assign Delivery Agent (Optional)</label>
-                                                        <select name="deliveryAgentId" class="form-select rounded-3">
-                                                            <option value="">-- Select Agent --</option>
-                                                            <!-- Note: Ensure ViewBag.DeliveryAgents is populated in controller if using this -->
-                                                        </select>
-                                                        <div class="form-text">You can assign an agent later if needed.</div>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer border-0 pt-0">
-                                                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                                        <i class="fas fa-check-circle me-1"></i> Confirm Ready
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="6" class="text-center py-5">
-                                    <div class="opacity-25 mb-3">
-                                        <i class="fas fa-clipboard-check fa-3x"></i>
-                                    </div>
-                                    <h5 class="text-muted">No POs pending fulfillment.</h5>
-                                    <p class="text-muted small">All specific POs assigned to this warehouse have been processed.</p>
+                            <tr class="border-bottom border-theme">
+                                <td class="ps-4 fw-bold text-primary">@po.PONumber</td>
+                                <td>
+                                    <div class="fw-medium text-theme">@po.Order?.Retailer?.BusinessName</div>
+                                    <div class="text-muted small">@po.Order?.Retailer?.City</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-soft-secondary text-muted border border-theme">
+                                        @po.PurchaseOrderItems?.Count Items
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge @(po.Status == "PO Issued" ? "bg-info" : (po.Status == "In Progress" ? "bg-warning" : "bg-primary")) rounded-pill px-3">
+                                        @po.Status
+                                    </span>
+                                </td>
+                                <td class="text-theme">@po.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#packModal-@po.Id">
+                                        <i class="fas fa-box-open me-1"></i> Pack & Dispatch
+                                    </button>
                                 </td>
                             </tr>
+
+                            <!-- Pack Modal -->
+                            <div class="modal fade" id="packModal-@po.Id" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-card-theme text-theme">
+                                        <div class="modal-header border-bottom border-theme pb-3">
+                                            <h5 class="modal-title fw-bold">Pack PO @po.PONumber</h5>
+                                            <button type="button" class="btn-close text-theme" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form asp-action="MarkReady" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="purchaseOrderId" value="@po.Id" />
+                                            <div class="modal-body p-4">
+                                                <div class="mb-4">
+                                                    <label class="form-label small fw-bold text-uppercase text-muted">Items to Pack</label>
+                                                    <ul class="list-group list-group-flush rounded-3 overflow-hidden border border-theme">
+                                                        @foreach (var item in po.PurchaseOrderItems)
+                                                        {
+                                                            <li class="list-group-item bg-transparent text-theme d-flex justify-content-between align-items-center border-theme">
+                                                                <span>@item.Product?.ProductName</span>
+                                                                <span class="fw-bold">x @item.Quantity</span>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold text-uppercase text-muted">Assign Delivery Agent (Optional)</label>
+                                                    <select name="deliveryAgentId" class="form-select bg-soft-secondary border-theme text-theme rounded-3">
+                                                        <option value="">-- Select Agent --</option>
+                                                    </select>
+                                                    <div class="form-text text-muted">You can assign an agent later if needed.</div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-top border-theme pt-3">
+                                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                                    <i class="fas fa-check-circle me-1"></i> Confirm Ready
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="opacity-25 mb-3">
+                                    <i class="fas fa-clipboard-check fa-3x text-muted"></i>
+                                </div>
+                                <h5 class="text-muted">No POs pending fulfillment.</h5>
+                                <p class="text-muted small">All specific POs assigned to this warehouse have been processed.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .bg-card-theme { background-color: var(--bg-card) !important; }
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
+</style>

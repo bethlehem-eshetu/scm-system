@@ -4,10 +4,10 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid px-4 py-3">
+<div class="content-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1 text-danger"><i class="fas fa-exclamation-triangle me-2"></i> Low Stock Alerts</h2>
+            <h2 class="fw-bold mb-1 text-danger"><i class="fas fa-exclamation-triangle me-2"></i> Low Stock Alerts</h2>
             <p class="text-muted mb-0">Products requiring immediate replenishment to avoid order shortages</p>
         </div>
         <div class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2">
@@ -18,34 +18,36 @@
     <div class="row g-4">
         @if (!Model.Any())
         {
-            <div class="col-12 text-center py-5 shadow-sm rounded-4 bg-white">
-                <div class="text-success mb-3">
-                    <i class="fas fa-check-circle fa-4x"></i>
+            <div class="col-12">
+                <div class="dashboard-card text-center py-5">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-check-circle fa-4x"></i>
+                    </div>
+                    <h5 class="fw-bold text-theme">All Stock Levels Normal</h5>
+                    <p class="text-muted">No products are currently below the safety threshold.</p>
                 </div>
-                <h5 class="text-dark fw-bold">All Stock Levels Normal</h5>
-                <p class="text-muted">No products are currently below the safety threshold.</p>
             </div>
         }
         @foreach (var alert in Model)
         {
             var available = alert.QuantityOnHand - alert.QuantityReserved;
             <div class="col-xl-4 col-md-6">
-                <div class="card bg-glass border-0 border-start border-4 border-danger shadow-sm h-100">
+                <div class="dashboard-card border-start border-4 border-danger h-100">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between mb-3">
                             <div>
-                                <h6 class="fw-bold text-dark mb-1">@alert.Product?.ProductName</h6>
-                                <span class="badge bg-light text-muted border small">SKU: @(alert.Product?.SKU ?? "N/A")</span>
+                                <h6 class="fw-bold text-theme mb-1">@alert.Product?.ProductName</h6>
+                                <span class="badge bg-soft-secondary text-muted border border-theme small">SKU: @(alert.Product?.SKU ?? "N/A")</span>
                             </div>
                             <div class="stat-circle bg-danger bg-opacity-10 text-danger">
                                 <i class="fas fa-box"></i>
                             </div>
                         </div>
                         
-                        <div class="row text-center g-0 border rounded-3 overflow-hidden mb-3">
-                            <div class="col-6 py-2 border-end bg-light bg-opacity-50">
+                        <div class="row text-center g-0 border border-theme rounded-3 overflow-hidden mb-3">
+                            <div class="col-6 py-2 border-end border-theme bg-soft-secondary">
                                 <span class="smaller d-block text-muted">ON HAND</span>
-                                <span class="fw-bold text-dark">@alert.QuantityOnHand</span>
+                                <span class="fw-bold text-theme">@alert.QuantityOnHand</span>
                             </div>
                             <div class="col-6 py-2">
                                 <span class="smaller d-block text-muted">AVAILABLE</span>
@@ -54,7 +56,7 @@
                         </div>
 
                         <div class="alert alert-warning border-0 small mb-4 py-2 opacity-75">
-                            <i class="fas fa-info-circle me-1"></i> Below your safety threshold (@(ViewBag.Threshold ?? 20))
+                            <i class="fas fa-info-circle me-1"></i> Below safety threshold (@(ViewBag.Threshold ?? 20))
                         </div>
 
                         <div class="d-grid gap-2">
@@ -73,13 +75,45 @@
 </div>
 
 <style>
-    .bg-glass {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
     }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
+
     .smaller { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .stat-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .btn-soft-secondary { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; border: none; }
+    .btn-soft-secondary { background-color: var(--bg-table-header); color: var(--text-secondary); border: none; }
 </style>

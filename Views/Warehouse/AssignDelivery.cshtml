@@ -7,10 +7,10 @@
     var suggestedVehicles = ViewBag.SuggestedVehicles as IEnumerable<SCM_System.Models.ViewModels.VehicleSuggestion>;
 }
 
-<div class="container-fluid px-4 py-3">
+<div class="content-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Dispatch Control Center</h2>
+            <h2 class="fw-bold mb-1">Dispatch Control Center</h2>
             <p class="text-muted mb-0">Step 3: Assign a professional delivery agent and a suitable vehicle to finalize dispatch.</p>
         </div>
         <div class="d-flex gap-2 text-end">
@@ -22,7 +22,7 @@
 
     @if (!Model.Any())
     {
-        <div class="card border-0 shadow-sm rounded-4 py-5 text-center">
+        <div class="dashboard-card py-5 text-center">
             <div class="opacity-25 mb-3">
                 <i class="fas fa-shipping-fast fa-4x text-muted"></i>
             </div>
@@ -37,11 +37,11 @@
             {
                 var orderWeight = po.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0));
                 <div class="col-xl-6">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden d-flex flex-column">
-                        <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div class="dashboard-card h-100 overflow-hidden d-flex flex-column">
+                        <div class="card-header border-0 bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-theme">
                             <div>
                                 <span class="badge bg-primary text-white rounded-pill px-2 me-2">#@po.PONumber</span>
-                                <span class="fw-bold text-dark">@po.Retailer?.BusinessName</span>
+                                <span class="fw-bold text-theme">@po.Retailer?.BusinessName</span>
                             </div>
                             <span class="badge bg-success bg-opacity-10 text-success rounded-pill">READY FOR PICKUP</span>
                         </div>
@@ -52,22 +52,22 @@
                                         <label class="smaller text-muted d-block mb-1">DELIVERY DESTINATION</label>
                                         <div class="d-flex align-items-start">
                                             <i class="fas fa-map-marker-alt text-danger me-2 mt-1"></i>
-                                            <span class="text-dark small fw-medium">@(po.Order?.DeliveryAddress ?? "No address provided")</span>
+                                            <span class="small fw-medium text-theme">@(po.Order?.DeliveryAddress ?? "No address provided")</span>
                                         </div>
                                     </div>
                                     <label class="smaller text-muted d-block mb-2">SHIPMENT PREVIEW</label>
-                                    <div class="bg-light bg-opacity-50 p-3 rounded-4">
+                                    <div class="p-3 rounded-4 bg-soft-secondary border border-theme">
                                         <ul class="list-unstyled mb-0">
                                             @foreach (var item in po.PurchaseOrderItems.Take(3))
                                             {
-                                                <li class="small mb-1 d-flex justify-content-between">
+                                                <li class="small mb-1 d-flex justify-content-between text-theme">
                                                     <span>@item.Product?.ProductName</span>
                                                     <span class="fw-bold text-muted">x@item.Quantity</span>
                                                 </li>
                                             }
                                         </ul>
-                                        <div class="mt-3 p-2 bg-white bg-opacity-75 rounded-3 border border-light small">
-                                            <div class="d-flex justify-content-between">
+                                        <div class="mt-3 p-2 rounded-3 border border-theme bg-card-theme small">
+                                            <div class="d-flex justify-content-between text-theme">
                                                 <span class="text-muted">Total Order Weight:</span>
                                                 <span class="fw-bold text-primary">@orderWeight KG</span>
                                             </div>
@@ -80,7 +80,7 @@
                                         
                                         <div class="mb-3">
                                             <label class="smaller text-muted d-block fw-bold mb-2">SELECT AGENT</label>
-                                            <select name="agentId" class="form-select border-0 bg-light rounded-3 shadow-none py-2" required>
+                                            <select name="agentId" class="form-select border-theme rounded-3 shadow-none py-2 bg-soft-secondary text-theme" required>
                                                 <option value="">-- Choose Agent --</option>
                                                 @if (ViewBag.SortedAgents != null)
                                                 {
@@ -94,23 +94,11 @@
                                                         else if (item.ProjectedScore > 100) { labelPrefix = "⚠️ [OVERLOADED] "; }
                                                         else if (firstRecommended && !item.IsPhysicsViolation) { labelPrefix = "⭐ [RECOMMENDED] "; firstRecommended = false; }
 
-                                                        if (firstRecommended == false && labelPrefix.Contains("⭐"))
-                                                        {
-                                                            <option value="@agent.Id" 
-                                                                    data-vehicle-id="@item.VehicleId"
-                                                                    class="@(item.IsPhysicsViolation ? "text-muted" : "") @(item.ProjectedScore > 100 ? "text-danger" : "text-success")"
-                                                                    selected>
-                                                                @labelPrefix @(agent.User?.FullName ?? "Staff") (@agent.Phone) - @(item.ProjectedScore)% Load
-                                                            </option>
-                                                        }
-                                                        else
-                                                        {
-                                                            <option value="@agent.Id" 
-                                                                    data-vehicle-id="@item.VehicleId"
-                                                                    class="@(item.IsPhysicsViolation ? "text-muted" : "") @(item.ProjectedScore > 100 ? "text-danger" : "text-success")">
-                                                                @labelPrefix @(agent.User?.FullName ?? "Staff") (@agent.Phone) - @(item.ProjectedScore)% Load
-                                                            </option>
-                                                        }
+                                                        <option value="@agent.Id" 
+                                                                data-vehicle-id="@item.VehicleId"
+                                                                class="@(item.IsPhysicsViolation ? "text-muted" : "") @(item.ProjectedScore > 100 ? "text-danger" : "text-success")">
+                                                            @labelPrefix @(agent.User?.FullName ?? "Staff") (@agent.Phone) - @(item.ProjectedScore)% Load
+                                                        </option>
                                                     }
                                                 }
                                                 else if (agents != null)
@@ -125,7 +113,7 @@
 
                                         <div class="mb-4">
                                             <label class="smaller text-muted d-block fw-bold mb-2">SELECT VEHICLE</label>
-                                            <select name="vehicleId" class="form-select border-0 bg-light rounded-3 shadow-none py-2" required>
+                                            <select name="vehicleId" class="form-select border-theme rounded-3 shadow-none py-2 bg-soft-secondary text-theme" required>
                                                 <option value="">-- Choose Vehicle --</option>
                                                 @if (vehicles != null)
                                                 {
@@ -159,6 +147,55 @@
     }
 </div>
 
+<style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .bg-card-theme { background-color: var(--bg-card) !important; }
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
+    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .form-select:focus {
+        background-color: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 3px rgba(46, 156, 122, 0.1) !important;
+    }
+</style>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -182,7 +219,6 @@
                             vehicleSelect.val(driverData.vehicleId);
                             
                             let statusColor = driverData.loadStatus === 'Critical' ? 'danger' : (driverData.loadStatus === 'High Risk' ? 'warning' : 'success');
-                            let statusIcon = driverData.loadStatus === 'Critical' ? 'fa-exclamation-triangle' : 'fa-check-circle';
                             
                             let alertHtml = '';
                             if (driverData.isPhysicsViolation) {
@@ -191,14 +227,14 @@
                                 </div>`;
                                 form.find('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-ban me-2"></i> Invalid Payload');
                             } else if (driverData.workloadScore > 100) {
-                                alertHtml = `<div class="alert alert-warning mt-2 py-2 smaller shadow-sm border-0 rounded-3">
+                                alertHtml = `<div class="alert alert-warning mt-2 py-2 smaller shadow-sm border-0 rounded-3 bg-opacity-10 border border-warning text-warning">
                                     <i class="fas fa-exclamation-triangle me-1"></i> <strong>OVERLOADED:</strong> High risk delay.
                                     <div class="form-check form-switch mt-2">
                                         <input class="form-check-input" type="checkbox" id="overrideToggle" name="isOverride" value="true">
                                         <label class="form-check-label fw-bold" for="overrideToggle">Override</label>
                                     </div>
                                     <div class="mt-1 d-none" id="overrideReasonDiv">
-                                        <input type="text" class="form-control form-control-sm" name="overrideReason" placeholder="Reason...">
+                                        <input type="text" class="form-control form-control-sm border-theme bg-soft-secondary text-theme" name="overrideReason" placeholder="Reason...">
                                     </div>
                                 </div>`;
                                 form.find('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-ban me-2"></i> Overloaded');
@@ -207,23 +243,23 @@
                             }
 
                             infoDiv.html(`
-                                <div class="alert alert-info border-0 shadow-sm rounded-4 mt-3 mb-0">
+                                <div class="alert alert-info border-0 shadow-sm rounded-4 mt-3 mb-0 bg-opacity-10 border border-info">
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="fas fa-truck me-2 text-primary"></i>
                                         <div>
-                                            <div class="small fw-bold">${driverData.licensePlate} (${driverData.vehicleType})</div>
-                                            <div class="smaller">Max Payload: ${driverData.maxLoadCapacity} KG</div>
+                                            <div class="small fw-bold text-theme">${driverData.licensePlate} (${driverData.vehicleType})</div>
+                                            <div class="smaller text-muted">Max Payload: ${driverData.maxLoadCapacity} KG</div>
                                         </div>
                                     </div>
-                                    <div class="bg-white bg-opacity-50 p-2 rounded-3">
-                                        <div class="d-flex justify-content-between smaller mb-1">
+                                    <div class="p-2 rounded-3 bg-soft-secondary border border-theme">
+                                        <div class="d-flex justify-content-between smaller mb-1 text-theme">
                                             <span>Projected Load:</span>
                                             <strong>${driverData.projectedLoad} / ${driverData.maxLoadCapacity} KG</strong>
                                         </div>
-                                        <div class="progress" style="height: 4px;">
+                                        <div class="progress" style="height: 4px; background-color: var(--border);">
                                             <div class="progress-bar bg-${statusColor}" style="width: ${Math.min(100, driverData.workloadScore)}%;"></div>
                                         </div>
-                                        <div class="mt-2 small fw-bold">Score: ${driverData.workloadScore}% (${driverData.loadStatus})</div>
+                                        <div class="mt-2 small fw-bold text-theme">Score: ${driverData.workloadScore}% (${driverData.loadStatus})</div>
                                         ${alertHtml}
                                     </div>
                                 </div>`).fadeIn();

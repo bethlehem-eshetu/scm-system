@@ -4,10 +4,10 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid px-4 py-5">
+<div class="content-wrapper">
     <div class="row mb-4">
         <div class="col-12 text-center text-lg-start">
-            <h2 class="fw-bold text-dark mb-1"><i class="fas fa-sliders-h me-2 text-primary"></i> Control Center</h2>
+            <h2 class="fw-bold mb-1"><i class="fas fa-sliders-h me-2 text-primary"></i> Control Center</h2>
             <p class="text-muted">Manage your warehouse logic, automation, and advanced workflow protocols.</p>
         </div>
     </div>
@@ -18,9 +18,9 @@
         <div class="row g-4">
             <!-- Section 1: Core Operations -->
             <div class="col-lg-6">
-                <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden border-top border-warning border-5">
-                    <div class="card-header bg-white py-3 border-bottom border-light d-flex align-items-center">
-                        <div class="icon-box bg-warning-soft text-warning me-3 rounded-3 p-2">
+                <div class="dashboard-card h-100 border-top border-warning border-5">
+                    <div class="card-header bg-transparent py-3 border-bottom border-theme d-flex align-items-center">
+                        <div class="icon-box bg-warning bg-opacity-10 text-warning me-3 rounded-3 p-2">
                             <i class="fas fa-warehouse fa-lg"></i>
                         </div>
                         <h5 class="card-title fw-bold mb-0">Core Operations</h5>
@@ -28,22 +28,22 @@
                     <div class="card-body p-4">
                         <div class="mb-4">
                             <label asp-for="DefaultWarehouseLocation" class="form-label small fw-bold text-muted" data-bs-toggle="tooltip" title="Default rack/zone for incoming inventory"></label>
-                            <div class="input-group shadow-sm rounded-3 overflow-hidden">
-                                <span class="input-group-text bg-light border-0"><i class="fas fa-map-pin text-muted"></i></span>
-                                <input asp-for="DefaultWarehouseLocation" class="form-control bg-light border-0" placeholder="e.g. Zone A, Rack 01" />
+                            <div class="input-group shadow-sm rounded-3 overflow-hidden border-theme">
+                                <span class="input-group-text bg-soft-secondary border-0"><i class="fas fa-map-pin text-muted"></i></span>
+                                <input asp-for="DefaultWarehouseLocation" class="form-control bg-soft-secondary border-0 text-theme" placeholder="e.g. Zone A, Rack 01" />
                             </div>
                         </div>
 
                         <div class="row g-3 mb-4">
                             <div class="col-6">
                                 <label asp-for="LowStockThreshold" class="form-label small fw-bold text-muted" data-bs-toggle="tooltip" title="Alert trigger quantity"></label>
-                                <div class="input-group shadow-sm rounded-3 overflow-hidden">
-                                    <input asp-for="LowStockThreshold" type="number" class="form-control bg-light border-0 text-center fw-bold" />
+                                <div class="input-group shadow-sm rounded-3 overflow-hidden border-theme">
+                                    <input asp-for="LowStockThreshold" type="number" class="form-control bg-soft-secondary border-0 text-center fw-bold text-theme" />
                                 </div>
                             </div>
                             <div class="col-6">
                                 <label asp-for="PicklistFormat" class="form-label small fw-bold text-muted" data-bs-toggle="tooltip" title="Picking sheet layout"></label>
-                                <select asp-for="PicklistFormat" class="form-select bg-light border-0 shadow-sm rounded-3">
+                                <select asp-for="PicklistFormat" class="form-select bg-soft-secondary border-0 shadow-sm rounded-3 text-theme">
                                     <option value="Detailed">Detailed</option>
                                     <option value="Summary">Summary</option>
                                     <option value="Minimal">Minimal</option>
@@ -51,17 +51,17 @@
                             </div>
                         </div>
 
-                        <div class="automation-switches p-3 bg-light rounded-4 border border-white">
+                        <div class="automation-switches p-3 bg-soft-secondary rounded-4 border border-theme">
                             <div class="form-check form-switch mb-3 custom-switch d-flex justify-content-between align-items-center ps-0">
                                 <div class="switch-label">
-                                    <label asp-for="AutoAcceptPickTasks" class="form-check-label small fw-bold d-block"></label>
+                                    <label asp-for="AutoAcceptPickTasks" class="form-check-label small fw-bold d-block text-theme"></label>
                                     <span class="extra-small text-muted" data-bs-toggle="tooltip" title="Advance orders to Pick instantly">Autonomous Picking</span>
                                 </div>
                                 <input asp-for="AutoAcceptPickTasks" class="form-check-input" type="checkbox" role="switch">
                             </div>
                             <div class="form-check form-switch custom-switch d-flex justify-content-between align-items-center ps-0">
                                 <div class="switch-label">
-                                    <label asp-for="NotifyLowStock" class="form-check-label small fw-bold d-block"></label>
+                                    <label asp-for="NotifyLowStock" class="form-check-label small fw-bold d-block text-theme"></label>
                                     <span class="extra-small text-muted" data-bs-toggle="tooltip" title="Live dashboard push alerts">Stock Watcher</span>
                                 </div>
                                 <input asp-for="NotifyLowStock" class="form-check-input" type="checkbox" role="switch">
@@ -73,9 +73,9 @@
 
             <!-- Section 2: Advanced Workflow -->
             <div class="col-lg-6">
-                <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden border-top border-primary border-5">
-                    <div class="card-header bg-white py-3 border-bottom border-light d-flex align-items-center">
-                        <div class="icon-box bg-primary-soft text-primary me-3 rounded-3 p-2">
+                <div class="dashboard-card h-100 border-top border-primary border-5">
+                    <div class="card-header bg-transparent py-3 border-bottom border-theme d-flex align-items-center">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary me-3 rounded-3 p-2">
                             <i class="fas fa-cogs fa-lg"></i>
                         </div>
                         <h5 class="card-title fw-bold mb-0">Advanced Workflow</h5>
@@ -84,7 +84,7 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label asp-for="DefaultPackingPriority" class="form-label small fw-bold text-muted" data-bs-toggle="tooltip" title="Logic used to prioritize orders for packing"></label>
-                                <select asp-for="DefaultPackingPriority" class="form-select bg-light border-0 shadow-sm rounded-3">
+                                <select asp-for="DefaultPackingPriority" class="form-select bg-soft-secondary border-0 shadow-sm rounded-3 text-theme">
                                     <option value="FIFO">FIFO (First In, First Out)</option>
                                     <option value="Expiry Date">Expiry Date</option>
                                     <option value="Order Value">Order Value</option>
@@ -92,16 +92,16 @@
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="DailyCutoffTime" class="form-label small fw-bold text-muted" data-bs-toggle="tooltip" title="Orders after this time are processed next day"></label>
-                                <div class="input-group shadow-sm rounded-3 overflow-hidden">
-                                    <span class="input-group-text bg-light border-0"><i class="fas fa-clock text-muted"></i></span>
-                                    <input asp-for="DailyCutoffTime" type="time" class="form-control bg-light border-0" />
+                                <div class="input-group shadow-sm rounded-3 overflow-hidden border-theme">
+                                    <span class="input-group-text bg-soft-secondary border-0"><i class="fas fa-clock text-muted"></i></span>
+                                    <input asp-for="DailyCutoffTime" type="time" class="form-control bg-soft-secondary border-0 text-theme" />
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-4">
                             <label asp-for="PrintLabelFormat" class="form-label small fw-bold text-muted" data-bs-toggle="tooltip" title="Layout for shipping and inventory labels"></label>
-                            <select asp-for="PrintLabelFormat" class="form-select bg-light border-0 shadow-sm rounded-3">
+                            <select asp-for="PrintLabelFormat" class="form-select bg-soft-secondary border-0 shadow-sm rounded-3 text-theme">
                                 <option value="Standard">Standard Text</option>
                                 <option value="QR">QR Code Enhanced</option>
                                 <option value="Barcode">1D Barcode Classic</option>
@@ -110,14 +110,14 @@
 
                         <div class="mb-4">
                             <label class="form-label small fw-bold text-muted d-block mb-2">Zone Assignments</label>
-                            <div class="bg-light p-3 rounded-4 border border-white">
+                            <div class="bg-soft-secondary p-3 rounded-4 border border-theme">
                                 <div class="row g-2">
                                     @foreach (var zone in new[] { "Cold Storage", "Bulk Area", "Packing Station", "Loading Dock", "Hazardous Goods" })
                                     {
                                         <div class="col-6">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" name="AssignedZones" value="@zone" id="zone_@zone.Replace(" ", "")" @(Model.AssignedZones.Contains(zone) ? "checked" : "")>
-                                                <label class="form-check-label small" for="zone_@zone.Replace(" ", "")">@zone</label>
+                                                <label class="form-check-label small text-theme" for="zone_@zone.Replace(" ", "")">@zone</label>
                                             </div>
                                         </div>
                                     }
@@ -125,10 +125,10 @@
                             </div>
                         </div>
 
-                        <div class="automation-switches p-3 bg-light rounded-4 border border-white">
+                        <div class="automation-switches p-3 bg-soft-secondary rounded-4 border border-theme">
                             <div class="form-check form-switch custom-switch d-flex justify-content-between align-items-center ps-0">
                                 <div class="switch-label">
-                                    <label asp-for="EnableVoicePicking" class="form-check-label small fw-bold d-block"></label>
+                                    <label asp-for="EnableVoicePicking" class="form-check-label small fw-bold d-block text-theme"></label>
                                     <span class="extra-small text-muted" data-bs-toggle="tooltip" title="Hands-free picking via headset instructions">Voice-Guided Operations</span>
                                 </div>
                                 <input asp-for="EnableVoicePicking" class="form-check-input" type="checkbox" role="switch">
@@ -153,11 +153,52 @@
 @section Styles {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
     <style>
-        .bg-primary-soft { background-color: rgba(13, 110, 253, 0.08); }
-        .bg-warning-soft { background-color: rgba(255, 193, 7, 0.08); }
+        :root {
+            --bg-page: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --bg-table-header: #F8FAFC;
+            --border: #E2E8F0;
+            --text-primary: #1A2C26;
+            --text-secondary: #4B5E55;
+        }
+
+        body.dark-mode {
+            --bg-page: #0A0F0D;
+            --bg-card: #1A1F1D;
+            --bg-table-header: #252B28;
+            --border: #2A3530;
+            --text-primary: #EDEDED;
+            --text-secondary: #B8C5BE;
+        }
+
+        .content-wrapper {
+            min-height: 100vh;
+            width: 100%;
+            padding: 2rem;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+        }
+
+        .dashboard-card {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+        .border-theme { border-color: var(--border) !important; }
+        .text-theme { color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+
         .extra-small { font-size: 0.72rem; }
         .custom-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; margin-left: 0; }
-        .form-control:focus, .form-select:focus { background-color: #fff !important; border: 1px solid var(--bs-primary) !important; box-shadow: 0 0 0 5px rgba(13, 110, 253, 0.05) !important; }
+        .form-control:focus, .form-select:focus { 
+            background-color: var(--bg-card) !important; 
+            border: 1px solid var(--primary-color) !important; 
+            box-shadow: 0 0 0 5px rgba(46, 156, 122, 0.05) !important; 
+            color: var(--text-primary) !important;
+        }
         .hvr-grow { transition: transform .2s ease-in-out; }
         .hvr-grow:hover { transform: scale(1.05); }
     </style>
@@ -166,11 +207,9 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        // 1. Tooltips Initialization
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         const tooltipList = tooltipTriggerList.map(t => new bootstrap.Tooltip(t));
 
-        // 2. Unsaved Changes Warning
         let isDirty = false;
         $('#settingsForm input, #settingsForm select').on('change input', function() {
             isDirty = true;
@@ -184,7 +223,6 @@
             isDirty = false;
         });
 
-        // 3. Toastr Notifications
         toastr.options = { 
             "closeButton": true, 
             "progressBar": true, 
