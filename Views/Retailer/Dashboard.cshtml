@@ -565,29 +565,13 @@
 </style>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function () {
             // Load live counts
             loadCounts();
             setInterval(loadCounts, 30000);
-        });
 
-        function loadCounts() {
-            $.get('/Notification/GetUnreadCount', function (data) {
-                if (data.count > 0) $('#notificationBadge').text(data.count).show();
-                else $('#notificationBadge').hide();
-            });
-            $.get('/Message/GetUnreadCount', function (data) {
-                if (data > 0) $('#messageBadge').text(data).show();
-                else $('#messageBadge').hide();
-            });
-        }
-    </script>
-}
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        $(document).ready(function() {
             // Chart.js Globals
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#64748B';
@@ -699,5 +683,16 @@
             });
             observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         });
+
+        function loadCounts() {
+            $.get('/Notification/GetUnreadCount', function (data) {
+                if (data.count > 0) $('#notificationBadge').text(data.count).show();
+                else $('#notificationBadge').hide();
+            });
+            $.get('/Message/GetUnreadCount', function (data) {
+                if (data > 0) $('#messageBadge').text(data).show();
+                else $('#messageBadge').hide();
+            });
+        }
     </script>
 }
