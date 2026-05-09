@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace SCM_System.Models.ViewModels
 {
@@ -13,6 +13,8 @@ namespace SCM_System.Models.ViewModels
         public int UnreadCount { get; set; }
         public bool HasBlockedMessages { get; set; }
         public bool IsActive { get; set; }
+
+        public string TimeSpanDisplay => TimeAgo;
 
         public string TimeAgo
         {

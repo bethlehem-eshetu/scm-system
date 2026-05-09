@@ -33,7 +33,6 @@ namespace SCM_System.Models.ViewModels
         public int PenaltySuspensionDays { get; set; }
         public int LowStockDefaultThreshold { get; set; }
         public int MaxTenderDays { get; set; }
-        public int OrderCancellationHours { get; set; }
         public int AutoReleaseEscrowDays { get; set; }
 
         // User Defaults

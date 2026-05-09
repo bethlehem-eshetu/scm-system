@@ -20,10 +20,10 @@ namespace SCM_System.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userIdString = HttpContext.Session.GetString("UserId");
+            var userId = HttpContext.Session.GetInt32("UserId");
             var userRole = HttpContext.Session.GetString("UserRole");
 
-            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            if (userId == null)
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -48,8 +48,8 @@ namespace SCM_System.Controllers
                 return Json(new { success = false, message = "Message cannot be empty." });
             }
 
-            var userIdString = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
             {
                 return Json(new { success = false, message = "You must be logged in to submit a ticket." });
             }
@@ -58,7 +58,7 @@ namespace SCM_System.Controllers
             {
                 var ticket = new SupportTicket
                 {
-                    UserId = userId,
+                    UserId = userId.Value,
                     Subject = string.IsNullOrWhiteSpace(subject) ? "General Support" : subject,
                     Message = message,
                     Status = "Open",

@@ -34,39 +34,135 @@ namespace SCM_System.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        public async Task<IActionResult> Details(int id)
+        [Route("Order/Details/{id}")]
+        [Route("Retailer/OrderDetails/{id}")]
+        public async Task<IActionResult> Details(int id, int? poId = null)
         {
-            var order = await _orderService.GetOrderByIdAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .Include(o => o.Retailer)
+                    .ThenInclude(r => r.User)
+                .Include(o => o.Supplier)
+                    .ThenInclude(s => s.User)
+                .Include(o => o.StatusHistory)
+                .Include(o => o.PurchaseOrders)
+                    .ThenInclude(p => p.Warehouse)
+                .Include(o => o.PurchaseOrders)
+                    .ThenInclude(p => p.PurchaseOrderItems)
+                .Include(o => o.PurchaseOrders)
+                    .ThenInclude(p => p.DeliveryAgent)
+                        .ThenInclude(da => da.User)
+                .Include(o => o.PurchaseOrders)
+                    .ThenInclude(p => p.Vehicle)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
             if (order == null) return NotFound();
 
-            if (User.IsInRole("Supplier"))
+            // Find the active PO for context (default to first or poId)
+            var primaryPO = poId.HasValue 
+                ? order.PurchaseOrders.FirstOrDefault(p => p.Id == poId.Value) 
+                : order.PurchaseOrders.OrderByDescending(p => p.CreatedAt).FirstOrDefault();
+            
+            ViewBag.PrimaryPO = primaryPO;
+
+            if (User.IsInRole("Supplier") || User.IsInRole("WarehouseManager"))
             {
                 var sId = await GetSupplierIdAsync();
-                ViewBag.Warehouses = await _context.Warehouses.Where(w => w.SupplierId == sId && w.Status == SCM_System.Models.Enums.WarehouseStatus.Active).ToListAsync();
                 
-                // Pre-acceptance stock validation
-                var stockStatus = new Dictionary<int, bool>();
-                bool allAvailable = true;
-                foreach (var item in order.OrderItems)
-                {
-                    if (item.ProductId == null) 
-                    {
-                        stockStatus[0] = true; // Use 0 as temporary key for custom items or handle differently
-                        continue;
-                    }
+                // Security check
+                if (order.SupplierId != sId) return Forbid();
 
-                    var globalStock = await _context.Inventories
-                        .Where(i => i.ProductId == item.ProductId && i.Warehouse.SupplierId == sId)
-                        .SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
-                    
-                    stockStatus[item.ProductId.Value] = globalStock >= item.Quantity;
-                    if (globalStock < item.Quantity) allAvailable = false;
-                }
-                ViewBag.StockStatus = stockStatus;
-                ViewBag.CanAccept = allAvailable;
+                ViewBag.Warehouses = await _context.Warehouses
+                    .Where(w => w.SupplierId == sId && w.IsActive)
+                    .Select(w => new {
+                        w.Id,
+                        w.Name,
+                        w.City,
+                        TotalStock = _context.Inventories
+                            .Where(i => i.WarehouseId == w.Id)
+                            .Sum(i => (int?)(i.QuantityOnHand - i.QuantityReserved)) ?? 0
+                    })
+                    .ToListAsync();
+
+                ViewBag.Agents = await _context.SupplierEmployees
+                    .Include(a => a.User)
+                    .Where(a => a.SupplierId == sId && a.IsActive && 
+                               (a.EmployeeRole == "delivery_person" || a.EmployeeRole == "DeliveryAgent"))
+                    .ToListAsync();
             }
 
             return View(order);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Supplier")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AcceptPO(int orderId, int poId, int warehouseId)
+        {
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Order)
+                .FirstOrDefaultAsync(p => p.Id == poId && p.OrderId == orderId);
+        
+            if (po == null) return NotFound();
+
+            // Smart Auto Select Logic
+            if (warehouseId == -1)
+            {
+                var warehouses = await _context.Warehouses
+                    .Include(w => w.Inventories)
+                    .Where(w => w.SupplierId == po.SupplierId && w.Status == SCM_System.Models.Enums.WarehouseStatus.Active)
+                    .ToListAsync();
+
+                // Find best warehouse: Enough stock -> Highest remaining stock -> Closest (as proxy, using coverage)
+                var bestHub = warehouses
+                    .Where(w => w.Inventories.Any(i => po.PurchaseOrderItems.All(poi => 
+                        w.Inventories.Any(inv => inv.ProductId == poi.ProductId && (inv.QuantityOnHand - inv.QuantityReserved) >= poi.Quantity))))
+                    .OrderByDescending(w => w.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved))
+                    .FirstOrDefault();
+
+                if (bestHub == null)
+                {
+                    // Fallback: Highest overall stock even if not all items match
+                    bestHub = warehouses
+                        .OrderByDescending(w => w.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved))
+                        .FirstOrDefault();
+                }
+
+                if (bestHub != null)
+                {
+                    warehouseId = bestHub.Id;
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Could not find any suitable warehouse for auto-selection. Please select manually.";
+                    return RedirectToAction("Details", new { id = orderId, poId = poId });
+                }
+            }
+
+            // Atomic Status Sync & Warehouse Assignment
+            po.WarehouseId = warehouseId;
+            po.Status = "Accepted";
+            po.UpdatedAt = DateTime.Now;
+
+            if (po.Order != null)
+            {
+                po.Order.OrderStatus = "Accepted";
+                po.Order.UpdatedAt = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Reserve stock via Inventory Service
+            var inventoryService = (IInventoryService)HttpContext.RequestServices.GetService(typeof(IInventoryService));
+            if (inventoryService != null)
+            {
+                await inventoryService.BulkReserveStockForPOAsync(po.Id, po.SupplierId, warehouseId);
+            }
+
+            TempData["SuccessMessage"] = warehouseId == -1 ? "Smart Auto Select successful. Fulfillment Hub assigned." : "Warehouse assigned and PO accepted successfully.";
+
+            return RedirectToAction("Details", new { id = orderId, poId = poId });
         }
 
         [HttpPost]
@@ -82,17 +178,6 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        [HttpPost]
-        [Authorize(Roles = "Retailer")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelOrder(int id)
-        {
-            bool success = await _orderService.CancelOrderAsync(id);
-            if (!success) TempData["ErrorMessage"] = "Could not cancel Order. It may have already been shipped or completed.";
-            else TempData["SuccessMessage"] = "Order Cancelled Successfully. Vendor stock has been released.";
-            
-            return RedirectToAction(nameof(Details), new { id });
-        }
 
         [HttpPost]
         [Authorize(Roles = "Supplier")]
@@ -125,7 +210,6 @@ namespace SCM_System.Controllers
             }
             return RedirectToAction(nameof(Details), new { id });
         }
-
         private async Task<int> GetRetailerIdAsync()
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -142,8 +226,13 @@ namespace SCM_System.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
             {
+                // check if user is the Supplier entity owner
                 var s = await _context.Suppliers.FirstOrDefaultAsync(x => x.UserId == userId);
-                return s?.Id ?? 0;
+                if (s != null) return s.Id;
+
+                // check if user is a SupplierEmployee (e.g. WarehouseManager)
+                var se = await _context.SupplierEmployees.FirstOrDefaultAsync(x => x.UserId == userId);
+                if (se != null) return se.SupplierId;
             }
             return 0;
         }

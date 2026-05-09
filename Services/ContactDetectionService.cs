@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace SCM_System.Services
 {
@@ -75,17 +75,25 @@ namespace SCM_System.Services
             if (string.IsNullOrWhiteSpace(content))
                 return result;
 
+            var uniqueDescriptions = new HashSet<string>();
+
             foreach (var pattern in _patterns)
             {
                 if (Regex.IsMatch(content, pattern.Pattern, RegexOptions.IgnoreCase))
                 {
                     result.HasContactInfo = true;
                     result.DetectedPatterns.Add(pattern.Name);
+                    uniqueDescriptions.Add(pattern.Description);
+                }
+            }
 
-                    if (string.IsNullOrEmpty(result.BlockedReason))
-                        result.BlockedReason = pattern.Description;
-                    else
-                        result.BlockedReason += $" and {pattern.Description.ToLower()}";
+            if (result.HasContactInfo)
+            {
+                result.BlockedReason = string.Join(" and ", uniqueDescriptions.Select(d => d.ToLower()));
+                // Capitalize first letter of reason
+                if (!string.IsNullOrEmpty(result.BlockedReason))
+                {
+                    result.BlockedReason = char.ToUpper(result.BlockedReason[0]) + result.BlockedReason.Substring(1);
                 }
             }
 

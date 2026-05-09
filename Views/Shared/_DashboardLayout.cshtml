@@ -15,25 +15,34 @@
     <style>
         :root {
             /* Light Theme Variables */
-            --sidebar-width: 280px;
-            --sidebar-bg: #0f172a;         /* Slate 900 */
-            --sidebar-hover: rgba(255, 255, 255, 0.05);
-            --sidebar-color: #94a3b8;      /* Slate 400 */
-            --sidebar-active: #ffffff;
-            --bg-color: #f8fafc;
-            --text-color: #333333;
-            --card-bg: #ffffff;
-            --border-color: rgba(0, 0, 0, 0.125);
-            --top-nav-bg: #ffffff;
+            --bg-color: #F1F5F9;
+            --text-color: #0A1C16;
+            --text-muted: #4A6359;
+            --card-bg: #FFFFFF;
+            --border-color: #E2E8E4;
+            --top-nav-bg: #FFFFFF;
+            --primary-color: #2E9C7A;
+            --sidebar-width: 260px;
+            --sidebar-bg: #0B3B2F;
+            --sidebar-hover: #1E5A48;
+            --sidebar-color: #F0F6F2;
+            --sidebar-active: #1A4D3A;
+            --input-bg: #FFFFFF;
+            --hover-state: #F0F4F2;
         }
 
         /* Dark Theme Variables */
         html.dark-mode:root, body.dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg: #1e1e1e;
-            --border-color: #333333;
-            --top-nav-bg: #1e1e1e;
+            --bg-color: #0A0F0D;
+            --text-color: #EDEDED;
+            --text-muted: #B8C5BE;
+            --card-bg: #1A1F1D;
+            --border-color: #2A3530;
+            --top-nav-bg: #1A1F1D;
+            --primary-color: #3BAE86;
+            --sidebar-bg: #06261E;
+            --input-bg: #252A28;
+            --hover-state: #2A3530;
         }
 
         body {
@@ -47,21 +56,77 @@
 
         .dark-mode .card, .dark-mode .bg-white {
             background-color: var(--card-bg) !important;
-            color: var(--text-color);
-            border-color: var(--border-color);
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
         }
         
         .dark-mode .text-dark {
-            color: #ffffff !important;
+            color: var(--text-color) !important;
         }
         
-        .dark-mode .table, .dark-mode .table-hover tbody tr:hover {
+        .dark-mode .text-muted {
+            color: var(--text-muted) !important;
+        }
+        
+        .dark-mode .table {
             color: var(--text-color);
             background-color: transparent;
         }
         
-        .dark-mode .border-bottom {
-            border-bottom-color: var(--border-color) !important;
+        .dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            color: var(--text-color);
+        }
+        
+        .dark-mode .table-hover tbody tr:hover > * {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: var(--text-color);
+        }
+        
+        .dark-mode th, .dark-mode td {
+            border-color: var(--border-color);
+        }
+        
+        .dark-mode .border-bottom, .dark-mode .border {
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark-mode .bg-light {
+            background-color: var(--hover-state) !important;
+            color: var(--text-color) !important;
+        }
+        
+        .dark-mode .form-control, .dark-mode .form-select {
+            background-color: var(--input-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+        
+        .dark-mode .form-control::placeholder {
+            color: var(--text-muted) !important;
+            opacity: 1;
+        }
+        
+        .dark-mode .dropdown-menu {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+        }
+        
+        .dark-mode .dropdown-item {
+            color: var(--text-color) !important;
+        }
+        
+        .dark-mode .dropdown-item:hover {
+            background-color: var(--hover-state) !important;
+        }
+        
+        .dark-mode .dropdown-header {
+            color: var(--text-muted) !important;
+        }
+        
+        .dark-mode .dropdown-divider {
+            border-top-color: var(--border-color) !important;
         }
 
         /* Sidebar Styling */
@@ -131,45 +196,52 @@
             border-radius: 10px;
         }
 
-        .menu-label {
+        .sidebar-section {
             padding: 0.5rem 1.5rem;
-            font-size: 0.75rem;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: rgba(255,255,255,0.4);
+            color: #64748B;
             font-weight: 600;
-            margin-top: 1rem;
+            margin-top: 20px;
         }
 
         .sidebar-menu li a {
-            padding: 0.8rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             font-size: 0.95rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
             color: var(--sidebar-color);
             text-decoration: none;
             transition: all 0.2s;
-            border-left: 3px solid transparent;
+            border-left: 4px solid transparent;
+            margin: 4px 12px;
+            border-radius: 0 8px 8px 0;
         }
 
         .sidebar-menu li a i {
-            width: 24px;
+            width: 20px;
             font-size: 1.1rem;
-            margin-right: 10px;
+            margin-right: 12px;
             text-align: center;
+            color: #B8D0C5;
             transition: transform 0.2s;
         }
 
-        .sidebar-menu li a:hover,
-        .sidebar-menu li.active > a {
+        .sidebar-menu li a:hover {
             background: var(--sidebar-hover);
-            color: var(--sidebar-active);
-            border-left-color: var(--primary-color);
+            color: #FFFFFF;
+        }
+
+        .sidebar-menu li.active > a {
+            background: var(--sidebar-active);
+            border-left: 4px solid var(--primary-color);
+            color: #FFFFFF;
         }
 
         .sidebar-menu li a:hover i {
             transform: translateX(3px);
-            color: #818cf8;
         }
 
         /* User Profile in Sidebar */
@@ -199,7 +271,7 @@
         }
 
         /* Content Area */
-        #content {
+        .main-content {
             width: calc(100% - var(--sidebar-width));
             min-height: 100vh;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -208,17 +280,19 @@
             right: 0;
             display: flex;
             flex-direction: column;
+            background-color: var(--bg-color);
         }
         
-        #content.active {
+        .main-content.active {
             width: 100%;
         }
 
         /* Top Navbar */
-        .top-navbar {
-            padding: 1rem 2rem;
+        .top-bar {
+            height: 70px;
+            padding: 0 24px;
             background: var(--top-nav-bg);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -245,9 +319,12 @@
         }
 
         /* Main Content Padding */
-        .main-container {
-            padding: 2rem;
+        .dashboard-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
             flex-grow: 1;
+            width: 100%;
         }
 
         /* Responsive */
@@ -258,14 +335,13 @@
             #sidebar.active {
                 margin-left: 0;
             }
-            #content {
+            .main-content {
                 width: 100%;
             }
-            #content.active {
-                /* When sidebar is active on mobile, push content slightly or overlay */
+            .main-content.active {
                 transform: translateX(var(--sidebar-width));
             }
-            .main-container {
+            .dashboard-wrapper {
                 padding: 1rem;
             }
         }
@@ -291,6 +367,228 @@
             background-color: var(--primary-dark);
             border-color: var(--primary-dark);
         }
+        
+        /* ---------------------------------------------------- 
+            PREMIUM GLOBAL COMPONENT STYLES
+        ----------------------------------------------------- */
+
+        /* Badge System */
+        .badge-soft {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .badge-soft-success { background: rgba(46,156,122,0.15); color: #2E9C7A; }
+        .badge-soft-warning { background: rgba(230,126,34,0.15); color: #E67E22; }
+        .badge-soft-danger { background: rgba(224,90,90,0.15); color: #E05A5A; }
+        .badge-soft-info { background: rgba(91,143,249,0.15); color: #5B8FF9; }
+        
+        /* Action Buttons */
+        .btn-outline-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline-card:hover {
+            background-color: var(--hover-state);
+            color: #2E9C7A;
+            border-color: #2E9C7A;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Filter Chips */
+        .chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .chip.active {
+            background: #2E9C7A;
+            color: white;
+            border-color: #2E9C7A;
+        }
+
+        .chip:hover:not(.active) {
+            background: var(--hover-state);
+            border-color: #2E9C7A;
+            color: #2E9C7A;
+        }
+        
+        .dark-mode .chip:hover:not(.active) {
+            border-color: #4BC0A0;
+            color: #4BC0A0;
+        }
+
+        /* Global Table Styling */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .dark-mode .table-container { box-shadow: none; }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-bottom: 0;
+        }
+
+        .admin-table th {
+            background: var(--hover-state);
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            color: var(--text-color);
+        }
+
+        .table-hover tbody tr { transition: background-color 0.2s; }
+        .table-hover tbody tr:hover { background-color: var(--hover-state); cursor: pointer; }
+        .admin-table tr:last-child td { border-bottom: none; }
+
+        /* Search Section Framework */
+        .page-search-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        
+        .dark-mode .page-search-section { box-shadow: none; }
+
+        .search-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-width: 250px;
+            max-width: 400px;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .page-search-input {
+            width: 100%;
+            padding: 10px 16px 10px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-color);
+            background: var(--input-bg);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .page-search-input:focus { border-color: #2E9C7A; }
+        .dark-mode .page-search-input:focus { border-color: #4BC0A0; }
+
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-dropdown {
+            height: 40px;
+            background: var(--input-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 0 32px 0 16px;
+            font-size: 14px;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .filter-dropdown:hover, .filter-dropdown:focus { border-color: #2E9C7A; }
+        .dark-mode .filter-dropdown:hover, .dark-mode .filter-dropdown:focus { border-color: #4BC0A0; }
+
+        /* General Empty State */
+        .empty-state {
+            padding: 48px;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .empty-state h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* ---------------------------------------------------- */
     </style>
 
     @await RenderSectionAsync("Styles", required: false)
@@ -302,7 +600,7 @@
             <div class="sidebar-header">
                 <a href="/" class="brand">
                     <img src="~/images/ethiochain-logo.jpg" alt="Logo" />
-                    <span>EthioChain SCM</span>
+                    <span>🌿 EthioChain SCM</span>
                 </a>
             </div>
 
@@ -316,54 +614,53 @@
                 @if (role == "Admin")
                 {
                     <li>
-                        <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-check"></i> Verifications</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users"></i> All Users</a>
+                        <a asp-controller="Admin" asp-action="Dashboard" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fas fa-chart-bar"></i> Dashboard</a>
                     </li>
                     
-                    <li class="menu-label">Communication</li>
+                    <li class="sidebar-section">👥 USERS</li>
                     <li>
-                        <a asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope-open-text"></i> Message Monitoring</a>
+                        <a asp-controller="Admin" asp-action="PendingUsers" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingUsers" ? "active" : "")">
+                            <i class="fas fa-check-circle"></i> Verifications
+                            <span class="badge rounded-pill ms-auto" style="background:#E05A5A; font-size:10px;">🔴 @(ViewBag.PendingSuppliersCount ?? 0) pending</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AllUsers" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "AllUsers" ? "active" : "")"><i class="fas fa-user"></i> All Users</a>
+                    </li>
+
+                    <li class="sidebar-section">💬 COMMUNICATION</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope"></i> Message Monitoring</a>
                     </li>
                     <li>
                         <a asp-controller="Admin" asp-action="BlockedMessages"><i class="fas fa-ban"></i> Blocked Messages</a>
                     </li>
                     <li>
-                        <a asp-controller="Admin" asp-action="Penalties"><i class="fas fa-gavel"></i> Penalties</a>
+                        <a asp-controller="Admin" asp-action="Penalties"><i class="fas fa-exclamation-triangle"></i> Penalties</a>
                     </li>
 
-                    <li class="menu-label">Finance</li>
+                    <li class="sidebar-section">💰 FINANCE</li>
                     <li>
-                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-pie"></i> Commission Overview</a>
+                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-line"></i> Commission Overview</a>
                     </li>
                     <li>
-                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-exchange-alt"></i> Transactions</a>
+                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-money-bill-alt"></i> Transactions</a>
                     </li>
                     <li>
-                        <a asp-controller="Admin" asp-action="Payouts"><i class="fas fa-money-bill-wave"></i> Payouts</a>
-                    </li>
-
-                    <li class="menu-label">Report</li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-file-invoice-dollar"></i> Financial Reports</a>
+                        <a asp-controller="Admin" asp-action="Payouts"><i class="fas fa-wallet"></i> Payouts</a>
                     </li>
 
-                    <li class="menu-label">System Admin</li>
+                    <li class="sidebar-section">📄 REPORTS</li>
                     <li>
-                        <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-history"></i> Audit Logs</a>
+                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-chart-pie"></i> Financial Reports</a>
+                    </li>
+
+                    <li class="sidebar-section">⚙️ SYSTEM</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-scroll"></i> Audit Logs</a>
                     </li>
                     <li>
-                        <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-envelope-open-text"></i> Email Logs</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
+                        <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-inbox"></i> Email Logs</a>
                     </li>
                 }
                 else if (role == "Supplier")
@@ -561,55 +858,113 @@
 
             </ul>
 
-            <div class="sidebar-user">
-                <div class="user-info">
-                    <div class="avatar shadow-sm border border-2 border-white border-opacity-10 overflow-hidden">
-                        @{
-                            var name = Context.Session.GetString("UserName") ?? "U";
-                            var pImg = Context.Session.GetString("ProfileImg");
-                            if (!string.IsNullOrEmpty(pImg))
-                            {
-                                <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
+            @if (role != "Admin")
+            {
+                <div class="sidebar-user">
+                    <div class="user-info">
+                        <div class="avatar shadow-sm border border-2 border-white border-opacity-10 overflow-hidden">
+                            @{
+                                var name = Context.Session.GetString("UserName") ?? "U";
+                                var pImg = Context.Session.GetString("ProfileImg");
+                                if (!string.IsNullOrEmpty(pImg))
+                                {
+                                    <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
+                                }
+                                else
+                                {
+                                    @name.Substring(0, 1).ToUpper()
+                                }
                             }
-                            else
-                            {
-                                @name.Substring(0, 1).ToUpper()
-                            }
-                        }
-                    </div>
-                    <div>
-                        <div class="text-white fw-bold" style="font-size: 0.9rem;">@name</div>
-                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">@role</div>
+                        </div>
+                        <div>
+                            <div class="text-white fw-bold" style="font-size: 0.9rem;">@name</div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">@role</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </nav>
 
-        <!-- Page Content -->
-        <div id="content">
-            <nav class="top-navbar">
-                <button type="button" id="sidebarCollapse" class="sidebar-toggler">
-                    <i class="fas fa-bars"></i>
-                </button>
+        <!-- Main Content -->
+        <main class="main-content" id="content">
+            <header class="top-bar">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" id="sidebarCollapse" class="sidebar-toggler">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
 
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center gap-4">
+                    <!-- Weather & Time (Premium Capsule) -->
+                    <div class="d-none d-lg-flex align-items-center bg-light bg-opacity-50 px-3 py-1 rounded-pill border shadow-sm" style="font-size: 13px; font-weight: 600;">
+                        <span class="text-warning me-3 d-flex align-items-center">
+                            <i class="fas fa-sun me-2"></i> 82°F
+                        </span>
+                        <div class="vr me-3 opacity-25" style="height: 16px;"></div>
+                        <span class="text-muted me-3">
+                            <i class="fas fa-clock me-1 opacity-50"></i> @DateTime.Now.ToString("h:mm tt")
+                        </span>
+                        <div class="vr me-3 opacity-25" style="height: 16px;"></div>
+                        <span class="text-muted">
+                            <i class="fas fa-calendar-day me-1 opacity-50"></i> @DateTime.Now.ToString("MMM d, yyyy")
+                        </span>
+                    </div>
+
+                    <!-- Dark Mode Toggle -->
+                    <a href="#" class="text-muted text-decoration-none me-2 d-flex align-items-center justify-content-center border-0 rounded-circle" onclick="toggleTheme(event);" title="Toggle Dark Mode" style="width: 36px; height: 36px; background-color: var(--hover-state); transition: all 0.2s;">
+                        <i class="fas fa-moon fs-5" style="color: var(--text-color);"></i>
+                    </a>
+
+                    <!-- Notifications -->
+                    <a asp-controller="Notification" asp-action="Index" class="text-muted position-relative text-decoration-none me-3 d-flex align-items-center justify-content-center rounded-circle" title="Notifications" style="width: 36px; height: 36px; background-color: var(--hover-state); transition: all 0.2s;">
+                        <i class="fas fa-bell fs-5" style="color: var(--text-color);"></i>
+                        <span class="position-absolute rounded-circle text-white d-flex align-items-center justify-content-center shadow-sm" style="top: -4px; right: -4px; background-color: #E05A5A; font-size: 10px; width: 18px; height: 18px; font-weight: bold; border: 2px solid var(--top-nav-bg);">3</span>
+                    </a>
+
                     @if (Context.Session.GetString("UserRole") == "Retailer")
                     {
                         <!-- Global Cart Toggle -->
-                        <button class="btn btn-light position-relative rounded-circle me-3 border-0 shadow-sm p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" id="cartToggleButton" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                        <button class="btn btn-light position-relative rounded-circle border-0 shadow-sm p-2 d-flex align-items-center justify-content-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" id="cartToggleButton" style="width: 36px; height: 36px; background-color: var(--hover-state); color: var(--text-color);">
                             <i class="fas fa-shopping-cart text-primary"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="globalCartCount" style="display:none; font-size: 0.65em;">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2" id="globalCartCount" style="display:none; font-size: 0.65em; border-color: var(--top-nav-bg)!important;">
                                 0
                             </span>
                         </button>
                     }
-                    <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
-                        <i class="fas fa-sign-out-alt me-1"></i> Logout
-                    </a>
+                    
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none text-dark" data-bs-toggle="dropdown">
+                            <div class="avatar-sm text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm overflow-hidden" style="width: 44px; height: 44px; background: #2E9C7A; font-size: 18px;">
+                                @{
+                                    var navName = Context.Session.GetString("UserName") ?? "Admin";
+                                    var navPImg = Context.Session.GetString("ProfileImg");
+                                    if (!string.IsNullOrEmpty(navPImg))
+                                    {
+                                        <img src="@navPImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
+                                    }
+                                    else
+                                    {
+                                        @navName.Substring(0, 1).ToUpper()
+                                    }
+                                }
+                            </div>
+                            <i class="fas fa-chevron-down ms-1 text-muted" style="font-size: 12px; margin-right: 10px;"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; margin-top: 10px;">
+                            <li><h6 class="dropdown-header">@Context.Session.GetString("UserName")</h6></li>
+                            <li><a class="dropdown-item py-2" href="#"><i class="fas fa-user-circle me-2 text-muted"></i> View Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger fw-bold" asp-controller="Account" asp-action="Logout">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </nav>
+            </header>
 
-            <main class="main-container">
+            <div class="dashboard-wrapper">
                 @if (TempData["SuccessMessage"] != null)
                 {
                     <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
@@ -627,8 +982,8 @@
                 }
 
                 @RenderBody()
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
 
     <!-- Scripts -->
@@ -655,7 +1010,6 @@
             const htmlElement = document.documentElement;
 
             // 1. Determine Initial Theme
-            // First check localStorage (client override), then fallback to server attribute (data-theme)
             let currentTheme = localStorage.getItem('themePreference');
             if (!currentTheme) {
                 currentTheme = htmlElement.getAttribute('data-theme') || 'light';
@@ -665,6 +1019,21 @@
             if (currentTheme === 'dark') {
                 htmlElement.classList.add('dark-mode');
                 document.body.classList.add('dark-mode');
+            }
+            
+            // Toggle Theme function
+            window.toggleTheme = function(e) {
+                if (e) e.preventDefault();
+                document.documentElement.classList.toggle('dark-mode');
+                document.body.classList.toggle('dark-mode');
+                
+                const isDark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('themePreference', isDark ? 'dark' : 'light');
+                
+                // If there's an API point to save preference:
+                $.post('/Account/SetTheme', { theme: isDark ? 'dark' : 'light' }).fail(function() {
+                    console.log('Saved theme locally only');
+                });
             }
         });
     </script>
@@ -859,7 +1228,7 @@
             <!-- Initial Message -->
             <div class="mb-3 d-flex">
                 <div class="bg-white p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; border-bottom-left-radius: 0 !important;">
-                    👋 Hello! I'm your SCM Assistant. How can I help you today?
+                    ≡ƒæï Hello! I'm your SCM Assistant. How can I help you today?
                 </div>
             </div>
 

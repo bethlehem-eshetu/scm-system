@@ -32,6 +32,14 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
+        public decimal Subtotal { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal VAT { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal TotalAmount { get; set; }
 
         [Required]
@@ -43,6 +51,7 @@ namespace SCM_System.Models.Entities
         public string PaymentStatus { get; set; } = "Pending"; // Pending, Escrow, Released
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; set; }
 
         [StringLength(500)]
         public string? RejectionReason { get; set; }

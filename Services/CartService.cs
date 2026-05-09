@@ -129,17 +129,24 @@ namespace SCM_System.Services
                 var supplierItems = group.ToList();
 
                 // Create Order directly
+                var netAmount = supplierItems.Sum(i => (decimal)i.Quantity * i.Product.BasePrice);
+                var vatAmount = Math.Round(netAmount * 0.15m, 2);
+                var totalAmount = netAmount + vatAmount;
+
                 var order = new Order
                 {
                     OrderNumber = $"ORD-DIR-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}",
                     RetailerId = retailerId,
                     SupplierId = supplierId,
-                    TotalAmount = supplierItems.Sum(i => (decimal)i.Quantity * i.Product.BasePrice),
+                    Subtotal = netAmount,
+                    VAT = vatAmount,
+                    TotalAmount = totalAmount, 
                     OrderStatus = "Pending",
                     PaymentStatus = "Pending",
                     DeliveryAddress = deliveryAddress,
                     ExpectedDeliveryDate = expectedDeliveryDate,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 };
 
                 order.OrderItems = supplierItems.Select(i => new OrderItem
@@ -153,6 +160,34 @@ namespace SCM_System.Services
                 }).ToList();
 
                 _context.Orders.Add(order);
+                await _context.SaveChangesAsync(); // Save to get Order.Id
+
+                // Create initial unassigned PurchaseOrder for fulfillment tracking
+                var po = new PurchaseOrder
+                {
+                    PONumber = $"PO-DIR-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}",
+                    OrderId = order.Id,
+                    RetailerId = retailerId,
+                    SupplierId = supplierId,
+                    WarehouseId = null, // IMPORTANT: Enforce unassigned initial state
+                    Subtotal = netAmount,
+                    VAT = vatAmount,
+                    TotalAmount = totalAmount,
+                    Status = "Issued",
+                    DeliveryAddress = deliveryAddress,
+                    ExpectedDeliveryDate = expectedDeliveryDate,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    PurchaseOrderItems = order.OrderItems.Select(i => new PurchaseOrderItem
+                    {
+                        ProductId = i.ProductId,
+                        ProductName = i.ProductName,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice
+                    }).ToList()
+                };
+
+                _context.PurchaseOrders.Add(po);
 
                 // Notify supplier
                 var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.Id == supplierId);

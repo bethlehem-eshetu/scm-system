@@ -84,7 +84,7 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Supplier/Employees        [HttpGet]
-        public async Task<IActionResult> GetDriverDetails(int employeeId)
+        public async Task<IActionResult> GetDriverDetails(int employeeId, decimal newOrderWeightKg = 0)
         {
             var driver = await _context.SupplierEmployees
                 .Include(e => e.VehicleAssignments.Where(va => va.IsActive))
@@ -96,14 +96,64 @@ namespace SCM_System.Controllers
 
             var activeVehicle = driver.VehicleAssignments.FirstOrDefault()?.Vehicle;
 
+            // ERP-Level Smart Workload Calculations
+            var activeOrders = await _context.PurchaseOrders
+                .Include(p => p.PurchaseOrderItems)
+                    .ThenInclude(i => i.Product)
+                .Where(p => p.DeliveryAgentId == employeeId && 
+                            p.Status != SCM_System.Models.Constants.POStatus.Delivered &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Completed &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Cancelled &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Failed &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Rejected &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Expired)
+                .ToListAsync();
+
+            decimal pickingQueue = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.Picking || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Picked || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Packing || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Packed || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Issued || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Processing || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Accepted)
+                                                .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+                                                
+            decimal readyDispatch = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.Ready)
+                                                 .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+                                                 
+            decimal inTransit = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.InTransit)
+                                              .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+                                              
+            decimal currentTotalLoad = pickingQueue + readyDispatch + inTransit;
+            decimal vehicleCapacity = activeVehicle?.MaxLoadCapacity ?? 100;
+            
+            decimal projectedTotalLoad = currentTotalLoad + newOrderWeightKg;
+            decimal projectedScore = vehicleCapacity > 0 ? (projectedTotalLoad / vehicleCapacity) * 100 : 0;
+            
+            string loadStatus = "Safe";
+            if (projectedScore >= 120) loadStatus = "Critical"; // Red
+            else if (projectedScore >= 90) loadStatus = "High Risk"; // Orange
+            else if (projectedScore >= 60) loadStatus = "Moderate"; // Yellow
+
             return Json(new
             {
                 vehicleId = activeVehicle?.Id,
                 licensePlate = activeVehicle?.LicensePlate,
                 vehicleType = activeVehicle?.VehicleType.ToString(),
-                maxLoadCapacity = activeVehicle?.MaxLoadCapacity,
+                maxLoadCapacity = vehicleCapacity,
                 licenseNumber = driver.DriverProfile?.DrivingLicenseNumber,
-                licenseExpiry = driver.DriverProfile?.LicenseExpiryDate?.ToString("yyyy-MM-dd")
+                licenseExpiry = driver.DriverProfile?.LicenseExpiryDate?.ToString("yyyy-MM-dd"),
+                
+                currentLoad = currentTotalLoad,
+                projectedLoad = projectedTotalLoad,
+                pickingQueue = pickingQueue,
+                readyDispatch = readyDispatch,
+                inTransit = inTransit,
+                
+                workloadScore = (int)projectedScore,
+                loadStatus = loadStatus,
+                isPhysicsViolation = newOrderWeightKg > vehicleCapacity,
+                canAssign = projectedTotalLoad <= vehicleCapacity || newOrderWeightKg <= vehicleCapacity // can assign if not structural violation
             });
         }
 

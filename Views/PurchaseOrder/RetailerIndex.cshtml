@@ -2,138 +2,219 @@
 @model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
 
 @{
-    ViewData["Title"] = "My Purchase Orders";
+    ViewData["Title"] = "Procurement Control Center";
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 bg-light min-vh-100">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-file-invoice text-primary me-2"></i>My Purchase Orders 
-        </h1>
-        <a asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-4">
-            <i class="fas fa-shopping-cart me-2"></i> Continue Shopping
-        </a>
+        <div>
+            <h2 class="fw-bold text-dark mb-0"><i class="fas fa-file-contract text-primary me-2"></i>Procurement Control</h2>
+            <p class="text-muted mb-0 small">Manage commercial commitments, escrow payments, and fulfillment health.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group shadow-sm" style="width: 300px;">
+                <form asp-action="RetailerIndex" method="get" class="d-flex w-100">
+                    <input type="text" name="searchTerm" class="form-control border-0 rounded-start-pill px-3" placeholder="Search PO Number..." value="@ViewBag.SearchTerm">
+                    <button type="submit" class="btn btn-white bg-white border-0 rounded-end-pill"><i class="fas fa-search text-muted"></i></button>
+                </form>
+            </div>
+            <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                <i class="fas fa-shopping-basket me-2"></i> New
+            </a>
+        </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">PO Number</th>
-                            <th>Supplier</th>
-                            <th>Total Amount</th>
-                            <th>Status</th>
-                            <th>Payment Status</th>
-                            <th>Order Date</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var po in Model)
-                        {
-                            var needsPayment = po.Status == "Delivered" && po.Commission != null && po.Commission.Status == "Pending" && po.PaymentStatus != "Paid";
-                            var isPaid = (po.Commission != null && po.Commission.Status == "Paid") || po.PaymentStatus == "Paid";
-                            
+    <!-- Executive KPI Bar -->
+    @{
+        var activePOs = Model.Where(p => p.Status != "Completed" && p.Status != "Rejected" && p.Status != "Cancelled");
+        var committedCapital = activePOs.Sum(p => p.TotalAmount);
+        var pendingFulfillment = activePOs.Count(p => p.Status != "Delivered");
+        var healthRate = Model.Any() ? (Model.Count(p => p.Status == "Delivered" || p.Status == "Completed") * 100 / Model.Count()) : 0;
+    }
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-bottom border-4 border-primary">
+                <label class="smaller text-muted text-uppercase fw-bold d-block mb-1">Committed Capital</label>
+                <h3 class="fw-bold text-dark mb-0">@committedCapital.ToString("N0") <span class="smaller font-normal">ETB</span></h3>
+                <div class="progress mt-2" style="height: 4px;">
+                    <div class="progress-bar" style="width: 70%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-bottom border-4 border-warning">
+                <label class="smaller text-muted text-uppercase fw-bold d-block mb-1">In Pipeline</label>
+                <h3 class="fw-bold text-dark mb-0">@activePOs.Count() <span class="smaller font-normal">POs</span></h3>
+                <span class="smaller text-warning fw-bold">@pendingFulfillment Pending Delivery</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-bottom border-4 border-success">
+                <label class="smaller text-muted text-uppercase fw-bold d-block mb-1">Fulfillment Health</label>
+                <h3 class="fw-bold text-success mb-0">@healthRate%</h3>
+                <span class="smaller text-muted">Successful Completions</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-dark text-white shadow">
+                <label class="smaller text-white-50 text-uppercase fw-bold d-block mb-1">Escrow Balance</label>
+                <h3 class="fw-bold mb-0">@Model.Where(p => p.PaymentStatus == "Escrow").Sum(p => p.TotalAmount).ToString("N0")</h3>
+                <span class="smaller opacity-75">Secured Commitments</span>
+            </div>
+        </div>
+    </div>
 
-                            // Check if already rated
-                            var hasRated = po.Rating != null;
-                            
-                            // Check if return request already exists (safe null check)
-                            var hasReturnRequest = po.ReturnRequests != null && po.ReturnRequests.Any(r => r.Status != ReturnStatus.Cancelled);
-                            
-                            <tr>
-                                <td class="ps-4 fw-bold">@po.PONumber</td>
-                                <td>@po.Supplier?.CompanyName</td>
-                                <td class="fw-bold">@po.TotalAmount.ToString("C")</td>
-                                <td>
-                                    @if (po.Status == "Delivered")
-                                    {
-                                        <span class="badge bg-success rounded-pill px-3">Delivered</span>
-                                    }
-                                    else if (po.Status == "In Transit")
-                                    {
-                                        <span class="badge bg-primary rounded-pill px-3">In Transit</span>
-                                    }
-                                    else if (po.Status == "Processing")
-                                    {
-                                        <span class="badge bg-info rounded-pill px-3">Processing</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary rounded-pill px-3">@po.Status</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (needsPayment)
-                                    {
-                                        <span class="badge bg-warning text-dark rounded-pill px-3">
-                                            <i class="fas fa-exclamation-triangle me-1"></i>Payment Required
-                                        </span>
-                                    }
-                                    else if (isPaid)
-                                    {
-                                        <span class="badge bg-success rounded-pill px-3">
-                                            <i class="fas fa-check-circle me-1"></i>Paid
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary rounded-pill px-3">Pending</span>
-                                    }
-                                </td>
-                                <td>@po.CreatedAt.ToString("MMM dd, yyyy")</td>
-                                <td class="text-end pe-4">
-                                    <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                        @if (needsPayment && po.Commission != null)
-                                        {
-                                            <form asp-controller="Payment" asp-action="InitializePayment" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="commissionId" value="@po.Commission.Id" />
-                                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
-                                                    <i class="fas fa-credit-card me-1"></i> Pay Now
-                                                </button>
-                                            </form>
-                                        }
-
-                                        @if (po.Status == "Delivered" && !hasReturnRequest)
-                                        {
-                                            <a asp-controller="Return" asp-action="Create" asp-route-purchaseOrderId="@po.Id"
-                                                   class="btn btn-sm btn-warning rounded-pill px-3">
-                                                <i class="fas fa-undo-alt me-1"></i> Request Return
-                                            </a>
-                                        }
-                                        
-                                        @if (po.Status == "Delivered" && !hasRated)
-                                        {
-                                            <a asp-controller="Rating" asp-action="RateOrder" asp-route-purchaseOrderId="@po.Id"
-                                                   class="btn btn-sm btn-outline-warning rounded-pill px-3">
-                                                <i class="fas fa-star me-1"></i> Rate Order
-                                            </a>
-                                        }
-                                        
-                                        @if (hasRated)
-                                        {
-                                            <span class="badge bg-secondary rounded-pill px-3 py-2">
-                                                <i class="fas fa-check me-1"></i> Rated
-                                            </span>
-                                        }
-                                        
-                                        @if (hasReturnRequest)
-                                        {
-                                            <span class="badge bg-info rounded-pill px-3 py-2">
-                                                <i class="fas fa-undo-alt me-1"></i> Return Requested
-                                            </span>
-                                        }
-                                    </div>
-                                </td>
+    <!-- PO Workspace -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="card-header bg-white py-3 px-4 border-light">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="fw-bold mb-0">Commercial Registry</h6>
+                        </div>
+                        <div class="col-auto">
+                            <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
+                                <button class="btn btn-light active px-3">All</button>
+                                <button class="btn btn-light px-3">Active</button>
+                                <button class="btn btn-light px-3">Completed</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="smaller text-muted text-uppercase">
+                                <th class="ps-4">Document ID</th>
+                                <th>Supplier & Terms</th>
+                                <th>Financials</th>
+                                <th class="text-center">Lifecycle Status</th>
+                                <th class="text-center">Escrow / Pay</th>
+                                <th class="text-end pe-4">Actions</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var po in Model.OrderByDescending(p => p.CreatedAt))
+                            {
+                                var needsPayment = po.Status == "Delivered" && po.Commission != null && po.Commission.Status == "Pending" && po.PaymentStatus != "Paid";
+                                var isPaid = (po.Commission != null && po.Commission.Status == "Paid") || po.PaymentStatus == "Paid";
+
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark mb-0">#@po.PONumber</div>
+                                        <div class="smaller text-muted">Issued: @po.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@po.Supplier?.CompanyName</div>
+                                        <div class="smaller text-muted"><i class="fas fa-truck-loading me-1"></i> Delivery to @po.DeliveryAddress</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-primary">@po.TotalAmount.ToString("N2") ETB</div>
+                                        <div class="smaller text-muted">@po.PurchaseOrderItems?.Count() Items</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge @GetPOStatusClass(po.Status) rounded-pill px-3 py-2">@po.Status</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (po.PaymentStatus == "Escrow")
+                                        {
+                                            <span class="badge bg-info-subtle text-info border border-info rounded-pill px-3">
+                                                <i class="fas fa-shield-alt me-1"></i> In Escrow
+                                            </span>
+                                        }
+                                        else if (isPaid)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">
+                                                <i class="fas fa-check-double me-1"></i> Disbursed
+                                            </span>
+                                        }
+                                        else if (needsPayment)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 animate-pulse">
+                                                <i class="fas fa-exclamation-circle me-1"></i> Action Required
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-muted border rounded-pill px-3">Pending</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-white border rounded-pill px-3 shadow-sm fw-bold">
+                                                Workspace <i class="fas fa-chevron-right ms-1"></i>
+                                            </a>
+                                            @if (needsPayment && po.Commission != null)
+                                            {
+                                                <form asp-controller="Payment" asp-action="InitializePayment" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="commissionId" value="@po.Commission.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm fw-bold">
+                                                        Disburse Funds
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination Footer -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="card-footer bg-white border-top border-light py-3">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link rounded-circle mx-1 border-0 @(i == ViewBag.CurrentPage ? "bg-primary text-white" : "text-dark bg-light")" 
+                                           asp-action="RetailerIndex" asp-route-page="@i" asp-route-searchTerm="@ViewBag.SearchTerm">@i</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
+
+@functions {
+    string GetPOStatusClass(string status)
+    {
+        return status switch
+        {
+            "Delivered" => "bg-success text-white shadow-sm",
+            "In Transit" => "bg-primary text-white shadow-sm",
+            "Processing" => "bg-info text-white shadow-sm",
+            "Accepted" => "bg-indigo text-white shadow-sm",
+            "Issued" => "bg-warning text-dark shadow-sm",
+            "Rejected" => "bg-danger text-white shadow-sm",
+            _ => "bg-secondary text-white shadow-sm"
+        };
+    }
+}
+
+<style>
+    .smaller { font-size: 0.725rem; font-weight: 700; letter-spacing: 0.5px; }
+    .font-normal { font-weight: 400; }
+    .bg-indigo { background-color: #6610f2; }
+    .bg-success-subtle { background-color: #e9f7ef; }
+    .bg-info-subtle { background-color: #eaf2f8; }
+    .bg-danger-subtle { background-color: #fceae9; }
+    .btn-white { background: white; }
+    .animate-pulse { animation: pulse 2s infinite; }
+    @@keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+</style>

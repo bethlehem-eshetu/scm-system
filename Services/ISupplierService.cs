@@ -13,5 +13,6 @@ namespace SCM_System.Services
         Task<bool> UpdateCommissionPaymentStatusAsync(int commissionId, string chapaId, string status, string verificationData);
         Task<List<VehicleSuggestion>> GetSmartDispatchSuggestionsAsync(int warehouseId);
         Task<List<DriverSuggestion>> GetSmartDriverSuggestionsAsync(int warehouseId);
+        Task<bool> UpdateSupplierTierAsync(int supplierId);
     }
 }

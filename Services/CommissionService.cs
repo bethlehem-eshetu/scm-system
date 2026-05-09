@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Constants;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
@@ -10,17 +12,20 @@ namespace SCM_System.Services
         private readonly IChapaService _chapaService;
         private readonly INotificationService _notificationService;
         private readonly IConfiguration _configuration;
+        private readonly ISupplierService _supplierService;
 
         public CommissionService(
             ApplicationDbContext context,
             IChapaService chapaService,
             INotificationService notificationService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ISupplierService supplierService)
         {
             _context = context;
             _chapaService = chapaService;
             _notificationService = notificationService;
             _configuration = configuration;
+            _supplierService = supplierService;
         }
 
         public async Task<Commission> CreateCommissionAsync(int orderId, decimal orderAmount, int purchaseOrderId)
@@ -56,17 +61,31 @@ namespace SCM_System.Services
                 CommissionRate = commissionRate,
                 CommissionAmount = commissionAmount,
                 PaymentType = "PlatformCommission",
-                Status = "Pending",
+                Status = PaymentStatus.Pending.ToString(),
                 CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 DueDate = DateTime.Now.AddDays(7)
             };
 
-            var supplierId = await _context.PurchaseOrders
-                .Where(po => po.Id == purchaseOrderId)
-                .Select(po => po.SupplierId)
-                .FirstOrDefaultAsync();
-            
-            commission.SupplierId = supplierId;
+            if (purchaseOrderId > 0)
+            {
+                var supplierIdFromPO = await _context.PurchaseOrders
+                    .Where(po => po.Id == purchaseOrderId)
+                    .Select(po => po.SupplierId)
+                    .FirstOrDefaultAsync();
+                
+                commission.SupplierId = supplierIdFromPO;
+                commission.PurchaseOrderId = purchaseOrderId;
+            }
+            else
+            {
+                commission.SupplierId = await _context.Orders
+                    .Where(o => o.Id == orderId)
+                    .Select(o => o.SupplierId)
+                    .FirstOrDefaultAsync();
+                commission.PurchaseOrderId = null;
+            }
+
             _context.Commissions.Add(commission);
             await _context.SaveChangesAsync();
 
@@ -96,7 +115,7 @@ namespace SCM_System.Services
             return await _context.Commissions
                 .Include(c => c.Supplier)
                     .ThenInclude(s => s.User)
-                .Where(c => c.Status == "Pending" && (c.DueDate == null || c.DueDate > DateTime.Now))
+                .Where(c => c.Status == PaymentStatus.Pending.ToString() && (c.DueDate == null || c.DueDate > DateTime.Now))
                 .OrderBy(c => c.DueDate)
                 .ToListAsync();
         }
@@ -107,10 +126,10 @@ namespace SCM_System.Services
             if (commission == null)
                 throw new Exception("Commission not found");
 
-            if (commission.Status != "Pending")
+            if (commission.Status != PaymentStatus.Pending.ToString())
                 throw new Exception("Commission is already processed");
 
-            commission.Status = "Processing";
+            commission.Status = PaymentStatus.Processing.ToString();
             commission.ChapaPaymentUrl = paymentUrl;
             await _context.SaveChangesAsync();
 
@@ -138,7 +157,7 @@ namespace SCM_System.Services
 
         public async Task<decimal> GetTotalCommissionsEarnedAsync(DateTime? fromDate = null, DateTime? toDate = null)
         {
-            var query = _context.Commissions.Where(c => c.Status == "Paid");
+            var query = _context.Commissions.Where(c => c.Status == PaymentStatus.Paid.ToString());
 
             if (fromDate.HasValue)
                 query = query.Where(c => c.PaidAt >= fromDate.Value);
@@ -152,7 +171,7 @@ namespace SCM_System.Services
         public async Task<decimal> GetPendingCommissionsTotalAsync()
         {
             return await _context.Commissions
-                .Where(c => c.Status == "Pending" && (c.DueDate == null || c.DueDate > DateTime.Now))
+                .Where(c => c.Status == PaymentStatus.Pending.ToString() && (c.DueDate == null || c.DueDate > DateTime.Now))
                 .SumAsync(c => c.CommissionAmount);
         }
 
@@ -163,6 +182,11 @@ namespace SCM_System.Services
             {
                 var mainCommission = await _context.Commissions
                     .Include(c => c.Order)
+                        .ThenInclude(o => o.PurchaseOrders)
+                            .ThenInclude(po => po.Supplier)
+                    .Include(c => c.Order)
+                        .ThenInclude(o => o.PurchaseOrders)
+                            .ThenInclude(po => po.PurchaseOrderItems)
                     .Include(c => c.PurchaseOrder)
                     .Include(c => c.Supplier)
                     .Include(c => c.Retailer)
@@ -170,111 +194,148 @@ namespace SCM_System.Services
 
                 if (mainCommission == null) return false;
 
-                // 1. Idempotency Check
-                if (mainCommission.Status == "Paid")
+                // 1. Strict Guard & Idempotency
+                if (mainCommission.Status == PaymentStatus.Paid.ToString())
                 {
                     await transaction.CommitAsync();
                     return true;
                 }
 
-                // 2. Mark Master Commission as Paid
-                mainCommission.Status = "Paid";
-                mainCommission.PaidAt = DateTime.Now;
-                mainCommission.ChapaTransactionId = transactionId;
-                mainCommission.PaymentVerificationData = verificationData;
-
-                // 3. Update Order & PurchaseOrder Status
-                if (mainCommission.PurchaseOrder != null)
+                // Webhook Replay Protection: Check if TxRef already processed
+                var existingPaid = await _context.Payments
+                    .AnyAsync(p => p.TxRef == transactionId && p.Status == PaymentStatus.Paid);
+                if (existingPaid)
                 {
-                    mainCommission.PurchaseOrder.PaymentStatus = "Paid";
-                    if (mainCommission.PurchaseOrder.Status == "Delivered")
-                    {
-                        mainCommission.PurchaseOrder.Status = "Completed";
-                    }
+                    await transaction.CommitAsync();
+                    return true;
                 }
 
                 if (mainCommission.Order != null)
                 {
-                    var otherPOs = await _context.PurchaseOrders
-                        .Where(p => p.OrderId == mainCommission.OrderId && p.Id != mainCommission.PurchaseOrderId)
-                        .ToListAsync();
+                    // Mark Master Commission as Paid
+                    mainCommission.Status = PaymentStatus.Paid.ToString();
+                    mainCommission.PaidAt = DateTime.Now;
+                    mainCommission.ChapaTransactionId = transactionId;
+                    mainCommission.PaymentVerificationData = verificationData;
 
-                    if (otherPOs.All(p => p.PaymentStatus == "Paid"))
+                    // Update Payment record
+                    var payment = await _context.Payments
+                        .FirstOrDefaultAsync(p => p.OrderId == mainCommission.OrderId);
+                    
+                    if (payment != null)
                     {
-                        mainCommission.Order.PaymentStatus = "Paid";
-                        if (mainCommission.Order.OrderStatus == "Delivered")
+                        // Guard: Only move to Paid if it was Processing
+                        if (payment.Status == PaymentStatus.Paid) {
+                            await transaction.CommitAsync();
+                            return true; 
+                        }
+                        
+                        payment.Status = PaymentStatus.Paid;
+                        payment.PaidAt = DateTime.UtcNow;
+                        payment.TxRef = transactionId;
+                    }
+
+                    mainCommission.Order.PaymentStatus = "Paid";
+                    mainCommission.Order.OrderStatus = "Completed";
+
+                    // 2. Iterate each PO in the order to safely manage supplier balances
+                    foreach (var po in mainCommission.Order.PurchaseOrders)
+                    {
+                        po.PaymentStatus = "Paid";
+                        po.Status = POStatus.Completed;
+
+                        if (po.Supplier != null)
                         {
-                            mainCommission.Order.OrderStatus = "Completed";
+                            var supplier = po.Supplier;
+                            decimal commissionRate = supplier.CommissionRate > 0 ? supplier.CommissionRate : Supplier.GetRateByTier(supplier.CommissionTier);
+                            if (commissionRate < 5.0m) commissionRate = 5.0m; // Enforce minimum 5% for testing/bronze
+
+                            // poAmount should be the inclusive TotalAmount stored on the PO
+                            var poAmount = po.TotalAmount > 0 ? po.TotalAmount : Math.Round(po.PurchaseOrderItems.Sum(i => i.Quantity * i.UnitPrice), 2);
+                            
+                            var platformCommAmount = Math.Round(poAmount * (commissionRate / 100), 2);
+                            var supplierAmount = Math.Round(poAmount - platformCommAmount, 2);
+
+                            // Update Balance
+                            supplier.Balance += supplierAmount; 
+
+                            // ✅ Safe Guard: Prevent negative balance
+                            if (supplier.Balance < 0)
+                            {
+                                throw new Exception("Invalid balance state detected for supplier: " + supplier.CompanyName);
+                            }
+
+                            // Log Audit Trail
+                            var auditTransaction = new SupplierTransaction
+                            {
+                                SupplierId = supplier.Id,
+                                OrderId = po.OrderId,
+                                Amount = supplierAmount,
+                                Type = "Credit",
+                                Reference = $"Order #{mainCommission.Order?.OrderNumber} - PO #{po.PONumber}",
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            _context.SupplierTransactions.Add(auditTransaction);
+
+                            // 4. Automated Commission Split (Updates or Creates)
+                            var platformComm = await _context.Commissions
+                                .FirstOrDefaultAsync(c => c.PurchaseOrderId == po.Id && c.PaymentType == "PlatformCommission");
+
+                            if (platformComm == null)
+                            {
+                                platformComm = new Commission
+                                {
+                                    PurchaseOrderId = po.Id,
+                                    OrderId = mainCommission.OrderId,
+                                    SupplierId = po.SupplierId,
+                                    RetailerId = mainCommission.RetailerId,
+                                    OrderAmount = poAmount,
+                                    CommissionRate = commissionRate / 100,
+                                    CommissionAmount = platformCommAmount,
+                                    CommissionRateAtTransaction = commissionRate,
+                                    PaymentType = "PlatformCommission",
+                                    CreatedAt = DateTime.Now
+                                };
+                                _context.Commissions.Add(platformComm);
+                            }
+
+                            platformComm.Status = PaymentStatus.Paid.ToString();
+                            platformComm.PaidAt = DateTime.Now;
+                            platformComm.UpdatedAt = DateTime.Now;
+                            platformComm.CommissionAmount = platformCommAmount; // Sync in case of changes
+                            platformComm.Notes = $"Platform commission ({commissionRate}%) deducted for Order #{mainCommission.Order?.OrderNumber}";
                         }
                     }
                 }
 
-                // 4. Automated Commission Split
-                if (mainCommission.PaymentType == "OrderPayment")
+                // Single SaveChanges call for atomic transaction
+                try 
                 {
-                    var supplier = mainCommission.Supplier;
-                    decimal commissionRate = supplier != null 
-                        ? (supplier.CommissionRate > 0 ? supplier.CommissionRate : Supplier.GetRateByTier(supplier.CommissionTier)) 
-                        : 5.0m;
-
-                    var platformCommAmount = mainCommission.OrderAmount * (commissionRate / 100);
-
-                    // Prevents redudant splits in case of race between verify and webhook
-                    var splitExists = await _context.Commissions.AnyAsync(c => 
-                        c.PurchaseOrderId == mainCommission.PurchaseOrderId && 
-                        (c.PaymentType == "PlatformCommission" || c.PaymentType == "SupplierPayout"));
-
-                    if (!splitExists)
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    // Concurrency Retry Logic for Supplier Balance updates
+                    foreach (var entry in _context.ChangeTracker.Entries())
                     {
-                        var platformComm = new Commission
-                        {
-                            PurchaseOrderId = mainCommission.PurchaseOrderId,
-                            OrderId = mainCommission.OrderId,
-                            SupplierId = mainCommission.SupplierId,
-                            RetailerId = mainCommission.RetailerId,
-                            OrderAmount = mainCommission.OrderAmount,
-                            CommissionRate = commissionRate / 100,
-                            CommissionAmount = platformCommAmount,
-                            PaymentType = "PlatformCommission",
-                            Status = "Paid",
-                            CreatedAt = DateTime.Now,
-                            PaidAt = DateTime.Now,
-                            Notes = $"Platform commission ({commissionRate}%) automatically deducted"
-                        };
-                        _context.Commissions.Add(platformComm);
-
-                        var payoutAmount = mainCommission.OrderAmount - platformCommAmount;
-                        var supplierPayout = new Commission
-                        {
-                            PurchaseOrderId = mainCommission.PurchaseOrderId,
-                            OrderId = mainCommission.OrderId,
-                            SupplierId = mainCommission.SupplierId,
-                            RetailerId = mainCommission.RetailerId,
-                            OrderAmount = mainCommission.OrderAmount,
-                            CommissionAmount = payoutAmount,
-                            PaymentType = "SupplierPayout",
-                            Status = "Pending",
-                            CreatedAt = DateTime.Now,
-                            DueDate = DateTime.Now.AddDays(7),
-                            SupplierPayoutAmount = payoutAmount,
-                            SupplierPayoutStatus = "Pending",
-                            Notes = $"Net earnings generated from Order #{mainCommission.Order?.OrderNumber}"
-                        };
-                        _context.Commissions.Add(supplierPayout);
+                        await entry.ReloadAsync();
                     }
+                    await _context.SaveChangesAsync();
                 }
 
-                await _context.SaveChangesAsync();
+                // 5. Trigger Supplier Tier Recalculation
+                await _supplierService.UpdateSupplierTierAsync(mainCommission.SupplierId);
+
                 await transaction.CommitAsync();
 
                 if (mainCommission.Retailer?.UserId != null)
                 {
                     await _notificationService.SendNotificationAsync(
                         mainCommission.Retailer.UserId,
-                        "Payment Confirmed",
-                        $"Your payment for Order #{mainCommission.Order?.OrderNumber} was successful.",
+                        "Payment Confirmed ✅",
+                        $"Your payment for Order #{mainCommission.Order?.OrderNumber} was successful. Status: Settled.",
                         "Success",
-                        "/Retailer/OrderTracking"
+                        "/Order/Details/" + mainCommission.OrderId
                     );
                 }
 
@@ -285,6 +346,68 @@ namespace SCM_System.Services
                 await transaction.RollbackAsync();
                 return false;
             }
+        }
+
+        public async Task<Commission> InitiateOrderPaymentAsync(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null) return null;
+
+            // Check if already exists
+            var existing = await _context.Commissions
+                .FirstOrDefaultAsync(c => c.OrderId == orderId && c.PaymentType == "OrderPayment");
+            
+            if (existing != null) return existing;
+
+            var commission = new Commission
+            {
+                OrderId = orderId,
+                SupplierId = order.SupplierId,
+                RetailerId = order.RetailerId,
+                OrderAmount = order.TotalAmount,
+                CommissionAmount = order.TotalAmount, // ✅ Set amount for Chapa lookup
+                PaymentType = "OrderPayment",
+                Status = PaymentStatus.Pending.ToString(),
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            _context.Commissions.Add(commission);
+
+            // ✅ ENSURE SHARED TRUTH: Check if a payment record already exists for this order
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.OrderId == orderId);
+
+            if (payment == null)
+            {
+                // Generate TxRef only if creating new
+                string txRef = $"ORD-{orderId}-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                
+                payment = new Payment
+                {
+                    OrderId = orderId,
+                    RetailerId = order.RetailerId,
+                    Amount = order.TotalAmount,
+                    Status = PaymentStatus.Pending,
+                    TxRef = txRef,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Payments.Add(payment);
+            }
+            else
+            {
+                // Sync amount just in case of order updates
+                payment.Amount = order.TotalAmount;
+            }
+
+            await _context.SaveChangesAsync();
+            return commission;
+        }
+
+        public async Task<Commission> GetCommissionByOrderAndTypeAsync(int orderId, string paymentType)
+        {
+            return await _context.Commissions
+                .FirstOrDefaultAsync(c => c.OrderId == orderId && c.PaymentType == paymentType);
         }
     }
 }

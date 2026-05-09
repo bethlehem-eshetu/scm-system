@@ -167,14 +167,19 @@
                                                 <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-light rounded-circle shadow-sm" title="View Details">
                                                     <i class="fas fa-eye text-primary"></i>
                                                 </a>
-                                                @if (po.Status == POStatus.Issued || po.Status == POStatus.Accepted) 
+                                                @if (po.Status == POStatus.Issued || po.Status == POStatus.Accepted || po.Status == POStatus.Picking) 
                                                 {
+                                                    var nextStatus = po.Status == POStatus.Picking ? POStatus.Picked : POStatus.Picking;
+                                                    var btnIcon = po.Status == POStatus.Picking ? "fa-check-double" : "fa-hand-holding-box";
+                                                    var btnTitle = po.Status == POStatus.Picking ? "Mark as Picked" : "Start Picking";
+                                                    var btnClass = po.Status == POStatus.Picking ? "text-info" : "text-warning";
+
                                                     <form asp-action="UpdateStatus" method="post" class="d-inline">
                                                         <input type="hidden" name="id" value="@po.Id" />
-                                                        <input type="hidden" name="status" value="@POStatus.Processing" />
+                                                        <input type="hidden" name="status" value="@nextStatus" />
                                                         <input type="hidden" name="returnAction" value="Dashboard" />
-                                                        <button type="submit" class="btn btn-sm btn-light rounded-circle shadow-sm" title="Start Picking">
-                                                            <i class="fas fa-hand-holding-box text-warning"></i>
+                                                        <button type="submit" class="btn btn-sm btn-light rounded-circle shadow-sm" title="@btnTitle">
+                                                            <i class="fas @btnIcon @btnClass"></i>
                                                         </button>
                                                     </form>
                                                 }

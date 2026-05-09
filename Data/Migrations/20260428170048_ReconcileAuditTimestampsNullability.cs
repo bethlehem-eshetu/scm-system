@@ -10,17 +10,21 @@ namespace SCM_System.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<DateTime>(
+            migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 table: "Orders",
                 type: "datetime2",
-                nullable: true);
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
 
-            migrationBuilder.AddColumn<DateTime>(
+            migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 table: "Commissions",
                 type: "datetime2",
-                nullable: true);
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "datetime2");
         }
 
         /// <inheritdoc />

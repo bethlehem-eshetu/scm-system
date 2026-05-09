@@ -38,6 +38,9 @@ namespace SCM_System.Models.Entities
         [StringLength(100)]
         public required string City { get; set; }
 
+        [StringLength(100)]
+        public string? Region { get; set; } // Nullable to allow existing rows with NULL values
+
         [Required]
         [StringLength(100)]
         public required string Country { get; set; } = "Ethiopia";

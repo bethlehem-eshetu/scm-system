@@ -117,6 +117,16 @@ namespace SCM_System.Services
                     TransactionId = transactionId
                 };
             }
+            catch (TaskCanceledException tex)
+            {
+                _logger.LogWarning($"Chapa verification timed out: {tex.Message}");
+                return new ChapaVerifyResponse
+                {
+                    Success = false,
+                    Status = "pending_verification",
+                    TransactionId = transactionId
+                };
+            }
             catch (Exception ex)
             {
                 _logger.LogError($"Chapa verification error: {ex.Message}");

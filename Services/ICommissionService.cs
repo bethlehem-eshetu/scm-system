@@ -13,5 +13,7 @@ namespace SCM_System.Services
         Task<decimal> GetTotalCommissionsEarnedAsync(DateTime? fromDate = null, DateTime? toDate = null);
         Task<decimal> GetPendingCommissionsTotalAsync();
         Task<bool> FinalizePaymentAsync(int commissionId, string transactionId, string verificationData);
+        Task<Commission> InitiateOrderPaymentAsync(int orderId);
+        Task<Commission> GetCommissionByOrderAndTypeAsync(int orderId, string paymentType);
     }
 }

@@ -16,13 +16,15 @@ namespace SCM_System.Controllers
         private readonly ITenderService _tenderService;
         private readonly IPurchaseOrderService _poService;
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public BidController(IBidService bidService, ITenderService tenderService, IPurchaseOrderService poService, ApplicationDbContext context)
+        public BidController(IBidService bidService, ITenderService tenderService, IPurchaseOrderService poService, ApplicationDbContext context, INotificationService notificationService)
         {
             _bidService = bidService;
             _tenderService = tenderService;
             _poService = poService;
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IActionResult> Index()
@@ -31,7 +33,7 @@ namespace SCM_System.Controllers
             {
                 var supplierId = await GetSupplierIdAsync();
                 var bids = await _bidService.GetBidsBySupplierAsync(supplierId);
-                return View("MyBids", bids);
+                return RedirectToAction("MyBids", "Tender");
             }
             return RedirectToAction("Index", "Home");
         }
@@ -104,8 +106,25 @@ namespace SCM_System.Controllers
                 };
 
                 await _bidService.SubmitBidAsync(bid);
+                
+                if (bid.Status == "Pending")
+                {
+                    var tenderDetails = await _context.Tenders.Include(t => t.Retailer).ThenInclude(r => r.User).FirstOrDefaultAsync(t => t.Id == model.TenderId);
+                    var supplier = await _context.Suppliers.FindAsync(supplierId);
+                    if (tenderDetails?.Retailer?.User != null && supplier != null)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            tenderDetails.Retailer.User.Id, 
+                            "New Bid Received", 
+                            $"{supplier.CompanyName} submitted a bid for {tenderDetails.ReferenceNumber}", 
+                            "Info", 
+                            $"/Tender/Details/{model.TenderId}"
+                        );
+                    }
+                }
+
                 TempData["SuccessMessage"] = bid.Status == "Draft" ? "Your bid draft has been saved." : "Your bid has been submitted and evaluated.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("MyBids", "Tender");
             }
             
             ViewBag.Tender = await _context.Tenders.Include(t => t.TenderItems).FirstOrDefaultAsync(t => t.Id == model.TenderId);
@@ -126,7 +145,8 @@ namespace SCM_System.Controllers
             var bid = await _context.TenderBids
                 .Include(b => b.Supplier)
                 .Include(b => b.Tender)
-                .ThenInclude(t => t.TenderItems)
+                    .ThenInclude(t => t.TenderItems)
+                        .ThenInclude(p => p.Product)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
             if (bid == null) return NotFound();
@@ -139,22 +159,19 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Accept(int id, string deliveryAddress)
         {
-            var success = await _bidService.AcceptBidAsync(id, deliveryAddress);
-            if (success)
+            var generatedPo = await _bidService.AcceptBidAsync(id, deliveryAddress);
+            if (generatedPo != null)
             {
                 TempData["SuccessMessage"] = "Bid accepted successfully! Purchase order has been generated.";
+                return RedirectToAction("Details", "PurchaseOrder", new { id = generatedPo.PONumber });
             }
             else
             {
-                TempData["ErrorMessage"] = "Failed to accept bid.";
+                TempData["ErrorMessage"] = "Failed to accept bid or generate purchase order.";
+                var bid = await _context.TenderBids.FindAsync(id);
+                if (bid != null) return RedirectToAction("Review", new { tenderId = bid.TenderId });
+                return RedirectToAction("Index", "Tender");
             }
-
-            var bid = await _context.TenderBids.FindAsync(id);
-            if (bid != null)
-            {
-                return RedirectToAction("Review", new { tenderId = bid.TenderId });
-            }
-            return RedirectToAction("Index", "Tender");
         }
 
         private async Task<int> GetSupplierIdAsync()

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -20,6 +20,10 @@ namespace SCM_System.Models.Entities
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public bool IsRead { get; set; } = false;
+        public DateTime? SeenAt { get; set; }
+        public string? MessageType { get; set; } = "Text";
+        public string? Priority { get; set; } = "Normal";
+        public string? AttachmentUrl { get; set; }
 
         // ✅ ADD THESE FIELDS
         public bool IsBlocked { get; set; } = false;

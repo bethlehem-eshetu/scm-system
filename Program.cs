@@ -49,7 +49,10 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddHttpClient<IChapaService, ChapaService>();
+builder.Services.AddHttpClient<IChapaService, ChapaService>(client => 
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 
 // Add HttpContextAccessor for session helpers
 builder.Services.AddHttpContextAccessor();

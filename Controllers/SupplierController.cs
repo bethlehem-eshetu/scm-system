@@ -359,13 +359,15 @@ namespace SCM_System.Controllers
                 WebsiteUrl = supplier.WebsiteUrl,
                 PickupAddress = supplier.PickupAddress,
                 ExistingLogo = supplier.CompanyLogo,
+                Region = supplier.Region,
                 FullName = supplier.User.FullName,
                 Email = supplier.User.Email,
                 Phone = supplier.User.PhoneNumber,
                 
                 // Security
                 TwoFactorEnabled = supplier.User.TwoFactorEnabled,
-                ActiveSessions = await _context.UserSessions.Where(us => us.UserId == supplier.User.Id && us.IsActive).ToListAsync()
+                ActiveSessions = await _context.UserSessions.Where(us => us.UserId == supplier.User.Id && us.IsActive).ToListAsync(),
+                BankAccounts = await _context.BankAccounts.Where(ba => ba.SupplierId == supplier.Id).ToListAsync()
             };
 
             ViewBag.Warehouses = new SelectList(await _context.Warehouses.Where(w => w.SupplierId == supplier.Id).ToListAsync(), "Id", "Name");
@@ -385,7 +387,12 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Settings(SupplierSettingsViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                model.BankAccounts = await _context.BankAccounts.Where(ba => ba.SupplierId == model.SupplierId).ToListAsync();
+                model.ActiveSessions = await _context.UserSessions.Where(us => us.UserId != null && us.IsActive).ToListAsync(); // Simplified for error state
+                return View(model);
+            }
 
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction("Login", "Account");
@@ -400,6 +407,7 @@ namespace SCM_System.Controllers
             supplier.CompanyDescription = model.CompanyDescription;
             supplier.WebsiteUrl = model.WebsiteUrl;
             supplier.PickupAddress = model.PickupAddress;
+            supplier.Region = model.Region;
 
             // Handle Logo Upload
             if (model.CompanyLogoFile != null && model.CompanyLogoFile.Length > 0)

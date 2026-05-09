@@ -8,7 +8,7 @@ namespace TestApp
 {
     class Program
     {
-        static void Main(string[] args)
+        static void RunCheck(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseSqlite("Data Source=SCM_System.db"); // Assuming SQLite

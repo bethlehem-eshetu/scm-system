@@ -116,17 +116,6 @@
                                 </div>
                             </div>
 
-                            <!-- Live Tracking Alert -->
-                            @if (displayStatus != "Picked" && displayStatus != "Packed" && displayStatus != "Shipped" && displayStatus != "In Transit" && displayStatus != "Delivered" && displayStatus != "Completed" && displayStatus != "Cancelled")
-                            {
-                                <div class="mb-4 text-end">
-                                    <form asp-controller="Retailer" asp-action="CancelOrder" method="post" class="d-inline-block" onsubmit="return confirm('Are you sure you want to cancel this order? Stock will be released back to the supplier.');">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@order.Id" />
-                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3"><i class="fas fa-times me-1"></i> Cancel Order</button>
-                                    </form>
-                                </div>
-                            }
 
                             @if (displayStatus == "In Transit")
                             {
@@ -212,8 +201,8 @@
                                                             }
                                                         </div>
                                                         
-                                                        <a asp-action="OrderTrackingDetails" asp-route-id="@order.Id" 
-                                                           class="btn btn-sm btn-outline-primary rounded-pill w-100 mt-2">
+                                                        <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" 
+                                                           class="btn btn-primary rounded-pill w-100 mt-2">
                                                             <i class="fas fa-eye me-1"></i> Track Shipment
                                                         </a>
                                                     </div>

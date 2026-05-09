@@ -1,0 +1,985 @@
+﻿@using SCM_System.Models.Entities
+<!DOCTYPE html>
+<html lang="en" data-theme="@(Context.Session.GetString("ThemePreference")?.ToLower() ?? "system")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SCM Dashboard</title>
+    
+    <!-- Bootstrap and Fonts -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --sidebar-width: 280px;
+            --sidebar-bg: #0f172a;         /* Slate 900 */
+            --sidebar-hover: rgba(255, 255, 255, 0.05);
+            --sidebar-color: #94a3b8;      /* Slate 400 */
+            --sidebar-active: #ffffff;
+            --bg-color: #f8fafc;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.125);
+            --top-nav-bg: #ffffff;
+        }
+
+        /* Dark Theme Variables */
+        html.dark-mode:root, body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+            --top-nav-bg: #1e1e1e;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark-mode .card, .dark-mode .bg-white {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+        
+        .dark-mode .text-dark {
+            color: #ffffff !important;
+        }
+        
+        .dark-mode .table, .dark-mode .table-hover tbody tr:hover {
+            color: var(--text-color);
+            background-color: transparent;
+        }
+        
+        .dark-mode .border-bottom {
+            border-bottom-color: var(--border-color) !important;
+        }
+
+        /* Sidebar Styling */
+        .wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+            min-height: 100vh;
+        }
+
+        #sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: var(--sidebar-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar.active {
+            margin-left: calc(-1 * var(--sidebar-width));
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-header .brand {
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .sidebar-header .brand img {
+            height: 32px;
+            width: 32px;
+            border-radius: 8px;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+            list-style: none;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        .menu-label {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.4);
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .sidebar-menu li a {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            color: var(--sidebar-color);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu li a i {
+            width: 24px;
+            font-size: 1.1rem;
+            margin-right: 10px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li.active > a {
+            background: var(--sidebar-hover);
+            color: var(--sidebar-active);
+            border-left-color: var(--primary-color);
+        }
+
+        .sidebar-menu li a:hover i {
+            transform: translateX(3px);
+            color: #818cf8;
+        }
+
+        /* User Profile in Sidebar */
+        .sidebar-user {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .sidebar-user .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-user .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 12px;
+        }
+
+        /* Content Area */
+        #content {
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #content.active {
+            width: 100%;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            padding: 1rem 2rem;
+            background: var(--top-nav-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+            position: sticky;
+            top: 0;
+            transition: background 0.3s ease;
+        }
+
+        .sidebar-toggler {
+            background: transparent;
+            border: none;
+            color: #4b5563;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-toggler:hover {
+            background: #f3f4f6;
+            color: var(--primary-color);
+        }
+
+        /* Main Content Padding */
+        .main-container {
+            padding: 2rem;
+            flex-grow: 1;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            #sidebar {
+                margin-left: calc(-1 * var(--sidebar-width));
+            }
+            #sidebar.active {
+                margin-left: 0;
+            }
+            #content {
+                width: 100%;
+            }
+            #content.active {
+                /* When sidebar is active on mobile, push content slightly or overlay */
+                transform: translateX(var(--sidebar-width));
+            }
+            .main-container {
+                padding: 1rem;
+            }
+        }
+        
+        /* Dashboard Cards & Aesthetic Utilities */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="brand">
+                    <img src="~/images/ethiochain-logo.jpg" alt="Logo" />
+                    <span>EthioChain SCM</span>
+                </a>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-label">Menu</li>
+                
+                @{
+                    var role = Context.Session.GetString("UserRole");
+                }
+
+                @if (role == "Admin")
+                {
+                    <li>
+                        <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-check"></i> Verifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users"></i> All Users</a>
+                    </li>
+                    
+                    <li class="menu-label">Communication</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope-open-text"></i> Message Monitoring</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="BlockedMessages"><i class="fas fa-ban"></i> Blocked Messages</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Penalties"><i class="fas fa-gavel"></i> Penalties</a>
+                    </li>
+
+                    <li class="menu-label">Finance</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-pie"></i> Commission Overview</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-exchange-alt"></i> Transactions</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Payouts"><i class="fas fa-money-bill-wave"></i> Payouts</a>
+                    </li>
+
+                    <li class="menu-label">Report</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-file-invoice-dollar"></i> Financial Reports</a>
+                    </li>
+
+                    <li class="menu-label">System Admin</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-history"></i> Audit Logs</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-envelope-open-text"></i> Email Logs</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
+                    </li>
+                }
+                else if (role == "Supplier")
+                {
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    
+                    <li class="menu-label">Workforce</li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees"><i class="fas fa-users"></i> All Employees</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees" asp-route-role="warehouse_manager"><i class="fas fa-user-tie"></i> Warehouse Managers</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees" asp-route-role="delivery_agent"><i class="fas fa-id-card"></i> Delivery Agents</a>
+                    </li>
+
+                    <li class="menu-label">Logistics Infrastructure</li>
+                    <li>
+                        <a asp-controller="Hub" asp-action="Warehouses"><i class="fas fa-warehouse"></i> Hubs & Warehouses</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Fleet" asp-action="Vehicles"><i class="fas fa-truck"></i> Fleet Management</a>
+                    </li>
+
+                    <li class="menu-label">Operations</li>
+                    <li>
+                        <a asp-controller="Logistics" asp-action="DispatchCenter"><i class="fas fa-shipping-fast"></i> Dispatch Center</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="OrderTracking"><i class="fas fa-map-marker-alt"></i> Route Visibility</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Logistics" asp-action="InventoryTransfers"><i class="fas fa-exchange-alt"></i> Stock Transfers</a>
+                    </li>
+
+                    <li class="menu-label">Orders & Sales</li>
+                    <li>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-basket"></i> Customer Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice-dollar"></i> Purchase Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-boxes"></i> Product Catalog</a>
+                    </li>
+
+                    <li class="menu-label">Finance & Assets</li>
+                    <li>
+                        <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-wallet"></i> Earnings Ledger</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Payments"><i class="fas fa-file-invoice-dollar"></i> Commission History</a>
+                    </li>
+                    <li>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#withdrawModal"><i class="fas fa-university"></i> Payout Requests</a>
+                    </li>
+
+                    <li class="menu-label">Insights & Reports</li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-line"></i> Supply Chain Analytics</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Rating" asp-action="SupplierRatings"><i class="fas fa-star"></i> Performance Reviews</a>
+                    </li>
+
+                    <li class="menu-label">Administration</li>
+                    <li>
+                        <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Alerts & Notifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
+                    </li>
+                }
+                else if (role == "Retailer")
+                {
+                    <li>
+                        <a asp-controller="Retailer" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    <li class="menu-label">Marketplace</li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search"></i> Browse Catalog</a>
+                    </li>
+                    
+                    <li class="menu-label">My Purchases</li>
+                    <li>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-cart"></i> Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice"></i> Purchase Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="OrderTracking"><i class="fas fa-shipping-fast"></i> Order Tracking</a>
+                    </li>
+
+                    <li class="menu-label">Sourcing</li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> My Tenders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle"></i> Create Tender</a>
+                    </li>
+                    <li class="menu-label">Payments</li>
+<li>
+    <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-credit-card"></i> My Payments</a>
+</li>
+
+<li class="menu-label">Reviews</li>
+<li>
+    <a asp-controller="Rating" asp-action="MyRatings"><i class="fas fa-star"></i> My Ratings</a>
+</li>
+<li class="menu-label">Support</li>
+<li>
+    <a asp-controller="Return" asp-action="MyReturns"><i class="fas fa-undo-alt"></i> My Returns</a>
+</li>
+<li>
+    <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+</li>
+                    <li class="menu-label">Settings</li>
+                    <li>
+                        <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Notifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
+                    </li>
+                }
+                else if (role == "WarehouseManager")
+                {
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    <li class="menu-label">My Warehouse</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Inventory"><i class="fas fa-boxes"></i> Inventory Control</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Alerts"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</a>
+                    </li>
+                    
+                    <li class="menu-label">Operations</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="OrdersToPick"><i class="fas fa-clipboard-list"></i> Orders to Pick</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Packing"><i class="fas fa-box"></i> Packing Station</a>
+                    </li>
+
+                    <li class="menu-label">Logistics & Tracking</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Ready"><i class="fas fa-truck-loading"></i> Ready Dispatch</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="AssignDelivery"><i class="fas fa-tasks"></i> Delivery Assignments</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="History"><i class="fas fa-history"></i> Dispatch History</a>
+                    </li>
+
+                    <li class="menu-label">Management</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Reports"><i class="fas fa-chart-line"></i> Performance Reports</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Details"><i class="fas fa-warehouse"></i> Warehouse Profile</a>
+                    </li>
+                }
+                else if (role == "DeliveryAgent")
+                {
+                    <li>
+                        <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Delivery" asp-action="MyDeliveries"><i class="fas fa-route"></i> My Deliveries</a>
+                    </li>
+                    <li class="menu-label">Account</li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Delivery" asp-action="Settings"><i class="fas fa-user-cog"></i> Settings</a>
+                    </li>
+                }
+                
+
+            </ul>
+
+            <div class="sidebar-user">
+                <div class="user-info">
+                    <div class="avatar shadow-sm border border-2 border-white border-opacity-10 overflow-hidden">
+                        @{
+                            var name = Context.Session.GetString("UserName") ?? "U";
+                            var pImg = Context.Session.GetString("ProfileImg");
+                            if (!string.IsNullOrEmpty(pImg))
+                            {
+                                <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
+                            }
+                            else
+                            {
+                                @name.Substring(0, 1).ToUpper()
+                            }
+                        }
+                    </div>
+                    <div>
+                        <div class="text-white fw-bold" style="font-size: 0.9rem;">@name</div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">@role</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <nav class="top-navbar">
+                <button type="button" id="sidebarCollapse" class="sidebar-toggler">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="d-flex align-items-center">
+                    @if (Context.Session.GetString("UserRole") == "Retailer")
+                    {
+                        <!-- Global Cart Toggle -->
+                        <button class="btn btn-light position-relative rounded-circle me-3 border-0 shadow-sm p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" id="cartToggleButton" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-shopping-cart text-primary"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="globalCartCount" style="display:none; font-size: 0.65em;">
+                                0
+                            </span>
+                        </button>
+                    }
+                    <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </div>
+            </nav>
+
+            <main class="main-container">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+                $('#content').toggleClass('active');
+            });
+            
+            // Highlight active menu item based on current URL path
+            var path = window.location.pathname;
+            $('.sidebar-menu li a').each(function() {
+                if ($(this).attr('href') === path || $(this).attr('href') === path + "/") {
+                    $(this).parent().addClass('active');
+                }
+            });
+
+            // --- Theme Init Logic ---
+            const htmlElement = document.documentElement;
+
+            // 1. Determine Initial Theme
+            // First check localStorage (client override), then fallback to server attribute (data-theme)
+            let currentTheme = localStorage.getItem('themePreference');
+            if (!currentTheme) {
+                currentTheme = htmlElement.getAttribute('data-theme') || 'light';
+            }
+
+            // Apply theme on load
+            if (currentTheme === 'dark') {
+                htmlElement.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            }
+        });
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+
+    @if (Context.Session.GetString("UserRole") == "Retailer")
+    {
+        <!-- Global Cart Offcanvas -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 400px; box-shadow: -5px 0 15px rgba(0,0,0,0.05);">
+            <div class="offcanvas-header bg-primary text-white">
+                <h5 class="offcanvas-title fw-bold" id="cartOffcanvasLabel"><i class="fas fa-shopping-cart me-2"></i> Your Cart</h5>
+                <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column" style="background-color: var(--bg-color);">
+                <div id="cartItemsContainer" class="flex-grow-1 overflow-auto pe-2">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div class="mt-2 text-muted">Loading cart...</div>
+                    </div>
+                </div>
+                
+                <div class="border-top pt-3 bg-white mt-auto rounded-3 shadow-sm p-3 border">
+                    <div class="d-flex justify-content-between mb-3 align-items-center">
+                        <span class="fw-bold text-muted">Subtotal:</span>
+                        <span class="fw-bold fs-5 text-primary" id="cartSubtotal">$0.00</span>
+                    </div>
+                    
+                    <form asp-controller="Retailer" asp-action="Checkout" method="post" id="checkoutForm">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-muted">Delivery Address <span class="text-danger">*</span></label>
+                            <textarea name="deliveryAddress" class="form-control form-control-sm border-0 bg-light" rows="2" required placeholder="Full delivery address..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Expected Delivery Date <span class="text-danger">*</span></label>
+                            <input type="date" name="expectedDeliveryDate" class="form-control form-control-sm border-0 bg-light" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold" id="checkoutBtn">
+                            <i class="fas fa-check-circle me-1"></i> Checkout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                function loadGlobalCart() {
+                    $.get('/Retailer/GetCartJson', function(res) {
+                        if (res.success) {
+                            let count = 0;
+                            if (res.items && res.items.length > 0) {
+                                let html = '';
+                                res.items.forEach(function(item) {
+                                    count += item.quantity;
+                                    html += `<div class="card mb-3 border-0 shadow-sm cart-item" data-id="${item.id}">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="mb-0 fw-bold text-truncate" style="max-width: 200px;" title="${item.productName}">${item.productName}</h6>
+                                                            <small class="text-muted"><i class="fas fa-store me-1"></i>${item.supplierName}</small>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="fw-bold text-primary">$${item.price.toFixed(2)}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                                            <button class="btn btn-outline-secondary btn-update-qty border-end-0" data-change="-1" type="button"><i class="fas fa-minus small"></i></button>
+                                                            <input type="text" class="form-control text-center border-secondary border-start-0 border-end-0 item-qty" value="${item.quantity}" readonly>
+                                                            <button class="btn btn-outline-secondary btn-update-qty border-start-0" data-change="1" type="button"><i class="fas fa-plus small"></i></button>
+                                                        </div>
+                                                        <button class="btn btn-link text-danger p-0 btn-remove-item" type="button"><i class="fas fa-trash"></i></button>
+                                                    </div>
+                                                </div>
+                                             </div>`;
+                                });
+                                $('#cartItemsContainer').html(html);
+                                $('#globalCartCount').text(count).show();
+                                $('#cartSubtotal').text('$' + res.subtotal.toFixed(2));
+                                $('#checkoutBtn').prop('disabled', false);
+                            } else {
+                                $('#cartItemsContainer').html(`
+                                    <div class="text-center py-5 opacity-50">
+                                        <i class="fas fa-shopping-basket fa-4x mb-3"></i>
+                                        <h5>Your cart is empty</h5>
+                                        <p class="small">Add items to proceed to checkout.</p>
+                                    </div>
+                                `);
+                                $('#globalCartCount').hide();
+                                $('#cartSubtotal').text('$0.00');
+                                $('#checkoutBtn').prop('disabled', true);
+                            }
+                        }
+                    });
+                }
+
+                loadGlobalCart();
+                $('#cartToggleButton').on('click', function() {
+                    loadGlobalCart();
+                });
+
+                $(document).on('submit', '.ajax-add-to-cart', function(e) {
+                    e.preventDefault();
+                    let form = $(this);
+                    let btn = form.find('button[type="submit"]');
+                    let originalHtml = btn.html();
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+                    $.post('/Retailer/AddToCart', form.serialize(), function(res) {
+                        btn.html(originalHtml).prop('disabled', false);
+                        if (res.success) {
+                            $('#globalCartCount').text(res.cartItemCount).show();
+                            // Show success message if not in modal
+                            if (typeof bootstrap !== 'undefined') {
+                                var cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
+                                cartOffcanvas.show();
+                            }
+                            loadGlobalCart();
+                        } else {
+                            alert(res.message || 'Error adding to cart.');
+                        }
+                    }).fail(function() {
+                        btn.html(originalHtml).prop('disabled', false);
+                        alert('Error adding to cart.');
+                    });
+                });
+
+                $(document).on('click', '.btn-update-qty', function() {
+                    let btn = $(this);
+                    let itemCard = btn.closest('.cart-item');
+                    let id = itemCard.data('id');
+                    let qtyInput = itemCard.find('.item-qty');
+                    let currentQty = parseInt(qtyInput.val());
+                    let change = parseInt(btn.data('change'));
+                    let newQty = currentQty + change;
+                    
+                    if (newQty < 1) return;
+                    
+                    btn.prop('disabled', true);
+                    qtyInput.val(newQty);
+                    qtyInput.addClass('opacity-50');
+
+                    $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: newQty }, function(res) {
+                        btn.prop('disabled', false);
+                        qtyInput.removeClass('opacity-50');
+                        if (res.success) {
+                            loadGlobalCart();
+                        }
+                    }).fail(function() {
+                        btn.prop('disabled', false);
+                        qtyInput.removeClass('opacity-50').val(currentQty);
+                    });
+                });
+
+                $(document).on('click', '.btn-remove-item', function() {
+                    if(!confirm("Remove this item?")) return;
+                    let btn = $(this);
+                    let itemCard = btn.closest('.cart-item');
+                    let id = itemCard.data('id');
+                    
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                    
+                    $.post('/Retailer/RemoveFromCart', { cartItemId: id }, function(res) {
+                        if (res.success) {
+                            loadGlobalCart();
+                        }
+                    });
+                });
+            });
+        </script>
+    }
+
+    <!-- Floating Chatbot Widget -->
+    <div id="chatbot-widget" class="position-fixed shadow-lg rounded-4 d-flex flex-column" style="bottom: 80px; right: 20px; width: 350px; height: 450px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1050; display: none !important; border: 1px solid rgba(0,0,0,0.1); overflow: hidden; transform: scale(0.9); opacity: 0; transition: all 0.3s ease;">
+        <!-- Header -->
+        <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center rounded-top-4">
+            <div class="d-flex align-items-center">
+                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                    <i class="fas fa-robot text-primary"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">SCM Assistant</h6>
+                    <small class="text-white-50" style="font-size: 0.75rem;">Online</small>
+                </div>
+            </div>
+            <button class="btn btn-sm text-white border-0" id="close-chat"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="flex-grow-1 p-3 overflow-auto" id="chat-body" style="background: #f8fafc;">
+            <!-- Initial Message -->
+            <div class="mb-3 d-flex">
+                <div class="bg-white p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; border-bottom-left-radius: 0 !important;">
+                    ≡ƒæï Hello! I'm your SCM Assistant. How can I help you today?
+                </div>
+            </div>
+
+            <!-- Quick FAQ Options -->
+            <div class="mb-3 d-flex flex-wrap gap-2" id="chat-faq-options">
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I post a tender?" data-answer="To post a tender, navigate to the 'Sourcing' menu on the left and click 'Create Tender'. Fill in your required products and wait for suppliers to bid.">Post a Tender</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I track my order?" data-answer="You can track your order in real-time by going to 'Order Tracking' under the My Purchases menu.">Track Order</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I update inventory?" data-answer="Warehouse Managers can update inventory from the 'Inventory Control' section in the Dashboard.">Update Inventory</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="I have a problem" data-answer="Please use the text box below to describe your issue, and it will be submitted as a support ticket to our admins.">Submit a Ticket</button>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-2 border-top bg-white">
+            <form id="chat-form" class="d-flex gap-2">
+                <input type="text" id="chat-input" class="form-control form-control-sm rounded-pill" placeholder="Type feedback or a question..." required>
+                <button type="submit" class="btn btn-primary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Chat Button -->
+    <button id="chatbot-toggle" class="btn btn-primary position-fixed rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1040; transition: transform 0.2s;">
+        <i class="fas fa-comment-dots fs-3"></i>
+    </button>
+
+    <script>
+        $(document).ready(function () {
+            // Toggle Chatbot
+            $('#chatbot-toggle').click(function () {
+                var widget = $('#chatbot-widget');
+                if (widget.css('display') === 'none') {
+                    widget.css('display', 'flex').hide().fadeIn(200, function() {
+                        $(this).css({ 'transform': 'scale(1)', 'opacity': '1' });
+                    });
+                    $(this).css('transform', 'scale(0.8)');
+                } else {
+                    $('#close-chat').click();
+                }
+            });
+
+            // Close Chatbot
+            $('#close-chat').click(function () {
+                $('#chatbot-widget').css({ 'transform': 'scale(0.9)', 'opacity': '0' });
+                setTimeout(() => {
+                    $('#chatbot-widget').fadeOut(200);
+                }, 200);
+                $('#chatbot-toggle').css('transform', 'scale(1)');
+            });
+
+            // Scroll to bottom helper
+            function scrollToBottom() {
+                var body = $('#chat-body');
+                body.scrollTop(body[0].scrollHeight);
+            }
+
+            // Append Message helper
+            function appendMessage(text, isUser = false) {
+                var align = isUser ? 'justify-content-end' : 'justify-content-start';
+                var bg = isUser ? 'bg-primary text-white' : 'bg-white text-dark';
+                var radius = isUser ? 'border-bottom-right-radius: 0 !important;' : 'border-bottom-left-radius: 0 !important;';
+                
+                var msgHtml = `
+                    <div class="mb-3 d-flex ${align}">
+                        <div class="${bg} p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; ${radius}">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+                $('#chat-body').append(msgHtml);
+                scrollToBottom();
+            }
+
+            // FAQ Button Click
+            $('.btn-faq').click(function () {
+                var q = $(this).data('question');
+                var a = $(this).data('answer');
+                
+                appendMessage(q, true);
+                setTimeout(() => {
+                    appendMessage(a, false);
+                }, 500);
+            });
+
+            // Submit Support Ticket / Feedback
+            $('#chat-form').submit(function (e) {
+                e.preventDefault();
+                var msg = $('#chat-input').val().trim();
+                if (!msg) return;
+
+                appendMessage(msg, true);
+                $('#chat-input').val('');
+
+                // Show typing indicator
+                var typingId = 'typing-' + Date.now();
+                $('#chat-body').append(`
+                    <div id="${typingId}" class="mb-3 d-flex justify-content-start">
+                        <div class="bg-light text-muted p-2 rounded-3 shadow-sm" style="font-size: 0.8rem;">
+                            <i class="fas fa-ellipsis-h fa-fade"></i> Sending ticket...
+                        </div>
+                    </div>
+                `);
+                scrollToBottom();
+
+                // Send to backend SupportController
+                $.post('/Support/SubmitFeedback', { subject: "Chatbot Ticket", message: msg }, function(res) {
+                    $('#' + typingId).remove();
+                    if (res.success) {
+                        appendMessage("<i class='fas fa-check-circle text-success me-1'></i> " + res.message, false);
+                    } else {
+                        appendMessage("<i class='fas fa-exclamation-circle text-danger me-1'></i> " + res.message, false);
+                    }
+                }).fail(function() {
+                    $('#' + typingId).remove();
+                    appendMessage("Sorry, there was an error submitting your ticket.", false);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -113,10 +113,10 @@ namespace SCM_System.Services
             return bid;
         }
 
-        public async Task<bool> AcceptBidAsync(int id, string deliveryAddress)
+        public async Task<PurchaseOrder> AcceptBidAsync(int id, string deliveryAddress)
         {
             var bid = await GetBidByIdAsync(id);
-            if (bid == null) return false;
+            if (bid == null) return null;
 
             // Update Bid Status
             bid.Status = "Accepted";
@@ -141,9 +141,7 @@ namespace SCM_System.Services
             await _context.SaveChangesAsync();
 
             // Generate Purchase Order(s)
-            await _poService.GeneratePurchaseOrderFromBidAsync(id, deliveryAddress);
-
-            return true;
+            return await _poService.GeneratePurchaseOrderFromBidAsync(id, deliveryAddress);
         }
     }
 }

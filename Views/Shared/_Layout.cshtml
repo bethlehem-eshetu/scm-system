@@ -17,7 +17,8 @@
             border-bottom: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             padding: 1rem 2rem;
-            position: sticky;
+            position: fixed;
+            width: 100%;
             top: 0;
             z-index: 1000;
         }
@@ -140,8 +141,8 @@
         }
 
         main {
-            min-height: calc(100vh - 180px);
-            padding: 2rem 0;
+            min-height: 100vh;
+            padding: 0;
         }
 
         .btn-primary {
@@ -182,83 +183,70 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/ethiochain-logo.jpg" alt="EthioChain Logo" style="height: 32px; width: 32px; border-radius: 8px;" />
-                    EthioChain SCM
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+            <div class="container-fluid px-lg-5">
+                <!-- Brand -->
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/ethiochain-logo.jpg" alt="Logo" style="height: 32px; width: 32px; border-radius: 8px;" />
+                    <span class="fw-bold text-primary">EthioChain SCM</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+                <!-- Mobile Toggle -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navRes" aria-controls="navRes" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+
+                <!-- Menu Structure -->
+                <div class="collapse navbar-collapse" id="navRes">
+                    <ul class="navbar-nav ms-auto align-items-center gap-lg-3">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">About</a>
+                            <a class="nav-link" href="#features">Features</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#how-it-works">How It Works</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">About</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
                         </li>
 
-                        @if (Context.Session.GetString("UserRole") == "Admin")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user-shield me-1"></i>Admin
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard">Dashboard</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="PendingUsers">User Verifications</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="AllUsers">Users</a></li>
-                                </ul>
-                            </li>
-                        }
-
-                        @if (Context.Session.GetString("UserRole") == "Supplier")
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Supplier" asp-action="Dashboard">
-                                    <i class="fas fa-building me-1"></i>Supplier Dashboard
-                                </a>
-                            </li>
-                        }
-                        
-                        @if (Context.Session.GetString("UserRole") == "Retailer")
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Retailer" asp-action="Dashboard">
-                                    <i class="fas fa-store me-1"></i>Retailer Dashboard
-                                </a>
-                            </li>
-                        }
-
-                        @if (Context.Session.GetString("UserRole") == "Warehouse")
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Warehouse" asp-action="Dashboard">
-                                    <i class="fas fa-boxes me-1"></i>Warehouse Dashboard
-                                </a>
-                            </li>
-                        }
-
-                        @if (Context.Session.GetString("UserRole") == "Delivery")
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Delivery" asp-action="Dashboard">
-                                    <i class="fas fa-truck-loading me-1"></i>Delivery Dashboard
-                                </a>
-                            </li>
-                        }
-
                         @if (Context.Session.GetString("UserRole") != null)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Logout">
-                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-primary fw-bold" href="#" id="dashboardDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-th-large me-1"></i> Dashboard
                                 </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                    @if (Context.Session.GetString("UserRole") == "Admin")
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-chart-line me-2"></i>Admin Dashboard</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-check me-2"></i>User Verifications</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users me-2"></i>Manage Users</a></li>
+                                    }
+                                    else if (Context.Session.GetString("UserRole") == "Supplier")
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-warehouse me-2"></i>Supplier Dashboard</a></li>
+                                    }
+                                    else if (Context.Session.GetString("UserRole") == "Retailer")
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Retailer" asp-action="Dashboard"><i class="fas fa-store me-2"></i>Retailer Dashboard</a></li>
+                                    }
+                                    else if (Context.Session.GetString("UserRole") == "Warehouse")
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-boxes me-2"></i>Warehouse Dashboard</a></li>
+                                    }
+                                    else if (Context.Session.GetString("UserRole") == "Delivery")
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-truck me-2"></i>Delivery Dashboard</a></li>
+                                    }
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                                </ul>
                             </li>
                         }
                         else
@@ -267,7 +255,7 @@
                                 <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="btn btn-primary px-4 rounded-pill" asp-controller="Account" asp-action="Register">Register Now</a>
                             </li>
                         }
                     </ul>
@@ -279,7 +267,7 @@
     <main>
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="container mt-3">
+            <div class="container" style="padding-top: 100px;">
                 <div class="alert alert-success alert-dismissible fade show">
                     <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -289,7 +277,7 @@
 
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="container mt-3">
+            <div class="container" style="padding-top: 100px;">
                 <div class="alert alert-danger alert-dismissible fade show">
                     <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -307,6 +295,7 @@
                     <a href="/" class="footer-brand">
                         <img src="~/images/ethiochain-logo.jpg" alt="EthioChain Logo" style="height: 36px; width: 36px; border-radius: 8px;" />
                         EthioChain SCM
+
                     </a>
                     <p class="mt-3 pe-lg-4 text-sm" style="line-height: 1.6;">
                         The definitive digital standard for supply chain operations. Powering next-generation procurement, smart bidding, and transparent logistics across Ethiopia.

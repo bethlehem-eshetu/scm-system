@@ -42,6 +42,9 @@ namespace SCM_System.Models.Entities
         [StringLength(100)]
         public string City { get; set; } = string.Empty;
 
+        [StringLength(100)]
+        public string? Region { get; set; } // Nullable to allow existing rows with NULL values
+
         [Required]
         [StringLength(100)]
         public string Country { get; set; } = "Ethiopia";
@@ -74,6 +77,9 @@ namespace SCM_System.Models.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Balance { get; set; } = 0;
+
         public bool IsDeleted { get; set; } = false;
 
         public string? CompanyDescription { get; set; }
@@ -91,6 +97,11 @@ namespace SCM_System.Models.Entities
 
         // Navigation properties
         public ICollection<Product> Products { get; set; } = new List<Product>();
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        public ICollection<SupplierTransaction> SupplierTransactions { get; set; } = new List<SupplierTransaction>();
         public ICollection<Tender> Tenders { get; set; } = new List<Tender>();
         public ICollection<TenderBid> TenderBids { get; set; } = new List<TenderBid>();
         public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();

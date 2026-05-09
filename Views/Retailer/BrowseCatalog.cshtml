@@ -91,9 +91,9 @@
                         </div>
                         <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
                             <h6 class="fw-bold mb-1 text-truncate" title="@product.ProductName">@product.ProductName</h6>
-                            <div class="d-flex align-items-baseline mb-2">
-                                <span class="h5 fw-bold text-primary mb-0">@product.BasePrice.ToString("C")</span>
-                                <span class="text-muted small ms-2">/ @product.Unit</span>
+                            <div class="d-flex flex-column mb-2">
+                                <span class="h5 fw-bold text-primary mb-0">ETB @product.BasePrice.ToString("N2") <small class="text-muted smaller">Net</small></span>
+                                <span class="text-muted extra-small">Final: ETB @((product.BasePrice * 1.15m).ToString("N2")) <small>(inc. VAT)</small></span>
                             </div>
                             
                             <div class="mb-3">

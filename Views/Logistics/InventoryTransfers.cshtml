@@ -16,21 +16,49 @@
         </a>
     </div>
 
+    <!-- KPI Summary -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-bold">PENDING APPROVAL</div>
+                <div class="h3 fw-bold mb-0">@ViewBag.PendingCount</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-bold">IN TRANSIT</div>
+                <div class="h3 fw-bold mb-0 text-primary">@ViewBag.InTransitCount</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-bold">COMPLETED</div>
+                <div class="h3 fw-bold mb-0 text-success">@ViewBag.CompletedCount</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-muted small fw-bold">UNITS REBALANCED</div>
+                <div class="h3 fw-bold mb-0 text-info">@ViewBag.UnitsRebalanced</div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4">@TempData["ErrorMessage"]</div>
+    }
+
     <!-- Status Tabs -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-2">
             <ul class="nav nav-pills nav-fill gap-2">
                 <li class="nav-item">
                     <a class="nav-link active rounded-pill fw-bold" href="#">All Movements</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link rounded-pill fw-bold text-muted" href="#">Pending Approval</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link rounded-pill fw-bold text-muted" href="#">In Transit</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link rounded-pill fw-bold text-muted" href="#">Completed</a>
                 </li>
             </ul>
         </div>
@@ -71,7 +99,7 @@
                                             <span class="small text-muted"><i class="fas fa-arrow-down me-1"></i> FROM</span>
                                         </div>
                                         <i class="fas fa-long-arrow-alt-right mx-3 text-muted fs-4"></i>
-                                        <div class="text-start">
+                                        <div class="text-start" style="min-width: 100px;">
                                             <span class="badge bg-primary bg-opacity-10 text-primary border d-block mb-1">@item.DestinationWarehouse?.Name</span>
                                             <span class="small text-muted"><i class="fas fa-arrow-up me-1"></i> TO</span>
                                         </div>
@@ -102,6 +130,24 @@
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
                                                 <i class="fas fa-check me-1"></i> Approve
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (item.Status == SCM_System.Models.Enums.TransferStatus.Approved)
+                                    {
+                                        <form asp-action="ShipTransfer" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                                                <i class="fas fa-truck me-1"></i> Ship
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (item.Status == SCM_System.Models.Enums.TransferStatus.InTransit)
+                                    {
+                                        <form asp-action="ReceiveTransfer" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-info rounded-pill px-3 shadow-sm text-white">
+                                                <i class="fas fa-hand-holding me-1"></i> Receive
                                             </button>
                                         </form>
                                     }

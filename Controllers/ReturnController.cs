@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
@@ -101,36 +101,82 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Return/MyReturns (Retailer)
-        public async Task<IActionResult> MyReturns()
+        public async Task<IActionResult> MyReturns(string searchTerm, int page = 1)
         {
             int currentUserId = GetCurrentUserId();
             if (currentUserId == 0)
                 return RedirectToAction("Login", "Account");
 
             var retailer = await _context.Retailers
+                .AsNoTracking()
                 .FirstOrDefaultAsync(r => r.UserId == currentUserId);
 
             if (retailer == null)
                 return RedirectToAction("Login", "Account");
 
-            var returns = await _returnService.GetRetailerReturnsAsync(retailer.Id);
+            var query = _context.ReturnRequests
+                .Include(r => r.Order)
+                .Include(r => r.PurchaseOrder)
+                .Include(r => r.Supplier)
+                .Where(r => r.RetailerId == retailer.Id)
+                .AsNoTracking();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(r => r.ReturnNumber.Contains(searchTerm) || r.Order.OrderNumber.Contains(searchTerm));
+            }
+
+            int pageSize = 10;
+            var returns = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(await query.CountAsync() / (double)pageSize);
+
             return View(returns);
         }
 
         // GET: /Return/SupplierReturns (Supplier)
-        public async Task<IActionResult> SupplierReturns()
+        public async Task<IActionResult> SupplierReturns(string searchTerm, int page = 1)
         {
             int currentUserId = GetCurrentUserId();
             if (currentUserId == 0)
                 return RedirectToAction("Login", "Account");
 
             var supplier = await _context.Suppliers
+                .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.UserId == currentUserId);
 
             if (supplier == null)
                 return RedirectToAction("Login", "Account");
 
-            var returns = await _returnService.GetSupplierReturnsAsync(supplier.Id);
+            var query = _context.ReturnRequests
+                .Include(r => r.Order)
+                .Include(r => r.PurchaseOrder)
+                .Include(r => r.Retailer)
+                .Where(r => r.SupplierId == supplier.Id)
+                .AsNoTracking();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(r => r.ReturnNumber.Contains(searchTerm) || r.Retailer.BusinessName.Contains(searchTerm));
+            }
+
+            int pageSize = 10;
+            var returns = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(await query.CountAsync() / (double)pageSize);
+
             return View(returns);
         }
 

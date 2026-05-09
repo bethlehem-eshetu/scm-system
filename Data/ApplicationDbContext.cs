@@ -76,6 +76,7 @@ namespace SCM_System.Data
         public DbSet<TenderBid> TenderBids { get; set; }
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+        public DbSet<DispatchOverrideLog> DispatchOverrideLogs { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
@@ -89,6 +90,8 @@ namespace SCM_System.Data
 
         // Payment Tables
         public DbSet<Commission> Commissions { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<SupplierTransaction> SupplierTransactions { get; set; }
         public DbSet<Refund> Refunds { get; set; }
         public DbSet<DeadLetterWebhook> DeadLetterWebhooks { get; set; }
 
@@ -538,6 +541,19 @@ namespace SCM_System.Data
                 .HasForeignKey(c => c.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Payment Configuration
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Order)
+                .WithMany()
+                .HasForeignKey(p => p.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Retailer)
+                .WithMany()
+                .HasForeignKey(p => p.RetailerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ========== COMMUNICATION CONFIGURATIONS ==========
 
             // Conversation - Supplier (many-to-one)
@@ -775,13 +791,36 @@ namespace SCM_System.Data
                 .Property(d => d.DeliveryStatus)
                 .HasDefaultValue("Preparing");
 
-            // ========== LOGISTICS 2.0 GLOBAL FILTERS ==========
-            modelBuilder.Entity<Warehouse>().HasQueryFilter(w => !w.IsDeleted);
-            modelBuilder.Entity<Vehicle>().HasQueryFilter(v => !v.IsDeleted);
-            modelBuilder.Entity<SupplierEmployee>().HasQueryFilter(se => !se.IsDeleted);
-            modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
-            modelBuilder.Entity<VehicleDocument>().HasQueryFilter(vd => vd.IsActive);
-            modelBuilder.Entity<EmployeeDocument>().HasQueryFilter(ed => ed.IsActive);
+            // ========== SUPPLIER TRANSACTION CONFIGURATIONS ==========
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasOne(st => st.Supplier)
+                .WithMany(s => s.SupplierTransactions)
+                .HasForeignKey(st => st.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasOne(st => st.Order)
+                .WithMany()
+                .HasForeignKey(st => st.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasIndex(st => st.OrderId)
+                .HasDatabaseName("IX_SupplierTransaction_OrderId");
+
+            // ========== PAYMENT INDEXES ==========
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.TxRef)
+                .IsUnique()
+                .HasDatabaseName("UQ_Payment_TxRef");
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.OrderId)
+                .HasDatabaseName("IX_Payment_OrderId");
+
+            modelBuilder.Entity<Commission>()
+                .HasIndex(c => c.OrderId)
+                .HasDatabaseName("IX_Commission_OrderId");
 
             // ========== LOGISTICS 2.0 RELATIONSHIPS ==========
 
@@ -871,6 +910,23 @@ namespace SCM_System.Data
                 .WithMany()
                 .HasForeignKey(ih => ih.SupplierEmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Financial & Audit Indices
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.TxRef)
+                .IsUnique();
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.OrderId);
+
+            modelBuilder.Entity<Commission>()
+                .HasIndex(c => c.OrderId);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasIndex(st => st.OrderId);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasIndex(st => st.SupplierId);
         }
     }
 }

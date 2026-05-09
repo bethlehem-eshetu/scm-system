@@ -8,6 +8,9 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using System.Net;
+using System.Net.Mail;
 
 namespace SCM_System.Controllers
 {
@@ -15,15 +18,19 @@ namespace SCM_System.Controllers
     public class OtpVerifyModel { public string FAN { get; set; } public string OTP { get; set; } }
 
     public class AccountController(
-        ApplicationDbContext context, 
-        IWebHostEnvironment webHostEnvironment, 
+        ApplicationDbContext context,
+        IWebHostEnvironment webHostEnvironment,
         SCM_System.Services.IFaydaService faydaService,
-        ILogger<AccountController> logger) : Controller
+        SCM_System.Services.IEmailService emailService,
+        ILogger<AccountController> logger,
+        IConfiguration configuration) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
         private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
+        private readonly SCM_System.Services.IEmailService _emailService = emailService;
         private readonly ILogger<AccountController> _logger = logger;
+        private readonly IConfiguration _configuration = configuration;
 
         // POST: /Account/RequestFaydaOtp
         [HttpPost]
@@ -31,9 +38,9 @@ namespace SCM_System.Controllers
         {
             if (string.IsNullOrEmpty(model?.FAN)) return Json(new { success = false, message = "FAN is required." });
             if (string.IsNullOrEmpty(model?.Email)) return Json(new { success = false, message = "Email is required to receive OTP." });
-            
+
             var result = await _faydaService.GenerateOtpAsync(model.FAN, model.Email);
-            
+
             return Json(new { success = result.success, message = result.message });
         }
 
@@ -83,7 +90,7 @@ namespace SCM_System.Controllers
                         ModelState.AddModelError("CompanyName", "Company name is required");
 
                     // Industry Focus (BusinessType) is now redundant as Categories define the scope
-                    
+
                     if (string.IsNullOrEmpty(model.LicenseNumber))
                         ModelState.AddModelError("LicenseNumber", "License number is required");
 
@@ -100,13 +107,13 @@ namespace SCM_System.Controllers
 
                         string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
                         string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
-                        
+
                         string logMsg = $"[FILE VALIDATION] FileName: '{model.LicenseFile.FileName}' -> Extension: '{fileExtension}'\n";
-                        try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", logMsg); } catch {}
+                        try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", logMsg); } catch { }
 
                         if (!allowedExtensions.Contains(fileExtension))
                         {
-                            try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", $"[FILE VALIDATION] Rejected! '{fileExtension}' not in allowed list.\n"); } catch {}
+                            try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", $"[FILE VALIDATION] Rejected! '{fileExtension}' not in allowed list.\n"); } catch { }
                             ModelState.AddModelError("LicenseFile", $"Only PDF, JPG, JPEG, and PNG files are allowed (Detected: {fileExtension})");
                         }
                     }
@@ -291,7 +298,7 @@ namespace SCM_System.Controllers
                         {
                             webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                         }
-                        
+
                         // Ensure upload directory exists
                         string uploadPath = Path.Combine(webRootPath, "uploads", "licenses");
                         if (!Directory.Exists(uploadPath))
@@ -365,7 +372,7 @@ namespace SCM_System.Controllers
                                 Type = "Info",
                                 CreatedAt = DateTime.Now,
                                 IsRead = false,
-                                ActionUrl = "/Admin/PendingSuppliers"  // ✅ FIXED: Added ActionUrl
+                                ActionUrl = "/Admin/PendingSuppliers"
                             };
                             _context.Notifications.Add(notification);
                             Console.WriteLine("Admin notification added");
@@ -563,6 +570,9 @@ namespace SCM_System.Controllers
                         }
                     }
 
+                    // Reset login attempts on successful login
+                    user.LoginAttempts = 0;
+
                     // Update last login
                     user.LastLoginAt = DateTime.Now;
                     await _context.SaveChangesAsync();
@@ -626,17 +636,14 @@ namespace SCM_System.Controllers
 
                     var authProperties = new AuthenticationProperties
                     {
-                        IsPersistent = true,
+                        IsPersistent = model.RememberMe,
                         ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
                     };
 
                     await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme, 
-                        new ClaimsPrincipal(claimsIdentity), 
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity),
                         authProperties);
-
-                    // Set success message
-                    TempData["SuccessMessage"] = $"👋 Welcome back, {user.FullName}!";
 
                     // Redirect based on role
                     if (user.Role == "Admin")
@@ -653,11 +660,11 @@ namespace SCM_System.Controllers
                     }
                     else if (user.Role == "Warehouse" || user.Role == "WarehouseManager")
                     {
-                        return RedirectToAction("Index", "Warehouse");
+                        return RedirectToAction("Dashboard", "Warehouse");
                     }
                     else if (user.Role == "DeliveryAgent")
                     {
-                        return RedirectToAction("MyDeliveries", "Delivery");
+                        return RedirectToAction("Dashboard", "Delivery");
                     }
 
                     return RedirectToAction("Index", "Home");
@@ -715,12 +722,131 @@ namespace SCM_System.Controllers
             return Json(new { success = false });
         }
 
+        // ==================== FORGOT PASSWORD METHODS ====================
+
+        // POST: /Account/ForgotPassword
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request?.Email))
+                {
+                    return Json(new { success = false, message = "Please provide a valid email address." });
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+                // For security, don't reveal if email exists or not
+                if (user == null)
+                {
+                    // Log that someone tried to reset a non-existent email
+                    _logger.LogWarning($"Password reset requested for non-existent email: {request.Email}");
+                    return Json(new { success = true, message = "If an account exists with that email, we've sent a password reset link." });
+                }
+
+                // Generate password reset token
+                string token = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+                token = token.Replace('+', '-').Replace('/', '_').TrimEnd('=');
+
+                // Store token with expiration (1 hour from now)
+                user.PasswordResetToken = token;
+                user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+                await _context.SaveChangesAsync();
+
+                // Create reset link
+                string resetLink = Url.Action("ResetPassword", "Account", new { email = user.Email, token = token }, Request.Scheme);
+
+                // Send email via service
+                try 
+                {
+                    await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, resetLink);
+                    _logger.LogInformation($"Password reset email sent to: {user.Email}");
+                    return Json(new { success = true, message = "If an account exists with that email, we've sent a password reset link." });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Failed to send password reset email to: {user.Email}");
+                    return Json(new { success = false, message = "Unable to send reset email. Please try again later or contact support." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ForgotPassword error for email: {Email}", request?.Email);
+                return Json(new { success = false, message = "An error occurred. Please try again later." });
+            }
+        }
+
+        // GET: /Account/ResetPassword
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                TempData["ErrorMessage"] = "Invalid password reset link. Please request a new one.";
+                return RedirectToAction("Login");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null ||
+                user.PasswordResetToken != token ||
+                user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                TempData["ErrorMessage"] = "This password reset link is invalid or has expired. Please request a new one.";
+                return RedirectToAction("Login");
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        // POST: /Account/ResetPassword
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+
+            if (user == null ||
+                user.PasswordResetToken != model.Token ||
+                user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                ModelState.AddModelError("", "This password reset link is invalid or has expired. Please request a new one.");
+                return View(model);
+            }
+
+            // Hash and update password
+            user.PasswordHash = HashPassword(model.NewPassword);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+            user.LoginAttempts = 0; // Reset login attempts on password change
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Your password has been reset successfully. Please login with your new password.";
+            return RedirectToAction("Login");
+        }
+
         // GET: /Account/AccessDenied
         public IActionResult AccessDenied()
-
         {
             return View();
         }
+
+        // ==================== PRIVATE HELPER METHODS ====================
 
         private string HashPassword(string password)
         {
@@ -735,5 +861,12 @@ namespace SCM_System.Controllers
                 return builder.ToString();
             }
         }
+
+    }
+
+    // ViewModel for Forgot Password request
+    public class ForgotPasswordRequest
+    {
+        public string Email { get; set; }
     }
 }

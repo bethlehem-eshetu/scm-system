@@ -33,6 +33,7 @@ namespace SCM_System.Models.ViewModels
         public string? DeliveryCapacity { get; set; }
         
         [Required]
+        [Range(1, 365)]
         [Display(Name = "Validity Period (Days)")]
         public int ValidityPeriodDays { get; set; }
         
