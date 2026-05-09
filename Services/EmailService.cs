@@ -26,12 +26,12 @@ namespace SCM_System.Services
             _context = context;
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        public async Task SendEmailAsync(string toEmail, string subject, string body, string? replyTo = null)
         {
-            await SendEmailInternalAsync(toEmail, subject, body, "General", null);
+            await SendEmailInternalAsync(toEmail, subject, body, "General", null, replyTo);
         }
 
-        private async Task SendEmailInternalAsync(string toEmail, string subject, string body, string type, string? referenceId)
+        private async Task SendEmailInternalAsync(string toEmail, string subject, string body, string type, string? referenceId, string? replyTo = null)
         {
             Console.WriteLine($"[EMAIL] Attempting to send '{type}' email to: {toEmail}");
             Console.WriteLine($"[EMAIL] Subject: {subject}");
@@ -56,17 +56,21 @@ namespace SCM_System.Services
                     using var client = new SmtpClient(_emailSettings.Host, _emailSettings.Port)
                     {
                         EnableSsl = _emailSettings.EnableSsl,
-                        Credentials = new NetworkCredential(_emailSettings.Email, _emailSettings.Password)
+                        Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password)
                     };
 
                     var mailMessage = new MailMessage
                     {
-                        From = new MailAddress(_emailSettings.Email, _emailSettings.SenderName),
+                        From = new MailAddress(_emailSettings.FromEmail, _emailSettings.SenderName),
                         Subject = subject,
                         Body = body,
                         IsBodyHtml = true
                     };
                     mailMessage.To.Add(toEmail);
+                    if (!string.IsNullOrEmpty(replyTo))
+                    {
+                        mailMessage.ReplyToList.Add(new MailAddress(replyTo));
+                    }
 
                     await client.SendMailAsync(mailMessage);
                     success = true;
@@ -168,17 +172,31 @@ namespace SCM_System.Services
             await SendEmailInternalAsync(toEmail, subject, body, "Welcome", role);
         }
 
-        public async Task SendPasswordResetEmailAsync(string toEmail, string userName, string token)
+        public async Task SendPasswordResetEmailAsync(string toEmail, string userName, string resetLink)
         {
             var subject = "Reset Your Password - EthioChain SCM";
             var body = $@"
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
-                <h2>Password Reset Request</h2>
-                <p>Hello {userName},</p>
-                <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
-                <p>To reset your password, click the link below:</p>
-                <p><a href='https://ethiochain-scm.com/Account/ResetPassword?token={token}'>Reset Password</a></p>
-                <p>Best regards,<br/>EthioChain Team</p>
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <div style='background: linear-gradient(135deg, #0b3d60, #07253b); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;'>
+                    <h1 style='color: #cba052; margin: 0;'>EthioChain SCM</h1>
+                </div>
+                <div style='padding: 30px; background: #f8f9fc; border-radius: 0 0 10px 10px;'>
+                    <h2>Hello {userName},</h2>
+                    <p>We received a request to reset the password for your EthioChain SCM account.</p>
+                    <p>Click the button below to create a new password:</p>
+                    <div style='text-align: center;'>
+                        <a href='{resetLink}' style='display: inline-block; padding: 12px 30px; background: #0b3d60; color: white; text-decoration: none; border-radius: 50px; margin: 20px 0;'>Reset Password</a>
+                    </div>
+                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                    <p style='word-break: break-all; color: #666;'><small>{resetLink}</small></p>
+                    <p style='color: #dc3545; font-size: 12px;'><strong>⚠️ This link will expire in 1 hour.</strong></p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                    <hr>
+                    <p style='font-size: 11px; color: #888;'>For security reasons, never share this link with anyone.</p>
+                </div>
+                <div style='text-align: center; padding: 20px; font-size: 12px; color: #666;'>
+                    &copy; {DateTime.Now.Year} EthioChain SCM. All rights reserved.
+                </div>
             </div>";
             await SendEmailInternalAsync(toEmail, subject, body, "PasswordReset", null);
         }
@@ -202,6 +220,48 @@ namespace SCM_System.Services
             </div>";
 
             await SendEmailInternalAsync(toEmail, subject, body, "OTP", "FaydaOTP");
+        }
+
+        public async Task SendPaymentConfirmationEmailAsync(string toEmail, string userName, string orderNumber, decimal amount)
+        {
+            var subject = $"Payment Confirmed for Order {orderNumber}";
+            var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #28a745; text-align: center;'>Payment Successful!</h2>
+                <p>Hello {userName},</p>
+                <p>Your payment of <strong>{amount:C}</strong> for Order <strong>#{orderNumber}</strong> has been successfully processed.</p>
+                <p>The supplier has been notified and will proceed with fulfillment.</p>
+                <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>Regards,<br/>The EthioChain Team</p>
+            </div>";
+            await SendEmailInternalAsync(toEmail, subject, body, "PaymentConfirmation", orderNumber);
+        }
+
+        public async Task SendRefundInitiatedEmailAsync(string toEmail, string userName, string orderNumber, decimal amount)
+        {
+            var subject = $"Refund Initiated for Order {orderNumber}";
+            var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #17a2b8; text-align: center;'>Refund Initiated</h2>
+                <p>Hello {userName},</p>
+                <p>A refund of <strong>{amount:C}</strong> for Order <strong>#{orderNumber}</strong> has been initiated and is being processed via Chapa.</p>
+                <p>It may take a few business days to reflect in your account.</p>
+                <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>Regards,<br/>The EthioChain Team</p>
+            </div>";
+            await SendEmailInternalAsync(toEmail, subject, body, "RefundInitiated", orderNumber);
+        }
+
+        public async Task SendPaymentExpiryEmailAsync(string toEmail, string userName, string orderNumber)
+        {
+            var subject = $"Action Required: Payment Expired for Order {orderNumber}";
+            var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #dc3545; text-align: center;'>Payment Timeout</h2>
+                <p>Hello {userName},</p>
+                <p>The pending payment for Order <strong>#{orderNumber}</strong> has expired and the order has been cancelled.</p>
+                <p>If you still wish to proceed, please place a new order.</p>
+                <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>Regards,<br/>The EthioChain Team</p>
+            </div>";
+            await SendEmailInternalAsync(toEmail, subject, body, "PaymentExpiry", orderNumber);
         }
     }
 }

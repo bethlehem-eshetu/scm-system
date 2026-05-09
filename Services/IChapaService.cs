@@ -1,4 +1,4 @@
-﻿using SCM_System.Models.ViewModels;
+using SCM_System.Models.ViewModels;
 
 namespace SCM_System.Services
 {
@@ -7,6 +7,14 @@ namespace SCM_System.Services
         Task<ChapaInitializeResponse> InitializePaymentAsync(ChapaPaymentRequest request);
         Task<ChapaVerifyResponse> VerifyPaymentAsync(string transactionId);
         Task<bool> WebhookHandlerAsync(string transactionId, string status);
+        Task<ChapaRefundResponse> InitiateRefundAsync(string transactionId, decimal amount);
+    }
+
+    public class ChapaRefundResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
     }
 
     public class ChapaPaymentRequest

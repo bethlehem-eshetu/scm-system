@@ -2,25 +2,30 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Models.Constants;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
-    public class PurchaseOrderService : IPurchaseOrderService
+    public class PurchaseOrderService(
+        ApplicationDbContext context, 
+        INotificationService notificationService, 
+        IInventoryService inventoryService,
+        ICommissionService commissionService,
+        ILogger<PurchaseOrderService> logger) : IPurchaseOrderService
     {
-        private readonly ApplicationDbContext _context;
-        private readonly INotificationService _notificationService;
-
-        public PurchaseOrderService(ApplicationDbContext context, INotificationService notificationService)
-        {
-            _context = context;
-            _notificationService = notificationService;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly INotificationService _notificationService = notificationService;
+        private readonly IInventoryService _inventoryService = inventoryService;
+        private readonly ICommissionService _commissionService = commissionService;
+        private readonly ILogger _logger = logger;
 
         public async Task<IEnumerable<PurchaseOrder>> GetPurchaseOrdersByRetailerAsync(int retailerId)
         {
             return await _context.PurchaseOrders
                 .Include(po => po.Supplier)
+                .Include(po => po.Warehouse)
                 .Where(po => po.RetailerId == retailerId)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -28,7 +33,9 @@ namespace SCM_System.Services
         {
             return await _context.PurchaseOrders
                 .Include(po => po.Retailer)
+                .Include(po => po.Warehouse)
                 .Where(po => po.SupplierId == supplierId)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -36,7 +43,10 @@ namespace SCM_System.Services
         {
             return await _context.PurchaseOrders
                 .Include(po => po.Retailer)
+                .Include(po => po.Supplier)
+                .Include(po => po.Warehouse)
                 .Where(po => po.WarehouseId == warehouseId)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -45,11 +55,32 @@ namespace SCM_System.Services
             return await _context.PurchaseOrders
                 .Include(po => po.Retailer)
                 .Include(po => po.Supplier)
+                .Include(po => po.Warehouse)
                 .Include(po => po.PurchaseOrderItems)
                     .ThenInclude(i => i.Product)
                 .Include(po => po.TenderBid)
                     .ThenInclude(tb => tb.Tender)
+                .Include(po => po.Order)
+                    .ThenInclude(o => o.StatusHistory)
+                        .ThenInclude(h => h.ChangedByUser)
                 .FirstOrDefaultAsync(po => po.Id == id);
+        }
+
+        public async Task<PurchaseOrder> GetPurchaseOrderByNumberAsync(string poNumber)
+        {
+            return await _context.PurchaseOrders
+                .Include(po => po.Retailer)
+                .Include(po => po.Supplier)
+                .Include(po => po.Warehouse)
+                .Include(po => po.PurchaseOrderItems)
+                    .ThenInclude(i => i.Product)
+                .Include(po => po.TenderBid)
+                    .ThenInclude(tb => tb.Tender)
+                .Include(po => po.Order)
+                    .ThenInclude(o => o.StatusHistory)
+                        .ThenInclude(h => h.ChangedByUser)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(po => po.PONumber == poNumber);
         }
 
         public async Task<PurchaseOrder> GeneratePurchaseOrderFromBidAsync(int tenderBidId, string deliveryAddress)
@@ -57,106 +88,66 @@ namespace SCM_System.Services
             var bid = await _context.TenderBids
                 .Include(b => b.Tender)
                     .ThenInclude(t => t.TenderItems)
+                        .ThenInclude(ti => ti.Product)
                 .FirstOrDefaultAsync(b => b.Id == tenderBidId);
 
-            if (bid == null || bid.Status != "Accepted") return null;
+            if (bid == null || bid.Status != POStatus.Accepted) return null;
 
-            // Automated Warehouse Assignment Logic
-            var allocations = new Dictionary<int, List<PurchaseOrderItem>>(); // WarehouseId -> Items
-            
-            foreach (var tenderItem in bid.Tender.TenderItems)
+            // 1. Create a "Shadow Order" to represent the tender award in the commercial layer
+            var order = new Order
             {
-                int remainingToAllocate = tenderItem.Quantity;
-                
-                // Find warehouses with stock for this ProductId belonging to the Winning Supplier
-                var inventories = await _context.Inventories
-                    .Where(i => i.ProductId == tenderItem.ProductId && i.Warehouse.SupplierId == bid.SupplierId)
-                    .OrderByDescending(i => i.QuantityOnHand - i.QuantityReserved)
-                    .ToListAsync();
-                
-                foreach (var inv in inventories)
-                {
-                    if (remainingToAllocate <= 0) break;
-                    
-                    int available = inv.QuantityOnHand - inv.QuantityReserved;
-                    if (available <= 0) continue;
-                    
-                    int allocate = Math.Min(remainingToAllocate, available);
-                    
-                    if (inv.WarehouseId.HasValue)
-                    {
-                        if (!allocations.ContainsKey(inv.WarehouseId.Value))
-                            allocations[inv.WarehouseId.Value] = new List<PurchaseOrderItem>();
-                            
-                        allocations[inv.WarehouseId.Value].Add(new PurchaseOrderItem {
-                            ProductId = tenderItem.ProductId,
-                            ProductName = tenderItem.ProductName,
-                            Description = tenderItem.Description,
-                            Quantity = allocate,
-                            UnitPrice = bid.UnitPrice
-                        });
-                        
-                        // Reserve Stock
-                        inv.QuantityReserved += allocate;
-                        remainingToAllocate -= allocate;
-                    }
-                }
-                
-                // If not enough stock was found, we still allocate to the first warehouse (will show as shortage for manager)
-                if (remainingToAllocate > 0)
-                {
-                    var firstWh = await _context.Warehouses.FirstOrDefaultAsync(w => w.SupplierId == bid.SupplierId);
-                    if (firstWh != null)
-                    {
-                        if (!allocations.ContainsKey(firstWh.Id))
-                            allocations[firstWh.Id] = new List<PurchaseOrderItem>();
-                            
-                        allocations[firstWh.Id].Add(new PurchaseOrderItem {
-                            ProductId = tenderItem.ProductId,
-                            ProductName = tenderItem.ProductName,
-                            Description = tenderItem.Description,
-                            Quantity = remainingToAllocate,
-                            UnitPrice = bid.UnitPrice
-                        });
-                    }
-                }
-            }
-
-            PurchaseOrder firstPo = null;
-
-            foreach (var kvp in allocations)
-            {
-                var warehouseId = kvp.Key;
-                var items = kvp.Value;
-
-                var po = new PurchaseOrder
-                {
-                    PONumber = "PO-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
-                    RetailerId = bid.Tender.RetailerId,
-                    SupplierId = bid.SupplierId,
-                    WarehouseId = warehouseId,
-                    TenderBidId = bid.Id,
-                    TotalAmount = items.Sum(i => i.Quantity * i.UnitPrice),
-                    Status = POStatus.Issued,
-                    DeliveryAddress = deliveryAddress,
-                    ExpectedDeliveryDate = DateTime.Now.AddDays(bid.DeliveryLeadTimeDays),
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    OrderDate = DateTime.Now,
-                    PurchaseOrderItems = items
-                };
-
-                _context.PurchaseOrders.Add(po);
-                if (firstPo == null) firstPo = po;
-            }
-
+                OrderNumber = "ORD-TEND-" + DateTime.Now.Ticks.ToString().Substring(12),
+                RetailerId = bid.Tender.RetailerId,
+                SupplierId = bid.SupplierId,
+                TotalAmount = bid.ProposedTotalAmount,
+                OrderStatus = POStatus.Issued,
+                PaymentStatus = "Pending",
+                DeliveryAddress = deliveryAddress,
+                CreatedAt = DateTime.Now
+            };
+            _context.Orders.Add(order);
             await _context.SaveChangesAsync();
-            return firstPo;
+
+            var items = bid.Tender.TenderItems.Select(ti => new PurchaseOrderItem {
+                ProductId = ti.ProductId,
+                ProductName = ti.ProductName,
+                Description = ti.Description,
+                Quantity = ti.Quantity,
+                UnitPrice = bid.UnitPrice
+            }).ToList();
+
+            decimal subtotal = items.Sum(i => i.Quantity * i.UnitPrice);
+            decimal vat = subtotal * 0.15m; // Standard VAT
+
+            var po = new PurchaseOrder
+            {
+                PONumber = "PO-TEND-" + DateTime.Now.Ticks.ToString().Substring(12),
+                RetailerId = bid.Tender.RetailerId,
+                SupplierId = bid.SupplierId,
+                WarehouseId = null, // 🔥 KEEP UNASSIGNED
+                TenderBidId = bid.Id,
+                OrderId = order.Id,
+                Subtotal = subtotal,
+                VAT = vat,
+                TotalAmount = subtotal + vat,
+                Status = POStatus.Issued,
+                DeliveryAddress = deliveryAddress,
+                ExpectedDeliveryDate = DateTime.Now.AddDays(bid.DeliveryLeadTimeDays),
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                OrderDate = DateTime.Now,
+                PurchaseOrderItems = items
+            };
+
+            _context.PurchaseOrders.Add(po);
+            await _context.SaveChangesAsync();
+
+            return po;
         }
 
         public async Task<PurchaseOrder> CreateDirectPurchaseOrderAsync(PurchaseOrder po, List<PurchaseOrderItem> items)
         {
-            po.PONumber = "PO-" + DateTime.Now.Ticks.ToString().Substring(8);
+            po.PONumber = "PO-" + DateTime.Now.Ticks.ToString().Substring(12);
             po.CreatedAt = DateTime.Now;
             po.UpdatedAt = DateTime.Now;
             po.OrderDate = DateTime.Now;
@@ -177,16 +168,71 @@ namespace SCM_System.Services
 
         public async Task<PurchaseOrder> UpdatePurchaseOrderStatusAsync(int id, string status, int userId)
         {
-            var po = await _context.PurchaseOrders
-                .Include(p => p.Order)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (po != null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
+                var po = await _context.PurchaseOrders
+                    .Include(p => p.Order)
+                    .Include(p => p.PurchaseOrderItems)
+                    .Include(p => p.Retailer)
+                    .Include(p => p.Warehouse)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (po == null) return null;
+
                 var oldStatus = po.Status;
+                
+                // 🛑 IMPOSSIBLE STATUS GUARDRAILS
+                if (status == POStatus.Accepted && (!po.WarehouseId.HasValue || po.WarehouseId == 0))
+                    throw new InvalidOperationException("Selection of a warehouse is required to accept this Purchase Order.");
+
+                if (status == POStatus.Picking && oldStatus != POStatus.Accepted)
+                    throw new InvalidOperationException("PO must be 'Accepted' before picking can begin.");
+
+                if (status == POStatus.Picked && oldStatus != POStatus.Picking && oldStatus != POStatus.Accepted)
+                    throw new InvalidOperationException("PO must be in 'Picking' or 'Accepted' status before being marked as 'Picked'.");
+
+                if (status == POStatus.Packing && oldStatus != POStatus.Picked)
+                    throw new InvalidOperationException("PO must be 'Picked' before packing can begin.");
+
+                if (status == POStatus.Packed && oldStatus != POStatus.Packing && oldStatus != POStatus.Picked)
+                    throw new InvalidOperationException("PO must be in 'Packing' or 'Picked' status before being marked as 'Packed'.");
+
+                if (status == POStatus.Ready && oldStatus != POStatus.Packed)
+                    throw new InvalidOperationException("PO must be 'Packed' before being 'Ready Dispatch'.");
+
+                if (status == POStatus.InTransit)
+                {
+                    if (oldStatus != POStatus.Ready && oldStatus != POStatus.Packed)
+                        throw new InvalidOperationException("PO must be 'Ready Dispatch' or 'Packed' before it can move to 'In Transit'.");
+                    if (!po.DeliveryAgentId.HasValue || !po.VehicleId.HasValue)
+                        throw new InvalidOperationException("A Delivery Agent and Vehicle must be assigned before shipping.");
+                }
+
+                if (status == POStatus.Delivered && oldStatus != POStatus.InTransit)
+                    throw new InvalidOperationException("PO must be 'In Transit' before it can be marked as 'Delivered'.");
+
+                if (status == POStatus.Failed && oldStatus != POStatus.InTransit)
+                    throw new InvalidOperationException("PO must be 'In Transit' before it can be marked as 'Failed Delivery'.");
+
+                // 1. If transitioning OUT OF 'Issued' or into 'Accepted', trigger atomic reservation
+                var reservedStatuses = new[] { POStatus.Accepted, POStatus.Picking, POStatus.Picked, POStatus.Packing, POStatus.Packed, POStatus.Ready, POStatus.InTransit, POStatus.Failed };
+                if (oldStatus == POStatus.Issued && reservedStatuses.Contains(status))
+                {
+                    var success = await _inventoryService.BulkReserveStockForPOAsync(id, po.SupplierId, po.WarehouseId);
+                    if (!success) throw new InvalidOperationException("Failed to reserve stock. Items may be out of stock or warehouse at capacity.");
+                }
+
+                // 🔥 Auto-Complete Guard
+                if (status == POStatus.Delivered && po.Order != null && po.Order.PaymentStatus == PaymentStatus.Paid.ToString())
+                {
+                    status = POStatus.Completed;
+                }
+
                 po.Status = status;
                 po.UpdatedAt = DateTime.Now;
 
+                if (status == POStatus.Picking) po.PickedAt = null; // Reset if re-picking? Usually just set dates
                 if (status == POStatus.Picked) po.PickedAt = DateTime.Now;
                 if (status == POStatus.Packed) po.PackedAt = DateTime.Now;
                 if (status == POStatus.Delivered) po.DeliveredAt = DateTime.Now;
@@ -199,53 +245,64 @@ namespace SCM_System.Services
                     
                     if (manager != null && manager.AutoAcceptPickTasks)
                     {
-                        po.Status = POStatus.Processing;
+                        po.Status = POStatus.Picking; // Changed from Processing to Picking
                         po.UpdatedAt = DateTime.Now;
                     }
                 }
 
-                // Sync with parent Order if it exists
+                // Sync with parent Order
                 if (po.Order != null)
                 {
-                    // Add to History
                     var history = new OrderStatusHistory
                     {
                         OrderId = po.OrderId,
                         Status = status,
-                        Comments = $"Warehouse Status Update: {po.PONumber} moved from {oldStatus} to {status}.",
+                        Comments = $"ERP Workflow: {po.PONumber} moved from {oldStatus} to {status}.",
                         ChangedByUserId = userId,
                         ChangedAt = DateTime.Now
                     };
-
                     _context.OrderStatusHistories.Add(history);
 
-                    // If all POs are Delivered, mark Order as Delivered (if applicable)
-                    // If all POs are Delivered, mark Order as Delivered (if applicable)
-                    if (status == POStatus.Delivered)
+                    if (status == POStatus.Delivered || status == POStatus.Completed)
                     {
                         var allOtherPos = await _context.PurchaseOrders
                             .Where(p => p.OrderId == po.OrderId && p.Id != po.Id)
-                            .AllAsync(p => p.Status == POStatus.Delivered);
+                            .AsNoTracking()
+                            .AllAsync(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
 
-                        if (allOtherPos)
-                        {
-                            po.Order.OrderStatus = POStatus.Delivered;
+                        if (allOtherPos) {
+                            po.Order.OrderStatus = status;
+                            // Trigger Payment Initiation ONLY when ALL POs are delivered
+                            await _commissionService.InitiateOrderPaymentAsync(po.OrderId);
                         }
-                        else
-                        {
-                            po.Order.OrderStatus = "Partially Delivered";
-                        }
+                        else po.Order.OrderStatus = "Partially Delivered";
                     }
-                    else if (status == POStatus.Picked || status == POStatus.Packed || status == POStatus.Ready || status == POStatus.InTransit)
+                    else if (status == POStatus.Picking || status == POStatus.Picked || status == POStatus.Packing || status == POStatus.Packed || status == POStatus.Ready || status == POStatus.InTransit)
                     {
-                        if (po.Order.OrderStatus == POStatus.Accepted) 
-                        {
-                             po.Order.OrderStatus = POStatus.Processing; 
-                        }
+                        if (po.Order.OrderStatus == POStatus.Accepted || po.Order.OrderStatus == "Paid") 
+                            po.Order.OrderStatus = "Processing"; // Keep Order status broader
                     }
                 }
 
-                // Notify Retailer on specific milestones
+                // 2. Handle Stock Deduction Fallback
+                var shippedStatuses = new[] { POStatus.Picked, POStatus.Packing, POStatus.Packed, POStatus.Ready, POStatus.InTransit, POStatus.Delivered, POStatus.Completed };
+                if (shippedStatuses.Contains(status))
+                {
+                    await _inventoryService.DeductStockOnPickAsync(id);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // 2. Reload full entity to avoid detached/stale navigation properties during Notification processing
+                po = await _context.PurchaseOrders
+                    .Include(p => p.Retailer)
+                    .Include(p => p.Warehouse)
+                    .Include(p => p.Order)
+                    .Include(p => p.PurchaseOrderItems)
+                        .ThenInclude(i => i.Product)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                // 3. Post-transaction notifications
                 if (po.Retailer?.UserId != null)
                 {
                     string title = "";
@@ -277,11 +334,10 @@ namespace SCM_System.Services
                             title,
                             msg,
                             type,
-                            $"/Retailer/OrderTrackingDetails/{po.OrderId}"
+                            $"/Order/Details/{po.OrderId}"
                         );
                     }
                 }
-
                 // Handle Inventory Deduction on Delivery
                 if (status == POStatus.Delivered && oldStatus != POStatus.Delivered)
                 {
@@ -297,10 +353,15 @@ namespace SCM_System.Services
 
                         if (itemInv.QuantityReserved < item.Quantity)
                         {
-                            throw new InvalidOperationException($"Insufficient reserved stock for Product ID {item.ProductId}. Reserved: {itemInv.QuantityReserved}, Required: {item.Quantity}");
+                            // Safety guard: if reservation was already cleaned up but Hand is still there, adjust Hand only
+                            // But usually we expect reserved stock to be there if we follow the reservation flow.
+                            _logger.LogWarning("Insufficient reserved stock for Product ID {ProductId} during delivery. Adjusting Hand only.", item.ProductId);
+                        }
+                        else 
+                        {
+                            itemInv.QuantityReserved -= item.Quantity;
                         }
 
-                        itemInv.QuantityReserved -= item.Quantity;
                         itemInv.QuantityOnHand -= item.Quantity;
                         
                         if (itemInv.QuantityOnHand < 0) itemInv.QuantityOnHand = 0; // Safety
@@ -328,8 +389,18 @@ namespace SCM_System.Services
                 }
 
                 await _context.SaveChangesAsync();
+
+
+                await transaction.CommitAsync();
+
+                return po;
             }
-            return po;
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Failed to update Purchase Order {Id} to status {Status}", id, status);
+                throw; 
+            }
         }
     }
 }

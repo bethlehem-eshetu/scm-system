@@ -160,24 +160,28 @@ namespace SCM_System.Controllers
             };
 
             var lastWarehouse = await _context.Warehouses
-                .Where(w => w.SupplierId == supplierId && w.HubType == hubType)
+                .Where(w => w.WarehouseCode.StartsWith(prefix + "-"))
                 .OrderByDescending(w => w.WarehouseCode)
                 .FirstOrDefaultAsync();
             
-            if (lastWarehouse == null || string.IsNullOrWhiteSpace(lastWarehouse.WarehouseCode))
-                return $"{prefix}-001";
-            
-            try 
+            int lastNumber = 0;
+            if (lastWarehouse != null && !string.IsNullOrWhiteSpace(lastWarehouse.WarehouseCode))
             {
                 var parts = lastWarehouse.WarehouseCode.Split('-');
-                if (parts.Length == 2 && int.TryParse(parts[1], out int lastNumber))
+                if (parts.Length == 2)
                 {
-                    return $"{prefix}-{(lastNumber + 1):D3}";
+                    int.TryParse(parts[1], out lastNumber);
                 }
             }
-            catch {}
             
-            return $"{prefix}-001";
+            string newCode;
+            do
+            {
+                lastNumber++;
+                newCode = $"{prefix}-{lastNumber:D3}";
+            } while (await _context.Warehouses.AnyAsync(w => w.WarehouseCode == newCode));
+            
+            return newCode;
         }
 
         // GET: /Supplier/EditWarehouse/5

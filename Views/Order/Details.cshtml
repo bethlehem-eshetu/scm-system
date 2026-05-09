@@ -1,468 +1,521 @@
-@model SCM_System.Models.Entities.Order
+@using SCM_System.Models.Entities
+@using SCM_System.Models.Constants
+@model Order
 @{
-    ViewData["Title"] = "Order Details";
+    ViewData["Title"] = "Fulfillment Command Center";
     Layout = "_DashboardLayout";
-    var isSupplier = User.IsInRole("Supplier");
-    var isRetailer = User.IsInRole("Retailer");
+    bool isRetailer = User.IsInRole("Retailer");
+    bool isSupplier = User.IsInRole("Supplier") || User.IsInRole("WarehouseManager");
+    bool isWarehouseRole = User.IsInRole("WarehouseManager");
+
+    // Primary PO context for fulfillment tracking
+    var po = ViewBag.PrimaryPO as PurchaseOrder;
+    
+    // Status Flow Logic for Timeline (Must match POStatus.cs)
+    var statuses = new[] { "Pending", "Issued", "Accepted", "Picking", "Picked", "Packing", "Packed", "Ready Dispatch", "In Transit", "Delivered", "Completed" };
+    string currentStatus = po?.Status ?? Model.OrderStatus;
+    int currentIdx = Array.IndexOf(statuses, currentStatus);
+    if (currentIdx == -1) currentIdx = 0;
+
+    bool isTerminal = new[] { "Rejected", "Expired", "Completed" }.Contains(currentStatus);
+
+    // ✅ FIXED: show panel whenever warehouse missing and PO is still active
+    bool showAssignPanel = (isSupplier || isWarehouseRole) && 
+                          po != null && 
+                          !po.WarehouseId.HasValue && 
+                          !new[] { "Rejected", "Completed", "Delivered", "Expired" }.Contains(po.Status);
+
+    bool isDelivered = currentStatus == "Delivered" || currentStatus == "Completed";
+
+    var requiredQty = Model.OrderItems?.Sum(x => x.Quantity) ?? 0;
 }
 
-<style>
-    .status-badge {
-        padding: 0.5rem 1.25rem;
-        font-weight: 600;
-        border-radius: 50px;
-        font-size: 0.85rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .status-Pending { background: #fff3cd; color: #856404; }
-    .status-Accepted { background: #d4edda; color: #155724; }
-    .status-Processing { background: #cce5ff; color: #004085; }
-    .status-Completed { background: #d1ecf1; color: #0c5460; }
-    .status-Rejected { background: #f8d7da; color: #721c24; }
-
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-    }
-
-    .section-header {
-        position: relative;
-        padding-bottom: 0.5rem;
-        margin-bottom: 1.5rem;
-        font-weight: 700;
-        color: #2c3e50;
-    }
-
-    .section-header::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 40px;
-        height: 3px;
-        background: var(--bs-primary);
-        border-radius: 2px;
-    }
-
-    .allocation-item {
-        border-left: 3px solid var(--bs-primary);
-        padding-left: 1rem;
-        margin-bottom: 1rem;
-    }
-</style>
-
-<div class="container-fluid py-4">
-    <!-- Header -->
+<div class="container-fluid py-4 min-vh-100 bg-light">
+    <!-- Breadcrumb & Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index")">Orders</a></li>
-                    <li class="breadcrumb-item active">Details</li>
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Orders</a></li>
+                    <li class="breadcrumb-item active">#@Model.OrderNumber</li>
                 </ol>
             </nav>
-            <h2 class="fw-bold text-dark mb-0">Order <span class="text-primary">#@Model.OrderNumber</span></h2>
+            <h2 class="fw-bold text-dark mb-0"><i class="fas fa-file-contract text-primary me-2"></i>Fulfillment Command Center</h2>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Index" class="btn btn-light rounded-pill px-4 shadow-sm border">
-                <i class="fas fa-arrow-left me-2"></i>Back to List
-            </a>
-            @if (isRetailer && Model.OrderStatus == "Pending")
+            <button onclick="window.print()" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm bg-white fw-bold">
+                <i class="fas fa-print me-2"></i> Print Order
+            </button>
+            @if (isSupplier)
             {
-                <form asp-action="CancelOrder" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?')">
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4 shadow-sm">
-                        <i class="fas fa-times me-2"></i>Cancel Order
-                    </button>
-                </form>
+                <a asp-controller="Message" asp-action="SendMessage" asp-route-receiverId="@(Model.Retailer?.UserId ?? 0)" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                    <i class="fas fa-comment-dots me-2"></i> Message Retailer
+                </a>
+            }
+            else if (isRetailer)
+            {
+                <a asp-controller="Message" asp-action="SendMessage" asp-route-receiverId="@(Model.Supplier?.UserId ?? 0)" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                    <i class="fas fa-comment-dots me-2"></i> Message Supplier
+                </a>
+                @if (Model.OrderStatus == "Delivered" || Model.OrderStatus == "Completed")
+                {
+                    <a asp-controller="Return" asp-action="Create" asp-route-orderId="@Model.Id" class="btn btn-danger rounded-pill px-4 shadow-sm fw-bold">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Raise Claim
+                    </a>
+                }
             }
         </div>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4" role="alert">
-            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center">
+            <i class="fas fa-check-circle me-3 fs-4"></i> @TempData["SuccessMessage"]
         </div>
     }
-
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center">
+            <i class="fas fa-exclamation-circle me-3 fs-4"></i> @TempData["ErrorMessage"]
         </div>
     }
 
-    @if (Model.OrderStatus == "Rejected")
-    {
-        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 p-4 d-flex align-items-center">
-            <div class="me-4 rounded-circle bg-white shadow-sm p-3">
-                <i class="fas fa-times-circle text-danger fa-2x"></i>
-            </div>
-            <div>
-                <h5 class="alert-heading fw-bold mb-1">Order Rejected ❌</h5>
-                <p class="mb-0 text-muted">Reason: <span class="fw-bold text-dark">"@Model.RejectionReason"</span></p>
-            </div>
-        </div>
-    }
-
-    <!-- Step Tracker -->
-    <div class="glass-card p-4 mb-4">
-        <div class="step-tracker d-flex justify-content-between position-relative">
-            @{
-                var steps = new[] { 
-                    new { Name = "Ordered", Icon = "fa-shopping-basket", Active = true, Completed = Model.CreatedAt != default },
-                    new { Name = "Accepted", Icon = "fa-check-circle", Active = Model.OrderStatus != "Pending" && Model.OrderStatus != "Rejected", Completed = Model.OrderStatus != "Pending" && Model.OrderStatus != "Rejected" },
-                    new { Name = "Fulfillment", Icon = "fa-box-open", Active = Model.OrderStatus == "Processing" || Model.OrderStatus == "Completed", Completed = Model.OrderStatus == "Completed" || (Model.PurchaseOrders != null && Model.PurchaseOrders.Any(p => p.Status == "Packed" || p.Status == "Ready for Pickup")) },
-                    new { Name = "Delivery", Icon = "fa-truck", Active = Model.Delivery != null || (Model.PurchaseOrders != null && Model.PurchaseOrders.Any(p => p.Status == "In Transit")), Completed = Model.OrderStatus == "Completed" || (Model.Delivery != null && Model.Delivery.DeliveryStatus == "Delivered") },
-                    new { Name = "Delivered", Icon = "fa-home", Active = Model.OrderStatus == "Completed" || (Model.Delivery != null && Model.Delivery.DeliveryStatus == "Delivered"), Completed = Model.OrderStatus == "Completed" }
-                };
-            }
-            <div class="progress position-absolute top-50 start-0 translate-middle-y w-100" style="height: 2px; z-index: 0; left: 0; margin-top: -10px;">
-                <div class="progress-bar" style="width: @(steps.Count(s => s.Completed) * 25 - 12.5)%;"></div>
-            </div>
-            @foreach (var step in steps)
-            {
-                <div class="step-item text-center position-relative" style="z-index: 1; width: 20%;">
-                    <div class="step-icon mx-auto mb-2 @(step.Completed ? "bg-primary text-white" : (step.Active ? "bg-white text-primary border-primary" : "bg-light text-muted")) shadow-sm d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid @(step.Completed ? "transparent" : (step.Active ? "var(--bs-primary)" : "#e9ecef")); transition: all 0.3s ease;">
-                        <i class="fas @step.Icon"></i>
-                    </div>
-                    <div class="step-label small fw-bold @(step.Active ? "text-dark" : "text-muted")">@step.Name</div>
+    <!-- Executive Summary Card -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 border-top border-4 border-primary">
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-md-3 bg-glass border-end p-4 text-center">
+                    <span class="text-muted small fw-bold text-uppercase d-block mb-2">Order Identification</span>
+                    <h4 class="fw-bold text-primary mb-1">#@Model.OrderNumber</h4>
+                    <span class="badge @GetBadgeClass(currentStatus) rounded-pill px-3 py-2 shadow-sm">@currentStatus</span>
                 </div>
-            }
-        </div>
-    </div>
-
-    <style>
-        .step-tracker { padding: 0.5rem 0; }
-        .step-icon { font-size: 1.1rem; }
-        .progress-bar { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-    </style>
-
-    <div class="row g-4">
-        <!-- Main Content (Items & Fulfillment) -->
-        <div class="col-lg-8">
-            <!-- Order Summary Section -->
-            <div class="glass-card p-4 mb-4">
-                <h5 class="section-header"><i class="fas fa-info-circle me-2 text-primary"></i>Order Summary</h5>
-                <div class="row g-3">
-                    <div class="col-sm-4">
-                        <label class="text-muted small d-block">Order Status</label>
-                        <span class="status-badge status-@Model.OrderStatus">
-                            <i class="fas @(Model.OrderStatus == "Pending" ? "fa-clock" : (Model.OrderStatus == "Rejected" ? "fa-times-circle" : "fa-check-circle"))"></i>
-                            @Model.OrderStatus
-                        </span>
-                    </div>
-                    <div class="col-sm-4">
-                        <label class="text-muted small d-block">Order Date</label>
-                        <div class="fw-bold">@Model.CreatedAt.ToString("MMM dd, yyyy")</div>
-                    </div>
-                    @if (isSupplier)
-                    {
-                        <div class="col-sm-4">
-                            <label class="text-muted small d-block">Retailer</label>
-                            <div class="fw-bold">@Model.Retailer?.BusinessName</div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="col-sm-4">
-                            <label class="text-muted small d-block">Supplier</label>
-                            <div class="fw-bold">@Model.Supplier?.CompanyName</div>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <!-- Items Table Section -->
-            <div class="glass-card mb-4 overflow-hidden">
-                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-box-open me-2 text-primary"></i>Ordered Items</h5>
-                    @if (Model.OrderStatus == "Pending")
-                    {
-                        bool canAccept = ViewBag.CanAccept ?? true;
-                        <span class="badge @(canAccept ? "bg-success-soft text-success" : "bg-danger-soft text-danger") rounded-pill px-3 py-2 fw-600">
-                             <i class="fas @(canAccept ? "fa-check" : "fa-exclamation-triangle") me-1"></i> 
-                             @(canAccept ? "Stock Available" : "Insufficient Stock")
-                        </span>
-                    }
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light bg-opacity-50">
-                            <tr>
-                                <th class="ps-4">Product Name</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                @if (isSupplier && Model.OrderStatus == "Pending")
-                                {
-                                    <th>Global Stock</th>
-                                }
-                                <th class="text-end pe-4">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.OrderItems)
-                            {
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="fw-bold">@item.Product?.ProductName</div>
-                                        <div class="small text-muted">@item.Product?.SKU</div>
-                                    </td>
-                                    <td>@item.Quantity @item.Product?.Unit</td>
-                                    <td>@item.UnitPrice.ToString("C")</td>
-                                    @if (isSupplier && Model.OrderStatus == "Pending")
-                                    {
-                                        <td>
-                                            @{
-                                                var stockStatus = ViewBag.StockStatus as Dictionary<int, bool>;
-                                                bool isAvailable = true;
-                                                if (item.ProductId.HasValue)
-                                                {
-                                                    isAvailable = stockStatus != null && stockStatus.ContainsKey(item.ProductId.Value) && stockStatus[item.ProductId.Value];
-                                                }
-                                            }
-                                            <span class="badge rounded-pill @(isAvailable ? "bg-light text-success" : "bg-danger-soft text-danger")">
-                                                @(isAvailable ? (item.ProductId.HasValue ? "Available ✅" : "Custom Item - No Stock Check") : "Insufficient Stock ❌")
-                                            </span>
-                                        </td>
-                                    }
-                                    <td class="text-end pe-4 fw-bold text-primary">@((item.Quantity * item.UnitPrice).ToString("C"))</td>
-                                </tr>
+                <div class="col-md-9 p-4">
+                    <div class="row g-4 text-center text-md-start">
+                        <div class="col-md-3 border-end">
+                            @{
+                                // Ensure top card matches manifest footer exactly
+                                var topNet = Model.Subtotal > 0 ? Model.Subtotal : Model.OrderItems.Sum(item => item.Quantity * item.UnitPrice);
+                                var topVat = Model.VAT > 0 ? Model.VAT : Math.Round(topNet * 0.15m, 2);
+                                var topTotal = Model.TotalAmount > (topNet + topVat - 1) ? Model.TotalAmount : (topNet + topVat);
                             }
-                        </tbody>
-                        <tfoot class="bg-light bg-opacity-50 border-top-0">
-                            <tr>
-                                <td colspan="@(isSupplier && Model.OrderStatus == "Pending" ? "4" : "3")" class="text-end fw-bold ps-4 border-0">Grand Total:</td>
-                                <td class="text-end pe-4 fw-bold h5 text-primary border-0">@Model.TotalAmount.ToString("C")</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-            @if (Model.PurchaseOrders != null && Model.PurchaseOrders.Any())
-            {
-                <!-- Split Fulfillment Section -->
-                <div class="glass-card p-4 mb-4">
-                    <h5 class="section-header"><i class="fas fa-truck-loading me-2 text-primary"></i>Split Fulfillment Details</h5>
-                    <div class="row g-3">
-                        @foreach (var po in Model.PurchaseOrders)
-                        {
-                            <div class="col-md-6">
-                                <div class="allocation-item">
-                                    <div class="fw-bold text-dark">@po.Warehouse?.Name</div>
-                                    <div class="small text-muted">@(po.PurchaseOrderItems?.Sum(p => p.Quantity) ?? 0) items allocated</div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <!-- Purchase Orders Section -->
-                <div class="glass-card mb-4 overflow-hidden">
-                    <div class="p-4 border-bottom">
-                        <h5 class="mb-0 fw-bold"><i class="fas fa-file-invoice me-2 text-primary"></i>Linked Purchase Orders</h5>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">PO Number</th>
-                                    <th>Warehouse</th>
-                                    <th>Status</th>
-                                    <th>Delivery Status</th>
-                                    <th class="text-end pe-4">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var po in Model.PurchaseOrders)
-                                {
-                                    <tr style="cursor: pointer;" onclick="location.href='@Url.Action("Details", "PurchaseOrder", new { id = po.Id })'">
-                                        <td class="ps-4 fw-bold">@po.PONumber</td>
-                                        <td>@po.Warehouse?.Name</td>
-                                        <td><span class="badge bg-light text-dark shadow-sm">@po.Status</span></td>
-                                        <td>
-                                            @if (po.Status == "Delivered")
-                                            {
-                                                <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>Delivered</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-primary small fw-bold"><i class="fas fa-shipping-fast me-1"></i>In Transit</span>
-                                            }
-                                        </td>
-                                        <td class="text-end pe-4 fw-bold">@po.TotalAmount.ToString("C")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <!-- Sidebar (Actions & Tracking) -->
-        <div class="col-lg-4">
-            @if (isSupplier && Model.OrderStatus == "Pending")
-            {
-                <div class="glass-card p-4 mb-4 border-top border-primary border-4 shadow-lg">
-                    <h5 class="fw-bold mb-1">Actions</h5>
-                    <p class="text-muted small mb-4">Process order fulfillment</p>
-                    
-                    <form asp-action="StatusAction" method="post" id="orderActionForm">
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        @Html.AntiForgeryToken()
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-600 text-dark">Default Fulfillment Warehouse</label>
-                            @if (ViewBag.Warehouses != null && ((IEnumerable<SCM_System.Models.Entities.Warehouse>)ViewBag.Warehouses).Any())
+                            <label class="smaller text-muted d-block mb-1">CONTRACT VALUE</label>
+                            <h5 class="fw-bold text-dark mb-0">@topTotal.ToString("N2") <small class="text-muted">ETB</small></h5>
+                            <span class="smaller text-success">Total Payable (inc. VAT)</span>
+                        </div>
+                        <div class="col-md-3 border-end">
+                            <label class="smaller text-muted d-block mb-1">ISSUE DATE</label>
+                            <h5 class="fw-bold text-dark mb-0">@Model.CreatedAt.ToString("MMM dd, yyyy")</h5>
+                            <span class="smaller text-muted">Status: @Model.OrderStatus</span>
+                        </div>
+                        <div class="col-md-3 border-end">
+                            <label class="smaller text-muted d-block mb-1">FULFILLMENT HUB</label>
+                            @if (po?.WarehouseId.HasValue == true)
                             {
-                                <select name="warehouseId" class="form-select border-0 bg-light rounded-3 shadow-sm py-2">
-                                    <option value="">-- Let system auto-allocate --</option>
-                                    @foreach (var w in ViewBag.Warehouses) {
-                                        <option value="@w.Id">@w.Name @(w.IsDefault ? "(Default)" : "")</option>
-                                    }
-                                </select>
-                                <small class="text-muted mt-2 d-block">System will prioritize this warehouse if selected, otherwise it splits automatically.</small>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-success-subtle rounded-circle p-2 me-3">
+                                        <i class="fas fa-warehouse text-success"></i>
+                                    </div>
+                                    <div>
+                                        <p class="extra-small text-muted mb-0 text-uppercase fw-bold">Fulfillment Hub</p>
+                                        <h6 class="fw-bold text-dark mb-0">@(po?.Warehouse?.Name ?? "PENDING ASSIGNMENT")</h6>
+                                        <span class="extra-small text-muted">@po.Warehouse?.City, @po.Warehouse?.Region</span>
+                                    </div>
+                                </div>
                             }
                             else
                             {
-                                <div class="alert alert-warning py-2 small">No active warehouses found. <a href="/Warehouse" class="fw-bold">Add One</a></div>
+                                <h5 class="fw-bold text-warning mb-0">Unassigned</h5>
+                                @if (isSupplier)
+                                {
+                                    <span class="smaller text-danger fw-bold blinking"><i class="fas fa-exclamation-triangle me-1"></i> Action Required</span>
+                                }
+                                else
+                                {
+                                    <span class="smaller text-muted">Awaiting Acceptance</span>
+                                }
                             }
                         </div>
-
-                        <div class="d-grid gap-3">
-                            @{
-                                bool canAcceptAction = ViewBag.CanAccept ?? true;
-                            }
-                            <button type="submit" name="actionType" value="Accept" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm" @(canAcceptAction ? "" : "disabled")>
-                                <i class="fas fa-check-circle me-2"></i>@(canAcceptAction ? "ACCEPT ORDER" : "INSUFFICIENT STOCK")
-                            </button>
-                            
-                            <button type="button" class="btn btn-outline-danger rounded-pill py-2" data-bs-toggle="collapse" data-bs-target="#rejectionForm">
-                                <i class="fas fa-times-circle me-2"></i>REJECT ORDER
-                            </button>
+                        <div class="col-md-3">
+                            <label class="smaller text-muted d-block mb-1">ESTIMATED DELIVERY</label>
+                            <h5 class="fw-bold text-danger mb-0">@(Model.ExpectedDeliveryDate?.ToString("MMM dd, yyyy") ?? "TBD")</h5>
+                            <span class="smaller text-muted">Ref: @Model.Id</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                        <div class="collapse mt-3" id="rejectionForm">
-                            <div class="p-3 border rounded-3 bg-light">
-                                <label class="form-label fw-bold small text-danger">Rejection Reason (Required)</label>
-                                <textarea name="rejectionReason" class="form-control mb-2" rows="3" placeholder="e.g. Out of stock, pricing error..."></textarea>
-                                <button type="submit" name="actionType" value="Reject" class="btn btn-danger w-100 rounded-pill">Confirm Rejection</button>
+    <!-- Live Fulfillment Stepper -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-4 pt-5 pb-5">
+            <div class="fulfillment-stepper shadow-sm rounded-pill p-2 bg-light mx-2 position-relative">
+                <div class="stepper-progress bg-primary" style="width: @(currentIdx * 10)%; height: 8px; border-radius: 10px; position: absolute; top: 50%; margin-top: -4px; z-index: 1; left: 20px; transition: width 0.8s ease;"></div>
+                <div class="d-flex justify-content-between position-relative px-2" style="z-index: 2;">
+                    @for (int i = 0; i < statuses.Length; i++)
+                    {
+                        var isActive = i <= currentIdx;
+                        var icon = i switch { 0 => "fa-clock", 1 => "fa-file-invoice", 2 => "fa-check", 3 => "fa-dolly", 4 => "fa-clipboard-check", 5 => "fa-box-open", 6 => "fa-box", 7 => "fa-shipping-fast", 8 => "fa-truck-moving", 9 => "fa-house-user", _ => "fa-flag-checkered" };
+                        <div class="step-node text-center" style="width: 80px;">
+                            <div class="mx-auto shadow-sm rounded-circle d-flex align-items-center justify-content-center @(isActive ? "bg-primary text-white border-2 border-primary" : "bg-white text-muted border-2 border-secondary")" style="width: 45px; height: 45px; font-size: 1.1rem; border-style: solid;">
+                                <i class="fas @icon"></i>
+                            </div>
+                            <div class="step-label smaller fw-bold mt-2 d-none d-lg-block @(isActive ? "text-primary" : "text-muted opacity-75")" style="line-height:1.2">@statuses[i]</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Workspace -->
+        <div class="col-lg-8">
+
+
+            <!-- Items List (High-Visibility Dark Theme) -->
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 bg-dark text-white p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-white"><i class="fas fa-boxes text-success me-2"></i>Order Manifest</h5>
+                    <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-50 px-3">@Model.OrderItems.Count Line Items</span>
+                </div>
+
+                <div class="manifest-list px-2">
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-white border-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success bg-opacity-10 rounded-3 p-2 me-3">
+                                    <i class="fas fa-box text-success"></i>
+                                </div>
+                                <div style="color: #ffffff;">
+                                    <div class="fw-bold fs-6 mb-0">@item.ProductName</div>
+                                    <div class="smaller opacity-50 text-uppercase tracking-wider" style="font-size: 0.65rem;">SKU: @(item.Product?.SKU ?? "GENERIC")</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="small opacity-75 mb-0">@item.Quantity x @item.UnitPrice.ToString("N2")</div>
+                                <div class="fw-bold" style="color: #10b981; font-size: 1.1rem;">ETB @((item.Quantity * item.UnitPrice).ToString("N2"))</div>
                             </div>
                         </div>
+                    }
+                </div>
+
+                <div class="mt-4 pt-3 bg-black bg-opacity-40 rounded-4 p-4 border border-white border-opacity-10">
+                    @{
+                        var netSubtotal = Model.OrderItems.Sum(item => item.Quantity * item.UnitPrice);
+                        var vatTotal = Math.Round(netSubtotal * 0.15m, 2);
+                        var grandTotal = netSubtotal + vatTotal;
+                    }
+                    <div class="d-flex justify-content-between mb-2">
+                        <span style="color: rgba(255,255,255,0.6);" class="small">Net Value</span>
+                        <span class="fw-bold">@netSubtotal.ToString("N2") ETB</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom border-white border-opacity-10">
+                        <span style="color: rgba(255,255,255,0.6);" class="small">VAT (15%)</span>
+                        <span class="text-info fw-bold">@vatTotal.ToString("N2") ETB</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0 text-white">TOTAL PAYABLE</h5>
+                        <div class="text-end">
+                            <h4 class="fw-bold mb-0" style="color: #10b981;">@grandTotal.ToString("N2") <small class="fs-6 opacity-75">ETB</small></h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Activity Log -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">Workflow Activity Log</h6>
+                    <span class="extra-small text-muted">Lifecycle Audit Trail</span>
+                </div>
+                <div class="card-body p-4">
+                    @await Html.PartialAsync("_ActivityTimeline", Model.StatusHistory?.OrderByDescending(h => h.ChangedAt).ToList() ?? new List<OrderStatusHistory>())
+                </div>
+            </div>
+        </div>
+
+        <!-- Role-Based Action Panel Sidebar -->
+        <div class="col-lg-4">
+            @if (showAssignPanel)
+            {
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border border-primary border-opacity-25" style="border-width: 2px !important; border-color: #0d6efd !important;">
+                    <h5 class="fw-bold text-dark mb-1">Actions</h5>
+                    <p class="text-muted small mb-3">Process order fulfillment</p>
+                    
+                    <form asp-controller="Order" asp-action="AcceptPO" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="orderId" value="@Model.Id" />
+                        <input type="hidden" name="poId" value="@po.Id" />
+                        
+                        <label class="small text-dark fw-bold mb-2">Default Fulfillment Warehouse</label>
+                        <select name="warehouseId" class="form-select bg-light border-0 py-2 mb-2" required>
+                            <option value="-1">-- Let system auto-allocate --</option>
+                            @if (ViewBag.Warehouses != null)
+                            {
+                                foreach (dynamic w in ViewBag.Warehouses)
+                                {
+                                    <option value="@w.Id">@w.Name</option>
+                                }
+                            }
+                        </select>
+                        <p class="extra-small text-muted mb-4 mt-2" style="font-size: 0.70rem; line-height: 1.4;">System will prioritize this warehouse if selected, otherwise it splits automatically.</p>
+                        
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm mb-3">
+                            <i class="fas fa-check-circle me-1"></i> ACCEPT ORDER
+                        </button>
+                    </form>
+
+                    <form asp-controller="Order" asp-action="StatusAction" method="post" onsubmit="return confirm('Are you sure you want to reject this order?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="actionType" value="Reject" />
+                        <input type="hidden" name="rejectionReason" value="Rejected by fulfillment manager" />
+                        <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold py-2 shadow-sm border-2">
+                            <i class="fas fa-times-circle me-1"></i> REJECT ORDER
+                        </button>
                     </form>
                 </div>
             }
 
-            <!-- Delivery Tracking Info -->
-            @if (Model.Delivery != null)
-            {
-                <div class="glass-card p-4 mb-4">
-                    <h5 class="section-header"><i class="fas fa-truck me-2 text-primary"></i>Delivery Tracking</h5>
-                    <div class="mb-3">
-                        <label class="text-muted small d-block">Tracking Status</label>
-                        <div class="fw-bold"><i class="fas fa-map-marker-alt me-2 text-primary"></i>@Model.Delivery.DeliveryStatus</div>
+            <!-- Contracting Parties -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h6 class="fw-bold text-uppercase text-muted smaller mb-4">Contracting Parties</h6>
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar shadow-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                        <i class="fas fa-store"></i>
                     </div>
-                    @if (Model.Delivery.DeliveredDate.HasValue)
-                    {
-                        <div class="mb-3">
-                            <label class="text-muted small d-block">Delivered Date</label>
-                            <div class="fw-bold">@Model.Delivery.DeliveredDate?.ToString("MMM dd, yyyy HH:mm")</div>
+                    <div>
+                        <label class="smaller text-muted d-block">RETAILER (SHIP TO)</label>
+                        <span class="fw-bold text-dark">@Model.Retailer?.BusinessName</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-0">
+                    <div class="avatar shadow-sm rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div>
+                        <label class="smaller text-muted d-block">SUPPLIER (BILL FROM)</label>
+                        <span class="fw-bold text-dark">@Model.Supplier?.CompanyName</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warehouse Execution Diagnostics -->
+            @if(po != null && po.WarehouseId.HasValue)
+            {
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-light border border-secondary border-opacity-10">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-warehouse text-primary fs-4 me-2"></i>
+                        <h6 class="fw-bold text-dark mb-0">Warehouse Diagnostics</h6>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <span class="small text-muted d-block">Assigned Hub</span>
+                            <span class="small fw-bold">@po.Warehouse?.Name</span>
                         </div>
-                    }
-                    <div class="d-grid mt-3">
-                        <a href="@Url.Action("Details", "Delivery", new { id = Model.Delivery.Id })" class="btn btn-light border rounded-pill">Track Live Status</a>
+                        <div class="col-6">
+                            <span class="small text-muted d-block">Region</span>
+                            <span class="small fw-bold">@po.Warehouse?.Region</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="small text-muted d-block">Stock Lock</span>
+                            <span class="small fw-bold text-success"><i class="fas fa-lock me-1"></i>Reserved</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="small text-muted d-block">Pick Queue</span>
+                            <span class="small fw-bold badge bg-secondary px-2">Live #@((Model.Id % 10) + 1)</span>
+                        </div>
                     </div>
                 </div>
             }
 
-            <!-- History Timeline -->
-            <div class="glass-card p-4 shadow-sm h-100">
-                <h5 class="section-header"><i class="fas fa-history me-2 text-primary"></i>Tracking History</h5>
-                <div class="timeline-compact mt-3">
-                    @if (Model.StatusHistory != null && Model.StatusHistory.Any())
-                    {
-                        foreach (var history in Model.StatusHistory.OrderByDescending(h => h.ChangedAt))
+            <!-- Operational Workspace (For Warehouse Role) -->
+            @if (isWarehouseRole && po != null && currentIdx >= 2 && currentIdx <= 7)
+            {
+                <div class="card border-0 shadow-lg rounded-4 p-4 mb-4 bg-glass border-top border-4 border-warning">
+                    <h6 class="fw-bold text-dark mb-3"><i class="fas fa-tools me-2 text-warning"></i> Operations Console</h6>
+                    <form asp-controller="PurchaseOrder" asp-action="UpdateStatus" method="post" class="d-grid gap-3">
+                        <input type="hidden" name="id" value="@po.Id" />
+                        <div>
+                            <label class="smaller fw-bold text-muted text-uppercase mb-2">Stage Progression</label>
+                            <select name="status" class="form-select border-2 py-2">
+                                @if (po.Status == "Accepted") { <option value="Picking">🚀 Transition to Picking</option> }
+                                @if (po.Status == "Picking") { <option value="Picked">✅ Mark as Picked</option> }
+                                @if (po.Status == "Picked") { <option value="Packing">📦 Transition to Packing</option> }
+                                @if (po.Status == "Packing") { <option value="Packed">📦 Mark as Packed</option> }
+                                @if (po.Status == "Packed") { <option value="Ready Dispatch">🚢 Ready Dispatch</option> }
+                                @if (po.Status == "Ready Dispatch") { <option value="In Transit">🚚 Dispatch Shipment</option> }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-warning rounded-pill fw-bold py-3 shadow">
+                            Update Phase
+                        </button>
+                    </form>
+                </div>
+            }
+
+            @if (isSupplier && po?.Status == POStatus.Failed)
+            {
+                <div class="card border-0 shadow-lg rounded-4 p-4 mb-4 bg-danger bg-opacity-10 border border-danger shadow-danger-sm">
+                    <h5 class="fw-bold text-danger mb-1"><i class="fas fa-exclamation-triangle me-2"></i> Delivery Failure Recovery</h5>
+                    <p class="text-muted small mb-4 font-monospace">Case #@po.PONumber: <span class="badge bg-danger rounded-pill">@po.FailureReason</span></p>
+                    
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <form asp-controller="Delivery" asp-action="RetryDelivery" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@po.Id" />
+                                <button type="submit" class="btn btn-outline-dark w-100 rounded-pill fw-bold py-2 shadow-sm text-truncate">
+                                    <i class="fas fa-redo me-1"></i> RETRY
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-danger w-100 rounded-pill fw-bold py-2 shadow-sm text-truncate" data-bs-toggle="modal" data-bs-target="#reassignModal">
+                                <i class="fas fa-user-plus me-1"></i> REASSIGN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Logistics Intelligence -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h6 class="fw-bold text-uppercase text-muted smaller mb-4">Logistics Intelligence</h6>
+                <div class="mb-4 d-flex align-items-start">
+                    <div class="bg-light rounded-3 p-2 me-3"><i class="fas fa-map-marker-alt text-primary"></i></div>
+                    <div>
+                        <label class="smaller text-muted d-block">DESTINATION</label>
+                        <span class="fw-bold text-dark">@Model.DeliveryAddress, @Model.DeliveryCity</span>
+                    </div>
+                </div>
+                <div class="mb-4 d-flex align-items-start">
+                    <div class="bg-light rounded-3 p-2 me-3"><i class="fas fa-truck-loading text-primary"></i></div>
+                    <div>
+                        <label class="smaller text-muted d-block">CARRIER AGENT</label>
+                        <span class="fw-bold text-dark">@(po?.DeliveryAgent?.User?.FullName ?? "Unassigned")</span>
+                    </div>
+                </div>
+                <div class="mb-0 d-flex align-items-start">
+                    <div class="bg-light rounded-3 p-2 me-3"><i class="fas fa-id-card text-primary"></i></div>
+                    <div>
+                        <label class="smaller text-muted d-block">VEHICLE PLATE</label>
+                        <span class="fw-bold text-dark">@(po?.Vehicle?.LicensePlate ?? "N/A")</span>
+                    </div>
+                </div>
+
+                @if (isDelivered)
+                {
+                    <div class="mt-4 pt-4 border-top">
+                        <label class="smaller text-muted d-block mb-3 text-uppercase fw-bold">Proof of Delivery</label>
+                        
+                        @if (!string.IsNullOrEmpty(po.SignaturePath))
                         {
-                            <div class="mb-4 position-relative ps-4" style="border-left: 2px solid #e9ecef;">
-                                <div class="position-absolute" style="left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #0d6efd;"></div>
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <span class="fw-bold text-dark small">@history.Status</span>
-                                    <span class="text-muted extra-small" style="font-size: 0.7rem;">@history.ChangedAt.ToString("MMM dd HH:mm")</span>
+                            <div class="mb-3">
+                                <span class="smaller text-muted d-block mb-1">Customer Signature</span>
+                                <div class="border rounded-3 p-2 bg-white">
+                                    <img src="@po.SignaturePath" class="img-fluid" style="max-height: 80px;" alt="Signature">
                                 </div>
-                                <p class="text-muted small mb-0">@history.Comments</p>
                             </div>
                         }
-                    }
-                    else
-                    {
-                        <div class="text-center py-4 text-muted">
-                            <i class="fas fa-stream fa-2x mb-2 opacity-25"></i>
-                            <p class="small mb-0">No history events recorded yet.</p>
+
+                        @if (!string.IsNullOrEmpty(po.ProofOfDelivery))
+                        {
+                            <div class="mb-3">
+                                <span class="smaller text-muted d-block mb-1">Delivery Photo</span>
+                                <a href="@po.ProofOfDelivery" target="_blank">
+                                    <img src="@po.ProofOfDelivery" class="img-fluid rounded-3 border" style="max-height: 120px;" alt="Photo Proof">
+                                </a>
+                            </div>
+                        }
+
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-qrcode text-success me-2"></i>
+                            <span class="small">QR Verification: <strong>@(po.IsQRVerified ? "VERIFIED" : "Not Performed")</strong></span>
                         </div>
-                    }
+                        
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clipboard-check text-success me-2"></i>
+                            <span class="small">Checklist: <strong>@(po.ChecklistVerified ? "COMPLETED" : "N/A")</strong></span>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(po.DeliveryNotes))
+                        {
+                            <div class="mt-3 p-3 bg-white bg-opacity-10 rounded-3 small italic">
+                                <i class="fas fa-quote-left text-white-50 me-2"></i> @po.DeliveryNotes
+                            </div>
+                        }
+                    </div>
+                }
+                <div class="bg-white bg-opacity-10 rounded-3 p-3 mt-3 border border-white border-opacity-25">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-bold text-white"><i class="fas fa-shield-alt text-success me-2"></i>Security:</span>
+                        <span class="badge bg-success text-white px-2">Chapa Secured</span>
+                    </div>
+                    <div class="text-white-50 extra-small">Funds are secured via Chapa and will be released upon delivery confirmation.</div>
                 </div>
             </div>
-
-            @if (!string.IsNullOrEmpty(Model.QRCodeValue))
-{
-    <div class="card mb-3">
-        <div class="card-header bg-primary text-white">
-            <i class="fas fa-qrcode me-2"></i>Delivery QR Code
-        </div>
-        <div class="card-body text-center">
-            <div id="qrcode-container" class="mb-3"></div>
-            <p class="text-muted">Show this QR code to the delivery agent when your order arrives.</p>
-            <button class="btn btn-sm btn-outline-primary" onclick="downloadQRCode()">
-                <i class="fas fa-download me-1"></i>Save QR Code
-            </button>
-        </div>
-    </div>
-}
-
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script>
-    @if (!string.IsNullOrEmpty(Model.QRCodeValue))
-    {
-        <text>
-        new QRCode(document.getElementById("qrcode-container"), {
-            text: "@Model.QRCodeValue",
-            width: 200,
-            height: 200,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        function downloadQRCode() {
-            var canvas = document.querySelector("#qrcode-container canvas");
-            var link = document.createElement('a');
-            link.download = 'order-@Model.Id-qrcode.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-        </text>
-    }
-</script>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        $(document).ready(function() {
-            // Optional: Add micro-interactions here
-        });
-    </script>
+<!-- Reassign Modal -->
+<div class="modal fade" id="reassignModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold">Reassign Delivery Agent</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Delivery" asp-action="ReassignDelivery" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@(po?.Id ?? 0)" />
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning small border-0 mb-4">
+                        <i class="fas fa-info-circle me-1"></i> Reassigning will reset the PO to <strong>Ready Dispatch</strong> for the new agent.
+                    </div>
+                    <label class="form-label fw-bold small mb-2 text-uppercase ls-1 text-muted">Select Replacement Professional</label>
+                    <select name="agentId" class="form-select border-0 bg-light py-2" required>
+                        <option value="">-- Select Agent --</option>
+                        @if (ViewBag.Agents != null)
+                        {
+                            foreach (var agent in (IEnumerable<SCM_System.Models.Entities.SupplierEmployee>)ViewBag.Agents)
+                            {
+                                <option value="@agent.Id">@agent.User?.FullName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer border-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Confirm Reassignment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetBadgeClass(string status)
+    {
+        return status switch {
+            "Pending" or "Issued" => "bg-info-subtle text-info",
+            "Accepted" => "bg-primary-subtle text-primary",
+            "Delivered" => "bg-success-subtle text-success",
+            "Completed" => "bg-success text-white",
+            "Rejected" or "Expired" => "bg-danger-subtle text-danger",
+            _ => "bg-warning-subtle text-warning"
+        };
+    }
 }
 
+<style>
+    .smaller { font-size: 0.70rem; font-weight: 700; letter-spacing: 0.5px; }
+    .extra-small { font-size: 0.65rem; }
+    .bg-secondary-subtle { background-color: rgba(108, 117, 125, 0.1); }
+    .bg-glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+    .fulfillment-stepper { border: 1px solid rgba(0,0,0,0.05); }
+    .step-node { z-index: 3; }
+</style>

@@ -38,7 +38,16 @@ namespace SCM_System.Data
         public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
         public DbSet<IncidentReport> IncidentReports { get; set; }
         public DbSet<InventoryTransfer> InventoryTransfers { get; set; }
-        
+
+        // ========== NEW INVENTORY MANAGEMENT TABLES ==========
+        public DbSet<InventoryReservation> InventoryReservations { get; set; }
+        public DbSet<InventoryMovement> InventoryMovements { get; set; }
+        public DbSet<InventorySnapshot> InventorySnapshots { get; set; }
+        public DbSet<StockTransfer> StockTransfers { get; set; }
+        public DbSet<InventoryAdjustment> InventoryAdjustments { get; set; }
+        public DbSet<InboundShipment> InboundShipments { get; set; }
+        public DbSet<InboundShipmentItem> InboundShipmentItems { get; set; }
+
         // Identity Verification Mock
         public DbSet<FaydaRegistry> FaydaRegistries { get; set; }
         public DbSet<FaydaVerification> FaydaVerifications { get; set; }
@@ -47,7 +56,6 @@ namespace SCM_System.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
 
-
         // Product Catalog Tables
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<SupplierCategory> SupplierCategories { get; set; }
@@ -55,6 +63,7 @@ namespace SCM_System.Data
 
         public DbSet<ProductAttributeDefinition> ProductAttributeDefinitions { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<InventoryHistory> InventoryHistories { get; set; }
@@ -67,6 +76,7 @@ namespace SCM_System.Data
         public DbSet<TenderBid> TenderBids { get; set; }
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+        public DbSet<DispatchOverrideLog> DispatchOverrideLogs { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
@@ -80,6 +90,10 @@ namespace SCM_System.Data
 
         // Payment Tables
         public DbSet<Commission> Commissions { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<SupplierTransaction> SupplierTransactions { get; set; }
+        public DbSet<Refund> Refunds { get; set; }
+        public DbSet<DeadLetterWebhook> DeadLetterWebhooks { get; set; }
 
         // Communication Tables
         public DbSet<Conversation> Conversations { get; set; }
@@ -96,6 +110,189 @@ namespace SCM_System.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // ========== INVENTORY RESERVATION CONFIGURATIONS ==========
+
+            // InventoryReservation - Product (many-to-one)
+            modelBuilder.Entity<InventoryReservation>()
+                .HasOne(r => r.Product)
+                .WithMany()
+                .HasForeignKey(r => r.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryReservation - PurchaseOrder (many-to-one)
+            modelBuilder.Entity<InventoryReservation>()
+                .HasOne(r => r.PurchaseOrder)
+                .WithMany(po => po.InventoryReservations)
+                .HasForeignKey(r => r.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryReservation - Order (many-to-one)
+            modelBuilder.Entity<InventoryReservation>()
+                .HasOne(r => r.Order)
+                .WithMany()
+                .HasForeignKey(r => r.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryReservation - Supplier (many-to-one)
+            modelBuilder.Entity<InventoryReservation>()
+                .HasOne(r => r.Supplier)
+                .WithMany()
+                .HasForeignKey(r => r.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryReservation - Warehouse (many-to-one)
+            modelBuilder.Entity<InventoryReservation>()
+                .HasOne(r => r.Warehouse)
+                .WithMany()
+                .HasForeignKey(r => r.WarehouseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // InventoryReservation Indexes
+            modelBuilder.Entity<InventoryReservation>()
+                .HasIndex(r => new { r.ProductId, r.Status })
+                .HasDatabaseName("IX_InventoryReservation_Product_Status");
+
+            modelBuilder.Entity<InventoryReservation>()
+                .HasIndex(r => r.ExpiresAt)
+                .HasDatabaseName("IX_InventoryReservation_ExpiresAt");
+
+            modelBuilder.Entity<InventoryReservation>()
+                .HasIndex(r => r.OrderId)
+                .HasDatabaseName("IX_InventoryReservation_OrderId");
+
+            modelBuilder.Entity<InventoryReservation>()
+                .HasIndex(r => r.PurchaseOrderId)
+                .HasDatabaseName("IX_InventoryReservation_PurchaseOrderId");
+
+            // InventoryReservation Default Values
+            modelBuilder.Entity<InventoryReservation>()
+                .Property(r => r.Status)
+                .HasDefaultValue("Pending");
+
+            modelBuilder.Entity<InventoryReservation>()
+                .Property(r => r.Priority)
+                .HasDefaultValue(1);
+
+            modelBuilder.Entity<InventoryReservation>()
+                .Property(r => r.CreatedAt)
+                .HasDefaultValueSql("GETDATE()");
+
+            // ========== INVENTORY MOVEMENT CONFIGURATIONS ==========
+
+            // InventoryMovement - Product (many-to-one)
+            modelBuilder.Entity<InventoryMovement>()
+                .HasOne(m => m.Product)
+                .WithMany()
+                .HasForeignKey(m => m.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryMovement - Warehouse (many-to-one)
+            modelBuilder.Entity<InventoryMovement>()
+                .HasOne(m => m.Warehouse)
+                .WithMany()
+                .HasForeignKey(m => m.WarehouseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // InventoryMovement - User (many-to-one)
+            modelBuilder.Entity<InventoryMovement>()
+                .HasOne(m => m.PerformedByUser)
+                .WithMany()
+                .HasForeignKey(m => m.PerformedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryMovement Indexes
+            modelBuilder.Entity<InventoryMovement>()
+                .HasIndex(m => new { m.ProductId, m.CreatedAt })
+                .HasDatabaseName("IX_InventoryMovement_Product_Date");
+
+            modelBuilder.Entity<InventoryMovement>()
+                .HasIndex(m => m.ReferenceNumber)
+                .HasDatabaseName("IX_InventoryMovement_ReferenceNumber");
+
+            modelBuilder.Entity<InventoryMovement>()
+                .HasIndex(m => m.MovementType)
+                .HasDatabaseName("IX_InventoryMovement_Type");
+
+            // InventoryMovement Default Values
+            modelBuilder.Entity<InventoryMovement>()
+                .Property(m => m.CreatedAt)
+                .HasDefaultValueSql("GETDATE()");
+
+            // ========== STOCK TRANSFER CONFIGURATIONS ==========
+            modelBuilder.Entity<StockTransfer>()
+                .HasOne(st => st.SourceWarehouse)
+                .WithMany()
+                .HasForeignKey(st => st.SourceWarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockTransfer>()
+                .HasOne(st => st.DestinationWarehouse)
+                .WithMany()
+                .HasForeignKey(st => st.DestinationWarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockTransfer>()
+                .HasOne(st => st.Product)
+                .WithMany()
+                .HasForeignKey(st => st.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockTransfer>()
+                .HasOne(st => st.RequestedBy)
+                .WithMany()
+                .HasForeignKey(st => st.RequestedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockTransfer>()
+                .HasOne(st => st.ApprovedBy)
+                .WithMany()
+                .HasForeignKey(st => st.ApprovedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryAdjustment>()
+                .HasOne(ia => ia.PerformedBy)
+                .WithMany()
+                .HasForeignKey(ia => ia.PerformedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ========== INBOUND SHIPMENT CONFIGURATIONS ==========
+            modelBuilder.Entity<InboundShipment>()
+                .HasOne(s => s.Supplier)
+                .WithMany(sup => sup.InboundShipments)
+                .HasForeignKey(s => s.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InboundShipment>()
+                .HasOne(s => s.Warehouse)
+                .WithMany(w => w.InboundShipments)
+                .HasForeignKey(s => s.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InboundShipmentItem>()
+                .HasOne(si => si.InboundShipment)
+                .WithMany(s => s.Items)
+                .HasForeignKey(si => si.InboundShipmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InboundShipmentItem>()
+                .HasOne(si => si.Product)
+                .WithMany()
+                .HasForeignKey(si => si.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ========== INVENTORY SNAPSHOT CONFIGURATIONS ==========
+            modelBuilder.Entity<InventorySnapshot>()
+                .HasOne(i => i.Product)
+                .WithMany()
+                .HasForeignKey(i => i.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventorySnapshot>()
+                .HasOne(i => i.Warehouse)
+                .WithMany()
+                .HasForeignKey(i => i.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // ========== USER MANAGEMENT CONFIGURATIONS ==========
 
@@ -141,7 +338,7 @@ namespace SCM_System.Data
                 .HasForeignKey(se => se.WarehouseId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // SupplierEmployee - Vehicle (many-to-one) (Maintaining for backward compatibility, assignments handle actual logic)
+            // SupplierEmployee - Vehicle (many-to-one)
             modelBuilder.Entity<SupplierEmployee>()
                 .HasOne(se => se.Vehicle)
                 .WithMany(v => v.DeliveryAgents)
@@ -256,7 +453,6 @@ namespace SCM_System.Data
                 .HasForeignKey(rc => rc.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
             // Product - Inventory (one-to-many)
             modelBuilder.Entity<Inventory>()
                 .HasOne(i => i.Product)
@@ -285,12 +481,6 @@ namespace SCM_System.Data
                 .HasForeignKey(pav => pav.AttributeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // ========== PROCUREMENT CONFIGURATIONS ==========
-            // Removed for reimplementation
-            
-            // ========== ORDER MANAGEMENT CONFIGURATIONS ==========
-            // Removed for reimplementation
-            
             // Cart - Retailer (one-to-one)
             modelBuilder.Entity<Cart>()
                 .HasOne(c => c.Retailer)
@@ -311,6 +501,7 @@ namespace SCM_System.Data
                 .WithMany()
                 .HasForeignKey(ci => ci.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+
             // ========== DELIVERY CONFIGURATIONS ==========
 
             // Delivery - SupplierEmployee (many-to-one)
@@ -348,6 +539,19 @@ namespace SCM_System.Data
                 .HasOne(c => c.Supplier)
                 .WithMany(s => s.Commissions)
                 .HasForeignKey(c => c.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Payment Configuration
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Order)
+                .WithMany()
+                .HasForeignKey(p => p.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Retailer)
+                .WithMany()
+                .HasForeignKey(p => p.RetailerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ========== COMMUNICATION CONFIGURATIONS ==========
@@ -403,8 +607,6 @@ namespace SCM_System.Data
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Rating removed for now
-
             // Rating - Retailer (many-to-one)
             modelBuilder.Entity<Rating>()
                 .HasOne(r => r.Retailer)
@@ -419,7 +621,7 @@ namespace SCM_System.Data
                 .HasForeignKey(r => r.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Module 3 Relationships (No Cascade)
+            // Module 3 Relationships
             modelBuilder.Entity<PurchaseOrder>()
                 .HasOne(po => po.Retailer)
                 .WithMany(r => r.PurchaseOrders)
@@ -514,8 +716,25 @@ namespace SCM_System.Data
                 .HasIndex(p => p.SKU)
                 .IsUnique();
 
-            // PurchaseOrder unique constraint removed
-            // Conversation unique constraint (prevent duplicate conversations between same supplier-retailer)
+            // Vehicle unique constraints
+            modelBuilder.Entity<Vehicle>()
+                .HasIndex(v => v.LicensePlate)
+                .IsUnique();
+
+            // Warehouse unique constraints
+            modelBuilder.Entity<Warehouse>()
+                .HasIndex(w => w.WarehouseCode)
+                .IsUnique();
+
+            // SupplierEmployee unique constraints
+            modelBuilder.Entity<SupplierEmployee>()
+                .HasIndex(se => se.Email)
+                .IsUnique();
+            modelBuilder.Entity<SupplierEmployee>()
+                .HasIndex(se => se.Phone)
+                .IsUnique();
+
+            // Conversation unique constraint
             modelBuilder.Entity<Conversation>()
                 .HasIndex(c => new { c.SupplierId, c.RetailerId })
                 .IsUnique();
@@ -549,7 +768,6 @@ namespace SCM_System.Data
                 .Property(p => p.CreatedAt)
                 .HasDefaultValueSql("GETDATE()");
 
-            // Order defaults removed
             // Commission defaults
             modelBuilder.Entity<Commission>()
                 .Property(c => c.Status)
@@ -573,12 +791,36 @@ namespace SCM_System.Data
                 .Property(d => d.DeliveryStatus)
                 .HasDefaultValue("Preparing");
 
-            // ========== LOGISTICS 2.0 GLOBAL FILTERS ==========
-            modelBuilder.Entity<Warehouse>().HasQueryFilter(w => !w.IsDeleted);
-            modelBuilder.Entity<Vehicle>().HasQueryFilter(v => !v.IsDeleted);
-            modelBuilder.Entity<SupplierEmployee>().HasQueryFilter(se => !se.IsDeleted);
-            modelBuilder.Entity<VehicleDocument>().HasQueryFilter(vd => vd.IsActive);
-            modelBuilder.Entity<EmployeeDocument>().HasQueryFilter(ed => ed.IsActive);
+            // ========== SUPPLIER TRANSACTION CONFIGURATIONS ==========
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasOne(st => st.Supplier)
+                .WithMany(s => s.SupplierTransactions)
+                .HasForeignKey(st => st.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasOne(st => st.Order)
+                .WithMany()
+                .HasForeignKey(st => st.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasIndex(st => st.OrderId)
+                .HasDatabaseName("IX_SupplierTransaction_OrderId");
+
+            // ========== PAYMENT INDEXES ==========
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.TxRef)
+                .IsUnique()
+                .HasDatabaseName("UQ_Payment_TxRef");
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.OrderId)
+                .HasDatabaseName("IX_Payment_OrderId");
+
+            modelBuilder.Entity<Commission>()
+                .HasIndex(c => c.OrderId)
+                .HasDatabaseName("IX_Commission_OrderId");
 
             // ========== LOGISTICS 2.0 RELATIONSHIPS ==========
 
@@ -668,6 +910,23 @@ namespace SCM_System.Data
                 .WithMany()
                 .HasForeignKey(ih => ih.SupplierEmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Financial & Audit Indices
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.TxRef)
+                .IsUnique();
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.OrderId);
+
+            modelBuilder.Entity<Commission>()
+                .HasIndex(c => c.OrderId);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasIndex(st => st.OrderId);
+
+            modelBuilder.Entity<SupplierTransaction>()
+                .HasIndex(st => st.SupplierId);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace SCM_System.Models.Entities
 
         [Required]
         public int ProductId { get; set; }
-        public Product Product { get; set; }
+        public Product Product { get; set; } = null!;
 
         [Required]
         public int QuantityOnHand { get; set; }
@@ -18,11 +18,14 @@ namespace SCM_System.Models.Entities
         public int QuantityAvailable => QuantityOnHand - QuantityReserved;
 
         [StringLength(100)]
-        public string WarehouseLocation { get; set; }
+        public string WarehouseLocation { get; set; } = string.Empty;
 
         public DateTime LastUpdated { get; set; } = DateTime.Now;
 
         public int? WarehouseId { get; set; }
-        public Warehouse Warehouse { get; set; }
+        public Warehouse? Warehouse { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
     }
 }

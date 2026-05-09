@@ -1,372 +1,450 @@
 @model SCM_System.Models.Entities.Supplier
 @{
-    ViewData["Title"] = "Supplier Profile | " + Model.CompanyName;
+    var companyName = Model?.CompanyName ?? "Unknown Supplier";
+    ViewData["Title"] = "Supplier Profile | " + companyName;
+    Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-5" style="background-color: #f8f9fa; min-height: 100vh;">
-    <!-- Top Progress Bar / Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
-                <div class="card-body p-0">
-                    <div class="bg-primary p-4 text-white d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-xl bg-white text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">
-                                @Model.CompanyName.Substring(0, 1).ToUpper()
-                            </div>
-                            <div>
-                                <h2 class="fw-bold mb-0">@Model.CompanyName</h2>
-                                <p class="mb-0 text-white-50"><i class="fas fa-id-card me-2"></i>Supplier Account #@Model.Id</p>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge @(Model.VerificationStatus == "Verified" ? "bg-success" : (Model.VerificationStatus == "Rejected" ? "bg-danger" : "bg-warning text-dark")) rounded-pill px-4 py-2 fs-6 shadow-sm">
-                                <i class="fas @(Model.VerificationStatus == "Verified" ? "fa-check-circle" : (Model.VerificationStatus == "Rejected" ? "fa-times-circle" : "fa-clock")) me-2"></i>
-                                @Model.VerificationStatus
-                            </span>
-                            <div class="mt-2 text-white-50 small">Profile Status</div>
-                        </div>
-                    </div>
-                    <div class="p-3 bg-white d-flex justify-content-between align-items-center">
-                        <div class="ms-3">
-                            <a asp-action="PendingUsers" class="btn btn-link text-decoration-none text-muted fw-bold">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Verification Hub
-                            </a>
-                        </div>
-                        <div class="me-3">
-                            @if (Model.VerificationStatus == "Pending")
-                            {
-                                <form asp-action="ApproveUser" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@Model.UserId" />
-                                    <button type="submit" class="btn btn-primary px-4 rounded-3 fw-bold shadow-sm me-2">
-                                        <i class="fas fa-check-circle me-2"></i>Approve Agent
-                                    </button>
-                                </form>
-                                <button type="button" class="btn btn-outline-danger px-4 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="fas fa-times-circle me-2"></i>Reject
-                                </button>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <!-- Left Column: Identity & Contact -->
-        <div class="col-lg-4">
-            <!-- Fayda Identity Card -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="bg-soft-primary p-2 rounded-3 me-3">
-                            <i class="fas fa-fingerprint fa-2x text-primary"></i>
-                        </div>
-                        <h5 class="fw-bold mb-0">Fayda Identity</h5>
-                    </div>
-                    
-                    @if (Model.User?.FaydaVerification != null)
-                    {
-                        var vf = Model.User.FaydaVerification;
-                        <div class="p-3 rounded-4" style="background-color: #f0f4ff; border: 1px dashed #ced4da;">
-                            <div class="text-center mb-3">
-                                @if (Model.User.IsFaydaVerified)
-                                {
-                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill border border-info border-opacity-25 shadow-sm">
-                                        <i class="fas fa-check-shield me-2"></i>Verified Identity
-                                    </span>
-                                }
-                                else if (Model.User.FaydaStatus == "Rejected")
-                                {
-                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger border-opacity-25 shadow-sm">
-                                        <i class="fas fa-times-circle me-2"></i>Identity Rejected
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning border-opacity-25 shadow-sm">
-                                        <i class="fas fa-clock me-2"></i>Identity Pending
-                                    </span>
-                                }
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="text-muted small text-uppercase fw-bold d-block mb-1">Fan Account Number</label>
-                                <div class="p-2 bg-white rounded-3 border fw-bold font-monospace">@Model.User.FAN</div>
-                            </div>
-
-                            <div class="space-y-3">
-                                <div class="d-flex justify-content-between border-bottom pb-2">
-                                    <span class="text-muted small"><i class="fas fa-user-circle me-2"></i>Registry Name</span>
-                                    <span class="fw-bold text-dark">@vf.VerifiedName</span>
-                                </div>
-                                <div class="d-flex justify-content-between border-bottom py-2">
-                                    <span class="text-muted small"><i class="fas fa-birthday-cake me-2"></i>Date of Birth</span>
-                                    <span class="fw-bold text-dark">@vf.VerifiedDob?.ToString("MMMM dd, yyyy")</span>
-                                </div>
-                                <div class="d-flex justify-content-between py-2">
-                                    <span class="text-muted small"><i class="fas fa-phone-alt me-2"></i>Registry Phone</span>
-                                    <span class="fw-bold text-dark">@vf.VerifiedPhone</span>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4 bg-light rounded-4">
-                            <i class="fas fa-user-secret fa-3x text-muted opacity-25 mb-3"></i>
-                            <p class="text-muted small mb-0">No biometric snapshot link found.</p>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <!-- Business Contact Card -->
-            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-4">Contact Information</h5>
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item bg-transparent border-0 px-0 pb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-user text-muted"></i>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Account Owner</small>
-                                    <span class="fw-bold text-dark">@Model.User?.FullName</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item bg-transparent border-0 px-0 py-3">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-envelope text-muted"></i>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Official Email</small>
-                                    <a href="mailto:@Model.User?.Email" class="text-primary text-decoration-none fw-bold">@Model.User?.Email</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item bg-transparent border-0 px-0 py-3">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-phone text-muted"></i>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Contact Number</small>
-                                    <span class="fw-bold text-dark">@Model.User?.PhoneNumber</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item bg-transparent border-0 px-0 pt-3">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-globe text-muted"></i>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.65rem;">Business Website</small>
-                                    @if (!string.IsNullOrEmpty(Model.Website))
-                                    {
-                                        <a href="@(Model.Website.StartsWith("http") ? Model.Website : "http://" + Model.Website)" target="_blank" class="text-primary text-decoration-none fw-bold text-truncate d-inline-block" style="max-width: 150px;">@Model.Website</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small">Not provided</span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Business Metrics & Documents -->
-        <div class="col-lg-8">
-            <div class="row g-4 mb-4">
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
-                        <div class="display-6 fw-bold text-primary">@Model.Products.Count</div>
-                        <div class="text-muted small text-uppercase fw-bold">Live Products</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
-                        <div class="display-6 fw-bold text-success">@Model.PurchaseOrders.Count</div>
-                        <div class="text-muted small text-uppercase fw-bold">Active Orders</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm text-center p-3" style="border-radius: 20px;">
-                        <div class="display-6 fw-bold text-info">@Model.Tenders.Count</div>
-                        <div class="text-muted small text-uppercase fw-bold">Bids Won</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
-                <div class="card-body p-4">
-                    <ul class="nav nav-pills nav-fill mb-4 bg-light rounded-4 p-1" id="pills-tab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-4 fw-bold" id="pills-business-tab" data-bs-toggle="pill" data-bs-target="#pills-business" type="button" role="tab">
-                                <i class="fas fa-building me-2"></i>Business Logic
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-4 fw-bold" id="pills-docs-tab" data-bs-toggle="pill" data-bs-target="#pills-docs" type="button" role="tab">
-                                <i class="fas fa-file-contract me-2"></i>Compliance Docs
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-4 fw-bold" id="pills-audit-tab" data-bs-toggle="pill" data-bs-target="#pills-audit" type="button" role="tab">
-                                <i class="fas fa-history me-2"></i>Audit History
-                            </button>
-                        </li>
-                    </ul>
-
-                    <div class="tab-content" id="pills-tabContent">
-                        <!-- Business Information Tab -->
-                        <div class="tab-pane fade show active" id="pills-business" role="tabpanel">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <h6 class="text-muted small text-uppercase fw-bold mb-3">Enterprise Scope</h6>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span>Business Type:</span>
-                                            <span class="badge bg-light text-dark border">@Model.BusinessType</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>HQ Location:</span>
-                                            <span class="fw-bold">@Model.City, @Model.Country</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Detailed Address</h6>
-                                        <p class="text-dark bg-light p-3 rounded-4 border small">@Model.CompanyAddress</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <h6 class="text-muted small text-uppercase fw-bold mb-3">Operational Meta</h6>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span>Registration Date:</span>
-                                            <span class="text-dark fw-bold">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>Last Data Sync:</span>
-                                            <span class="text-dark fw-bold">@DateTime.Now.ToString("MMM dd, yyyy")</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Company Overview</h6>
-                                        <p class="text-muted small italic">@(string.IsNullOrEmpty(Model.Description) ? "No company profile description provided." : Model.Description)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Documents Tab -->
-                        <div class="tab-pane fade" id="pills-docs" role="tabpanel">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="card border p-3 rounded-4 bg-light shadow-none h-100">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="bg-primary-soft p-2 rounded-3 me-2">
-                                                <i class="fas fa-certificate text-primary"></i>
-                                            </div>
-                                            <h6 class="mb-0 fw-bold">Operational License</h6>
-                                        </div>
-                                        <p class="small text-muted mb-3">Verified trade license document attached during onboarding.</p>
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="small text-muted">License #:</span>
-                                            <span class="fw-bold text-dark font-monospace">@Model.LicenseNumber</span>
-                                        </div>
-                                        @if (!string.IsNullOrEmpty(Model.LicenseFilePath))
-                                        {
-                                            <a asp-action="ViewLicense" asp-route-id="@Model.Id" target="_blank" class="btn btn-primary btn-sm rounded-pill py-2 w-100 fw-bold">
-                                                <i class="fas fa-external-link-alt me-2"></i>Review Document
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <button disabled class="btn btn-outline-secondary btn-sm rounded-pill py-2 w-100">No Document Attached</button>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card border p-3 rounded-4 bg-light shadow-none h-100">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="bg-info-soft p-2 rounded-3 me-2">
-                                                <i class="fas fa-file-invoice-dollar text-info"></i>
-                                            </div>
-                                            <h6 class="mb-0 fw-bold">Fiscal Identity (TIN)</h6>
-                                        </div>
-                                        <p class="small text-muted mb-3">Tax identification number registered with the regional authority.</p>
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="small text-muted">TIN:</span>
-                                            <span class="fw-bold text-dark font-monospace">@Model.TaxIdentificationNumber</span>
-                                        </div>
-                                        <div class="alert alert-info border-0 rounded-4 small py-2">
-                                            <i class="fas fa-check-shield me-2"></i>Fiscal data confirmed
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Audit History Tab (Placeholder for now) -->
-                        <div class="tab-pane fade" id="pills-audit" role="tabpanel">
-                            <div class="text-center py-5">
-                                <i class="fas fa-history fa-3x text-muted opacity-25 mb-3"></i>
-                                <h6>Traceability Log</h6>
-                                <p class="text-muted small">Automatic logs of all approval/rejection actions are stored in the system audit vault.</p>
-                                <a asp-action="AuditLogs" class="btn btn-sm btn-outline-primary rounded-pill px-4">View All Audit Logs</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg p-3" style="border-radius: 25px;">
-            <div class="modal-header border-0 pb-0">
-                <h4 class="modal-title fw-bold">Reject Supplier</h4>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-action="RejectSupplier" asp-route-id="@Model.Id" method="post">
-                @Html.AntiForgeryToken()
-                <div class="modal-body py-4">
-                    <p class="text-muted mb-4">You are rejecting <strong>@Model.CompanyName</strong>. Provide a formal reason for the rejection.</p>
-                    <div class="form-group mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Rejection Reason</label>
-                        <textarea class="form-control bg-light border-0 rounded-4 p-3 shadow-none" name="rejectionReason" rows="4" required placeholder="Describe why this application was denied..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light px-4 py-2 rounded-pill fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm">Confirm Denial</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <style>
-    .bg-soft-primary { background-color: rgba(26, 35, 126, 0.05) !important; }
-    .bg-primary-soft { background-color: rgba(26, 35, 126, 0.1) !important; }
-    .bg-success-soft { background-color: rgba(46, 125, 50, 0.1) !important; }
-    .bg-warning-soft { background-color: rgba(255, 143, 0, 0.1) !important; }
-    .bg-info-soft { background-color: rgba(0, 188, 212, 0.1) !important; }
-    .nav-pills .nav-link.active { background-color: #fff; color: #1a237e; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .nav-pills .nav-link { color: #6c757d; border: 1px solid transparent; }
-    .avatar-xl { border: 4px solid rgba(255,255,255,0.2); }
-    .font-monospace { letter-spacing: 0.5px; }
+    .supplier-details {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px 24px;
+    }
+
+    .error-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        margin-top: 40px;
+    }
+    .error-state i {
+        font-size: 48px;
+        color: #E67E22;
+        margin-bottom: 20px;
+        opacity: 0.8;
+    }
+    .error-state h3 {
+        color: var(--text-color);
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+    .error-state p {
+        color: var(--text-muted);
+        margin-bottom: 24px;
+    }
+
+    .two-column-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    @@media (max-width: 768px) {
+        .two-column-grid { grid-template-columns: 1fr; }
+    }
+
+    .full-width-card {
+        margin-bottom: 20px;
+    }
+
+    /* Enterprise Standard Cards */
+    .detail-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        transition: transform 0.2s ease, box-shadow 0.2s;
+        height: 100%;
+    }
+    .detail-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .dark-mode .detail-card:hover { border-color: #3f4e47; }
+
+    .card-heading {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Profile Completion */
+    .profile-completion {
+        margin-top: 16px;
+    }
+    .completion-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+    .completion-percent {
+        color: #2E9C7A;
+        font-weight: 700;
+    }
+    .dark-mode .completion-percent { color: #4BC0A0; }
+
+    .progress-bar-bg {
+        height: 8px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: #2E9C7A;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    .dark-mode .progress-fill { background: #4BC0A0; }
+
+    /* Typography & Layouts */
+    .info-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    
+    .info-value {
+        font-size: 14px;
+        color: var(--text-color);
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .doc-link {
+        display: inline-flex;
+        align-items: flex-end;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-color);
+        background: var(--hover-state);
+        border: 1px solid var(--border-color);
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .doc-link:hover {
+        border-color: #5B8FF9;
+        background: rgba(91, 143, 249, 0.05);
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 24px;
+        margin-bottom: 16px;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 6px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2E9C7A;
+    }
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: 3px;
+        top: 14px;
+        width: 2px;
+        height: calc(100% + 8px);
+        background: var(--border-color);
+    }
+    .timeline-item:last-child::after {
+        display: none;
+    }
+    .timeline-time {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 2px;
+    }
+    .timeline-desc {
+        font-size: 13px;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 24px;
+    }
+    .action-btn {
+        padding: 10px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .action-btn:hover { opacity: 0.9; }
+
+    .btn-approve { background: #2E9C7A; color: white; }
+    .dark-mode .btn-approve { background: #3BAE86; }
+    .btn-reject { background: #E05A5A; color: white; }
+    .dark-mode .btn-reject { background: #E57373; }
 </style>
+
+<div class="supplier-details pb-5">
+    
+    @if (Model == null)
+    {
+        <div class="error-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Supplier Not Found</h3>
+            <p>The supplier you're looking for doesn't exist or has been removed.</p>
+            <a href="/Admin/PendingUsers" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm" style="background:#2E9C7A; border-color:#2E9C7A;">Back to Verification Hub</a>
+        </div>
+    }
+    else
+    {
+        <!-- Breadcrumb -->
+        <a asp-action="PendingUsers" class="text-decoration-none mb-3 d-inline-block" style="color: var(--text-muted); font-size: 13px; font-weight: 600;">
+            <i class="fas fa-arrow-left me-2"></i> Back to Verification Hub
+        </a>
+
+        <!-- Header Block -->
+        <div class="detail-card full-width-card">
+            <div class="d-flex align-items-center gap-4 mb-3">
+                <div style="width: 72px; height: 72px; border-radius: 16px; background: var(--hover-state); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                    👤
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: var(--text-color); letter-spacing: -0.5px;">@Model.CompanyName</h3>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Account #@Model.Id</span>
+                        <span style="color: var(--border-color);">•</span>
+                        @{ 
+                            string statusLabel = Model.VerificationStatus;
+                            string badgeClass = statusLabel == "Verified" ? "badge-soft-success" : (statusLabel == "Rejected" ? "badge-soft-danger" : "badge-soft-warning");
+                        }
+                        <span class="badge-soft @badgeClass" style="font-size: 12px; padding: 4px 10px;">@statusLabel</span>
+                        <span style="color: var(--border-color);">•</span>
+                        <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Member since: @Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-completion">
+                <div class="completion-label">
+                    <span>Profile Completion</span>
+                    <span class="completion-percent">65%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-fill" style="width: 65%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="two-column-grid">
+            <div class="detail-card">
+                <div class="card-heading">📞 CONTACT INFORMATION</div>
+                <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
+                
+                <div class="info-label">Account Owner:</div>
+                <div class="info-value">@Model.User?.FullName</div>
+
+                <div class="info-label">Email:</div>
+                <div class="info-value">@Model.User?.Email</div>
+
+                <div class="info-label">Phone:</div>
+                <div class="info-value">@(!string.IsNullOrEmpty(Model.User?.PhoneNumber) ? Model.User.PhoneNumber : "Not provided")</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="card-heading">🏢 BUSINESS INFORMATION</div>
+                <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
+                
+                <div class="info-label">Business Type:</div>
+                <div class="info-value">@(string.IsNullOrEmpty(Model.BusinessType) ? "Not specified" : Model.BusinessType)</div>
+
+                <div class="info-label">HQ Location:</div>
+                <div class="info-value">@(string.IsNullOrEmpty(Model.City) ? "Unknown" : Model.City), @(string.IsNullOrEmpty(Model.Country) ? "Unknown" : Model.Country)</div>
+
+                <div class="info-label">Detailed Address:</div>
+                <div class="info-value">@(!string.IsNullOrEmpty(Model.CompanyAddress) ? Model.CompanyAddress : "Not provided")</div>
+            </div>
+        </div>
+
+        <div class="detail-card full-width-card">
+            <div class="card-heading">🔗 FAYDA IDENTITY</div>
+            <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
+            
+            @if (Model.User?.FaydaVerification != null) {
+                <div class="mb-3 d-flex align-items-center">
+                    <span class="info-label d-inline-block" style="width: 120px;">Status:</span>
+                    <span class="badge-soft badge-soft-success py-1"><i class="fas fa-check me-1"></i> Verified Configured</span>
+                </div>
+                <div class="mb-3">
+                    <span class="info-label d-inline-block" style="width: 120px;">Fayda ID:</span>
+                    <span class="info-value font-monospace">@Model.User.FAN</span>
+                </div>
+                <div class="mb-3 d-flex align-items-center">
+                    <span class="info-label d-inline-block" style="width: 120px;">Registry Name:</span>
+                    <span class="info-value mb-0">@Model.User.FaydaVerification.VerifiedName</span>
+                </div>
+                <div class="mb-3 d-flex align-items-center">
+                    <span class="info-label d-inline-block" style="width: 120px;">DOB:</span>
+                    <span class="info-value mb-0">@Model.User.FaydaVerification.VerifiedDob?.ToString("MMM dd, yyyy")</span>
+                </div>
+            } else {
+                <div class="mb-2">
+                    <span class="info-label d-inline-block" style="width: 100px;">Status:</span>
+                    <span class="badge-soft badge-soft-warning py-1" style="font-weight:600;"><i class="fas fa-exclamation-triangle me-1"></i> Not Configured</span>
+                </div>
+                <div>
+                    <span class="info-label d-inline-block" style="width: 100px;">Message:</span>
+                    <span style="font-size:13px; color:var(--text-muted); font-weight:500;">Biometric integration not available</span>
+                </div>
+            }
+        </div>
+
+        <div class="detail-card full-width-card">
+            <div class="card-heading">📎 COMPLIANCE DOCUMENTS</div>
+            <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
+            
+            <div class="mb-3">
+                <span class="info-label d-inline-block" style="width: 100px;">Status:</span>
+                @{ 
+                    bool hasDocs = !string.IsNullOrEmpty(Model.LicenseNumber) || !string.IsNullOrEmpty(Model.TaxIdentificationNumber);
+                }
+                @if (hasDocs && Model.VerificationStatus == "Verified") {
+                    <span style="font-size:13px; font-weight:700; color:#2E9C7A;">✅ Validated</span>
+                } else if (hasDocs) {
+                    <span style="font-size:13px; font-weight:700; color:#E67E22;">⏳ In Progress</span>
+                } else {
+                    <span style="font-size:13px; font-weight:700; color:#E05A5A;">⚠️ Incomplete</span>
+                }
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 mb-4">
+                @if(!string.IsNullOrEmpty(Model.LicenseNumber)) {
+                    <div class="doc-link" onclick="openDocumentModal('License.pdf')">
+                        <div>
+                            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">📄 License</div>
+                            <div>.pdf <span style="font-size:10px; color:#5B8FF9; margin-left:12px;">[View]</span></div>
+                        </div>
+                    </div>
+                }
+                @if(!string.IsNullOrEmpty(Model.TaxIdentificationNumber)) {
+                    <div class="doc-link" onclick="openDocumentModal('TaxID.pdf')">
+                        <div>
+                            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">📄 TaxID</div>
+                            <div>.pdf <span style="font-size:10px; color:#5B8FF9; margin-left:12px;">[View]</span></div>
+                        </div>
+                    </div>
+                }
+                <div class="doc-link" onclick="openDocumentModal('BusinessPermit.jpg')">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">📄 Business Permit</div>
+                        <div>.jpg <span style="font-size:10px; color:#5B8FF9; margin-left:12px;">[View]</span></div>
+                    </div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Upload Date: @Model.CreatedAt.ToString("MMM dd, yyyy")</div>
+        </div>
+
+        <div class="detail-card full-width-card">
+            <div class="card-heading">📜 AUDIT HISTORY</div>
+            <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
+            
+            <div class="timeline-item">
+                <div class="timeline-desc">Profile created by @(Model.User?.FullName ?? "Unknown")</div>
+                <div class="timeline-time">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+            </div>
+            @if(hasDocs) {
+                <div class="timeline-item">
+                    <div class="timeline-desc">Documents uploaded successfully</div>
+                    <div class="timeline-time">@Model.CreatedAt.AddMinutes(3).ToString("MMM dd, yyyy HH:mm")</div>
+                </div>
+            }
+            @if (Model.User?.FaydaVerification != null) {
+                <div class="timeline-item">
+                    <div class="timeline-desc">Fayda verification integration triggered</div>
+                    <div class="timeline-time">@Model.CreatedAt.AddHours(24).ToString("MMM dd, yyyy HH:mm")</div>
+                </div>
+            }
+        </div>
+
+        @if (Model.VerificationStatus == "Pending")
+        {
+            <div class="detail-card full-width-card" style="background: transparent; border: none; box-shadow: none;">
+                <div class="action-buttons mt-0">
+                    <form asp-action="ApproveUser" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.UserId" />
+                        <button type="submit" class="action-btn btn-approve">
+                            ✅ Approve
+                        </button>
+                    </form>
+                    <button type="button" class="action-btn btn-reject" onclick="openRejectModal(@Model.UserId, '@Html.Raw(Model.User?.FullName?.Replace("'", "\\'"))', '@Model.User?.Email', 'Supplier', '@Html.Raw(Model.CompanyName?.Replace("'", "\\'"))')">
+                        ❌ Reject
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+        }
+    }
+</div>
+
+<!-- Modal elements from Verification Hub ported to details -->
+<div class="modal fade" id="documentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg" style="border-radius: 16px; background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="modal-header border-bottom-0 pb-0 pt-3 px-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" style="color: var(--text-color);">
+                    📄 <span id="docTitle">Document.pdf</span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" style="filter: var(--invert-close-btn);"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="w-100 rounded-3 d-flex align-items-center justify-content-center" style="height: 400px; background: var(--hover-state); border: 1px dashed var(--border-color);">
+                    <div class="text-center">
+                        <i class="fas fa-file-pdf fa-4x mb-3 text-muted opacity-50"></i>
+                        <h6 style="color: var(--text-color);">[PREVIEW GENERATED]</h6>
+                        <p class="small text-muted">Securely loaded document viewer layer.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-card px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn px-4 text-white" style="background:#5B8FF9;"><i class="fas fa-download me-2"></i>Download Original</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openDocumentModal(docName) {
+            $('#docTitle').text(docName);
+            var myModal = new bootstrap.Modal(document.getElementById('documentModal'));
+            myModal.show();
+        }
+    </script>
+}

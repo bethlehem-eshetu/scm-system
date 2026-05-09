@@ -12,33 +12,25 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Google.Authenticator;
 
+using SCM_System.Models.Enums;
+
 namespace SCM_System.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class AdminController : Controller
+    public class AdminController(
+        ApplicationDbContext context, 
+        IWebHostEnvironment webHostEnvironment, 
+        INotificationService notificationService,
+        SCM_System.Services.IFaydaService faydaService,
+        SCM_System.Services.IEmailService emailService,
+        ILogger<AdminController> logger) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly INotificationService _notificationService;
-        private readonly SCM_System.Services.IFaydaService _faydaService;
-        private readonly SCM_System.Services.IEmailService _emailService;
-        private readonly ILogger<AdminController> _logger;
-
-        public AdminController(
-            ApplicationDbContext context, 
-            IWebHostEnvironment webHostEnvironment, 
-            INotificationService notificationService,
-            SCM_System.Services.IFaydaService faydaService,
-            SCM_System.Services.IEmailService emailService,
-            ILogger<AdminController> logger)
-        {
-            _context = context;
-            _notificationService = notificationService;
-            _webHostEnvironment = webHostEnvironment;
-            _faydaService = faydaService;
-            _emailService = emailService;
-            _logger = logger;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
+        private readonly INotificationService _notificationService = notificationService;
+        private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
+        private readonly SCM_System.Services.IEmailService _emailService = emailService;
+        private readonly ILogger<AdminController> _logger = logger;
 
         // Helper method to check if user is admin
         private bool IsAdmin()
@@ -55,111 +47,158 @@ namespace SCM_System.Controllers
         {
             if (!IsAdmin())
             {
-                TempData["ErrorMessage"] = "⚠️ Please login as admin to access the dashboard.";
                 return RedirectToAction("Login", "Account");
             }
 
+            var model = new AdminDashboardViewModel();
             try
             {
-                // Supplier Statistics
-                ViewBag.TotalSuppliers = _context.Suppliers.Count();
-                ViewBag.PendingSuppliers = _context.Suppliers.Count(s => s.VerificationStatus == "Pending");
-                ViewBag.VerifiedSuppliers = _context.Suppliers.Count(s => s.VerificationStatus == "Verified");
-                ViewBag.RejectedSuppliers = _context.Suppliers.Count(s => s.VerificationStatus == "Rejected");
+                var orders = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(i => i.Product)
+                            .ThenInclude(p => p.Category)
+                    .ToListAsync() ?? new List<Order>();
+                var suppliers = await _context.Suppliers.ToListAsync() ?? new List<Supplier>();
+                var retailers = await _context.Retailers.Include(r => r.User).ToListAsync() ?? new List<Retailer>();
+                var products = await _context.Products.ToListAsync() ?? new List<Product>();
+                var commissions = await _context.Commissions.ToListAsync() ?? new List<Commission>();
 
-                // Retailer Statistics - Using User properties with safety checks
-                var retailers = await _context.Retailers.Include(r => r.User).ToListAsync();
-                ViewBag.TotalRetailers = retailers.Count;
-                ViewBag.PendingRetailers = retailers.Count(r => r.User == null || (!r.User.IsApproved && r.User.AccountStatus != "Rejected"));
-                ViewBag.ApprovedRetailers = retailers.Count(r => r.User != null && r.User.IsApproved);
-                ViewBag.RejectedRetailers = retailers.Count(r => r.User != null && r.User.AccountStatus == "Rejected");
+                model.TotalOrders = orders?.Count ?? 0;
+                model.TotalSuppliers = suppliers?.Count ?? 0;
+                model.TotalRetailers = retailers?.Count ?? 0;
+                model.TotalProducts = products?.Count ?? 0;
 
-                // Product and Order Statistics
-                ViewBag.TotalProducts = _context.Products.Count();
-                ViewBag.TotalOrders = _context.Orders.Count();
-                ViewBag.PendingOrders = _context.Orders.Count(o => o.OrderStatus == "Processing" || o.OrderStatus == "Pending");
+                model.TotalRevenue = Math.Round(commissions?.Where(c => c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.CommissionAmount) ?? 0, 2);
 
-                // Get recent suppliers with FULL User object included
-                var recentSuppliers = _context.Suppliers
-                    .Include(s => s.User)
-                    .OrderByDescending(s => s.CreatedAt)
-                    .Take(5)
-                    .ToList();
-
-                ViewBag.RecentSuppliers = recentSuppliers;
-
-                // Get recent retailers with FULL User object included
-                var recentRetailers = _context.Retailers
-                    .Include(r => r.User)
-                    .OrderByDescending(r => r.CreatedAt)
-                    .Take(5)
-                    .ToList();
-
-                ViewBag.RecentRetailers = recentRetailers;
-
-                // Commission Statistics
-                ViewBag.TotalCommissionRevenue = _context.Commissions
-                    .Where(c => c.Status == "Paid")
-                    .Sum(c => (decimal?)c.CommissionAmount) ?? 0;
-
-                ViewBag.PendingCommissions = _context.Commissions
-                    .Where(c => c.Status == "Pending")
-                    .Sum(c => (decimal?)c.CommissionAmount) ?? 0;
-
-                // Recent Commissions
-                ViewBag.RecentCommissions = _context.Commissions
-                    .Include(c => c.Supplier)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Take(5)
-                    .ToList();
-
-                // Notification data
-                var adminUser = _context.Users.FirstOrDefault(u => u.Role == "Admin");
-                if (adminUser != null)
-                {
-                    ViewBag.UnreadNotifications = _context.Notifications
-                        .Count(n => n.UserId == adminUser.Id && !n.IsRead);
-
-                    ViewBag.RecentNotifications = _context.Notifications
-                        .Where(n => n.UserId == adminUser.Id)
-                        .OrderByDescending(n => n.CreatedAt)
-                        .Take(5)
-                        .ToList();
-                }
-
-                // Progress bar calculations
-                ViewBag.SupplierProgress = ViewBag.TotalSuppliers > 0
-                    ? (ViewBag.VerifiedSuppliers * 100 / ViewBag.TotalSuppliers)
+                model.AvgOrderValue = model.TotalOrders > 0 
+                    ? Math.Round((orders?.Sum(o => o.TotalAmount) ?? 0) / model.TotalOrders, 2)
                     : 0;
 
-                ViewBag.RetailerProgress = ViewBag.TotalRetailers > 0
-                    ? (ViewBag.ApprovedRetailers * 100 / ViewBag.TotalRetailers)
-                    : 0;
+                model.VerifiedSuppliersCount = suppliers?.Count(s => s.VerificationStatus == "Verified") ?? 0;
+                model.PendingSuppliersCount = suppliers?.Count(s => s.VerificationStatus == "Pending") ?? 0;
+                model.RejectedSuppliersCount = suppliers?.Count(s => s.VerificationStatus == "Rejected") ?? 0;
 
-                // ========== ADD THESE NEW VIEWBAG PROPERTIES ==========
+                model.ApprovedRetailersCount = retailers?.Count(r => r.User != null && r.User.IsApproved) ?? 0;
+                model.PendingRetailersCount = retailers?.Count(r => r.User == null || (!r.User.IsApproved && r.User.AccountStatus != "Rejected")) ?? 0;
+                model.RejectedRetailersCount = retailers?.Count(r => r.User != null && r.User.AccountStatus == "Rejected") ?? 0;
 
-                // Message Monitoring Statistics
-                ViewBag.BlockedMessagesCount = _context.MessageViolations.Count(v => !v.IsResolved);
-                ViewBag.ActivePenaltiesCount = _context.Penalties.Count(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
-                ViewBag.TotalMessagesCount = _context.Messages.Count();
+                model.RecentSuppliers = suppliers.OrderByDescending(s => s.CreatedAt).Take(5).ToList();
+                model.RecentRetailers = retailers.OrderByDescending(r => r.CreatedAt).Take(5).ToList();
 
-                // Get recent blocked messages for dashboard display (optional)
-                ViewBag.RecentBlockedMessages = _context.MessageViolations
-                    .Include(v => v.Message)
-                        .ThenInclude(m => m.Sender)
-                    .OrderByDescending(v => v.CreatedAt)
-                    .Take(5)
+                // Populate ViewBag for View Compatibility (resolves CS1061/RuntimeBinderException)
+                ViewBag.TotalSuppliers = model.TotalSuppliers;
+                ViewBag.VerifiedSuppliers = model.VerifiedSuppliersCount;
+                ViewBag.PendingSuppliers = model.PendingSuppliersCount;
+                ViewBag.RejectedSuppliers = model.RejectedSuppliersCount;
+                
+                ViewBag.TotalRetailers = model.TotalRetailers;
+                ViewBag.ApprovedRetailers = model.ApprovedRetailersCount;
+                ViewBag.PendingRetailers = model.PendingRetailersCount;
+                ViewBag.RejectedRetailers = model.RejectedRetailersCount;
+
+                ViewBag.TotalProducts = model.TotalProducts;
+                ViewBag.TotalRevenue = model.TotalRevenue;
+                ViewBag.TotalOrders = model.TotalOrders;
+                ViewBag.ActiveSuppliers = model.TotalSuppliers;
+                ViewBag.ActiveRetailers = model.TotalRetailers;
+                ViewBag.PendingSuppliersCount = model.PendingSuppliersCount;
+                ViewBag.PendingRetailersCount = model.PendingRetailersCount;
+
+                // Dummy growth values matching mockup (can be replaced with real calc later)
+                ViewBag.OrderGrowth = 12;
+                ViewBag.RevenueGrowth = 8;
+                ViewBag.SupplierGrowth = model.PendingSuppliersCount + " pending";
+                ViewBag.RetailerGrowth = "1 new";
+
+                // --- Chart Data Logic (30 Day Trend) ---
+                var now = DateTime.Today;
+                var last30Days = Enumerable.Range(0, 30)
+                    .Select(i => now.AddDays(-i))
+                    .OrderBy(d => d)
                     .ToList();
 
-                // ========== END OF ADDED PROPERTIES ==========
+                var dailyRevenue = last30Days.Select(date => 
+                    commissions.Where(c => c.CreatedAt.Date == date.Date && (c.Status == "Paid" || c.Status == "Success" || c.Status == "OperationComplete"))
+                              .Sum(c => c.CommissionAmount)
+                ).ToList();
+
+                var dailyOrders = last30Days.Select(date => 
+                    orders.Count(o => o.CreatedAt.Date == date.Date)
+                ).ToList();
+
+                ViewBag.Last30DaysLabels = last30Days.Select(d => d.ToString("MMM dd")).ToArray();
+                ViewBag.RevenueData = dailyRevenue.ToArray();
+                ViewBag.OrderData = dailyOrders.ToArray();
+
+                // --- Category Data (Top 5) ---
+                var topCategories = orders
+                    .SelectMany(o => o.OrderItems)
+                    .GroupBy(i => i.Product?.Category?.CategoryName ?? "Uncategorized")
+                    .OrderByDescending(g => g.Count())
+                    .Take(5)
+                    .Select(g => new { 
+                        Name = g.Key, 
+                        Percentage = orders.SelectMany(o => o.OrderItems).Count() > 0 
+                            ? (int)((double)g.Count() / orders.SelectMany(o => o.OrderItems).Count() * 100) 
+                            : 0 
+                    })
+                    .ToList();
+
+                ViewBag.CategoryLabels = topCategories.Select(c => c.Name).ToArray();
+                ViewBag.CategoryData = topCategories.Select(c => c.Percentage).ToArray();
+
+                // --- Recent Suppliers (Last 5 with status) ---
+                ViewBag.RecentSuppliers = suppliers.OrderByDescending(s => s.CreatedAt).Take(5).Select(s => new {
+                    s.CompanyName,
+                    Status = s.VerificationStatus ?? "Pending",
+                    s.CreatedAt
+                }).ToList();
+
+
+                return View(model);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Dashboard Error: {ex.Message}");
-                TempData["ErrorMessage"] = "Error loading dashboard data.";
-            }
+                _logger.LogError(ex, "Error loading admin dashboard");
+                ViewBag.Error = ex.Message;
+                
+                // Initialize ViewBags even on error to prevent view crash
+                ViewBag.TotalSuppliers = 0; ViewBag.VerifiedSuppliers = 0; ViewBag.PendingSuppliers = 0; ViewBag.RejectedSuppliers = 0;
+                ViewBag.TotalRetailers = 0; ViewBag.ApprovedRetailers = 0; ViewBag.PendingRetailers = 0; ViewBag.RejectedRetailers = 0;
+                ViewBag.TotalProducts = 0; ViewBag.TotalRevenue = 0;
 
-            return View();
+                return View(new AdminDashboardViewModel());
+            }
+        }
+
+        // GET: /Admin/GetDashboardStats (AJAX for Dynamic Chart)
+        [HttpGet]
+        public async Task<IActionResult> GetDashboardStats(int range = 7)
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var now = DateTime.Today;
+            var dates = Enumerable.Range(0, range)
+                .Select(i => now.AddDays(-i))
+                .OrderBy(d => d)
+                .ToList();
+
+            var orders = await _context.Orders
+                .Where(o => o.CreatedAt >= now.AddDays(-range))
+                .ToListAsync();
+
+            var commissions = await _context.Commissions
+                .Where(c => c.CreatedAt >= now.AddDays(-range) && (c.Status == "Paid" || c.Status == "Success" || c.Status == "OperationComplete"))
+                .ToListAsync();
+
+            var data = dates.Select(date => new
+            {
+                date = date.ToString("yyyy-MM-dd"),
+                orders = orders.Count(o => o.CreatedAt.Date == date.Date),
+                revenue = commissions.Where(c => c.CreatedAt.Date == date.Date).Sum(c => c.CommissionAmount)
+            });
+
+            return Json(data);
         }
 
         // GET: /Admin/PendingSuppliers
@@ -231,7 +270,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ PendingSuppliers Error: {ex.Message}");
+                _logger.LogError(ex, "PendingSuppliers Error");
                 TempData["ErrorMessage"] = "Error loading pending approvals.";
                 return View(new List<PendingSupplierViewModel>());
             }
@@ -253,7 +292,8 @@ namespace SCM_System.Controllers
 
                 if (supplier == null || string.IsNullOrEmpty(supplier.LicenseFilePath))
                 {
-                    return NotFound();
+                    TempData["ErrorMessage"] = "No license file is attached for this supplier.";
+                    return RedirectToAction("SupplierDetails", new { id = id });
                 }
 
                 string filePath = Path.Combine(_webHostEnvironment.WebRootPath,
@@ -261,7 +301,8 @@ namespace SCM_System.Controllers
 
                 if (!System.IO.File.Exists(filePath))
                 {
-                    return NotFound("License file not found.");
+                    TempData["ErrorMessage"] = "The license document file was not found on the server.";
+                    return RedirectToAction("SupplierDetails", new { id = id });
                 }
 
                 string fileExtension = Path.GetExtension(filePath).ToLower();
@@ -278,7 +319,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ViewLicense Error: {ex.Message}");
+                _logger.LogError(ex, "ViewLicense Error");
                 return NotFound("Error loading license file.");
             }
         }
@@ -344,7 +385,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -368,7 +409,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error approving supplier: {ex.Message}");
+                _logger.LogError(ex, "Error approving supplier {SupplierId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -439,7 +480,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -463,7 +504,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error approving retailer: {ex.Message}");
+                _logger.LogError(ex, "Error approving retailer {RetailerId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -538,7 +579,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -562,7 +603,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error rejecting supplier: {ex.Message}");
+                _logger.LogError(ex, "Error rejecting supplier {SupplierId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -647,7 +688,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -675,7 +716,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error rejecting retailer: {ex.Message}");
+                _logger.LogError(ex, "Error rejecting retailer {RetailerId}", id);
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
@@ -843,6 +884,74 @@ namespace SCM_System.Controllers
             return RedirectToAction("PendingUsers");
         }
 
+        // POST: /Admin/RejectApplication (JSON Endpoint for Generic Rejections)
+        [HttpPost]
+        [Route("Admin/RejectApplication")]
+        public async Task<IActionResult> RejectApplication([FromBody] RejectRequest request)
+        {
+            try
+            {
+                if (!IsAdmin()) return Unauthorized(new { message = "Unauthorized access." });
+
+                if (string.IsNullOrWhiteSpace(request.RejectionReason))
+                {
+                    return BadRequest(new { message = "Rejection reason is required." });
+                }
+
+                // Check for user
+                var user = await _context.Users.FindAsync(request.UserId);
+                
+                if (user == null)
+                {
+                    return NotFound(new { message = $"{request.UserType} not found." });
+                }
+
+                user.IsApproved = false;
+                user.AccountStatus = "Rejected";
+                user.RejectionReason = request.RejectionReason;
+                user.ApprovalStatus = "Rejected";
+                user.ApprovalStatusType = "Rejected";
+                user.ApprovalStatusMessage = $"Your account was rejected. Reason: {request.RejectionReason}";
+
+                // Update associated roles
+                if (user.Role == "Supplier")
+                {
+                    var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == user.Id);
+                    if (supplier != null) supplier.VerificationStatus = "Rejected";
+                }
+                else if (user.Role == "Retailer")
+                {
+                    var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == user.Id);
+                    if (retailer != null) retailer.IsVerified = false;
+                }
+
+                // Log audit
+                await LogAudit(user.Id, "Rejected", request.RejectionReason);
+
+                await _context.SaveChangesAsync();
+
+                // Send Email if requested
+                if (request.SendEmail)
+                {
+                    try
+                    {
+                        await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, request.UserType ?? user.Role, request.RejectionReason);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send rejection email to {Email}", user.Email);
+                    }
+                }
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing generic rejection modal for ID: {UserId}", request.UserId);
+                return StatusCode(500, new { message = "An internal error occurred." });
+            }
+        }
+
         private async Task LogAudit(int targetUserId, string action, string? reason)
         {
             try
@@ -931,7 +1040,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ VerifiedSuppliers Error: {ex.Message}");
+                _logger.LogError(ex, "VerifiedSuppliers Error");
                 TempData["ErrorMessage"] = "Error loading verified suppliers.";
                 return View(new List<Supplier>());
             }
@@ -957,7 +1066,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ RejectedSuppliers Error: {ex.Message}");
+                _logger.LogError(ex, "RejectedSuppliers Error");
                 TempData["ErrorMessage"] = "Error loading rejected suppliers.";
                 return View(new List<Supplier>());
             }
@@ -982,7 +1091,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ AllRetailers Error: {ex.Message}");
+                _logger.LogError(ex, "AllRetailers Error");
                 TempData["ErrorMessage"] = "Error loading retailers.";
                 return View(new List<Retailer>());
             }
@@ -1007,10 +1116,239 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ AllUsers Error: {ex.Message}");
+                _logger.LogError(ex, "AllUsers Error");
                 TempData["ErrorMessage"] = "Error loading users.";
                 return View(new List<User>());
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SuspendUser([FromBody] SuspendUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Suspended";
+                user.RejectionReason = request.Reason; // Reuse field for suspension reason
+                
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "🔒 Account Suspended",
+                    Message = $"Your account has been suspended. Reason: {request.Reason}",
+                    Type = "Warning",
+                    CreatedAt = DateTime.Now
+                });
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyUser([FromBody] VerifyUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Active";
+                user.IsApproved = true;
+                user.IsFaydaVerified = true;
+                user.FaydaStatus = "Verified";
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "✅ Account Verified",
+                    Message = "Your account has been verified by an administrator.",
+                    Type = "Success",
+                    CreatedAt = DateTime.Now,
+                    ActionUrl = "/Dashboard"
+                });
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectUser([FromBody] RejectUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Rejected";
+                user.RejectionReason = request.Reason;
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "❌ Account Rejected",
+                    Message = $"Your account application was rejected. Reason: {request.Reason}",
+                    Type = "Error",
+                    CreatedAt = DateTime.Now
+                });
+
+                if (request.SendEmail)
+                {
+                    await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, user.Role, request.Reason);
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> BulkVerifyUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Active";
+                    user.IsApproved = true;
+                    user.IsFaydaVerified = true;
+                    user.FaydaStatus = "Verified";
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkSuspendUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Suspended";
+                    user.RejectionReason = request.Reason;
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkRejectUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Rejected";
+                    user.RejectionReason = request.Reason;
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsersPaginated(int page = 1, int pageSize = 10, string searchTerm = "", string role = "All", string status = "All")
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(u => u.FullName.Contains(searchTerm) || u.Email.Contains(searchTerm) || u.Id.ToString() == searchTerm);
+            }
+
+            if (role != "All")
+            {
+                query = query.Where(u => u.Role == role);
+            }
+
+            if (status != "All")
+            {
+                query = query.Where(u => u.AccountStatus == status);
+            }
+
+            var totalCount = await query.CountAsync();
+            var users = await query
+                .OrderByDescending(u => u.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new {
+                    u.Id,
+                    u.FullName,
+                    u.Email,
+                    u.Role,
+                    u.AccountStatus,
+                    LastActive = u.LastLoginAt != null ? u.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never",
+                    CreatedAt = u.CreatedAt.ToString("yyyy-MM-dd")
+                })
+                .ToListAsync();
+
+            return Json(new { totalCount, users });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportUsers(string format = "csv")
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var users = await _context.Users.OrderBy(u => u.CreatedAt).ToListAsync();
+            
+            var csv = new StringBuilder();
+            csv.AppendLine("ID,FullName,Email,Role,Status,LastActive,CreatedAt");
+            foreach (var u in users)
+            {
+                csv.AppendLine($"{u.Id},\"{u.FullName}\",{u.Email},{u.Role},{u.AccountStatus},{(u.LastLoginAt.HasValue ? u.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never")},{u.CreatedAt:yyyy-MM-dd HH:mm}");
+            }
+            
+            byte[] buffer = Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"SCM_Users_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv");
         }
 
         // GET: /Admin/AllSuppliers
@@ -1047,7 +1385,7 @@ namespace SCM_System.Controllers
 
             if (supplier == null)
             {
-                return NotFound();
+                return View((SCM_System.Models.Entities.Supplier)null);
             }
 
             return View(supplier);
@@ -1070,7 +1408,7 @@ namespace SCM_System.Controllers
 
             if (retailer == null)
             {
-                return NotFound();
+                return View((SCM_System.Models.Entities.Retailer)null);
             }
 
             return View(retailer);
@@ -1101,7 +1439,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Notifications Error: {ex.Message}");
+                _logger.LogError(ex, "Notifications Error");
                 TempData["ErrorMessage"] = "Error loading notifications.";
                 return View(new List<Notification>());
             }
@@ -1130,7 +1468,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MarkNotificationRead Error: {ex.Message}");
+                _logger.LogError(ex, "MarkNotificationRead Error");
                 return Json(new { success = false, message = "Error marking notification as read" });
             }
         }
@@ -1166,7 +1504,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MarkAllNotificationsRead Error: {ex.Message}");
+                _logger.LogError(ex, "MarkAllNotificationsRead Error");
                 return Json(new { success = false, message = "Error marking notifications as read" });
             }
         }
@@ -1194,11 +1532,68 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ GetUnreadCount Error: {ex.Message}");
+                _logger.LogError(ex, "GetUnreadCount Error");
                 return Json(new { count = 0 });
             }
         }
 
+
+        // POST: /Admin/ChangePassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
+        {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var user = await _context.Users.FindAsync(userId);
+
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                // Verify current password
+                if (user.PasswordHash != HashPassword(currentPassword))
+                {
+                    TempData["ErrorMessage"] = "❌ Current password is incorrect.";
+                    return RedirectToAction("Settings");
+                }
+
+                // Verify new password matches confirm
+                if (newPassword != confirmPassword)
+                {
+                    TempData["ErrorMessage"] = "❌ New password and confirm password do not match.";
+                    return RedirectToAction("Settings");
+                }
+
+                // Validate password strength
+                if (newPassword.Length < 6)
+                {
+                    TempData["ErrorMessage"] = "❌ Password must be at least 6 characters long.";
+                    return RedirectToAction("Settings");
+                }
+
+                // Update password
+                user.PasswordHash = HashPassword(newPassword);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "✅ Password changed successfully.";
+                Console.WriteLine($"✅ Password changed for admin user {user.Email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ChangePassword Error");
+                TempData["ErrorMessage"] = "❌ An error occurred while changing password.";
+            }
+
+            return RedirectToAction("Settings");
+        }
 
         // GET: /Admin/Reports
         public IActionResult Reports()
@@ -1238,7 +1633,7 @@ namespace SCM_System.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Reports Error: {ex.Message}");
+                _logger.LogError(ex, "Reports Error");
                 TempData["ErrorMessage"] = "Error loading report data.";
             }
 
@@ -1246,15 +1641,25 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Admin/MessageLog
-        public async Task<IActionResult> MessageLog()
+        // GET: /Admin/MessageLog (Enhanced with filtering)
+        public async Task<IActionResult> MessageLog(
+            string senderName = null,
+            string senderRole = null,
+            string dateFilter = "all",
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string keyword = null,
+            int? minLength = null,
+            int page = 1,
+            int pageSize = 20)
         {
             if (!IsAdmin())
                 return RedirectToAction("Login", "Account");
 
             try
             {
-                // Get recent messages
-                var recentMessages = await _context.Messages
+                // Start with base query - get messages that are NOT blocked
+                var messagesQuery = _context.Messages
                     .Include(m => m.Sender)
                     .Include(m => m.Conversation)
                         .ThenInclude(c => c.Supplier)
@@ -1262,51 +1667,140 @@ namespace SCM_System.Controllers
                     .Include(m => m.Conversation)
                         .ThenInclude(c => c.Retailer)
                             .ThenInclude(r => r.User)
-                    .OrderByDescending(m => m.CreatedAt)
-                    .Take(100)
-                    .Select(m => new AdminMessageViewModel
-                    {
-                        MessageId = m.Id,
-                        SenderName = m.Sender.FullName,
-                        SenderRole = m.Sender.Role,
-                        Content = m.MessageText,
-                        SentAt = m.CreatedAt,
-                        IsRead = m.IsRead,
-                        ConversationId = m.ConversationId,
-                        ConversationBetween = $"{m.Conversation.Supplier.User.FullName} (Supplier) ↔ {m.Conversation.Retailer.User.FullName} (Retailer)"
-                    })
-                    .ToListAsync();
+                    .Where(m => !m.IsBlocked) // Only show non-blocked messages
+                    .AsQueryable();
 
-                // Get violation statistics
-                var violations = await _context.MessageViolations
-                    .Include(v => v.Message)
-                    .OrderByDescending(v => v.CreatedAt)
-                    .Take(50)
-                    .ToListAsync();
+                // Apply filters
+                if (!string.IsNullOrEmpty(senderName))
+                {
+                    messagesQuery = messagesQuery.Where(m =>
+                        m.Sender.FullName.Contains(senderName) ||
+                        (m.Sender.Email != null && m.Sender.Email.Contains(senderName)));
+                }
 
-                ViewBag.BlockedMessagesCount = await _context.MessageViolations.CountAsync();
-                ViewBag.ActivePenaltiesCount = await _context.Penalties.CountAsync(p => p.IsActive);
+                if (!string.IsNullOrEmpty(senderRole))
+                {
+                    messagesQuery = messagesQuery.Where(m => m.Sender.Role == senderRole);
+                }
+
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    messagesQuery = messagesQuery.Where(m =>
+                        m.MessageText != null && m.MessageText.Contains(keyword));
+                }
+
+                if (minLength.HasValue && minLength.Value > 0)
+                {
+                    messagesQuery = messagesQuery.Where(m =>
+                        m.MessageText != null && m.MessageText.Length >= minLength.Value);
+                }
+
+                // Date filtering
+                var today = DateTime.Today;
+                switch (dateFilter)
+                {
+                    case "today":
+                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date == today);
+                        break;
+                    case "yesterday":
+                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date == today.AddDays(-1));
+                        break;
+                    case "last7days":
+                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date >= today.AddDays(-7));
+                        break;
+                    case "last30days":
+                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date >= today.AddDays(-30));
+                        break;
+                    case "custom":
+                        if (startDate.HasValue)
+                            messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date >= startDate.Value.Date);
+                        if (endDate.HasValue)
+                            messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date <= endDate.Value.Date);
+                        break;
+                }
+
+                // Get counts for stats cards
                 ViewBag.TotalMessagesCount = await _context.Messages.CountAsync();
+                ViewBag.BlockedMessagesCount = await _context.Messages.CountAsync(m => m.IsBlocked);
+                ViewBag.ActivePenaltiesCount = await _context.Penalties.CountAsync(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
 
-                return View(recentMessages);
+                // Execute query and get results
+                var filteredMessages = await messagesQuery
+                    .OrderByDescending(m => m.CreatedAt)
+                    .ToListAsync();
+
+                ViewBag.FilteredCount = filteredMessages.Count;
+
+                // Pagination
+                var totalItems = filteredMessages.Count;
+                var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+                var pagedMessages = filteredMessages
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                // Map to ViewModel
+                var viewModels = pagedMessages.Select(m => new AdminMessageViewModel
+                {
+                    MessageId = m.Id,
+                    SenderName = m.Sender?.FullName ?? "Unknown User",
+                    SenderRole = m.Sender?.Role ?? "Unknown",
+                    Content = m.MessageText ?? string.Empty,
+                    SentAt = m.CreatedAt,
+                    IsRead = m.IsRead,
+                    ConversationId = m.ConversationId,
+                    ConversationBetween = GetConversationBetween(m.Conversation)
+                }).ToList();
+
+                // Store filter values for the view
+                ViewBag.CurrentFilters = new
+                {
+                    SenderName = senderName,
+                    SenderRole = senderRole,
+                    DateFilter = dateFilter,
+                    StartDate = startDate?.ToString("yyyy-MM-dd"),
+                    EndDate = endDate?.ToString("yyyy-MM-dd"),
+                    Keyword = keyword,
+                    MinLength = minLength
+                };
+
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.HasFilters = !string.IsNullOrEmpty(senderName) ||
+                                    !string.IsNullOrEmpty(senderRole) ||
+                                    dateFilter != "all" ||
+                                    !string.IsNullOrEmpty(keyword) ||
+                                    (minLength.HasValue && minLength.Value > 0);
+
+                return View(viewModels);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MessageLog Error: {ex.Message}");
+                _logger.LogError(ex, "MessageLog Error");
                 TempData["ErrorMessage"] = "Error loading message logs.";
                 return View(new List<AdminMessageViewModel>());
             }
         }
 
         // GET: /Admin/BlockedMessages
-        public async Task<IActionResult> BlockedMessages()
+        // GET: /Admin/BlockedMessages (Enhanced with filtering)
+        public async Task<IActionResult> BlockedMessages(
+            string senderName = null,
+            string senderRole = null,
+            string violationType = null,
+            string dateFilter = "all",
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            bool? isResolved = null,
+            int page = 1,
+            int pageSize = 20)
         {
             if (!IsAdmin())
                 return RedirectToAction("Login", "Account");
 
             try
             {
-                var blockedMessages = await _context.MessageViolations
+                var violationsQuery = _context.MessageViolations
                     .Include(v => v.Message)
                         .ThenInclude(m => m.Sender)
                     .Include(v => v.Message)
@@ -1317,30 +1811,146 @@ namespace SCM_System.Controllers
                         .ThenInclude(m => m.Conversation)
                             .ThenInclude(c => c.Retailer)
                                 .ThenInclude(r => r.User)
+                    .AsQueryable();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(senderName))
+                {
+                    violationsQuery = violationsQuery.Where(v =>
+                        v.Message.Sender.FullName.Contains(senderName));
+                }
+
+                if (!string.IsNullOrEmpty(senderRole))
+                {
+                    violationsQuery = violationsQuery.Where(v =>
+                        v.Message.Sender.Role == senderRole);
+                }
+
+                if (!string.IsNullOrEmpty(violationType))
+                {
+                    violationsQuery = violationsQuery.Where(v =>
+                        v.ViolationType.Contains(violationType));
+                }
+
+                if (isResolved.HasValue)
+                {
+                    violationsQuery = violationsQuery.Where(v => v.IsResolved == isResolved.Value);
+                }
+
+                // Date filtering
+                var today = DateTime.Today;
+                switch (dateFilter)
+                {
+                    case "today":
+                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date == today);
+                        break;
+                    case "yesterday":
+                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date == today.AddDays(-1));
+                        break;
+                    case "last7days":
+                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date >= today.AddDays(-7));
+                        break;
+                    case "last30days":
+                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date >= today.AddDays(-30));
+                        break;
+                    case "custom":
+                        if (startDate.HasValue)
+                            violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date >= startDate.Value.Date);
+                        if (endDate.HasValue)
+                            violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date <= endDate.Value.Date);
+                        break;
+                }
+
+                // Execute query
+                var filteredViolations = await violationsQuery
                     .OrderByDescending(v => v.CreatedAt)
-                    .Select(v => new BlockedMessageViewModel
-                    {
-                        ViolationId = v.Id,
-                        MessageId = v.Message.Id,
-                        SenderName = v.Message.Sender.FullName,
-                        SenderRole = v.Message.Sender.Role,
-                        Content = v.Message.MessageText,
-                        ViolationType = v.ViolationType,
-                        CreatedAt = v.CreatedAt,
-                        IsResolved = v.IsResolved,
-                        ConversationId = v.Message.ConversationId,
-                        ConversationBetween = $"{v.Message.Conversation.Supplier.User.FullName} (Supplier) ↔ {v.Message.Conversation.Retailer.User.FullName} (Retailer)"
-                    })
                     .ToListAsync();
 
-                return View(blockedMessages);
+                ViewBag.FilteredCount = filteredViolations.Count;
+
+                // Pagination
+                var totalItems = filteredViolations.Count;
+                var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+                var pagedViolations = filteredViolations
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                // Map to ViewModel
+                var viewModels = pagedViolations.Select(v => new BlockedMessageViewModel
+                {
+                    ViolationId = v.Id,
+                    MessageId = v.Message.Id,
+                    SenderName = v.Message.Sender?.FullName ?? "Unknown",
+                    SenderRole = v.Message.Sender?.Role ?? "Unknown",
+                    Content = v.Message.MessageText ?? string.Empty,
+                    ViolationType = v.ViolationType,
+                    CreatedAt = v.CreatedAt,
+                    IsResolved = v.IsResolved,
+                    ConversationId = v.Message.ConversationId,
+                    ConversationBetween = GetConversationBetween(v.Message.Conversation)
+                }).ToList();
+
+                // Store filter values for the view
+                ViewBag.CurrentFilters = new
+                {
+                    SenderName = senderName,
+                    SenderRole = senderRole,
+                    ViolationType = violationType,
+                    DateFilter = dateFilter,
+                    StartDate = startDate?.ToString("yyyy-MM-dd"),
+                    EndDate = endDate?.ToString("yyyy-MM-dd"),
+                    IsResolved = isResolved
+                };
+
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.HasFilters = !string.IsNullOrEmpty(senderName) ||
+                                    !string.IsNullOrEmpty(senderRole) ||
+                                    !string.IsNullOrEmpty(violationType) ||
+                                    dateFilter != "all" ||
+                                    isResolved.HasValue;
+
+                return View(viewModels);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ BlockedMessages Error: {ex.Message}");
+                _logger.LogError(ex, "BlockedMessages Error");
                 TempData["ErrorMessage"] = "Error loading blocked messages.";
                 return View(new List<BlockedMessageViewModel>());
             }
+        }
+
+        // Helper method to get conversation display string
+        private string GetConversationBetween(Conversation conversation)
+        {
+            if (conversation == null) return "Unknown";
+
+            var supplierName = conversation.Supplier?.User?.FullName ?? "Supplier";
+            var retailerName = conversation.Retailer?.User?.FullName ?? "Retailer";
+
+            return $"{supplierName} ↔ {retailerName}";
+        }
+
+        // Helper methods for pagination and filtering
+        private string GetQueryString(Dictionary<string, object> currentFilters)
+        {
+            var queryParams = new List<string>();
+            if (currentFilters.ContainsKey("SenderName") && !string.IsNullOrEmpty(currentFilters["SenderName"]?.ToString()))
+                queryParams.Add($"senderName={Uri.EscapeDataString(currentFilters["SenderName"].ToString())}");
+            if (currentFilters.ContainsKey("SenderRole") && !string.IsNullOrEmpty(currentFilters["SenderRole"]?.ToString()))
+                queryParams.Add($"senderRole={currentFilters["SenderRole"]}");
+            if (currentFilters.ContainsKey("DateFilter") && !string.IsNullOrEmpty(currentFilters["DateFilter"]?.ToString()))
+                queryParams.Add($"dateFilter={currentFilters["DateFilter"]}");
+            if (currentFilters.ContainsKey("StartDate") && !string.IsNullOrEmpty(currentFilters["StartDate"]?.ToString()))
+                queryParams.Add($"startDate={currentFilters["StartDate"]}");
+            if (currentFilters.ContainsKey("EndDate") && !string.IsNullOrEmpty(currentFilters["EndDate"]?.ToString()))
+                queryParams.Add($"endDate={currentFilters["EndDate"]}");
+            if (currentFilters.ContainsKey("Keyword") && !string.IsNullOrEmpty(currentFilters["Keyword"]?.ToString()))
+                queryParams.Add($"keyword={Uri.EscapeDataString(currentFilters["Keyword"].ToString())}");
+            if (currentFilters.ContainsKey("MinLength") && currentFilters["MinLength"] != null && Convert.ToInt32(currentFilters["MinLength"]) > 0)
+                queryParams.Add($"minLength={currentFilters["MinLength"]}");
+            return string.Join("&", queryParams);
         }
 
         // GET: /Admin/ViewConversation/{id}
@@ -1758,9 +2368,38 @@ namespace SCM_System.Controllers
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            ViewBag.TotalCommissions = commissions.Sum(c => c.CommissionAmount);
-            ViewBag.PendingCommissions = commissions.Where(c => c.Status == "Pending").Sum(c => c.CommissionAmount);
-            ViewBag.PaidCommissions = commissions.Where(c => c.Status == "Paid").Sum(c => c.CommissionAmount);
+            // High-Level KPIs
+            ViewBag.GrossSales = commissions.Where(c => c.PaymentType == "OrderPayment" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.OrderAmount);
+            ViewBag.PlatformRevenue = commissions.Where(c => c.PaymentType == "PlatformCommission" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.CommissionAmount);
+            ViewBag.SupplierPayables = commissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == PaymentStatus.Pending.ToString()).Sum(c => c.CommissionAmount);
+            ViewBag.FailedPayments = commissions.Where(c => c.Status == PaymentStatus.Failed.ToString()).Count();
+
+            // Chart Data: Status Breakdown
+            var statusGroups = commissions.GroupBy(c => c.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToList();
+            ViewBag.StatusLabels = statusGroups.Select(g => g.Status).ToArray();
+            ViewBag.StatusCounts = statusGroups.Select(g => g.Count).ToArray();
+
+            // Chart Data: Revenue Trend (Last 30 Days)
+            var thirtyDaysAgo = DateTime.Now.AddDays(-30);
+            var trendData = commissions
+                .Where(c => c.PaymentType == "PlatformCommission" && c.PaidAt >= thirtyDaysAgo)
+                .GroupBy(c => c.PaidAt.Value.Date)
+                .Select(g => new { Date = g.Key.ToString("MMM dd"), Amount = g.Sum(c => c.CommissionAmount) })
+                .OrderBy(g => g.Date)
+                .ToList();
+            ViewBag.TrendLabels = trendData.Select(g => g.Date).ToArray();
+            ViewBag.TrendAmounts = trendData.Select(g => g.Amount).ToArray();
+
+            // Top Suppliers
+            ViewBag.TopSuppliers = commissions
+                .Where(c => c.PaymentType == "PlatformCommission")
+                .GroupBy(c => c.Supplier?.CompanyName ?? "Unknown")
+                .Select(g => new { Name = g.Key, Revenue = g.Sum(c => c.CommissionAmount) })
+                .OrderByDescending(g => g.Revenue)
+                .Take(5)
+                .ToList();
 
             return View(commissions);
         }
@@ -1790,10 +2429,135 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Admin/FinancialReports
-        public IActionResult FinancialReports()
+        public async Task<IActionResult> FinancialReports()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
-            return View();
+
+            try
+            {
+                // Summary Metrics
+                ViewBag.TotalRevenue = await _context.Commissions
+                    .Where(c => c.Status == "Paid")
+                    .SumAsync(c => (decimal?)c.CommissionAmount) ?? 0;
+
+                ViewBag.TotalOrderValue = await _context.Orders
+                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+                ViewBag.PendingCommissionsValue = await _context.Commissions
+                    .Where(c => c.Status == "Pending")
+                    .SumAsync(c => (decimal?)c.CommissionAmount) ?? 0;
+
+                ViewBag.TotalPayouts = await _context.Commissions
+                    .Where(c => c.SupplierPayoutStatus == "Processed")
+                    .SumAsync(c => (decimal?)c.SupplierPayoutAmount) ?? 0;
+
+                // Monthly Data for Chart (Last 6 Months)
+                var last6Months = Enumerable.Range(0, 6)
+                    .Select(i => DateTime.Now.AddMonths(-i))
+                    .OrderBy(d => d)
+                    .ToList();
+
+                var monthlyData = new List<decimal>();
+                var labels = new List<string>();
+
+                foreach (var month in last6Months)
+                {
+                    var revenue = await _context.Commissions
+                        .Where(c => c.Status == "Paid" && c.PaidAt.HasValue && c.PaidAt.Value.Month == month.Month && c.PaidAt.Value.Year == month.Year)
+                        .SumAsync(c => (decimal?)c.CommissionAmount) ?? 0;
+                    
+                    monthlyData.Add(revenue);
+                    labels.Add(month.ToString("MMM yyyy"));
+                }
+
+                ViewBag.ChartLabels = labels;
+                ViewBag.ChartData = monthlyData;
+
+                // Recent Financial Movements
+                var recentFinancials = await _context.Commissions
+                    .Include(c => c.Supplier)
+                    .Include(c => c.Order)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Take(10)
+                    .ToListAsync();
+
+                return View(recentFinancials);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "FinancialReports Error");
+                TempData["ErrorMessage"] = "Error loading financial data.";
+                return View(new List<Commission>());
+            }
+        }
+
+        // GET: /Admin/ExportCommissions
+        public async Task<IActionResult> ExportCommissions()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var commissions = await _context.Commissions
+                .Include(c => c.Supplier)
+                .Include(c => c.Order)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            var csv = new StringBuilder();
+            csv.AppendLine("ID,Date,Supplier,OrderReference,Amount,Status,PaymentType,Notes");
+
+            foreach (var c in commissions)
+            {
+                csv.AppendLine($"{c.Id},{c.CreatedAt:yyyy-MM-dd HH:mm},\"{c.Supplier?.CompanyName}\",\"{c.Order?.OrderNumber}\",{c.CommissionAmount},{c.Status},{c.PaymentType},\"{c.Notes?.Replace("\"", "'")}\"");
+            }
+
+            var fileName = $"Commission_Ledger_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
+        }
+
+        // GET: /Admin/ExportFinancials
+        public async Task<IActionResult> ExportFinancials()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var financials = await _context.Commissions
+                .Include(c => c.Supplier)
+                .Include(c => c.Order)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            var csv = new StringBuilder();
+            csv.AppendLine("ID,Date,Supplier,OrderNumber,OrderAmount,CommissionAmount,Status,PaidAt,PaymentType");
+
+            foreach (var item in financials)
+            {
+                csv.AppendLine($"{item.Id},{item.CreatedAt:yyyy-MM-dd HH:mm},\"{item.Supplier?.CompanyName}\",\"{item.Order?.OrderNumber}\",{item.OrderAmount},{item.CommissionAmount},{item.Status},{item.PaidAt:yyyy-MM-dd HH:mm},{item.PaymentType}");
+            }
+
+            var fileName = $"FinancialReport_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
+        }
+
+
+        // GET: /Admin/ExportAuditLogs
+        public async Task<IActionResult> ExportAuditLogs()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var logs = await _context.AuditLogs
+                .Include(a => a.PerformedByUser)
+                .OrderByDescending(a => a.PerformedAtUtc)
+                .ToListAsync();
+
+            var csv = new StringBuilder();
+            csv.AppendLine("Id,Timestamp,UserId,User,Action,Entity,EntityId,Notes");
+
+            foreach (var log in logs)
+            {
+                csv.AppendLine($"{log.Id},{log.PerformedAtUtc:yyyy-MM-dd HH:mm:ss},{log.PerformedByUserId},{log.PerformedByUser?.FullName ?? "N/A"},{log.ActionType},{log.EntityType},{log.EntityId},\"{log.Notes?.Replace("\"", "'")}\"");
+            }
+
+            var fileName = $"AuditLog_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
         }
 
         // GET: /Admin/Settings
@@ -1827,7 +2591,6 @@ namespace SCM_System.Controllers
                 PenaltySuspensionDays = GetConfigInt(sysConfigs, "PenaltySuspensionDays", 7),
                 LowStockDefaultThreshold = GetConfigInt(sysConfigs, "LowStockDefaultThreshold", 10),
                 MaxTenderDays = GetConfigInt(sysConfigs, "MaxTenderDays", 30),
-                OrderCancellationHours = GetConfigInt(sysConfigs, "OrderCancellationHours", 24),
                 AutoReleaseEscrowDays = GetConfigInt(sysConfigs, "AutoReleaseEscrowDays", 5),
 
                 // User Defaults
@@ -1933,7 +2696,6 @@ namespace SCM_System.Controllers
             await SaveOrUpdateConfig("PenaltySuspensionDays", model.PenaltySuspensionDays.ToString(), "int");
             await SaveOrUpdateConfig("LowStockDefaultThreshold", model.LowStockDefaultThreshold.ToString(), "int");
             await SaveOrUpdateConfig("MaxTenderDays", model.MaxTenderDays.ToString(), "int");
-            await SaveOrUpdateConfig("OrderCancellationHours", model.OrderCancellationHours.ToString(), "int");
             await SaveOrUpdateConfig("AutoReleaseEscrowDays", model.AutoReleaseEscrowDays.ToString(), "int");
 
             await SaveOrUpdateConfig("RequireSupplierApproval", model.RequireSupplierApproval.ToString(), "bool");
@@ -1957,28 +2719,6 @@ namespace SCM_System.Controllers
             return RedirectToAction("Settings");
         }
 
-        // GET: /Admin/ExportAuditLogs
-        public async Task<IActionResult> ExportAuditLogs()
-        {
-            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var logs = await _context.AuditLogs
-                .Where(l => l.PerformedByUserId == userId)
-                .OrderByDescending(l => l.PerformedAtUtc)
-                .ToListAsync();
-
-            var csv = new StringBuilder();
-            csv.AppendLine("Timestamp,Action,IpAddress,UserAgent,Notes");
-
-            foreach (var log in logs)
-            {
-                csv.AppendLine($"{log.PerformedAtUtc:yyyy-MM-dd HH:mm:ss},{log.ActionType},{log.IpAddress},\"{log.UserAgent}\",\"{log.Notes}\"");
-            }
-
-            byte[] buffer = Encoding.UTF8.GetBytes(csv.ToString());
-            return File(buffer, "text/csv", $"AdminActivityLog_{DateTime.Now:yyyyMMdd}.csv");
-        }
 
         // POST: /Admin/DeleteAccount
         [HttpPost]
@@ -2118,5 +2858,89 @@ namespace SCM_System.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        // GET: /Admin/UserDetails/{id}
+        public async Task<IActionResult> UserDetails(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("AllUsers");
+            }
+
+            if (user.Role == "Supplier")
+            {
+                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == id);
+                if (supplier != null) return RedirectToAction("SupplierDetails", new { id = supplier.Id });
+            }
+            else if (user.Role == "Retailer")
+            {
+                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == id);
+                if (retailer != null) return RedirectToAction("RetailerDetails", new { id = retailer.Id });
+            }
+
+            // Fallback for roles like Admin, DeliveryAgent, etc., or users with empty roles
+            return View(user);
+        }
+
+        // POST: /Admin/SuspendUser
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SuspendUser(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("AllUsers");
+            }
+
+            user.AccountStatus = "Suspended";
+            user.IsApproved = false;
+
+            await LogAudit(user.Id, "Suspended", $"Admin suspended user {user.FullName}.");
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"User {user.FullName} has been suspended.";
+            return RedirectToAction("AllUsers");
+        }
+
+        // POST: /Admin/RejectFayda
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectFayda(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("AllUsers");
+            }
+
+            user.FaydaStatus = "Rejected";
+            user.IsFaydaVerified = false;
+
+            await LogAudit(user.Id, "Rejected", $"Admin rejected Fayda identity for {user.FullName}.");
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Fayda identity for {user.FullName} has been rejected.";
+            return RedirectToAction("AllUsers");
+        }
+    }
+
+    public class RejectRequest
+    {
+        public int UserId { get; set; }
+        public string UserType { get; set; }
+        public string RejectionReason { get; set; }
+        public string AdditionalComments { get; set; }
+        public bool SendEmail { get; set; }
     }
 }

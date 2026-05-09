@@ -13,7 +13,7 @@ namespace SCM_System.Models.Entities
 
         [Required(ErrorMessage = "Name is required")]
         [StringLength(150)]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         [StringLength(50)]
         public string? WarehouseCode { get; set; }
@@ -24,13 +24,13 @@ namespace SCM_System.Models.Entities
         [StringLength(100)]
         public string Country { get; set; } = "Ethiopia";
         [StringLength(100)]
-        public string Region { get; set; }
+        public required string Region { get; set; }
         [StringLength(100)]
-        public string City { get; set; }
+        public required string City { get; set; }
         [StringLength(100)]
         public string? SubCityZone { get; set; }
         [StringLength(300)]
-        public string Address { get; set; }
+        public required string Address { get; set; }
         [StringLength(200)]
         public string? Landmark { get; set; }
         [Column(TypeName = "decimal(10, 8)")]
@@ -105,18 +105,19 @@ namespace SCM_System.Models.Entities
         public DateTime? DeletedAt { get; set; }
 
         // Navigation
-        public ICollection<WarehouseAssignment> Assignments { get; set; } = new List<WarehouseAssignment>();
+        public ICollection<WarehouseAssignment> Assignments { get; set; } = [];
 
         // Navigation properties
-        public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
-        public ICollection<SupplierEmployee> Employees { get; set; } = new List<SupplierEmployee>();
+        public ICollection<Inventory> Inventories { get; set; } = [];
+        public ICollection<SupplierEmployee> Employees { get; set; } = [];
 
         // History & Tracking
-        public ICollection<WarehouseManagerHistory> ManagerHistories { get; set; } = new List<WarehouseManagerHistory>();
-        public ICollection<EmployeeWarehouseAccess> StaffAccesses { get; set; } = new List<EmployeeWarehouseAccess>();
-        public ICollection<DispatchTask> HubDispatches { get; set; } = new List<DispatchTask>();
-        public ICollection<InventoryTransfer> OutgoingTransfers { get; set; } = new List<InventoryTransfer>();
-        public ICollection<InventoryTransfer> IncomingTransfers { get; set; } = new List<InventoryTransfer>();
-        public ICollection<IncidentReport> HubIncidents { get; set; } = new List<IncidentReport>();
+        public ICollection<WarehouseManagerHistory> ManagerHistories { get; set; } = [];
+        public ICollection<EmployeeWarehouseAccess> StaffAccesses { get; set; } = [];
+        public ICollection<DispatchTask> HubDispatches { get; set; } = [];
+        public ICollection<InventoryTransfer> OutgoingTransfers { get; set; } = [];
+        public ICollection<InventoryTransfer> IncomingTransfers { get; set; } = [];
+        public ICollection<IncidentReport> HubIncidents { get; set; } = [];
+        public ICollection<InboundShipment> InboundShipments { get; set; } = [];
     }
 }

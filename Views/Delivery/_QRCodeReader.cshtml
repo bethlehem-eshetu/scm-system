@@ -1,4 +1,4 @@
-﻿@model int  // PurchaseOrder ID
+@model int  // PurchaseOrder ID
 
 <!-- QR Code Scanner Modal -->
 <div class="modal fade" id="qrScannerModal-@Model" tabindex="-1" aria-hidden="true">
@@ -120,102 +120,69 @@
     })
     .then(response => response.json())
     .then(data => {
-    if (data.success) {
-    $('#qrScannerModal-' + poId).modal('hide');
+            if (data.success) {
+                $('#qrScannerModal-' + poId).modal('hide');
                 
-    // Call the global function to submit delivery
-    if (typeof window.setQRProofData === 'function') {
-    window.setQRProofData(poId, qrValue, false);
-    } else {
-    // Fallback: manually fill and submit
-    const proofDataInput = document.getElementById('proofData-' + poId);
-    if (proofDataInput) {
-    proofDataInput.value = `QR Verified: ${qrValue} at ${new Date().toLocaleString()}`;
-    }
-    const deliveryForm = document.getElementById('deliveryForm-' + poId);
-    if (deliveryForm) {
-    setTimeout(() => deliveryForm.submit(), 1000);
-    }
-    }
-    } else {
-    const resultDiv = document.getElementById('qr-reader-results-' + poId);
-    if (resultDiv) {
-    resultDiv.innerHTML = `
-    <div class="alert alert-danger">
-    <i class="fas fa-times-circle me-2"></i>
-    ${data.message || 'QR Code verification failed. Please try again or use manual entry.'}
-    </div>
-    `;
-    }
-    setTimeout(() => startQRScanner(poId), 3000);
-    }
-    })
-    .catch(error => {
-    console.error('Error verifying QR:', error);
-    const resultDiv = document.getElementById('qr-reader-results-' + poId);
-    if (resultDiv) {
-    resultDiv.innerHTML = `
-    <div class="alert alert-danger">
-    <i class="fas fa-exclamation-triangle me-2"></i>
-    Error verifying QR code. Please try manual entry.
-    </div>
-    `;
-    }
-    });
+                // Call global verification indicator
+                if (typeof window.onQRVerified === 'function') {
+                    window.onQRVerified(poId);
+                }
+            } else {
+                const resultDiv = document.getElementById('qr-reader-results-' + poId);
+                if (resultDiv) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            ${data.message || 'QR Code verification failed. Please try again or use manual entry.'}
+                        </div>
+                    `;
+                }
+                setTimeout(() => startQRScanner(poId), 3000);
+            }
+        })
+        .catch(error => {
+            console.error('Error verifying QR:', error);
+        });
     }
     
     function verifyManualQRCode(poId) {
-    const manualInput = document.getElementById('manualQRCode-' + poId);
-    const qrValue = manualInput.value.trim();
+        const manualInput = document.getElementById('manualQRCode-' + poId);
+        const qrValue = manualInput.value.trim();
         
-    if (!qrValue) {
-    alert('Please enter the QR code value or type "VERIFY" to confirm delivery');
-    return;
-    }
+        if (!qrValue) {
+            alert('Please enter the QR code value or type "VERIFY" to confirm delivery');
+            return;
+        }
         
-    const isManualConfirm = qrValue.toUpperCase() === 'VERIFY';
+        const isManualConfirm = qrValue.toUpperCase() === 'VERIFY';
         
-    fetch('@Url.Action("VerifyQRCode", "Delivery")', {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json',
-    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val()
-    },
-    body: JSON.stringify({
-    purchaseOrderId: poId,
-    qrCode: qrValue,
-    isManual: !isManualConfirm
-    })
-    })
-    .then(response => response.json())
-    .then(data => {
-    if (data.success) {
-    $('#qrScannerModal-' + poId).modal('hide');
+        fetch('@Url.Action("VerifyQRCode", "Delivery")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val()
+            },
+            body: JSON.stringify({
+                purchaseOrderId: poId,
+                qrCode: qrValue,
+                isManual: isManualConfirm
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                $('#qrScannerModal-' + poId).modal('hide');
                 
-    if (typeof window.setQRProofData === 'function') {
-    window.setQRProofData(poId, qrValue, isManualConfirm);
-    } else {
-    const proofDataInput = document.getElementById('proofData-' + poId);
-    if (proofDataInput) {
-    if (isManualConfirm) {
-    proofDataInput.value = `Manual delivery confirmation at ${new Date().toLocaleString()}`;
-    } else {
-    proofDataInput.value = `Manual QR Entry: ${qrValue} at ${new Date().toLocaleString()}`;
-    }
-    }
-    const deliveryForm = document.getElementById('deliveryForm-' + poId);
-    if (deliveryForm) {
-    setTimeout(() => deliveryForm.submit(), 1000);
-    }
-    }
-    } else {
-    alert(data.message || 'Verification failed. Please check the QR code.');
-    }
-    })
-    .catch(error => {
-    console.error('Error:', error);
-    alert('Error verifying QR code. Please try again.');
-    });
+                if (typeof window.onQRVerified === 'function') {
+                    window.onQRVerified(poId);
+                }
+            } else {
+                alert(data.message || 'Verification failed. Please check the QR code.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     }
     
     $('#qrScannerModal-@Model').on('hidden.bs.modal', function () {

@@ -1,4 +1,4 @@
-﻿@using SCM_System.Models.Entities
+@using SCM_System.Models.Entities
 
 @model List<SCM_System.Models.Entities.Commission>
 
@@ -7,177 +7,212 @@
     Layout = "_DashboardLayout";
     string userRole = ViewBag.UserRole ?? "User";
     
+    // Role-based logic for summaries
+    IEnumerable<Commission> displayList = Model;
+    if (userRole == "Supplier") {
+        displayList = Model.Where(m => m.PaymentType == "SupplierPayout" || m.PaymentType == "PlatformCommission");
+    }
+    
     var pendingPayments = Model.Where(p => p.Status == "Pending" && p.PaymentType == "OrderPayment").ToList();
     var paidPayments = Model.Where(p => p.Status == "Paid" && p.PaymentType == "OrderPayment").ToList();
     var totalPending = pendingPayments.Sum(p => p.CommissionAmount);
     var totalPaid = paidPayments.Sum(p => p.CommissionAmount);
+
+    var pendingCount = displayList.Count(p => p.Status == "Pending");
+    var totalAmount = displayList.Where(p => p.PaymentType == "SupplierPayout" || p.PaymentType == "OrderPayment").Sum(p => p.CommissionAmount);
+    var platformDeductions = displayList.Where(p => p.PaymentType == "PlatformCommission").Sum(p => p.CommissionAmount);
 }
 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-credit-card text-primary me-2"></i>My Payments
-        </h1>
-        <a asp-action="Dashboard" asp-controller="@(userRole == "Supplier" ? "Supplier" : "Retailer")" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
+        <h2 class="fw-bold text-dark mb-0">
+            <i class="fas fa-wallet text-primary me-2"></i>@(userRole == "Supplier" ? "Earnings Ledger" : "Payment History")
+        </h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-white shadow-sm border rounded-pill" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Export
+            </button>
+            <a asp-action="Dashboard" asp-controller="@(userRole == "Supplier" ? "Supplier" : "Retailer")" class="btn btn-outline-primary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+        </div>
     </div>
 
-    <!-- Summary Cards -->
+    <!-- Smart KPI Cards -->
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card bg-warning text-white shadow-sm">
-                <div class="card-body">
-                    <h6 class="text-white-50 mb-2">Pending Payments</h6>
-                    <h3 class="mb-0">@totalPending.ToString("C")</h3>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 border-start border-4 border-primary">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small fw-bold text-uppercase mb-1">@(userRole == "Supplier" ? "Total Earnings" : "Total Spent")</p>
+                            <h3 class="fw-bold mb-0">@totalAmount.ToString("C")</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 text-primary">
+                            <i class="fas fa-coins fa-lg"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card bg-success text-white shadow-sm">
-                <div class="card-body">
-                    <h6 class="text-white-50 mb-2">Completed Payments</h6>
-                    <h3 class="mb-0">@totalPaid.ToString("C")</h3>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 border-start border-4 border-warning">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small fw-bold text-uppercase mb-1">Pending Clearance</p>
+                            <h3 class="fw-bold mb-0">@displayList.Where(p => p.Status == "Pending").Sum(p => p.CommissionAmount).ToString("C")</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 text-warning">
+                            <i class="fas fa-clock fa-lg"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+        @if (userRole == "Supplier") {
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 border-start border-4 border-danger">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small fw-bold text-uppercase mb-1">Total Commission Paid</p>
+                            <h3 class="fw-bold mb-0">@platformDeductions.ToString("C")</h3>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3 text-danger">
+                            <i class="fas fa-percent fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold">Timeframe</label>
+                    <select name="dateRange" class="form-select border-0 bg-light rounded-3">
+                        <option value="all">All Records</option>
+                        <option value="month">Current Month</option>
+                        <option value="30days">Last 30 Days</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold">Status Filter</label>
+                    <select name="status" class="form-select border-0 bg-light rounded-3">
+                        <option value="all">All Statuses</option>
+                        <option value="Paid">Cleared / Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Failed">Failed</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold">Quick Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0 bg-light"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" class="form-control border-0 bg-light" placeholder="e.g. ORD-1234">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Pending Payments -->
-    @if (pendingPayments.Any())
-    {
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">
-                    <i class="fas fa-clock text-warning me-2"></i>Pending Payments
-                </h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Order / PO #</th>
-                                <th>Payment Type</th>
-                                <th>Amount</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var payment in pendingPayments)
-                            {
-                                <tr>
-                                    <td>#@payment.Id</td>
-                                    <td>
-                                        @if (payment.PurchaseOrder != null && !string.IsNullOrEmpty(payment.PurchaseOrder.PONumber))
-                                        {
-                                            <span>PO: @payment.PurchaseOrder.PONumber</span>
-                                        }
-                                        else if (payment.Order != null && !string.IsNullOrEmpty(payment.Order.OrderNumber))
-                                        {
-                                            <span>Order: @payment.Order.OrderNumber</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">N/A</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">Order Payment</span>
-                                    </td>
-                                    <td><span class="fw-bold text-danger">@payment.CommissionAmount.ToString("C")</span></td>
-                                    <td>@(payment.DueDate?.ToString("MMM dd, yyyy") ?? "N/A")</td>
-                                    <td>
-                                        <span class="badge bg-warning">Pending</span>
-                                    </td>
-                                    <td>
-                                        <form asp-action="InitializePayment" asp-controller="Payment" method="post" style="display:inline;">
+    <!-- Main Ledger -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+            <h5 class="fw-bold mb-0 text-dark">Transaction Ledger</h5>
+            <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">@displayList.Count() total records</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 text-muted small fw-bold">DATE</th>
+                        <th class="text-muted small fw-bold">REFERENCE</th>
+                        <th class="text-muted small fw-bold">TYPE</th>
+                        <th class="text-muted small fw-bold text-end">AMOUNT</th>
+                        <th class="text-muted small fw-bold text-center">STATUS</th>
+                        <th class="text-muted small fw-bold text-end pe-4">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!displayList.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png" style="width: 80px; opacity: 0.2" class="mb-3">
+                                <p class="text-muted mb-0">No financial records matching your filters.</p>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var payment in displayList.OrderByDescending(p => p.CreatedAt))
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">@payment.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                <div class="extra-small text-muted">@payment.CreatedAt.ToString("HH:mm")</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold">
+                                    @if (payment.PurchaseOrder != null) { <text>PO: @payment.PurchaseOrder.PONumber</text> }
+                                    else if (payment.Order != null) { <text>Order: @payment.Order.OrderNumber</text> }
+                                </div>
+                                <div class="extra-small text-muted px-2 py-0 border rounded d-inline-block">TX: #@payment.Id</div>
+                            </td>
+                            <td>
+                                @if (payment.PaymentType == "OrderPayment") { <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3">Customer Pay</span> }
+                                else if (payment.PaymentType == "SupplierPayout") { <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3">Earning</span> }
+                                else if (payment.PaymentType == "PlatformCommission") { <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-3">Commission</span> }
+                            </td>
+                            <td class="text-end fw-bold">
+                                @if (payment.PaymentType == "PlatformCommission") { <span class="text-danger">- @payment.CommissionAmount.ToString("C")</span> }
+                                else if (payment.PaymentType == "SupplierPayout") { <span class="text-success">+ @payment.CommissionAmount.ToString("C")</span> }
+                                else { <span class="text-dark">@payment.CommissionAmount.ToString("C")</span> }
+                            </td>
+                            <td class="text-center">
+                                @if (payment.Status == "Paid") { <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-check-circle me-1"></i>Cleared</span> }
+                                else if (payment.Status == "Processing") { <span class="badge bg-info rounded-pill px-3 py-2"><i class="fas fa-sync fa-spin me-1"></i>Processing</span> }
+                                else if (payment.Status == "Failed") { <span class="badge bg-danger rounded-pill px-3 py-2"><i class="fas fa-exclamation-triangle me-1"></i>Failed</span> }
+                                else { <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Pending</span> }
+                            </td>
+                            <td class="text-end pe-4">
+                                @if (userRole == "Retailer" && payment.PaymentType == "OrderPayment")
+                                {
+                                    if (payment.Status == "Pending" || payment.Status == "Failed")
+                                    {
+                                        <form asp-action="InitializePayment" asp-controller="Payment" method="post">
                                             <input type="hidden" name="commissionId" value="@payment.Id" />
-                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
-                                                <i class="fas fa-credit-card me-1"></i>Pay Now
+                                            <button type="submit" class="btn btn-sm @(payment.Status == "Failed" ? "btn-danger" : "btn-primary") rounded-pill px-3 shadow-sm">
+                                                <i class="fas fa-credit-card me-1"></i>@(payment.Status == "Failed" ? "Retry Payment" : "Pay Now")
                                             </button>
                                         </form>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                    }
+                                    else if (payment.Status == "Paid")
+                                    {
+                                        <a href="/Payment/Receipt/@payment.Id" class="btn btn-sm btn-light border rounded-pill px-3">View Receipt</a>
+                                    }
+                                }
+                                else
+                                {
+                                    <a href="/Payment/Receipt/@payment.Id" class="btn btn-sm btn-light border rounded-pill px-3">View Receipt</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
-
-    <!-- Payment History -->
-    @if (paidPayments.Any())
-    {
-        <div class="card shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">
-                    <i class="fas fa-history me-2 text-primary"></i>Payment History
-                </h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Order / PO #</th>
-                                <th>Payment Type</th>
-                                <th>Amount</th>
-                                <th>Paid Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var payment in paidPayments)
-                            {
-                                <tr>
-                                    <td>#@payment.Id</td>
-                                    <td>
-                                        @if (payment.PurchaseOrder != null && !string.IsNullOrEmpty(payment.PurchaseOrder.PONumber))
-                                        {
-                                            <span>PO: @payment.PurchaseOrder.PONumber</span>
-                                        }
-                                        else if (payment.Order != null && !string.IsNullOrEmpty(payment.Order.OrderNumber))
-                                        {
-                                            <span>Order: @payment.Order.OrderNumber</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">N/A</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">Order Payment</span>
-                                    </td>
-                                    <td class="fw-bold text-success">@payment.CommissionAmount.ToString("C")</td>
-                                    <td>@(payment.PaidAt?.ToString("MMM dd, yyyy") ?? "N/A")</td>
-                                    <td>
-                                        <span class="badge bg-success">Paid</span>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    }
-
-    @if (!pendingPayments.Any() && !paidPayments.Any())
-    {
-        <div class="card shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-receipt fa-4x text-muted mb-3 opacity-25"></i>
-                <h5 class="text-muted">No payments found</h5>
-                <p class="text-muted">Payments will appear here when orders are delivered or completed.</p>
-            </div>
-        </div>
-    }
+    </div>
 </div>
 
 <style>

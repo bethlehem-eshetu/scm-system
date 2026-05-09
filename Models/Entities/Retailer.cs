@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
 {
+
     public class Retailer
     {
         public int Id { get; set; }
@@ -14,7 +15,7 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(150)]
         [Display(Name = "Business Name")]
-        public string BusinessName { get; set; }
+        public required string BusinessName { get; set; }
 
         [StringLength(50)]
         [Display(Name = "Business Type")]
@@ -31,15 +32,18 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(200)]
         [Display(Name = "Business Address")]
-        public string BusinessAddress { get; set; }
+        public required string BusinessAddress { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string City { get; set; }
+        public required string City { get; set; }
+
+        [StringLength(100)]
+        public string? Region { get; set; } // Nullable to allow existing rows with NULL values
 
         [Required]
         [StringLength(100)]
-        public string Country { get; set; } = "Ethiopia";
+        public required string Country { get; set; } = "Ethiopia";
 
         [StringLength(20)]
         [Display(Name = "Store Size")]
@@ -109,12 +113,12 @@ namespace SCM_System.Models.Entities
         public bool IsDeleted { get; set; } = false;
 
         // Navigation properties
-        public ICollection<Tender> Tenders { get; set; }
-        public ICollection<PurchaseOrder> PurchaseOrders { get; set; }
-        public ICollection<Order> Orders { get; set; }
-        public ICollection<Rating> GivenRatings { get; set; }
-        public ICollection<Conversation> Conversations { get; set; }
-        public Cart Cart { get; set; }
+        public ICollection<Tender> Tenders { get; set; } = new List<Tender>();
+        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
+        public ICollection<Rating> GivenRatings { get; set; } = new List<Rating>();
+        public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
+        public Cart? Cart { get; set; }
         public ICollection<RetailerCategory> RetailerCategories { get; set; } = new List<RetailerCategory>();
         public ICollection<RetailerAddress> Addresses { get; set; } = new List<RetailerAddress>();
         public ICollection<RetailerPaymentMethod> PaymentMethods { get; set; } = new List<RetailerPaymentMethod>();

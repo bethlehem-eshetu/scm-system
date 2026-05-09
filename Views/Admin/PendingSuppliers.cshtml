@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Pending Approvals";
     var pendingRetailers = ViewBag.PendingRetailers as IEnumerable<SCM_System.Models.ViewModels.PendingRetailerViewModel>;
+    Layout = "_DashboardLayout";
 }
 
 <div class="container-fluid py-4">

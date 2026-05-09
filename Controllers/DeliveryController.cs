@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Constants;
 using SCM_System.Services;
 using System.Security.Claims;
+using System.IO;
 
 namespace SCM_System.Controllers
 {
@@ -93,6 +95,49 @@ namespace SCM_System.Controllers
                 .ToListAsync();
 
             return View(model);
+        }
+
+        public class QRCodeRequest
+        {
+            public int purchaseOrderId { get; set; }
+            public string qrCode { get; set; }
+            public bool? isManual { get; set; }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "DeliveryAgent")]
+        public async Task<IActionResult> VerifyQRCode([FromBody] QRCodeRequest request)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Json(new { success = false, message = "Unauthorized" });
+
+            var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == userId);
+            if (employee == null) return Json(new { success = false, message = "Employee profile not found" });
+
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Order)
+                .FirstOrDefaultAsync(p => p.Id == request.purchaseOrderId && p.DeliveryAgentId == employee.Id);
+
+            if (po == null)
+            {
+                return Json(new { success = false, message = "Purchase order not found or not assigned to you." });
+            }
+
+            // Expected QR format: "ORDER-{OrderNumber}"
+            var expectedQR = $"ORDER-{po.Order.OrderNumber}";
+
+            if (request.isManual == true)
+            {
+                // Manual confirmation, don't verify strict format, just return success so form can submit
+                return Json(new { success = true });
+            }
+
+            if (!string.IsNullOrEmpty(request.qrCode) && request.qrCode.Trim().Equals(expectedQR, StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new { success = true, message = "QR Code verified successfully." });
+            }
+
+            return Json(new { success = false, message = "Invalid QR Code for this order." });
         }
 
         [HttpPost]
@@ -233,6 +278,31 @@ namespace SCM_System.Controllers
 
             ViewBag.RecentDeliveries = recentDeliveries;
 
+            var activeDeliveries = await _context.PurchaseOrders
+                .Include(po => po.Order)
+                    .ThenInclude(o => o.Retailer)
+                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
+                .ToListAsync();
+
+            var mapDataList = new List<object>();
+            var random = new Random();
+            var index = 0;
+            foreach (var po in activeDeliveries)
+            {
+                mapDataList.Add(new {
+                    id = po.Id,
+                    poNumber = po.PONumber,
+                    businessName = po.Order?.Retailer?.BusinessName ?? "Retailer",
+                    address = po.DeliveryAddress ?? (po.Order?.Retailer?.BusinessAddress ?? "Address not set"),
+                    lat = 9.02 + (index * 0.12) + (random.NextDouble() * 0.05),
+                    lng = 38.75 + (index * 0.09) + (random.NextDouble() * 0.03),
+                    priority = po.Status == "In Transit" ? "High" : "Normal",
+                    status = po.Status
+                });
+                index++;
+            }
+            ViewBag.MapData = Newtonsoft.Json.JsonConvert.SerializeObject(mapDataList);
+
             return View(employee);
         }
 
@@ -258,7 +328,7 @@ namespace SCM_System.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int purchaseOrderId, string status, IFormFile? proofImage = null, string proofData = null)
+        public async Task<IActionResult> UpdateStatus(int purchaseOrderId, string status, IFormFile? proofImage = null, string? signatureData = null, bool checklistVerified = false)
         {
             var po = await _context.PurchaseOrders
                 .Include(p => p.Order)
@@ -274,64 +344,101 @@ namespace SCM_System.Controllers
 
             if (status == "Delivered")
             {
-                // Handle image upload
-                string imagePath = null;
+                // 1. Enforce Checklist
+                if (!checklistVerified)
+                {
+                    TempData["ErrorMessage"] = "You must verify the delivery checklist before completing the order.";
+                    return RedirectToAction(nameof(MyDeliveries));
+                }
+                po.ChecklistVerified = true;
+
+                // 2. Handle Signature (File storage)
+                if (!string.IsNullOrWhiteSpace(signatureData))
+                {
+                    try
+                    {
+                        var base64Data = signatureData.Contains(",") ? signatureData.Split(',')[1] : signatureData;
+                        var bytes = Convert.FromBase64String(base64Data);
+
+                        // Validate Size (Max 1MB for signature)
+                        if (bytes.Length > 1024 * 1024)
+                        {
+                            TempData["ErrorMessage"] = "Signature data is too large.";
+                            return RedirectToAction(nameof(MyDeliveries));
+                        }
+
+                        var fileName = $"sig_{po.PONumber}_{DateTime.Now:yyyyMMddHHmmss}.png";
+                        var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "signatures");
+                        if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
+
+                        var filePath = Path.Combine(uploadPath, fileName);
+                        await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+                        po.SignaturePath = $"/uploads/signatures/{fileName}";
+                    }
+                    catch (Exception ex)
+                    {
+                        TempData["ErrorMessage"] = "Failed to save signature: " + ex.Message;
+                        return RedirectToAction(nameof(MyDeliveries));
+                    }
+                }
+
+                // 3. Handle Photo Proof
                 if (proofImage != null && proofImage.Length > 0)
                 {
-                    // Validate file type
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
                     var fileExtension = Path.GetExtension(proofImage.FileName).ToLower();
 
                     if (!allowedExtensions.Contains(fileExtension))
                     {
-                        TempData["ErrorMessage"] = "Invalid file type. Please upload JPG, PNG, GIF, or PDF files only.";
+                        TempData["ErrorMessage"] = "Invalid photo type. Please upload JPG or PNG.";
                         return RedirectToAction(nameof(MyDeliveries));
                     }
 
-                    // Validate file size (max 5MB)
                     if (proofImage.Length > 5 * 1024 * 1024)
                     {
-                        TempData["ErrorMessage"] = "File size exceeds 5MB limit.";
+                        TempData["ErrorMessage"] = "Photo proof exceeds 5MB.";
                         return RedirectToAction(nameof(MyDeliveries));
                     }
 
-                    // Create unique filename
-                    var fileName = $"delivery_proof_{po.PONumber}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
-                    var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "delivery_proofs");
-
-                    if (!Directory.Exists(uploadPath))
-                    {
-                        Directory.CreateDirectory(uploadPath);
-                    }
+                    var fileName = $"proof_{po.PONumber}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
+                    var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "delivery_proofs");
+                    if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
 
                     var filePath = Path.Combine(uploadPath, fileName);
-
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await proofImage.CopyToAsync(stream);
                     }
+                    po.ProofOfDelivery = $"/uploads/delivery_proofs/{fileName}";
+                }
 
-                    imagePath = $"/uploads/delivery_proofs/{fileName}";
-                    po.ProofOfDelivery = imagePath;
-                }
-                else if (!string.IsNullOrWhiteSpace(proofData))
+                // 4. Validate Proof Requirement (At least ONE of Signature, Photo, or QR)
+                bool hasProof = !string.IsNullOrEmpty(po.SignaturePath) || 
+                                !string.IsNullOrEmpty(po.ProofOfDelivery) || 
+                                po.IsQRVerified;
+
+                if (!hasProof)
                 {
-                    po.ProofOfDelivery = proofData;
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Proof of Delivery (image or text) is required to mark a PO as Delivered.";
+                    TempData["ErrorMessage"] = "At least one proof of delivery (Signature, Photo, or QR Code) is required.";
                     return RedirectToAction(nameof(MyDeliveries));
                 }
 
                 po.DeliveredAt = DateTime.Now;
             }
 
-            // Update PO status
-            po.Status = status;
+            // Update PO status via Service (Strict guardrails will be checked there)
+            try 
+            {
+                await _poService.UpdatePurchaseOrderStatusAsync(purchaseOrderId, status, userId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(MyDeliveries));
+            }
 
             // Reset Vehicle status to Available when delivery is complete
-            if (status == "Delivered" || status == "Completed")
+            if (status == "Delivered")
             {
                 if (po.VehicleId.HasValue)
                 {
@@ -380,8 +487,6 @@ namespace SCM_System.Controllers
                     await _context.SaveChangesAsync();
                 }
             }
-
-            await _poService.UpdatePurchaseOrderStatusAsync(purchaseOrderId, status, userId);
 
             // Re-fetch to ensure we have updated status for parent check
             po = await _context.PurchaseOrders.FindAsync(purchaseOrderId);
@@ -470,14 +575,10 @@ namespace SCM_System.Controllers
 
                 if (isValid)
                 {
-                    // Update delivery with QR verification
-                    if (po.Order?.Delivery != null)
-                    {
-                        po.Order.Delivery.IsQRVerified = true;
-                        po.Order.Delivery.QRVerifiedAt = DateTime.Now;
-                        po.Order.Delivery.QRVerificationMethod = request.IsManual ? "Manual" : "QRScan";
-                        await _context.SaveChangesAsync();
-                    }
+                    // Update delivery with QR verification on PO level
+                    po.IsQRVerified = true;
+                    po.UpdatedAt = DateTime.Now;
+                    await _context.SaveChangesAsync();
 
                     return Json(new { success = true, message = "QR Code verified successfully" });
                 }
@@ -490,13 +591,63 @@ namespace SCM_System.Controllers
             }
         }
 
-        // Add this request class at the end of the file or in a separate file
-        public class QRVerificationRequest
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAsFailed(int purchaseOrderId, string reason)
         {
-            public int PurchaseOrderId { get; set; }
-            public string QRCode { get; set; }
-            public bool IsManual { get; set; } = false;
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var po = await _context.PurchaseOrders.FindAsync(purchaseOrderId);
+            if (po == null) return NotFound();
+
+            try
+            {
+                po.FailureReason = reason;
+                await _poService.UpdatePurchaseOrderStatusAsync(purchaseOrderId, POStatus.Failed, userId);
+                TempData["SuccessMessage"] = "Delivery marked as failed. Recovery options available for manager.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(MyDeliveries));
         }
 
+        // Recovery Actions (Manager/Supplier Level)
+        [HttpPost]
+        [Authorize(Roles = "Supplier")]
+        public async Task<IActionResult> ReassignDelivery(int id, int agentId)
+        {
+            var po = await _context.PurchaseOrders.FindAsync(id);
+            if (po == null) return NotFound();
+
+            po.DeliveryAgentId = agentId;
+            po.Status = POStatus.Packed; // Reset to packed so it can be shipped again
+            po.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Details", "PurchaseOrder", new { id = id });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Supplier")]
+        public async Task<IActionResult> RetryDelivery(int id)
+        {
+            var po = await _context.PurchaseOrders.FindAsync(id);
+            if (po == null) return NotFound();
+
+            po.Status = POStatus.Ready; // Move back to Ready Dispatch
+            po.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Details", "PurchaseOrder", new { id = id });
+        }
+    }
+
+    public class QRVerificationRequest
+    {
+        public int PurchaseOrderId { get; set; }
+        public string QRCode { get; set; } = string.Empty;
+        public bool IsManual { get; set; }
     }
 }

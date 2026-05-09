@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace SCM_System.Models.ViewModels
 {
@@ -18,6 +18,7 @@ namespace SCM_System.Models.ViewModels
         public int? PenaltyId { get; set; }
         public int ConversationId { get; set; }
         public string ReceiverName { get; set; } = string.Empty;
+        public DateTime? SeenAt { get; set; }
 
         public string TimeAgo
         {

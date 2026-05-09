@@ -12,20 +12,7 @@
         </div>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
-            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+
 
     <form asp-action="Settings" asp-controller="Admin" method="post" enctype="multipart/form-data" id="adminSettingsForm">
         <div class="row g-4">
@@ -376,12 +363,6 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label fw-bold">Order Auto-Cancellation (Hours)</label>
-                                    <input asp-for="OrderCancellationHours" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
                                     <label class="form-label fw-bold">Escrow Auto-Release (Days)</label>
                                     <input asp-for="AutoReleaseEscrowDays" type="number" class="form-control rounded-pill bg-light border-0 px-4" />
                                 </div>
@@ -601,13 +582,11 @@
                 localStorage.setItem('adminSettingsTab', e.target.id);
             });
 
-            // Unsaved changes warning
+            // Unsaved changes warning removed as per request to prevent annoying prompts during navigation
             var formChanged = false;
             $('#adminSettingsForm :input').change(function() { formChanged = true; });
             $('#adminSettingsForm').submit(function() { formChanged = false; });
-            window.onbeforeunload = function() {
-                if (formChanged) return "You have unsaved changes. Are you sure you want to leave?";
-            };
+
         });
 
         function previewImage(event) {

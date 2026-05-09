@@ -67,6 +67,38 @@ namespace SCM_System.Controllers
             return View(targetedTenders);
         }
 
+        [Authorize(Roles = "Supplier")]
+        public async Task<IActionResult> MyBids()
+        {
+            var supplierId = await GetSupplierIdAsync();
+            if (supplierId == 0) return Unauthorized();
+
+            var bids = await _context.TenderBids
+                .Include(b => b.Tender)
+                    .ThenInclude(t => t.Category)
+                .Where(b => b.SupplierId == supplierId)
+                .OrderByDescending(b => b.SubmittedAt)
+                .ToListAsync();
+
+            return View(bids);
+        }
+
+        [Authorize(Roles = "Supplier")]
+        public async Task<IActionResult> AwardedContracts()
+        {
+            var supplierId = await GetSupplierIdAsync();
+            if (supplierId == 0) return Unauthorized();
+
+            var bids = await _context.TenderBids
+                .Include(b => b.Tender)
+                    .ThenInclude(t => t.Category)
+                .Where(b => b.SupplierId == supplierId && b.IsWinningBid)
+                .OrderByDescending(b => b.SubmittedAt)
+                .ToListAsync();
+
+            return View(bids);
+        }
+
         [Authorize(Roles = "Retailer")]
         public async Task<IActionResult> MyTenders()
         {
@@ -162,18 +194,37 @@ namespace SCM_System.Controllers
                     PreferredSuppliers = model.PreferredSuppliers
                 };
 
+                var productIds = model.Items.Where(i => !i.IsCustom && i.ProductId.HasValue).Select(i => i.ProductId.Value).ToList();
+                var products = await _context.Products.Where(p => productIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, p => p.ProductName);
+
                 var items = model.Items.Select(i => new TenderItem
                 {
                     ProductId = i.IsCustom ? (int?)null : i.ProductId,
-                    ProductName = i.ProductName,
+                    ProductName = i.IsCustom ? (i.ProductName ?? "Custom Product") : (i.ProductId.HasValue && products.ContainsKey(i.ProductId.Value) ? products[i.ProductId.Value] : (i.ProductName ?? "Unknown Product")),
                     Description = i.Description,
                     Specifications = i.Specifications,
                     Quantity = i.Quantity,
-                    Unit = i.Unit,
+                    Unit = i.Unit ?? "pcs",
                     EstimatedUnitPrice = i.EstimatedUnitPrice
                 }).ToList();
 
                 await _tenderService.CreateTenderAsync(tender, items);
+
+                var targetSuppliers = await _context.SupplierCategories
+                    .Where(sc => sc.CategoryId == tender.CategoryId)
+                    .Select(sc => sc.Supplier.UserId)
+                    .ToListAsync();
+
+                foreach (var suppUserId in targetSuppliers)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        suppUserId, 
+                        "New Tender Published", 
+                        $"A new tender '{tender.Title}' has been published in your preferred category.", 
+                        "Info", 
+                        $"/Tender/Details/{tender.Id}"
+                    );
+                }
 
                 TempData["SuccessMessage"] = "Tender published successfully!";
                 return RedirectToAction(nameof(Index));
@@ -223,9 +274,54 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Award(int tenderId, int bidId)
         {
+            // Pre-load associations for notifications
+            var tenderAssociations = await _context.Tenders
+                .Include(t => t.Bids)
+                    .ThenInclude(b => b.Supplier)
+                        .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(t => t.Id == tenderId);
+
             var success = await _tenderService.AwardTenderAsync(tenderId, bidId);
-            if (success)
+            if (success && tenderAssociations != null)
             {
+                // Trigger notification for the winning supplier
+                var winningBid = tenderAssociations.Bids.FirstOrDefault(b => b.Id == bidId);
+                if (winningBid?.Supplier?.User != null)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        winningBid.Supplier.User.Id, 
+                        "Bid Accepted! 🎉", 
+                        $"Your bid for {tenderAssociations.ReferenceNumber} was accepted! Create PO from Awarded Contracts.", 
+                        "Success", 
+                        "/Tender/AwardedContracts"
+                    );
+
+                    // PO Notification directly per user prompt specifications
+                    await _notificationService.SendNotificationAsync(
+                        winningBid.Supplier.User.Id, 
+                        "PO Generated", 
+                        $"New PO created from won tender {tenderAssociations.ReferenceNumber}.", 
+                        "Info", 
+                        "/Tender/AwardedContracts"
+                    );
+                }
+
+                // Trigger reject notifications for losing suppliers
+                var losingBids = tenderAssociations.Bids.Where(b => b.Id != bidId);
+                foreach (var bid in losingBids)
+                {
+                    if (bid.Supplier?.User != null)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            bid.Supplier.User.Id, 
+                            "Bid Rejected", 
+                            $"Your bid for {tenderAssociations.ReferenceNumber} was rejected.", 
+                            "Warning", 
+                            "/Tender/MyBids"
+                        );
+                    }
+                }
+
                 TempData["SuccessMessage"] = "Tender awarded successfully!";
             }
             else
@@ -236,6 +332,282 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(Details), new { id = tenderId });
         }
 
+        [Authorize(Roles = "Retailer, Supplier")]
+        public async Task<IActionResult> ReviewProposal(int id)
+        {
+            var bid = await _context.TenderBids
+                .Include(b => b.Tender)
+                    .ThenInclude(t => t.Retailer)
+                .Include(b => b.Tender)
+                    .ThenInclude(t => t.TenderItems)
+                        .ThenInclude(i => i.Product)
+                .Include(b => b.Tender)
+                    .ThenInclude(t => t.Bids)
+                .Include(b => b.Supplier)
+                .FirstOrDefaultAsync(b => b.Id == id);
+            
+            if (bid == null) return NotFound();
+            
+            if (User.IsInRole("Supplier"))
+            {
+                var suppId = await GetSupplierIdAsync();
+                if (bid.SupplierId != suppId) return Unauthorized();
+            }
+            
+            return View(bid);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Retailer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelTender(int id)
+        {
+            var tender = await _context.Tenders
+                .Include(t => t.Bids)
+                    .ThenInclude(b => b.Supplier)
+                        .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (tender == null) return NotFound();
+
+            tender.Status = "Cancelled";
+            if (tender.Bids != null)
+            {
+                foreach(var bid in tender.Bids)
+                {
+                    bid.Status = "Rejected";
+                    if (bid.Supplier?.User != null)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            bid.Supplier.User.Id, 
+                            "Tender Cancelled", 
+                            $"Tender {tender.ReferenceNumber} was cancelled by the Retailer.", 
+                            "Danger", 
+                            "/Tender/MyBids"
+                        );
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = "Tender has been cancelled and all bids rejected.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Supplier")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FulfillAward(int tenderId)
+        {
+            var tender = await _context.Tenders.Include(t => t.Bids).FirstOrDefaultAsync(t => t.Id == tenderId);
+            if (tender == null) return NotFound();
+
+            var winningBidIds = tender.Bids.Where(b => b.IsWinningBid).Select(b => b.Id).ToList();
+            var po = await _context.PurchaseOrders.FirstOrDefaultAsync(p => p.TenderBidId.HasValue && winningBidIds.Contains(p.TenderBidId.Value));
+            
+            if (po != null)
+            {
+                return RedirectToAction("Details", "PurchaseOrder", new { id = po.Id });
+            }
+            
+            TempData["ErrorMessage"] = "A Purchase Order has not yet been generated for this award.";
+            return RedirectToAction(nameof(AwardedContracts));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Supplier")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> WithdrawProposal(int id)
+        {
+            var bid = await _context.TenderBids.FindAsync(id);
+            if (bid == null) return NotFound();
+            
+            var suppId = await GetSupplierIdAsync();
+            if (bid.SupplierId != suppId) return Unauthorized();
+
+            if (bid.Status == "Accepted" || bid.Status == "Rejected")
+            {
+                TempData["ErrorMessage"] = "Cannot withdraw a proposal that has already been awarded or rejected.";
+                return RedirectToAction(nameof(ReviewProposal), new { id });
+            }
+
+            bid.Status = "Withdrawn";
+            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = "Proposal withdrawn successfully.";
+            return RedirectToAction("MyBids");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Retailer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectBid(int id, string reason)
+        {
+            var bid = await _context.TenderBids
+                .Include(b => b.Supplier)
+                    .ThenInclude(s => s.User)
+                .Include(b => b.Tender)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (bid == null) return NotFound();
+            
+            bid.Status = "Rejected";
+            bid.Notes = (bid.Notes ?? "") + "\nRejection Reason: " + reason;
+            
+            await _context.SaveChangesAsync();
+
+            if (bid.Supplier?.User != null)
+            {
+                await _notificationService.SendNotificationAsync(
+                    bid.Supplier.User.Id,
+                    "Proposal Rejected",
+                    $"Your proposal for tender {bid.Tender?.ReferenceNumber} has been rejected.",
+                    "Danger",
+                    "/Tender/MyBids"
+                );
+            }
+
+            TempData["SuccessMessage"] = "Proposal rejected successfully.";
+            return RedirectToAction(nameof(Details), new { id = bid.TenderId });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Retailer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestRevision(int id, string comments)
+        {
+            var bid = await _context.TenderBids
+                .Include(b => b.Supplier)
+                    .ThenInclude(s => s.User)
+                .Include(b => b.Tender)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (bid == null) return NotFound();
+            
+            bid.Status = "RevisionRequested";
+            bid.Notes = (bid.Notes ?? "") + "\nRevision Comments: " + comments;
+            
+            await _context.SaveChangesAsync();
+
+            if (bid.Supplier?.User != null)
+            {
+                await _notificationService.SendNotificationAsync(
+                    bid.Supplier.User.Id,
+                    "Revision Requested",
+                    $"The retailer has requested a revision for your proposal on tender {bid.Tender?.ReferenceNumber}.",
+                    "Warning",
+                    "/Tender/MyBids"
+                );
+            }
+
+            TempData["SuccessMessage"] = "Revision request sent to supplier.";
+            return RedirectToAction(nameof(ReviewProposal), new { id });
+        }
+        [Authorize(Roles = "Supplier")]
+        public async Task<IActionResult> EditProposal(int id)
+        {
+            var bid = await _context.TenderBids.Include(b => b.Tender).FirstOrDefaultAsync(b => b.Id == id);
+            if (bid == null) return NotFound();
+            
+            var suppId = await GetSupplierIdAsync();
+            if (bid.SupplierId != suppId) return Unauthorized();
+
+            if (bid.Status == "Accepted" || bid.Status == "Rejected")
+            {
+                TempData["ErrorMessage"] = "Cannot edit a proposal that has already been awarded or rejected.";
+                return RedirectToAction(nameof(ReviewProposal), new { id });
+            }
+
+            var model = new BidSubmitViewModel
+            {
+                TenderId = bid.TenderId,
+                UnitPrice = bid.UnitPrice,
+                Quantity = bid.Quantity,
+                DiscountPercentage = bid.DiscountPercentage,
+                VATPercentage = bid.VATPercentage,
+                DeliveryLeadTimeDays = bid.DeliveryLeadTimeDays,
+                ProposedDeliveryDate = bid.ProposedDeliveryDate,
+                DeliveryMethod = bid.DeliveryMethod,
+                DeliveryCapacity = bid.DeliveryCapacity,
+                ValidityPeriodDays = bid.ValidityPeriodDays,
+                TechnicalProposal = bid.TechnicalProposal,
+                PackagingPlan = bid.PackagingPlan,
+                InspectionCompliance = bid.InspectionCompliance,
+                PenaltyAcceptance = bid.PenaltyAcceptance,
+                WarrantyPeriod = bid.WarrantyPeriod,
+                WarrantyType = bid.WarrantyType,
+                PreviousExperience = bid.PreviousExperience,
+                PaymentTerms = bid.PaymentTerms,
+                ProductSpecifications = bid.ProductSpecifications,
+                QualityCertifications = bid.QualityCertifications,
+                InsuranceCoverage = bid.InsuranceCoverage,
+                AfterSalesSupport = bid.AfterSalesSupport,
+                References = bid.References,
+                Notes = bid.Notes
+            };
+
+            ViewBag.Tender = bid.Tender;
+            ViewBag.BidId = id;
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Supplier")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProposal(int id, BidSubmitViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var bid = await _context.TenderBids.FindAsync(id);
+                if (bid == null) return NotFound();
+
+                var suppId = await GetSupplierIdAsync();
+                if (bid.SupplierId != suppId) return Unauthorized();
+
+                // Recalculate Totals
+                decimal subtotal = model.UnitPrice * model.Quantity;
+                decimal discountAmount = subtotal * (model.DiscountPercentage / 100.0m);
+                decimal vatableAmount = subtotal - discountAmount;
+                decimal vatAmount = vatableAmount * (model.VATPercentage / 100.0m);
+                decimal totalAmount = vatableAmount + vatAmount;
+
+                bid.UnitPrice = model.UnitPrice;
+                bid.Quantity = model.Quantity;
+                bid.Subtotal = subtotal;
+                bid.DiscountPercentage = model.DiscountPercentage;
+                bid.VATPercentage = model.VATPercentage;
+                bid.ProposedTotalAmount = totalAmount;
+                bid.DeliveryLeadTimeDays = model.DeliveryLeadTimeDays;
+                bid.ProposedDeliveryDate = model.ProposedDeliveryDate;
+                bid.DeliveryMethod = model.DeliveryMethod;
+                bid.DeliveryCapacity = model.DeliveryCapacity;
+                bid.ValidityPeriodDays = model.ValidityPeriodDays;
+                bid.TechnicalProposal = model.TechnicalProposal;
+                bid.PackagingPlan = model.PackagingPlan;
+                bid.InspectionCompliance = model.InspectionCompliance;
+                bid.PenaltyAcceptance = model.PenaltyAcceptance;
+                bid.WarrantyPeriod = model.WarrantyPeriod;
+                bid.WarrantyType = model.WarrantyType;
+                bid.PreviousExperience = model.PreviousExperience;
+                bid.PaymentTerms = model.PaymentTerms;
+                bid.ProductSpecifications = model.ProductSpecifications;
+                bid.QualityCertifications = model.QualityCertifications;
+                bid.InsuranceCoverage = model.InsuranceCoverage;
+                bid.AfterSalesSupport = model.AfterSalesSupport;
+                bid.References = model.References;
+                bid.Notes = model.Notes;
+                bid.Status = "Pending";
+                
+                await _context.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = "Proposal updated successfully.";
+                return RedirectToAction(nameof(ReviewProposal), new { id });
+            }
+
+            ViewBag.Tender = await _context.Tenders.FindAsync(model.TenderId);
+            ViewBag.BidId = id;
+            return View(model);
+        }
 
 
         private async Task<int> GetRetailerIdAsync()

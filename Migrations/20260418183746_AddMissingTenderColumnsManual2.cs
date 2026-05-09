@@ -10,42 +10,12 @@ namespace SCM_System.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "ProductName",
-                table: "Tenders",
-                type: "nvarchar(max)",
-                nullable: true);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "AllowPartialBids",
-                table: "Tenders",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
-
-            migrationBuilder.AddColumn<string>(
-                name: "AttachmentPath",
-                table: "Tenders",
-                type: "nvarchar(max)",
-                nullable: true);
-
-            migrationBuilder.AddColumn<decimal>(
-                name: "BudgetMax",
-                table: "Tenders",
-                type: "decimal(18,2)",
-                nullable: true);
-
-            migrationBuilder.AddColumn<decimal>(
-                name: "BudgetMin",
-                table: "Tenders",
-                type: "decimal(18,2)",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "PreferredSuppliers",
-                table: "Tenders",
-                type: "nvarchar(max)",
-                nullable: true);
+            migrationBuilder.Sql("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Tenders') AND name = 'ProductName') ALTER TABLE Tenders ADD ProductName nvarchar(max) NULL;");
+            migrationBuilder.Sql("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Tenders') AND name = 'AllowPartialBids') ALTER TABLE Tenders ADD AllowPartialBids bit NOT NULL DEFAULT 0;");
+            migrationBuilder.Sql("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Tenders') AND name = 'AttachmentPath') ALTER TABLE Tenders ADD AttachmentPath nvarchar(max) NULL;");
+            migrationBuilder.Sql("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Tenders') AND name = 'BudgetMax') ALTER TABLE Tenders ADD BudgetMax decimal(18,2) NULL;");
+            migrationBuilder.Sql("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Tenders') AND name = 'BudgetMin') ALTER TABLE Tenders ADD BudgetMin decimal(18,2) NULL;");
+            migrationBuilder.Sql("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Tenders') AND name = 'PreferredSuppliers') ALTER TABLE Tenders ADD PreferredSuppliers nvarchar(max) NULL;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

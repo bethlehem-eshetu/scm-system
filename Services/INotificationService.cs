@@ -18,5 +18,6 @@ namespace SCM_System.Services
         Task SendNotificationAsync(int userId, string title, string message, string type = "Info", string? actionUrl = null, int? targetWarehouseId = null, string? targetRole = null);
         Task SendRoleNotificationAsync(string role, string title, string message, string type = "Info", string? actionUrl = null, int? warehouseId = null);
         Task SendEscalatedNotificationAsync(int userId, string title, string message, string type = "Critical", string? actionUrl = null);
+        Task SendReservationExpiredNotification(InventoryReservation reservation);
     }
 }

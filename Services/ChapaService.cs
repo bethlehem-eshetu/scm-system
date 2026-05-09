@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using SCM_System.Models.ViewModels;
 
@@ -117,6 +117,16 @@ namespace SCM_System.Services
                     TransactionId = transactionId
                 };
             }
+            catch (TaskCanceledException tex)
+            {
+                _logger.LogWarning($"Chapa verification timed out: {tex.Message}");
+                return new ChapaVerifyResponse
+                {
+                    Success = false,
+                    Status = "pending_verification",
+                    TransactionId = transactionId
+                };
+            }
             catch (Exception ex)
             {
                 _logger.LogError($"Chapa verification error: {ex.Message}");
@@ -135,6 +145,59 @@ namespace SCM_System.Services
             // Implement webhook verification logic here
             _logger.LogInformation($"Webhook received: Transaction {transactionId} - Status: {status}");
             return true;
+        }
+
+        public async Task<ChapaRefundResponse> InitiateRefundAsync(string transactionId, decimal amount)
+        {
+            try
+            {
+                var secretKey = _configuration["Chapa:SecretKey"] ?? "CHASECK_TEST-xxxxxxxxxxxxx";
+                var baseUrl = _configuration["Chapa:BaseUrl"] ?? "https://api.chapa.co/v1";
+
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {secretKey}");
+
+                var payload = new
+                {
+                    transaction_id = transactionId,
+                    amount = amount.ToString("0.00")
+                };
+
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"{baseUrl}/transaction/refund", content);
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation($"Chapa refund response: {responseString}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return new ChapaRefundResponse
+                    {
+                        Success = true,
+                        Message = "Refund initiated successfully",
+                        Status = "success"
+                    };
+                }
+
+                return new ChapaRefundResponse
+                {
+                    Success = false,
+                    Message = $"Chapa refund error: {responseString}",
+                    Status = "failed"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Chapa refund error: {ex.Message}");
+                return new ChapaRefundResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}",
+                    Status = "error"
+                };
+            }
         }
 
         // Helper classes for deserialization

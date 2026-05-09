@@ -116,7 +116,7 @@
                                 </div>
                             </div>
 
-                            <!-- Live Tracking Alert -->
+
                             @if (displayStatus == "In Transit")
                             {
                                 var inTransitPO = order.PurchaseOrders?.FirstOrDefault(po => po.Status == "In Transit");
@@ -201,8 +201,8 @@
                                                             }
                                                         </div>
                                                         
-                                                        <a asp-action="OrderTrackingDetails" asp-route-id="@order.Id" 
-                                                           class="btn btn-sm btn-outline-primary rounded-pill w-100 mt-2">
+                                                        <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" 
+                                                           class="btn btn-primary rounded-pill w-100 mt-2">
                                                             <i class="fas fa-eye me-1"></i> Track Shipment
                                                         </a>
                                                     </div>

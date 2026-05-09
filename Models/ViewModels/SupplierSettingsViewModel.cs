@@ -11,6 +11,7 @@ namespace SCM_System.Models.ViewModels
         public IFormFile? CompanyLogoFile { get; set; }
         public string? ExistingLogo { get; set; }
         public List<UserSession> ActiveSessions { get; set; } = new List<UserSession>();
+        public List<BankAccount> BankAccounts { get; set; } = new List<BankAccount>();
 
         // Security
         public bool TwoFactorEnabled { get; set; }
@@ -24,6 +25,10 @@ namespace SCM_System.Models.ViewModels
 
         [Display(Name = "Pickup Address")]
         public string? PickupAddress { get; set; }
+
+        [Required]
+        [Display(Name = "Region")]
+        public string Region { get; set; }
 
         [Required]
         [Display(Name = "Full Name")]

@@ -48,6 +48,20 @@ namespace SCM_System.Controllers
 
             return true;
         }
+
+        private async Task<bool> IsVehicleCompliantAsync(int vehicleId)
+        {
+            var vehicle = await _context.Vehicles.FindAsync(vehicleId);
+            if (vehicle == null || vehicle.IsDeleted || !vehicle.IsActive) return false;
+
+            // Block if service is overdue
+            if (vehicle.NextServiceDueDate.HasValue && vehicle.NextServiceDueDate.Value < DateTime.Now) return false;
+            
+            // Block if insurance is expired
+            if (vehicle.InsuranceExpiryDate.HasValue && vehicle.InsuranceExpiryDate.Value < DateTime.Now) return false;
+
+            return true;
+        }
         private async Task<List<int>> GetAccessibleWarehouseIdsAsync(int userId, int supplierId)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -70,7 +84,7 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Supplier/Employees        [HttpGet]
-        public async Task<IActionResult> GetDriverDetails(int employeeId)
+        public async Task<IActionResult> GetDriverDetails(int employeeId, decimal newOrderWeightKg = 0)
         {
             var driver = await _context.SupplierEmployees
                 .Include(e => e.VehicleAssignments.Where(va => va.IsActive))
@@ -82,14 +96,64 @@ namespace SCM_System.Controllers
 
             var activeVehicle = driver.VehicleAssignments.FirstOrDefault()?.Vehicle;
 
+            // ERP-Level Smart Workload Calculations
+            var activeOrders = await _context.PurchaseOrders
+                .Include(p => p.PurchaseOrderItems)
+                    .ThenInclude(i => i.Product)
+                .Where(p => p.DeliveryAgentId == employeeId && 
+                            p.Status != SCM_System.Models.Constants.POStatus.Delivered &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Completed &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Cancelled &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Failed &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Rejected &&
+                            p.Status != SCM_System.Models.Constants.POStatus.Expired)
+                .ToListAsync();
+
+            decimal pickingQueue = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.Picking || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Picked || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Packing || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Packed || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Issued || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Processing || 
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Accepted)
+                                                .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+                                                
+            decimal readyDispatch = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.Ready)
+                                                 .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+                                                 
+            decimal inTransit = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.InTransit)
+                                              .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
+                                              
+            decimal currentTotalLoad = pickingQueue + readyDispatch + inTransit;
+            decimal vehicleCapacity = activeVehicle?.MaxLoadCapacity ?? 100;
+            
+            decimal projectedTotalLoad = currentTotalLoad + newOrderWeightKg;
+            decimal projectedScore = vehicleCapacity > 0 ? (projectedTotalLoad / vehicleCapacity) * 100 : 0;
+            
+            string loadStatus = "Safe";
+            if (projectedScore >= 120) loadStatus = "Critical"; // Red
+            else if (projectedScore >= 90) loadStatus = "High Risk"; // Orange
+            else if (projectedScore >= 60) loadStatus = "Moderate"; // Yellow
+
             return Json(new
             {
                 vehicleId = activeVehicle?.Id,
                 licensePlate = activeVehicle?.LicensePlate,
                 vehicleType = activeVehicle?.VehicleType.ToString(),
-                maxLoadCapacity = activeVehicle?.MaxLoadCapacity,
+                maxLoadCapacity = vehicleCapacity,
                 licenseNumber = driver.DriverProfile?.DrivingLicenseNumber,
-                licenseExpiry = driver.DriverProfile?.LicenseExpiryDate?.ToString("yyyy-MM-dd")
+                licenseExpiry = driver.DriverProfile?.LicenseExpiryDate?.ToString("yyyy-MM-dd"),
+                
+                currentLoad = currentTotalLoad,
+                projectedLoad = projectedTotalLoad,
+                pickingQueue = pickingQueue,
+                readyDispatch = readyDispatch,
+                inTransit = inTransit,
+                
+                workloadScore = (int)projectedScore,
+                loadStatus = loadStatus,
+                isPhysicsViolation = newOrderWeightKg > vehicleCapacity,
+                canAssign = projectedTotalLoad <= vehicleCapacity || newOrderWeightKg <= vehicleCapacity // can assign if not structural violation
             });
         }
 
@@ -188,8 +252,31 @@ namespace SCM_System.Controllers
                     {
                         ModelState.AddModelError("VehicleId", "This vehicle already has an active driver.");
                     }
+
+                    // Maintenance & Compliance Guard
+                    if (!await IsVehicleCompliantAsync(model.VehicleId.Value))
+                    {
+                        ModelState.AddModelError("VehicleId", "This vehicle cannot be assigned: Service is overdue or Insurance has expired.");
+                    }
                 }
                 model.WarehouseId = null;
+                
+                // Strict Document Validation for Delivery Agent
+                if (idDoc == null) ModelState.AddModelError("", "A valid Driving License or National ID document is required for Delivery Agents.");
+                if (contractDoc == null) ModelState.AddModelError("", "Employment Contract is required for Delivery Agents.");
+            }
+            
+            // Check file extensions and sizes limit (e.g. 5MB)
+            var maxFileSize = 5 * 1024 * 1024;
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+            foreach(var file in new[] {photoDoc, contractDoc, idDoc, Request.Form.Files.GetFile("medicalDoc")})
+            {
+                if (file != null && file.Length > 0)
+                {
+                    if (file.Length > maxFileSize) ModelState.AddModelError("", $"File {file.FileName} exceeds the max size of 5MB.");
+                    var ext = Path.GetExtension(file.FileName).ToLower();
+                    if (!allowedExtensions.Contains(ext)) ModelState.AddModelError("", $"File {file.FileName} extension {ext} not allowed.");
+                }
             }
 
             if (ModelState.IsValid)
@@ -619,6 +706,13 @@ namespace SCM_System.Controllers
 
                             if (model.VehicleId.HasValue) 
                             {
+                                // Maintenance & Compliance Guard
+                                if (!await IsVehicleCompliantAsync(model.VehicleId.Value))
+                                {
+                                    ModelState.AddModelError("VehicleId", "This vehicle cannot be assigned: Service is overdue or Insurance has expired.");
+                                    goto RePopulateAndReturn;
+                                }
+
                                 // 2. Deactivate other active drivers for the target vehicle
                                 var otherDrivers = await _context.VehicleAssignments
                                     .Where(va => va.VehicleId == model.VehicleId.Value && va.IsActive && va.SupplierEmployeeId != id)

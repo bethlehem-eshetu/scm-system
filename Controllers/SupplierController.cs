@@ -15,22 +15,18 @@ using System.Security.Claims;
 
 namespace SCM_System.Controllers
 {
-    public class SupplierController : Controller
+    public class SupplierController(
+        ApplicationDbContext context, 
+        SCM_System.Services.ISupplierService supplierService, 
+        IAuditLogService auditLogService, 
+        INotificationService notificationService, 
+        IWebHostEnvironment env) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly SCM_System.Services.ISupplierService _supplierService;
-        private readonly INotificationService _notificationService;
-        private readonly IAuditLogService _auditLogService;
-        private readonly IWebHostEnvironment _env;
-
-        public SupplierController(ApplicationDbContext context, SCM_System.Services.ISupplierService supplierService, IAuditLogService auditLogService, INotificationService notificationService, IWebHostEnvironment env)
-        {
-            _context = context;
-            _supplierService = supplierService;
-            _auditLogService = auditLogService;
-            _notificationService = notificationService;
-            _env = env;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly SCM_System.Services.ISupplierService _supplierService = supplierService;
+        private readonly INotificationService _notificationService = notificationService;
+        private readonly IAuditLogService _auditLogService = auditLogService;
+        private readonly IWebHostEnvironment _env = env;
 
         // GET: /Supplier/Dashboard
         public async Task<IActionResult> Dashboard()
@@ -55,8 +51,67 @@ namespace SCM_System.Controllers
 
             var analytics = await _supplierService.GetDashboardAnalyticsAsync(supplier.Id);
 
-            // ========== ADD MESSAGING VIEWBAGS ==========
+            // ========== FINANCIAL ZONE CALCULATIONS ==========
+            var allCommissions = await _context.Commissions
+                .Where(c => c.SupplierId == supplier.Id)
+                .ToListAsync();
 
+            ViewBag.GrossSales = allCommissions.Where(c => c.PaymentType == "OrderPayment" && c.Status == "Paid").Sum(c => c.OrderAmount);
+            ViewBag.NetEarnings = allCommissions.Where(c => c.PaymentType == "SupplierPayout").Sum(c => c.CommissionAmount);
+            ViewBag.PendingPayouts = allCommissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Pending").Sum(c => c.CommissionAmount);
+            ViewBag.CommissionsPaid = allCommissions.Where(c => c.PaymentType == "PlatformCommission").Sum(c => c.CommissionAmount);
+            ViewBag.UnpaidOrdersCount = await _context.PurchaseOrders
+                .CountAsync(po => po.SupplierId == supplier.Id && po.PaymentStatus == "Unpaid");
+
+            // Chart Data: Earnings Trend (Last 6 Months)
+            var sixMonthsAgo = DateTime.Now.AddMonths(-6);
+            var earningsTrend = allCommissions
+                .Where(c => c.PaymentType == "SupplierPayout" && c.CreatedAt >= sixMonthsAgo)
+                .GroupBy(c => new { Month = c.CreatedAt.Month, Year = c.CreatedAt.Year })
+                .Select(g => new { 
+                    Label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yy"),
+                    Value = g.Sum(c => c.CommissionAmount)
+                })
+                .OrderBy(x => x.Label)
+                .ToList();
+            ViewBag.EarningsTrendLabels = earningsTrend.Select(x => x.Label).ToArray();
+            ViewBag.EarningsTrendValues = earningsTrend.Select(x => x.Value).ToArray();
+
+            // Chart Data: Payout Status (Pie)
+            ViewBag.PayoutStatusLabels = new[] { "Paid Out", "Pending Clearance" };
+            ViewBag.PayoutStatusValues = new[] {
+                allCommissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Paid").Sum(c => c.CommissionAmount),
+                allCommissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Pending").Sum(c => c.CommissionAmount)
+            };
+
+            // Top Retailers by Revenue
+            ViewBag.TopRetailers = allCommissions
+                .Where(c => c.PaymentType == "OrderPayment")
+                .GroupBy(c => c.Retailer?.BusinessName ?? "Unknown")
+                .Select(g => new { Name = g.Key, Amount = g.Sum(c => c.OrderAmount) })
+                .OrderByDescending(x => x.Amount)
+                .Take(5)
+                .ToList();
+
+            // Recent Financial Ledger (Detailed)
+            ViewBag.FinancialLedger = allCommissions
+                .Where(c => c.PaymentType == "OrderPayment")
+                .OrderByDescending(c => c.CreatedAt)
+                .Take(10)
+                .Select(c => new {
+                    OrderNumber = c.Order?.OrderNumber ?? "N/A",
+                    Retailer = c.Retailer?.BusinessName ?? "Unknown",
+                    Amount = c.OrderAmount,
+                    Commission = allCommissions.FirstOrDefault(pc => pc.PurchaseOrderId == c.PurchaseOrderId && pc.PaymentType == "PlatformCommission")?.CommissionAmount ?? 0,
+                    Net = allCommissions.FirstOrDefault(sp => sp.PurchaseOrderId == c.PurchaseOrderId && sp.PaymentType == "SupplierPayout")?.CommissionAmount ?? 0,
+                    Status = c.Status,
+                    PayoutStatus = allCommissions.FirstOrDefault(sp => sp.PurchaseOrderId == c.PurchaseOrderId && sp.PaymentType == "SupplierPayout")?.Status ?? "N/A"
+                })
+                .ToList();
+
+            // ========== END FINANCIAL ZONE ==========
+
+            // ========== ADD MESSAGING VIEWBAGS ==========
             // Get unread message count
             var unreadCount = await _context.Messages
                 .Where(m => m.Conversation.SupplierId == supplier.Id &&
@@ -66,8 +121,17 @@ namespace SCM_System.Controllers
 
             ViewBag.UnreadMessagesCount = unreadCount;
 
+            // Inventory Metrics
+            ViewBag.LowStockProductsCount = await _context.Products
+                .CountAsync(p => p.SupplierId == supplier.Id && p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved) < 20);
+            ViewBag.TotalInventoryValue = await _context.Products
+                .Where(p => p.SupplierId == supplier.Id)
+                .SumAsync(p => (decimal?)(p.Inventories.Sum(i => i.QuantityOnHand - i.QuantityReserved) * p.BasePrice)) ?? 0;
+            ViewBag.TotalReservedValue = await _context.Products
+                .Where(p => p.SupplierId == supplier.Id)
+                .SumAsync(p => (decimal?)(p.Inventories.Sum(i => i.QuantityReserved) * p.BasePrice)) ?? 0;
+
             // Get active penalties count
-            
             ViewBag.ActivePenalties = await _context.Penalties
                 .CountAsync(p => p.UserId == userId && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
 
@@ -186,6 +250,10 @@ namespace SCM_System.Controllers
             var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
             if (supplier == null) return RedirectToAction("AccessDenied", "Home");
 
+            // ✅ RUN FISCAL RECONCILIATION (One-time audit for old records)
+            var reconciler = new SCM_System.Tools.FiscalReconciler(_context);
+            await reconciler.ReconcileAllAsync();
+
             var commissions = await _supplierService.GetSupplierCommissionsAsync(supplier.Id);
             return View(commissions);
         }
@@ -291,13 +359,15 @@ namespace SCM_System.Controllers
                 WebsiteUrl = supplier.WebsiteUrl,
                 PickupAddress = supplier.PickupAddress,
                 ExistingLogo = supplier.CompanyLogo,
+                Region = supplier.Region,
                 FullName = supplier.User.FullName,
                 Email = supplier.User.Email,
                 Phone = supplier.User.PhoneNumber,
                 
                 // Security
                 TwoFactorEnabled = supplier.User.TwoFactorEnabled,
-                ActiveSessions = await _context.UserSessions.Where(us => us.UserId == supplier.User.Id && us.IsActive).ToListAsync()
+                ActiveSessions = await _context.UserSessions.Where(us => us.UserId == supplier.User.Id && us.IsActive).ToListAsync(),
+                BankAccounts = await _context.BankAccounts.Where(ba => ba.SupplierId == supplier.Id).ToListAsync()
             };
 
             ViewBag.Warehouses = new SelectList(await _context.Warehouses.Where(w => w.SupplierId == supplier.Id).ToListAsync(), "Id", "Name");
@@ -317,7 +387,12 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Settings(SupplierSettingsViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                model.BankAccounts = await _context.BankAccounts.Where(ba => ba.SupplierId == model.SupplierId).ToListAsync();
+                model.ActiveSessions = await _context.UserSessions.Where(us => us.UserId != null && us.IsActive).ToListAsync(); // Simplified for error state
+                return View(model);
+            }
 
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction("Login", "Account");
@@ -332,6 +407,7 @@ namespace SCM_System.Controllers
             supplier.CompanyDescription = model.CompanyDescription;
             supplier.WebsiteUrl = model.WebsiteUrl;
             supplier.PickupAddress = model.PickupAddress;
+            supplier.Region = model.Region;
 
             // Handle Logo Upload
             if (model.CompanyLogoFile != null && model.CompanyLogoFile.Length > 0)

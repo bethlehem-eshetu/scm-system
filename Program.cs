@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add logging configuration
 builder.Logging.ClearProviders();
@@ -13,7 +15,8 @@ builder.Logging.AddDebug();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<SCM_System.Services.IProductService, SCM_System.Services.ProductService>();
 
-
+// Add Inventory Service
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 
 // Add DbContext with detailed error logging
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -46,7 +49,10 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddHttpClient<IChapaService, ChapaService>();
+builder.Services.AddHttpClient<IChapaService, ChapaService>(client => 
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 
 // Add HttpContextAccessor for session helpers
 builder.Services.AddHttpContextAccessor();
@@ -65,6 +71,11 @@ builder.Services.AddScoped<SCM_System.Services.IAuditLogService, SCM_System.Serv
 builder.Services.Configure<SCM_System.Models.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<SCM_System.Services.IEmailService, SCM_System.Services.EmailService>();
 builder.Services.AddHostedService<SCM_System.Services.EmailLogCleanupService>();
+builder.Services.AddHostedService<SCM_System.Services.ReservationExpiryBackgroundService>();
+builder.Services.AddHostedService<SCM_System.Services.PaymentExpiryBackgroundService>();
+builder.Services.AddHostedService<SCM_System.Services.InventorySnapshotBackgroundService>();
+builder.Services.AddHostedService<SCM_System.Services.ReorderSuggestionBackgroundService>();
+builder.Services.AddHostedService<SCM_System.Services.DeliverySLABackgroundService>();
 
 builder.Services.AddScoped<ICommissionService, CommissionService>();
 builder.Services.AddScoped<IChapaService, ChapaService>();

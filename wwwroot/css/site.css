@@ -1,17 +1,18 @@
 :root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
+  --primary-color: #3b82f6;
+  --primary-dark: #1e1b4b;
+  --primary-hover: #2563eb;
   --secondary-color: #f1f5f9;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
-  --bg-main: #f8fafc;
-  --hero-bg: linear-gradient(135deg, #1e293b 0%, #312e81 100%); /* Slate 800 to Indigo 900 */
+  --bg-main: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  --bg-sidebar: linear-gradient(180deg, #1e1b4b 0%, #111827 100%);
   --hero-text: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --bg-card: #ffffff;
+  --glass-border: rgba(255, 255, 255, 0.2);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 html {
@@ -28,8 +29,9 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-main);
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg-main);
+  background-attachment: fixed;
   color: var(--text-primary);
   margin-bottom: 60px;
   overflow-x: hidden;
@@ -69,14 +71,15 @@ body {
 /* Global UI Enhancements */
 .card {
     border: none !important;
-    border-radius: 1rem !important; /* rounded-4 */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 20px !important; 
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #fff;
 }
 
 .card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl) !important;
+    transform: translateY(-4px);
 }
 
 .badge {

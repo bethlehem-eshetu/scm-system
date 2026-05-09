@@ -1,23 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Constants;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
-    public class OrderService : IOrderService
+    public class OrderService(
+        ApplicationDbContext context, 
+        INotificationService notificationService, 
+        IPurchaseOrderService poService, 
+        ICommissionService commissionService, 
+        IInventoryService inventoryService) : IOrderService
     {
-        private readonly INotificationService _notificationService;
-        private readonly ApplicationDbContext _context;
-        private readonly IPurchaseOrderService _poService;
-        private readonly ICommissionService _commissionService;
-
-        public OrderService(ApplicationDbContext context, INotificationService notificationService, IPurchaseOrderService poService, ICommissionService commissionService)
-        {
-            _context = context;
-            _notificationService = notificationService;
-            _poService = poService;
-            _commissionService = commissionService;
-        }
+        private readonly INotificationService _notificationService = notificationService;
+        private readonly ApplicationDbContext _context = context;
+        private readonly IPurchaseOrderService _poService = poService;
+        private readonly ICommissionService _commissionService = commissionService;
+        private readonly IInventoryService _inventoryService = inventoryService;
 
         public async Task<IEnumerable<Order>> GetOrdersByRetailerAsync(int retailerId)
         {
@@ -69,10 +69,13 @@ namespace SCM_System.Services
                 OrderNumber = "ORD-" + DateTime.Now.Ticks.ToString().Substring(8),
                 SupplierId = po.SupplierId,
                 RetailerId = po.RetailerId,
+                Subtotal = po.TotalAmount / 1.15m, // Derived from PO if it doesn't have explicit bits yet, or just copy po details
+                VAT = po.TotalAmount - (po.TotalAmount / 1.15m),
                 TotalAmount = po.TotalAmount,
-                OrderStatus = "Processing",
-                PaymentStatus = "Pending",
+                OrderStatus = POStatus.Picking,
+                PaymentStatus = PaymentStatus.Pending.ToString(),
                 CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 QRCodeValue = "" // Temporary, will update after saving
             };
 
@@ -103,13 +106,22 @@ namespace SCM_System.Services
             var history = new OrderStatusHistory
             {
                 OrderId = order.Id,
-                Status = "Processing",
+                Status = POStatus.Picking,
                 Comments = "Order generated from Purchase Order",
                 ChangedByUserId = po.Supplier.UserId,
                 ChangedAt = DateTime.Now
             };
             _context.OrderStatusHistories.Add(history);
             await _context.SaveChangesAsync();
+
+            // Link reservations and confirm them
+            var reservations = await _context.InventoryReservations.Where(r => r.PurchaseOrderId == purchaseOrderId).ToListAsync();
+            foreach(var r in reservations)
+            {
+                r.OrderId = order.Id;
+                await _context.SaveChangesAsync();
+                await _inventoryService.ConfirmReservationAsync(r.Id);
+            }
 
             return order;
         }
@@ -132,19 +144,28 @@ namespace SCM_System.Services
                     
                 foreach (var po in pos)
                 {
-                    await _poService.UpdatePurchaseOrderStatusAsync(po.Id, status, changedByUserId);
+                    if (po.Status != status)
+                    {
+                        await _poService.UpdatePurchaseOrderStatusAsync(po.Id, status, changedByUserId);
+                    }
                 }
+            }
+
+            // Sync Order Total with PO Totals if they have diverged (e.g. VAT addition)
+            if (order.PurchaseOrders != null && order.PurchaseOrders.Any())
+            {
+                order.TotalAmount = order.PurchaseOrders.Sum(p => p.TotalAmount);
             }
 
             var previousStatus = order.OrderStatus;
             order.OrderStatus = status;
 
             // ================================
-            // 🔥 ESCROW RELEASE & COMMISSION DEDUCTION
+            // 🔥 CHAPA RELEASE & COMMISSION DEDUCTION
             // ================================
-            if (status == "Completed" && order.PaymentStatus == "Escrow")
+            if (status == "Completed" && order.PaymentStatus == "Chapa")
             {
-                order.PaymentStatus = "Released";
+                order.PaymentStatus = PaymentStatus.Paid.ToString();
                 
                 foreach (var po in order.PurchaseOrders)
                 {
@@ -171,6 +192,8 @@ namespace SCM_System.Services
 
                     if (existingOrderPayment == null)
                     {
+                        // ✅ ORDER PAYMENT (Full amount owed by Retailer to Marketplace)
+                        // Note: This is NOT a commission the supplier pays.
                         var orderPayment = new Commission
                         {
                             PurchaseOrderId = po.Id,
@@ -178,23 +201,21 @@ namespace SCM_System.Services
                             SupplierId = po.SupplierId,
                             RetailerId = order.RetailerId,
                             OrderAmount = po.TotalAmount,
-                            CommissionRate = 1.00m,
+                            CommissionRate = 0.00m, // It's the base payment, not a fee
                             CommissionAmount = po.TotalAmount,
                             PaymentType = "OrderPayment",
-                            Status = (status == "Completed") ? "Paid" : "Pending",
-                            PaymentRequestData = "",
-                            PaymentVerificationData = "",
+                            Status = (status == "Completed") ? PaymentStatus.Paid.ToString() : PaymentStatus.Pending.ToString(),
                             CreatedAt = DateTime.Now,
                             PaidAt = (status == "Completed") ? DateTime.Now : null,
                             DueDate = DateTime.Now.AddDays(7),
-                            Notes = $"Order payment for Purchase Order #{po.PONumber}"
+                            Notes = $"Main order settlement for #{po.PONumber}"
                         };
 
                         _context.Commissions.Add(orderPayment);
                     }
                     else if (status == "Completed")
                     {
-                        existingOrderPayment.Status = "Paid";
+                        existingOrderPayment.Status = PaymentStatus.Paid.ToString();
                         existingOrderPayment.PaidAt = DateTime.Now;
                     }
                 }
@@ -202,35 +223,7 @@ namespace SCM_System.Services
 
             await _context.SaveChangesAsync();
 
-            // ================================
-            // STOCK DEDUCTION (UNCHANGED)
-            // ================================
-            if ((status == "Delivered" || status == "Completed") &&
-                previousStatus != "Delivered" &&
-                previousStatus != "Completed")
-            {
-                var pos = await _context.PurchaseOrders
-                    .Include(p => p.PurchaseOrderItems)
-                    .Where(p => p.OrderId == order.Id && p.Status != "Cancelled")
-                    .ToListAsync();
-
-                foreach (var po in pos)
-                {
-                    var inventories = await _context.Inventories
-                        .Where(i => i.WarehouseId == po.WarehouseId)
-                        .ToListAsync();
-
-                    foreach (var item in po.PurchaseOrderItems)
-                    {
-                        var inv = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                        if (inv != null)
-                        {
-                            inv.QuantityReserved -= item.Quantity;
-                            inv.QuantityOnHand -= item.Quantity;
-                        }
-                    }
-                }
-            }
+            // STOCK DEDUCTION (REMOVED - Managed by PurchaseOrderService)
 
             // ================================
             // STATUS HISTORY
@@ -250,55 +243,6 @@ namespace SCM_System.Services
             return order;
         }
 
-        public async Task<bool> CancelOrderAsync(int orderId)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
-            try
-            {
-                var order = await _context.Orders
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(i => i.Product)
-                    .FirstOrDefaultAsync(o => o.Id == orderId);
-
-                if (order == null || order.OrderStatus == "Completed" || order.OrderStatus == "Delivered" || order.OrderStatus == "Cancelled")
-                    return false;
-
-                // Release reserved stock from warehouses
-                var pos = await _context.PurchaseOrders
-                    .Include(p => p.PurchaseOrderItems)
-                    .Where(p => p.OrderId == order.Id && p.Status != "Cancelled" && p.Status != "Completed").ToListAsync();
-
-                foreach (var po in pos)
-                {
-                    var inventories = await _context.Inventories.Where(i => i.WarehouseId == po.WarehouseId).ToListAsync();
-                    foreach (var item in po.PurchaseOrderItems)
-                    {
-                        if (item.ProductId == null) continue; // Custom product not in inventory
-
-                        var inv = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                        if (inv != null)
-                        {
-                            // Only decrement what we reserved during the split
-                            inv.QuantityReserved -= item.Quantity;
-                        }
-                    }
-                    po.Status = "Cancelled";
-                }
-
-                order.OrderStatus = "Cancelled";
-                
-                var history = new OrderStatusHistory { OrderId = order.Id, Status = "Cancelled", Comments = "Order cancelled by Retailer. Stock reservations released.", ChangedByUserId = order.RetailerId, ChangedAt = DateTime.Now };
-                _context.OrderStatusHistories.Add(history);
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
 
 
         public async Task<IEnumerable<OrderStatusHistory>> GetOrderStatusHistoryAsync(int orderId)
@@ -321,7 +265,7 @@ namespace SCM_System.Services
                         .ThenInclude(i => i.Product)
                     .FirstOrDefaultAsync(o => o.Id == orderId);
 
-                if (order == null || order.OrderStatus != "Pending") return false;
+                if (order == null || order.OrderStatus != POStatus.Issued && order.OrderStatus != "Pending") return false;
 
                 // Load all active warehouses for this supplier
                 var query = _context.Warehouses
@@ -371,11 +315,6 @@ namespace SCM_System.Services
 
                     foreach (var item in order.OrderItems)
                     {
-                        if (item.ProductId.HasValue)
-                        {
-                            var inventory = singleWarehouseMatch.Inventories.First(i => i.ProductId == item.ProductId.Value);
-                            inventory.QuantityReserved += item.Quantity;
-                        }
                         
                         poAllocations[singleWarehouseMatch.Id].Add(new PurchaseOrderItem
                         {
@@ -421,16 +360,12 @@ namespace SCM_System.Services
                             {
                                 int allocate = Math.Min(available, remainingQty);
                                 
-                                // Deduct and reserve
-                                inventory.QuantityReserved += allocate;
-                                remainingQty -= allocate;
 
                                 // Record allocation
                                 if (!poAllocations.ContainsKey(w.Id))
                                 {
                                     poAllocations[w.Id] = new List<PurchaseOrderItem>();
                                     subtotalAllocations[w.Id] = 0;
-                                    w.CurrentWorkload++; // Increment workload for this warehouse for the first item added
                                 }
 
                                 poAllocations[w.Id].Add(new PurchaseOrderItem
@@ -443,6 +378,7 @@ namespace SCM_System.Services
                                 });
 
                                 subtotalAllocations[w.Id] += (allocate * item.UnitPrice);
+                                remainingQty -= allocate; // 🔥 FIX: Decrement remaining quantity
                             }
                         }
 
@@ -477,11 +413,14 @@ namespace SCM_System.Services
                 }
 
                 // Create independent POs for each allocated warehouse
+                decimal totalOrderAmount = 0;
                 foreach (var allocation in poAllocations)
                 {
                     int wId = allocation.Key;
                     var poItems = allocation.Value;
                     decimal subtotal = subtotalAllocations[wId];
+                    decimal poTotal = subtotal + (subtotal * 0.15m);
+                    totalOrderAmount += poTotal;
 
                     var po = new PurchaseOrder
                     {
@@ -493,8 +432,8 @@ namespace SCM_System.Services
                         Subtotal = subtotal,
                         VAT = subtotal * 0.15m,
                         Discount = 0m,
-                        TotalAmount = subtotal + (subtotal * 0.15m),
-                        Status = "PO Issued",
+                        TotalAmount = poTotal,
+                        Status = POStatus.Accepted,
                         DeliveryAddress = order.DeliveryAddress ?? "N/A",
                         ExpectedDeliveryDate = order.ExpectedDeliveryDate ?? DateTime.Now.AddDays(7),
                         CreatedAt = DateTime.Now,
@@ -503,11 +442,22 @@ namespace SCM_System.Services
                     };
 
                     _context.PurchaseOrders.Add(po);
+                    await _context.SaveChangesAsync(); // Save to get PO ID
+
+                    // NEW: Reserve stock immediately so it reflects in the dashboard
+                    var reservationSuccess = await _inventoryService.BulkReserveStockForPOAsync(po.Id, po.SupplierId, po.WarehouseId);
+                    if (!reservationSuccess)
+                    {
+                        throw new InvalidOperationException($"Failed to reserve stock for Product(s) in PO {po.PONumber}. Order fulfillment blocked.");
+                    }
                 }
 
                 // Status Logic: Split? -> Partially Processing, Else -> Processing
                 bool isSplit = poAllocations.Count > 1;
-                order.OrderStatus = isSplit ? "Partially Processing" : "Processing";
+                order.OrderStatus = isSplit ? "Partially Picking" : POStatus.Picking;
+                order.Subtotal = poAllocations.Values.Sum(v => v.Sum(i => i.Quantity * i.UnitPrice));
+                order.VAT = order.Subtotal * 0.15m;
+                order.TotalAmount = order.Subtotal + order.VAT;
                 
                 var history = new OrderStatusHistory 
                 { 
@@ -535,7 +485,7 @@ namespace SCM_System.Services
                         "Order Accepted ✅",
                         $"Your order #{order.OrderNumber} has been accepted by {order.Supplier?.CompanyName}.",
                         "Success",
-                        $"/Retailer/OrderTrackingDetails/{order.Id}"
+                        $"/Order/Details/{order.Id}"
                     );
                 }
 
@@ -583,7 +533,7 @@ namespace SCM_System.Services
                     "Order Rejected ❌",
                     $"Your order #{order.OrderNumber} was rejected by {order.Supplier?.CompanyName}. Reason: {reason}",
                     "Error",
-                    $"/Retailer/OrderTrackingDetails/{order.Id}"
+                    $"/Order/Details/{order.Id}"
                 );
             }
 
@@ -619,7 +569,7 @@ namespace SCM_System.Services
                             CommissionRate = 1.00m,
                             CommissionAmount = po.TotalAmount,
                             PaymentType = "OrderPayment",
-                            Status = "Pending",
+                            Status = PaymentStatus.Pending.ToString(),
                             ChapaTransactionId = "",
                             PaymentRequestData = "",
                             PaymentVerificationData = "",
@@ -644,17 +594,15 @@ namespace SCM_System.Services
                             PurchaseOrderId = po.Id,
                             OrderId = order.Id,
                             SupplierId = po.SupplierId,
+                            RetailerId = order.RetailerId,
                             OrderAmount = po.TotalAmount,
                             CommissionRate = commissionRate,
                             CommissionAmount = platformAmount,
                             PaymentType = "PlatformCommission",
-                            Status = "Pending",
-                            ChapaTransactionId = "",
-                            PaymentRequestData = "",
-                            PaymentVerificationData = "",
+                            Status = PaymentStatus.Pending.ToString(),
                             CreatedAt = DateTime.Now,
                             DueDate = DateTime.Now.AddDays(7),
-                            Notes = $"Platform commission for Purchase Order #{po.PONumber}"
+                            Notes = $"Platform service fee (5%) for #{po.PONumber}"
                         };
                         _context.Commissions.Add(platformCommission);
                         createdCount++;

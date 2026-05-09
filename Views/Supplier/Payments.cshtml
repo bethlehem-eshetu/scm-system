@@ -54,9 +54,9 @@
                         <tr>
                             <th class="ps-4">Reference</th>
                             <th>Order Details</th>
-                            <th>Amount</th>
-                            <th>Commission</th>
-                            <th>Status</th>
+                            <th class="text-end">Order Amount</th>
+                            <th class="text-end">Platform Fee (5%)</th>
+                            <th class="text-center">Status</th>
                             <th class="text-end pe-4">Action</th>
                         </tr>
                     </thead>
@@ -71,15 +71,12 @@
                                         <div class="text-muted small">@commission.CreatedAt.ToString("MMM dd, yyyy")</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold">PO #@commission.PurchaseOrderId</div>
-                                        @if (!string.IsNullOrEmpty(commission.ChapaTransactionId))
-                                        {
-                                            <div class="text-muted small">ID: @commission.ChapaTransactionId</div>
-                                        }
+                                        <div class="fw-bold">@commission.PurchaseOrder?.PONumber</div>
+                                        <div class="text-muted small">ID: @commission.OrderId</div>
                                     </td>
-                                    <td class="fw-bold">@commission.PurchaseOrder.TotalAmount.ToString("C")</td>
-                                    <td class="text-danger fw-bold">@commission.CommissionAmount.ToString("C")</td>
-                                    <td>
+                                    <td class="text-end fw-bold">@commission.OrderAmount.ToString("C")</td>
+                                    <td class="text-end text-danger fw-bold">-@commission.CommissionAmount.ToString("C")</td>
+                                    <td class="text-center">
                                         <span class="badge @(commission.Status == "Paid" ? "bg-success" : "bg-warning text-dark") rounded-pill px-3 py-2">
                                             @commission.Status
                                         </span>

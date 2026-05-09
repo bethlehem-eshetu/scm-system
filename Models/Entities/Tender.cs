@@ -51,6 +51,7 @@ namespace SCM_System.Models.Entities
         public string? PreferredSuppliers { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; set; }
 
         // Navigation
         public ICollection<TenderItem> TenderItems { get; set; }

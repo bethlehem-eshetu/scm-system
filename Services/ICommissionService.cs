@@ -1,4 +1,4 @@
-﻿using SCM_System.Models.Entities;
+using SCM_System.Models.Entities;
 
 namespace SCM_System.Services
 {
@@ -12,5 +12,8 @@ namespace SCM_System.Services
         Task<Commission> VerifyPaymentAsync(int commissionId);
         Task<decimal> GetTotalCommissionsEarnedAsync(DateTime? fromDate = null, DateTime? toDate = null);
         Task<decimal> GetPendingCommissionsTotalAsync();
+        Task<bool> FinalizePaymentAsync(int commissionId, string transactionId, string verificationData);
+        Task<Commission> InitiateOrderPaymentAsync(int orderId);
+        Task<Commission> GetCommissionByOrderAndTypeAsync(int orderId, string paymentType);
     }
 }

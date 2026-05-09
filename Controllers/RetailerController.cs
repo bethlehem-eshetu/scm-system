@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Services;
+using System.Security.Claims;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Controllers
 {
@@ -11,12 +13,14 @@ namespace SCM_System.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ICartService _cartService;
         private readonly INotificationService _notificationService;
+        private readonly IOrderService _orderService;
 
-        public RetailerController(ApplicationDbContext context, ICartService cartService, INotificationService notificationService)
+        public RetailerController(ApplicationDbContext context, ICartService cartService, INotificationService notificationService, IOrderService orderService)
         {
             _context = context;
             _cartService = cartService;
             _notificationService = notificationService;
+            _orderService = orderService;
         }
 
         // Helper method to check if user is retailer
@@ -28,6 +32,18 @@ namespace SCM_System.Controllers
             var user = _context.Users.Find(userId);
             return user != null && user.Role == "Retailer" && user.IsApproved && user.IsFaydaVerified;
         }
+
+        private async Task<int> GetRetailerIdInternalAsync()
+        {
+            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? HttpContext.Session.GetInt32("UserId")?.ToString();
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var r = await _context.Retailers.FirstOrDefaultAsync(x => x.UserId == userId);
+                return r?.Id ?? 0;
+            }
+            return 0;
+        }
+
 
         // GET: /Retailer/Dashboard
         public async Task<IActionResult> Dashboard()
@@ -53,61 +69,47 @@ namespace SCM_System.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // ========== ADD MESSAGING VIEWBAGS ==========
-
-            // Get unread message count
+            // Unread messages and penalties
             ViewBag.UnreadMessagesCount = await _context.Messages
                 .Where(m => m.Conversation.RetailerId == retailer.Id &&
                             m.SenderId != userId &&
                             !m.IsRead)
                 .CountAsync();
 
-            // Get active penalties count
             ViewBag.ActivePenalties = await _context.Penalties
                .CountAsync(p => p.UserId == userId && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
 
-            // Get recent conversations for dashboard widget
-            ViewBag.RecentConversations = await _context.Conversations
-                .Include(c => c.Retailer)
-                    .ThenInclude(r => r.User)
-                .Include(c => c.Supplier)
-                    .ThenInclude(s => s.User)
-                .Where(c => c.RetailerId == retailer.Id)
-                .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
-                .Take(5)
-                .Select(c => new
-                {
-                    Id = c.Id,
-                    OtherUserId = c.SupplierId,
-                    OtherUserName = c.Supplier != null ? c.Supplier.User.FullName : "Supplier",
-                    OtherUserRole = "Supplier",
-                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt)
-                        .Select(m => m.MessageText.Length > 60 ? m.MessageText.Substring(0, 60) + "..." : m.MessageText)
-                        .FirstOrDefault() ?? "No messages yet",
-                    LastMessageAt = c.LastMessageAt ?? c.CreatedAt,
-                    UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead)
-                })
-                .ToListAsync();
-
-            // ========== END OF MESSAGING VIEWBAGS ==========
-
             // Advanced Stats for Dashboard
             var orders = await _context.Orders
+                .Include(o => o.Supplier)
                 .Include(o => o.PurchaseOrders)
                 .Where(o => o.RetailerId == retailer.Id)
                 .ToListAsync();
 
             ViewBag.TotalOrders = orders.Count;
-            ViewBag.ActiveOrders = orders.Count(o => o.OrderStatus != "Completed" && o.OrderStatus != "Cancelled" && o.OrderStatus != "Rejected");
+            ViewBag.ActiveOrders = orders.Count(o => o.OrderStatus != "Completed" && o.OrderStatus != "Rejected");
             ViewBag.TotalPurchaseOrders = retailer.PurchaseOrders?.Count ?? 0;
             ViewBag.ActiveTenders = retailer.Tenders?.Count(t => t.Status == "Open") ?? 0;
+
+            // Performance KPIs
+            ViewBag.TotalSpent = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
+            ViewBag.AverageOrderValue = orders.Any() ? orders.Average(o => o.TotalAmount) : 0;
+            
+            var totalOrders = orders.Count;
+            var completedOrdersCount = orders.Count(o => o.OrderStatus == "Completed");
+            ViewBag.OnTimeDeliveryRate = totalOrders > 0 ? Math.Round((completedOrdersCount * 100.0 / totalOrders), 1) : 0;
+
+            var ratingsList = await _context.Ratings
+                .Where(r => r.RetailerId == retailer.Id)
+                .ToListAsync();
+            ViewBag.AverageRatingGiven = ratingsList.Any() ? ratingsList.Average(r => r.RatingValue) : 0;
 
             // Deliveries In Progress
             ViewBag.DeliveriesInProgress = await _context.PurchaseOrders
                 .Where(po => po.RetailerId == retailer.Id && po.Status == "In Transit")
                 .CountAsync();
 
-            // Order Status Summary Bar
+            // Status Summary
             ViewBag.StatusPending = orders.Count(o => o.OrderStatus == "Pending");
             ViewBag.StatusProcessing = orders.Count(o => o.OrderStatus == "Processing" || o.OrderStatus == "Partially Processing");
             ViewBag.StatusInTransit = await _context.PurchaseOrders
@@ -125,10 +127,35 @@ namespace SCM_System.Controllers
                 .Take(5)
                 .ToListAsync();
 
+            var recentConversations = await _context.Conversations
+                .Include(c => c.Supplier)
+                .Include(c => c.Messages)
+                .Where(c => c.RetailerId == retailer.Id)
+                .OrderByDescending(c => c.LastMessageAt)
+                .Take(4)
+                .Select(c => new
+                {
+                    OtherUserId = c.Supplier.UserId,
+                    OtherUserName = c.Supplier.CompanyName,
+                    OtherUserRole = "Supplier",
+                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault() != null 
+                        ? c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault().MessageText 
+                        : "No messages yet",
+                    LastMessageAt = c.LastMessageAt ?? c.CreatedAt,
+                    UnreadCount = c.Messages.Count(m => !m.IsRead && m.SenderId != userId)
+                })
+                .ToListAsync();
+            ViewBag.RecentConversations = recentConversations;
+
+            ViewBag.AllCategories = await _context.ProductCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
             return View(retailer);
         }
 
-        // GET: /Retailer/OrderTracking - FIXED to include Purchase Orders
+        // GET: /Retailer/OrderTracking
         public async Task<IActionResult> OrderTracking()
         {
             if (!IsRetailer()) return RedirectToAction("Login", "Account");
@@ -137,8 +164,10 @@ namespace SCM_System.Controllers
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
 
             var orders = await _context.Orders
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(o => o.Supplier)
-                .Include(o => o.PurchaseOrders)  // ✅ Add this to include POs
+                .Include(o => o.PurchaseOrders)
                     .ThenInclude(po => po.Warehouse)
                 .Include(o => o.PurchaseOrders)
                     .ThenInclude(po => po.DeliveryAgent)
@@ -150,45 +179,12 @@ namespace SCM_System.Controllers
             return View(orders);
         }
 
-        // GET: /Retailer/OrderTrackingDetails/5
-        public async Task<IActionResult> OrderTrackingDetails(int id)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+        // Method removed to favor Order/Details
 
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-
-            var order = await _context.Orders
-                .Include(o => o.Supplier)
-                .Include(o => o.OrderItems)
-                    .ThenInclude(i => i.Product)
-                .Include(o => o.PurchaseOrders)
-                    .ThenInclude(po => po.Warehouse)
-                .Include(o => o.PurchaseOrders)
-                    .ThenInclude(po => po.DeliveryAgent)
-                        .ThenInclude(da => da.User)
-                .Include(o => o.PurchaseOrders)
-                    .ThenInclude(po => po.Commission)  // ✅ Add this to include payment info
-                .FirstOrDefaultAsync(o => o.Id == id && o.RetailerId == retailer.Id);
-
-            if (order == null) return NotFound();
-
-            // Load StatusHistory separately
-            var statusHistory = await _context.OrderStatusHistories
-                .Where(h => h.OrderId == order.Id)
-                .OrderByDescending(h => h.ChangedAt)
-                .ToListAsync();
-
-            ViewBag.StatusHistory = statusHistory;
-
-            return View(order);
-        }
-
-        // GET: /Retailer/MyPurchaseOrders - Redirects to proper purchase orders
+        // GET: /Retailer/MyPurchaseOrders
         public async Task<IActionResult> MyPurchaseOrders()
         {
             if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
             return RedirectToAction("RetailerIndex", "PurchaseOrder");
         }
 
@@ -203,13 +199,13 @@ namespace SCM_System.Controllers
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
-            // Mark all as read when viewing
             var unread = notifications.Where(n => !n.IsRead).ToList();
             if (unread.Any())
             {
                 foreach (var n in unread) n.IsRead = true;
                 await _context.SaveChangesAsync();
             }
+
 
             return View(notifications);
         }
@@ -222,58 +218,227 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers
                 .Include(r => r.User)
-                .Include(r => r.Addresses)
-                .Include(r => r.PaymentMethods)
-                .Include(r => r.Preference)
                 .FirstOrDefaultAsync(r => r.UserId == userId);
 
             if (retailer == null) return NotFound();
 
-            // Ensure Preference exists
-            if (retailer.Preference == null)
-            {
-                retailer.Preference = new RetailerPreference { RetailerId = retailer.Id };
-                _context.RetailerPreferences.Add(retailer.Preference);
-                await _context.SaveChangesAsync();
-            }
-
-            // Security Data
-            ViewBag.ActiveSessions = await _context.UserSessions
-                .Where(us => us.UserId == userId && us.IsActive)
-                .OrderByDescending(us => us.LastActivityTime)
-                .ToListAsync();
-
-            ViewBag.LoginHistory = await _context.AuditLogs
-                .Where(al => al.PerformedByUserId == userId && al.ActionType == "Login")
-                .OrderByDescending(al => al.PerformedAtUtc)
-                .Take(10)
-                .ToListAsync();
-
-            // Performance KPIs
             var orders = await _context.Orders
                 .Where(o => o.RetailerId == retailer.Id)
                 .ToListAsync();
 
             ViewBag.TotalOrders = orders.Count;
             ViewBag.TotalSpent = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
-            ViewBag.AverageOrderValue = orders.Any() ? orders.Average(o => o.TotalAmount) : 0;
             
-            var totalOrders = orders.Count;
-            var completedOrdersCount = orders.Count(o => o.OrderStatus == "Completed");
+            int totalOrders = orders.Count;
+            int completedOrdersCount = orders.Count(o => o.OrderStatus == "Completed");
             ViewBag.OnTimeDeliveryRate = totalOrders > 0 ? Math.Round((completedOrdersCount * 100.0 / totalOrders), 1) : 0;
 
-            var ratings = await _context.Ratings
+            var ratingsList = await _context.Ratings
                 .Where(r => r.RetailerId == retailer.Id)
                 .ToListAsync();
-            ViewBag.AverageRatingGiven = ratings.Any() ? ratings.Average(r => r.RatingValue) : 0;
+            ViewBag.AverageRatingGiven = ratingsList.Any() ? ratingsList.Average(r => r.RatingValue) : 0;
 
-            // Categories for procurement defaults
             ViewBag.AllCategories = await _context.ProductCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
             return View(retailer);
+        }
+
+        // GET: /Retailer/BrowseCatalog
+        public async Task<IActionResult> BrowseCatalog(string searchTerm, int? categoryId, decimal? minPrice, decimal? maxPrice, string supplierCity)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var query = _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Supplier)
+                .Include(p => p.Inventories)
+                .Where(p => !p.IsDeleted && p.IsAvailable && p.Category.IsActive);
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                query = query.Where(p => p.ProductName.Contains(searchTerm) || p.Description.Contains(searchTerm));
+            if (categoryId.HasValue && categoryId.Value > 0)
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            if (minPrice.HasValue)
+                query = query.Where(p => p.BasePrice >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(p => p.BasePrice <= maxPrice.Value);
+            if (!string.IsNullOrEmpty(supplierCity))
+                query = query.Where(p => p.Supplier.City == supplierCity);
+
+            var products = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+            ViewData["Categories"] = await _context.ProductCategories.Where(c => c.IsActive).OrderBy(c => c.CategoryName).ToListAsync();
+            ViewData["Cities"] = await _context.Suppliers.Select(s => s.City).Distinct().ToListAsync();
+
+            return View(products);
+        }
+
+        // GET: /Retailer/ProductDetails/5
+        public async Task<IActionResult> ProductDetails(int id)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Supplier)
+                    .ThenInclude(s => s.ReceivedRatings)
+                .Include(p => p.Inventories)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.AttributeDefinition)
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+
+            if (product == null) return NotFound();
+
+            if (product.Supplier != null)
+            {
+                var ratings = product.Supplier.ReceivedRatings;
+                ViewBag.AverageRating = ratings.Any() ? Math.Round(ratings.Average(r => r.RatingValue), 1) : 0;
+                ViewBag.RatingCount = ratings.Count();
+                
+                ViewBag.DealsCompleted = await _context.Orders
+                    .CountAsync(o => o.SupplierId == product.SupplierId && (o.OrderStatus == "Completed" || o.OrderStatus == "Delivered"));
+            }
+
+            var totalOnHand = product.Inventories?.Sum(i => i.QuantityOnHand) ?? 0;
+            var totalReserved = product.Inventories?.Sum(i => i.QuantityReserved) ?? 0;
+            ViewBag.AvailableStock = totalOnHand - totalReserved;
+
+            return View(product);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddToCart(int productId, int quantity = 1)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Session expired. Please login again." });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null) return Json(new { success = false, message = "Retailer profile not found" });
+
+            try
+            {
+                await _cartService.AddToCartAsync(retailer.Id, productId, quantity);
+                var count = await _cartService.GetCartItemCountAsync(retailer.Id);
+
+                return Json(new { 
+                    success = true, 
+                    message = "Product added to cart!", 
+                    cartItemCount = count 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Cart()
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            
+            var cart = await _cartService.GetCartAsync(retailer.Id);
+            return View(cart);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCartJson()
+        {
+            if (!IsRetailer()) return Json(new { success = false });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null) return Json(new { success = false });
+
+            var cart = await _cartService.GetCartAsync(retailer.Id);
+
+            var netSubtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0;
+            var taxTotal = Math.Round(netSubtotal * 0.15m, 2);
+            var deliveryFee = 50.00m;
+            var grandTotal = netSubtotal + taxTotal + deliveryFee;
+
+            var result = new
+            {
+                success = true,
+                items = cart.CartItems?.Select(i => new {
+                    id = i.Id,
+                    productId = i.ProductId,
+                    productName = i.Product?.ProductName,
+                    price = i.Product?.BasePrice,
+                    imageUrl = i.Product?.ImageUrl ?? "/img/placeholder-product.png",
+                    taxRate = i.Product?.TaxRate ?? 15,
+                    quantity = i.Quantity,
+                    maxQuantity = i.Product?.Inventories?.Sum(inv => inv.QuantityOnHand - inv.QuantityReserved) ?? 0,
+                    supplierId = i.Product?.SupplierId, 
+                    supplierName = i.Product?.Supplier?.CompanyName ?? "Unknown Supplier",
+                    total = (i.Quantity * (i.Product?.BasePrice ?? 0)) // This is the Net Total for the item
+                }),
+                subtotal = netSubtotal, // Net
+                taxTotal = taxTotal,
+                deliveryFee = deliveryFee,
+                total = grandTotal
+            };
+
+            return Json(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateCartItem(int cartItemId, int quantity)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Not authenticated" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+
+            await _cartService.UpdateCartItemQuantityAsync(retailer.Id, cartItemId, quantity);
+            var cart = await _cartService.GetCartAsync(retailer.Id);
+
+            var netSubtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0;
+            return Json(new { success = true, subtotal = netSubtotal, taxTotal = Math.Round(netSubtotal * 0.15m, 2) });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveFromCart(int cartItemId)
+        {
+            if (!IsRetailer()) return Json(new { success = false, message = "Not authenticated" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+
+            await _cartService.RemoveFromCartAsync(retailer.Id, cartItemId);
+            var count = await _cartService.GetCartItemCountAsync(retailer.Id);
+            var cart = await _cartService.GetCartAsync(retailer.Id);
+
+            var netSubtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0;
+            return Json(new { success = true, cartItemCount = count, subtotal = netSubtotal, taxTotal = Math.Round(netSubtotal * 0.15m, 2) });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Checkout(string deliveryAddress, DateTime expectedDeliveryDate)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+
+            try
+            {
+                await _cartService.CheckoutAsync(retailer.Id, deliveryAddress, expectedDeliveryDate);
+                TempData["SuccessMessage"] = "Checkout successful! Orders have been generated and sent to suppliers.";
+                return RedirectToAction("OrderTracking");
+            }
+            catch (Exception ex)
+            {
+                var message = ex.Message;
+                if (ex.InnerException != null) message += " | Inner: " + ex.InnerException.Message;
+                TempData["ErrorMessage"] = "Checkout failed: " + message;
+                return RedirectToAction("Dashboard");
+            }
         }
 
         [HttpPost]
@@ -291,6 +456,7 @@ namespace SCM_System.Controllers
             retailer.TaxIdentificationNumber = model.TaxIdentificationNumber;
             retailer.StoreSize = model.StoreSize;
             retailer.City = model.City;
+            retailer.Region = model.Region;
             retailer.BusinessAddress = model.BusinessAddress;
             retailer.Description = model.Description;
 
@@ -311,7 +477,6 @@ namespace SCM_System.Controllers
             retailer.ContactPersonEmail = contactPersonEmail;
             retailer.ContactPersonPhone = contactPersonPhone;
 
-            // Optionally update the main user profile if they are the same
             if (retailer.User != null)
             {
                 retailer.User.FullName = contactPersonName ?? retailer.User.FullName;
@@ -407,13 +572,12 @@ namespace SCM_System.Controllers
         {
             if (!IsRetailer()) return Json(new { success = false });
 
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            
-            address.RetailerId = retailer.Id;
+            var rId = await GetRetailerIdInternalAsync();
+            address.RetailerId = rId;
+
             if (address.IsDefault)
             {
-                var existingDefault = await _context.RetailerAddresses.FirstOrDefaultAsync(a => a.RetailerId == retailer.Id && a.AddressType == address.AddressType && a.IsDefault);
+                var existingDefault = await _context.RetailerAddresses.FirstOrDefaultAsync(a => a.RetailerId == rId && a.AddressType == address.AddressType && a.IsDefault);
                 if (existingDefault != null) existingDefault.IsDefault = false;
             }
 
@@ -441,13 +605,12 @@ namespace SCM_System.Controllers
         {
             if (!IsRetailer()) return Json(new { success = false });
 
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            var rId = await GetRetailerIdInternalAsync();
+            method.RetailerId = rId;
 
-            method.RetailerId = retailer.Id;
             if (method.IsDefault)
             {
-                var existingDefault = await _context.RetailerPaymentMethods.FirstOrDefaultAsync(p => p.RetailerId == retailer.Id && p.IsDefault);
+                var existingDefault = await _context.RetailerPaymentMethods.FirstOrDefaultAsync(p => p.RetailerId == rId && p.IsDefault);
                 if (existingDefault != null) existingDefault.IsDefault = false;
             }
 
@@ -495,7 +658,6 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             var user = await _context.Users.FindAsync(userId);
 
-            // Simple verification for mock (in production use BCrypt or similar)
             if (user.PasswordHash == password)
             {
                 user.AccountStatus = "Suspended";
@@ -521,179 +683,8 @@ namespace SCM_System.Controllers
             csv.AppendLine($"City,{retailer.City}");
             csv.AppendLine($"Created At,{retailer.CreatedAt}");
             
-            // Add more data as needed...
-            
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
             return File(buffer, "text/csv", $"Retailer_Data_{retailer.Id}.csv");
-        }
-
-        // GET: /Retailer/BrowseCatalog
-        public async Task<IActionResult> BrowseCatalog(string searchTerm, int? categoryId, decimal? minPrice, decimal? maxPrice, string supplierCity)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
-            var query = _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Supplier)
-                .Include(p => p.Inventories)
-                .Where(p => !p.IsDeleted && p.IsAvailable && p.Category.IsActive);
-
-            if (!string.IsNullOrEmpty(searchTerm))
-                query = query.Where(p => p.ProductName.Contains(searchTerm) || p.Description.Contains(searchTerm));
-            if (categoryId.HasValue && categoryId.Value > 0)
-                query = query.Where(p => p.CategoryId == categoryId.Value);
-            if (minPrice.HasValue)
-                query = query.Where(p => p.BasePrice >= minPrice.Value);
-            if (maxPrice.HasValue)
-                query = query.Where(p => p.BasePrice <= maxPrice.Value);
-            if (!string.IsNullOrEmpty(supplierCity))
-                query = query.Where(p => p.Supplier.City == supplierCity);
-
-            var products = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
-            ViewData["Categories"] = await _context.ProductCategories.Where(c => c.IsActive).OrderBy(c => c.CategoryName).ToListAsync();
-            ViewData["Cities"] = await _context.Suppliers.Select(s => s.City).Distinct().ToListAsync();
-
-            return View(products);
-        }
-
-        // GET: /Retailer/ProductDetails/5
-        public async Task<IActionResult> ProductDetails(int id)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Supplier)
-                    .ThenInclude(s => s.ReceivedRatings)
-                .Include(p => p.Inventories)
-                .Include(p => p.AttributeValues)
-                    .ThenInclude(av => av.AttributeDefinition)
-                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
-
-            if (product == null) return NotFound();
-
-            // Calculate Metrics
-            if (product.Supplier != null)
-            {
-                var ratings = product.Supplier.ReceivedRatings;
-                ViewBag.AverageRating = ratings.Any() ? Math.Round(ratings.Average(r => r.RatingValue), 1) : 0;
-                ViewBag.RatingCount = ratings.Count();
-                
-                ViewBag.DealsCompleted = await _context.Orders
-                    .CountAsync(o => o.SupplierId == product.SupplierId && (o.OrderStatus == "Completed" || o.OrderStatus == "Delivered"));
-            }
-
-            return View(product);
-        }
-
-        // APIs for Global Cart
-        [HttpPost]
-        public async Task<IActionResult> AddToCart([FromForm] int productId, [FromForm] int quantity = 1)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            if (retailer == null) return NotFound();
-
-            await _cartService.AddToCartAsync(retailer.Id, productId, quantity);
-            
-            TempData["SuccessMessage"] = "Product added to cart!";
-            return RedirectToAction(nameof(Cart));
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Cart()
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            
-            var cart = await _cartService.GetCartAsync(retailer.Id);
-            return View(cart);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetCartJson()
-        {
-            if (!IsRetailer()) return Json(new { success = false });
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            if (retailer == null) return Json(new { success = false });
-
-            var cart = await _cartService.GetCartAsync(retailer.Id);
-
-            var result = new
-            {
-                success = true,
-                items = cart.CartItems?.Select(i => new {
-                    id = i.Id,
-                    productId = i.ProductId,
-                    productName = i.Product?.ProductName,
-                    supplierName = i.Product?.Supplier?.CompanyName,
-                    price = i.Product?.BasePrice,
-                    quantity = i.Quantity,
-                    maxQuantity = i.Product?.Inventories?.Sum(inv => inv.QuantityOnHand - inv.QuantityReserved) ?? 0,
-                    total = (i.Quantity * (i.Product?.BasePrice ?? 0))
-                }),
-                subtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0
-            };
-
-            return Json(result);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> UpdateCartItem([FromForm] int cartItemId, [FromForm] int quantity)
-        {
-            if (!IsRetailer()) return Json(new { success = false, message = "Not authenticated" });
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-
-            await _cartService.UpdateCartItemQuantityAsync(retailer.Id, cartItemId, quantity);
-            var cart = await _cartService.GetCartAsync(retailer.Id);
-
-            return Json(new { success = true, subtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0 });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> RemoveFromCart([FromForm] int cartItemId)
-        {
-            if (!IsRetailer()) return Json(new { success = false, message = "Not authenticated" });
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-
-            await _cartService.RemoveFromCartAsync(retailer.Id, cartItemId);
-            var count = await _cartService.GetCartItemCountAsync(retailer.Id);
-            var cart = await _cartService.GetCartAsync(retailer.Id);
-
-            return Json(new { success = true, cartItemCount = count, subtotal = cart.CartItems?.Sum(i => i.Quantity * (i.Product?.BasePrice ?? 0)) ?? 0 });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Checkout([FromForm] string deliveryAddress, [FromForm] DateTime expectedDeliveryDate)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-
-            try
-            {
-                await _cartService.CheckoutAsync(retailer.Id, deliveryAddress, expectedDeliveryDate);
-                TempData["SuccessMessage"] = "Checkout successful! Orders have been generated and sent to suppliers.";
-                return RedirectToAction("OrderTracking");
-            }
-            catch (Exception ex)
-            {
-                var message = ex.Message;
-                if (ex.InnerException != null) message += " | Inner: " + ex.InnerException.Message;
-                TempData["ErrorMessage"] = "Checkout failed: " + message;
-                return RedirectToAction("Dashboard");
-            }
         }
 
         // GET: /Retailer/PayOrder/5
@@ -710,20 +701,24 @@ namespace SCM_System.Controllers
 
             if (order == null) return NotFound();
 
-            if (order.PaymentStatus != "Pending")
+            if (order.PaymentStatus != PaymentStatus.Pending.ToString())
             {
                 TempData["ErrorMessage"] = "This order is already paid or in escrow.";
-                return RedirectToAction("OrderTrackingDetails", new { id = order.Id });
+                return RedirectToAction("Details", "Order", new { id = order.Id });
             }
 
             // Initialize Chapa Payment
             var txRef = $"ORD-PAY-{order.Id}-{DateTime.Now.Ticks}";
             var user = await _context.Users.FindAsync(userId);
 
+            // Initialize Master Commission record
+            var commissionService = HttpContext.RequestServices.GetRequiredService<ICommissionService>();
+            await commissionService.InitiateOrderPaymentAsync(order.Id);
+
             var chapaService = HttpContext.RequestServices.GetRequiredService<IChapaService>();
             var request = new ChapaPaymentRequest
             {
-                Amount = order.TotalAmount,
+                Amount = order.TotalAmount, // Total amount already includes VAT per business rule
                 Currency = "ETB",
                 Email = user?.Email ?? "",
                 FirstName = user?.FullName?.Split(' ').FirstOrDefault() ?? "",
@@ -740,11 +735,6 @@ namespace SCM_System.Controllers
 
             if (result.Success)
             {
-                // Temporarily store txRef in the database to verify later
-                // Since Order entity doesn't have ChapaTransactionId, I'll use StatusHistory or a dedicated field if available.
-                // Actually, I'll add a 'ChapaTransactionId' to Order if it's missing, or use PurchaseOrder.
-                
-                // For now, let's assume we can verify by tx_ref in callback.
                 return Redirect(result.PaymentUrl);
             }
 
@@ -764,34 +754,18 @@ namespace SCM_System.Controllers
 
             if (verifyResult.Success && verifyResult.Status == "success")
             {
-                // Parse OrderId from tx_ref (ORD-PAY-{orderId}-{ticks})
                 var parts = tx_ref.Split('-');
                 if (parts.Length >= 3 && int.TryParse(parts[2], out int orderId))
                 {
-                    var order = await _context.Orders.FindAsync(orderId);
-                    if (order != null && order.PaymentStatus == "Pending")
-                    {
-                        order.PaymentStatus = "Escrow";
-                        
-                        var history = new OrderStatusHistory
-                        {
-                            OrderId = order.Id,
-                            Status = order.OrderStatus,
-                            Comments = "Payment received and held in Escrow via Chapa.",
-                            ChangedByUserId = HttpContext.Session.GetInt32("UserId") ?? 0,
-                            ChangedAt = DateTime.Now
-                        };
-                        _context.OrderStatusHistories.Add(history);
-                        
-                        await _context.SaveChangesAsync();
-                        TempData["SuccessMessage"] = "Payment successful! Your funds are now held in Escrow.";
-                        return RedirectToAction("OrderTrackingDetails", new { id = orderId });
-                    }
+                    // The WebhookController will handle the actual status update.
+                    // We just show a pleasant success/pending message to the UI.
+                    TempData["SuccessMessage"] = "Payment verification in progress. Your order status will be updated shortly.";
+                    return RedirectToAction("Details", "Order", new { id = orderId });
                 }
             }
 
-            TempData["ErrorMessage"] = "Payment verification failed or timed out.";
+            TempData["ErrorMessage"] = "Payment verification pending. If you completed the payment, your order will be updated automatically via our secure webhook.";
             return RedirectToAction("OrderTracking");
         }
     }
-}
+}

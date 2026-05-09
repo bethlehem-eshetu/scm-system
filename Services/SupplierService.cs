@@ -110,10 +110,10 @@ namespace SCM_System.Services
             return viewModel;
         }
 
-        public async Task<List<Vehicle>> GetSmartDispatchSuggestionsAsync(int warehouseId)
+        public async Task<List<VehicleSuggestion>> GetSmartDispatchSuggestionsAsync(int warehouseId)
         {
             var warehouse = await _context.Warehouses.FindAsync(warehouseId);
-            if (warehouse == null) return new List<Vehicle>();
+            if (warehouse == null) return new List<VehicleSuggestion>();
 
             var availableVehicles = await _context.Vehicles
                 .Include(v => v.PrimaryDriver)
@@ -126,21 +126,31 @@ namespace SCM_System.Services
             return availableVehicles
                 .OrderByDescending(v => {
                     int score = 0;
-                    // Mocked scoring factors
-                    if (v.TemperatureControlled) score += 20; // Specialized capability
-                    if (v.MaxLoadCapacity > 1000) score += 15; // Capacity fit
-                    if (v.PrimaryDriver != null) score += 25; // Has assigned driver
+                    if (v.TemperatureControlled) score += 20;
+                    if (v.MaxLoadCapacity > 1000) score += 15;
+                    if (v.PrimaryDriver != null) score += 25;
                     return score;
+                })
+                .Select((v, index) => new VehicleSuggestion 
+                { 
+                    VehicleId = v.Id, 
+                    Rank = index + 1 
                 })
                 .ToList();
         }
 
-        public async Task<List<SupplierEmployee>> GetSmartDriverSuggestionsAsync(int warehouseId)
+        public async Task<List<DriverSuggestion>> GetSmartDriverSuggestionsAsync(int warehouseId)
         {
-            return await _context.SupplierEmployees
+            var agents = await _context.SupplierEmployees
                 .Include(e => e.User)
                 .Where(e => e.WarehouseId == warehouseId && e.EmployeeRole == "DeliveryAgent" && e.Status == SCM_System.Models.Enums.EmployeeStatus.Active && !e.IsDeleted)
                 .ToListAsync();
+
+            return agents.Select((a, index) => new DriverSuggestion
+            {
+                DriverId = a.Id,
+                Rank = index + 1
+            }).ToList();
         }
 
         public async Task<SupplierReportsViewModel> GetSupplierReportsAsync(int supplierId)
@@ -224,7 +234,7 @@ namespace SCM_System.Services
         {
             return await _context.Commissions
                 .Include(c => c.PurchaseOrder)
-                .Where(c => c.SupplierId == supplierId)
+                .Where(c => c.SupplierId == supplierId && c.PaymentType == "PlatformCommission")
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
         }
@@ -248,6 +258,35 @@ namespace SCM_System.Services
             
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<bool> UpdateSupplierTierAsync(int supplierId)
+        {
+            var supplier = await _context.Suppliers
+                .Include(s => s.Orders)
+                .Include(s => s.ReceivedRatings)
+                .FirstOrDefaultAsync(s => s.Id == supplierId);
+
+            if (supplier == null) return false;
+
+            var completedOrders = supplier.Orders.Count(o => o.OrderStatus == "Completed");
+            var averageRating = supplier.ReceivedRatings.Any() ? supplier.ReceivedRatings.Average(r => r.RatingValue) : 0;
+
+            string newTier = "Bronze";
+            if (completedOrders >= 1000 || averageRating >= 4.9) newTier = "Platinum";
+            else if (completedOrders >= 500 || averageRating >= 4.7) newTier = "Gold";
+            else if (completedOrders >= 100 || averageRating >= 4.5) newTier = "Silver";
+
+            if (supplier.CommissionTier != newTier)
+            {
+                supplier.CommissionTier = newTier;
+                supplier.CommissionRate = Supplier.GetRateByTier(newTier);
+                _context.Suppliers.Update(supplier);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+
+            return false;
         }
     }
 }

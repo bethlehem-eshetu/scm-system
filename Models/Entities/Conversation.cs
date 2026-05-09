@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SCM_System.Models.Entities
 {
@@ -13,6 +13,12 @@ namespace SCM_System.Models.Entities
         [Required]
         public int RetailerId { get; set; }
         public Retailer Retailer { get; set; }
+
+        public string? Title { get; set; }
+        public int? OrderId { get; set; }
+        public Order? Order { get; set; }
+        public int? WarehouseId { get; set; }
+        public Warehouse? Warehouse { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

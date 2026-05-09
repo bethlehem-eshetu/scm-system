@@ -88,6 +88,14 @@
                 <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm" class="needs-validation">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Role" id="RoleHidden" />
+                    
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</h6>
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
 
                     <!-- Step 1: Fayda Identity Verification -->
                     <div id="step-1" class="registration-step">
@@ -176,13 +184,23 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase">Secure Password</label>
-                                    <input asp-for="Password" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" />
-                                    <span asp-validation-for="Password" class="text-danger extra-small"></span>
+                                    <div class="position-relative">
+                                        <input asp-for="Password" id="regPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" value="@Model?.Password" />
+                                        <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegPassword">
+                                            <i class="far fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="Password" class="text-danger extra-small mt-1 d-block"></span>
                                 </div>
                                 <div class="col-md-6">
                                     <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
-                                    <input asp-for="ConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="password" placeholder="••••••••" />
-                                    <span asp-validation-for="ConfirmPassword" class="text-danger extra-small"></span>
+                                    <div class="position-relative">
+                                        <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" value="@Model?.ConfirmPassword" />
+                                        <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegConfirmPassword">
+                                            <i class="far fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger extra-small mt-1 d-block"></span>
                                 </div>
                                 <div class="col-md-12">
                                     <label asp-for="DateOfBirth" class="form-label small fw-bold text-muted text-uppercase d-block">
@@ -272,8 +290,10 @@
                                         <span asp-validation-for="TaxIdentificationNumber" class="text-danger extra-small"></span>
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG)</label>
-                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG) *</label>
+                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
+                                        <span asp-validation-for="LicenseFile" class="text-danger extra-small"></span>
+                                        <small class="text-muted d-block mt-1">Please re-select your file if you encounter any errors.</small>
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="CompanyAddress" class="form-label small fw-bold text-muted text-uppercase">Headquarters Address</label>
@@ -448,15 +468,54 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            $('#registerForm').on('submit', function(e) {
-                console.log("Form is being submitted!");
-                
-                // Log all form data
-                var formData = new FormData(this);
-                for (var pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
+            // Prevent Enter key from submitting the form unexpectedly
+            $('#registerForm').on('keydown', 'input', function(e) {
+                if (e.which == 13) {
+                    e.preventDefault();
+                    var $step = $(this).closest('.registration-step');
+                    var stepId = $step.attr('id');
+                    
+                    if (stepId === 'step-1') {
+                        if ($('#otpSection').is(':visible')) {
+                            $('#btnVerifyOtp').click();
+                        } else {
+                            $('#btnRequestOtp').click();
+                        }
+                    } else if (stepId === 'step-2') {
+                        $('#btnNextToStep3').click();
+                    }
+                    return false;
                 }
-                
+            });
+
+            $('#registerForm').on('submit', function(e) {
+                // Prevent submission if not on the final step
+                if (!$('#step-3').is(':visible')) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                var role = $('#RoleHidden').val() || $('#RoleSelect').val();
+                var isFormValid = true;
+
+                if (role === 'Supplier') {
+                    if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
+                        $('#categoryError').text('Please select at least one business category.');
+                        isFormValid = false;
+                    } else {
+                        $('#categoryError').text('');
+                    }
+                } else if (role === 'Retailer') {
+                    // Retailers no longer select categories during registration
+                    // This section is kept for future-proofing or if logic is restored
+                }
+
+                if (!isFormValid) {
+                    e.preventDefault();
+                    window.scrollTo(0, 0);
+                    return false;
+                }
+
                 return true;
             });
             var expiryTimer = null;
@@ -476,21 +535,21 @@
                     // Step 1 completed (Fayda verified)
                     currentStep = 2;
                     
-                    // Check if business info is partially filled (meaning they were on step 3)
-                    if (savedRole === "Supplier" && $('#CompanyName').val() && $('#CompanyName').val().trim() !== "") {
-                        currentStep = 3;
-                    } else if (savedRole === "Retailer" && $('#BusinessName').val() && $('#BusinessName').val().trim() !== "") {
+                    // Re-populate verification UI state
+                    $('#nameBadge').show();
+                    $('#fullNameHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
+                    $('#phoneBadge').show();
+                    $('#phoneHelpText').html('<span class="badge bg-info">✓ Verified by Fayda</span>');
+                    $('#dobBadge').show();
+                    $('#dobHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
+
+                    // Check if business info is partially filled or Role was selected (meaning they passed step 2)
+                    if (savedRole && savedRole.trim() !== "") {
                         currentStep = 3;
                     }
                 }
                 
                 showStep(currentStep);
-                
-                if ($('#VerifiedFullName').val() && $('#VerifiedFullName').val().trim() !== "") {
-                    $('#nameBadge').show();
-                    $('#phoneBadge').show();
-                    $('#dobBadge').show();
-                }
                 
                 if (savedRole) {
                     $('#RoleSelect').val(savedRole).trigger('change');
@@ -707,25 +766,6 @@
                 if ($('#Password').val() && $('#Password').val() !== $('#ConfirmPassword').val()) {
                     $('#ConfirmPassword').addClass('is-invalid');
                     isValid = false;
-                }
-
-                if (isValid && $('#step-3').is(':visible')) {
-                    var role = $('#RoleSelect').val();
-                    if (role === 'Supplier') {
-                        if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
-                            $('#categoryError').text('Please select at least one business category.');
-                            isValid = false;
-                        } else {
-                            $('#categoryError').text('');
-                        }
-                    } else if (role === 'Retailer') {
-                        if ($('input[name="SelectedRetailerCategoryIds"]:checked').length === 0) {
-                            $('#retailerCategoryError').text('Please select at least one category.');
-                            isValid = false;
-                        } else {
-                            $('#retailerCategoryError').text('');
-                        }
-                    }
                 }
 
                 if (isValid) {

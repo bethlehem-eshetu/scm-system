@@ -1,0 +1,251 @@
+@model SCM_System.Models.Entities.User
+@{
+    ViewData["Title"] = $"Details: {Model.FullName} | Admin Hub";
+    Layout = "_DashboardLayout";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --title-color: #0B3B2F;
+            --label-color: #5A7A6E;
+            --value-color: #1A2C26;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        html.dark-mode:root, body.dark-mode {
+            --title-color: #4BC0A0;
+            --label-color: #9EABA5;
+            --value-color: #EDEDED;
+            --card-shadow: none;
+        }
+
+        .details-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            color: var(--label-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover { color: #2E9C7A; }
+
+        .profile-header-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .profile-initials {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: #2E9C7A;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            box-shadow: 0 8px 16px rgba(46, 156, 122, 0.2);
+        }
+
+        .user-title-name {
+            color: var(--title-color);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            height: 100%;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .info-card-header {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--label-color);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-item { margin-bottom: 16px; }
+        .detail-label { font-size: 13px; color: var(--label-color); margin-bottom: 4px; }
+        .detail-value { font-size: 15px; color: var(--value-color); font-weight: 600; }
+
+        .activity-item {
+            padding-left: 20px;
+            border-left: 2px solid var(--border-color);
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .activity-item::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2E9C7A;
+            position: absolute;
+            left: -6px;
+            top: 6px;
+        }
+
+        .btn-action {
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+    </style>
+}
+
+<div class="details-wrapper pb-5">
+    <a asp-action="AllUsers" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to All Users
+    </a>
+
+    <div class="page-title-section mb-4">
+        <h2 class="fw-bold mb-0" style="color: var(--title-color);"><i class="fas fa-diamond me-2"></i> User Details</h2>
+        <div class="section-underline-short mt-1" style="width: 40px; height: 3px; background: #2E9C7A; border-radius: 2px;"></div>
+    </div>
+
+    <!-- Header Card -->
+    <div class="profile-header-card">
+        <div class="d-flex align-items-center gap-4">
+            <div class="profile-initials">@Model.FullName.Substring(0, 1).ToUpper()</div>
+            <div>
+                <h1 class="user-title-name mb-1">@Model.FullName</h1>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-3">@Model.Role</span>
+                    <span class="text-muted small">ID: #@Model.Id · Member since @Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Contact Information -->
+        <div class="col-md-6">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-phone-alt"></i> Contact Information
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Email Address</div>
+                    <div class="detail-value">@Model.Email</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phone Number</div>
+                    <div class="detail-value">@(string.IsNullOrEmpty(Model.PhoneNumber) ? "Not Provided" : Model.PhoneNumber)</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Fayda identity number (FAN)</div>
+                    <div class="detail-value font-monospace">@Model.FAN</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Status -->
+        <div class="col-md-6">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-lock"></i> Account Status
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Current Status</div>
+                    <div class="detail-value">
+                        @if (Model.AccountStatus == "Active") { <span class="text-success"><i class="fas fa-circle me-1" style="font-size: 8px;"></i> Active</span> }
+                        else if (Model.AccountStatus == "Suspended") { <span class="text-warning"><i class="fas fa-circle me-1" style="font-size: 8px;"></i> Suspended</span> }
+                        else { <span class="text-danger"><i class="fas fa-circle me-1" style="font-size: 8px;"></i> @Model.AccountStatus</span> }
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Verification Status</div>
+                    <div class="detail-value">
+                        @if (Model.IsFaydaVerified) { <span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Verified</span> }
+                        else if (Model.FaydaStatus == "Rejected") { <span class="text-danger fw-bold"><i class="fas fa-times-circle me-1"></i>Rejected</span> }
+                        else { <span class="text-warning fw-bold"><i class="fas fa-clock me-1"></i>Pending Verification</span> }
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Last Login</div>
+                    <div class="detail-value">Today at 10:45 AM</div> <!-- Mock data, would usually come from a log -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity History -->
+        <div class="col-12">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-history"></i> Activity History
+                </div>
+                <div class="activity-timeline py-2">
+                    <div class="activity-item">
+                        <div class="detail-value">First login detected</div>
+                        <div class="text-muted small">May 03, 2026 · 09:15 AM</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="detail-value">Email address verified</div>
+                        <div class="text-muted small">May 02, 2026 · 02:30 PM</div>
+                    </div>
+                    <div class="activity-item" style="border-left: none;">
+                        <div class="detail-value">User registered to the platform</div>
+                        <div class="text-muted small">May 02, 2026 · 02:15 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="mt-5 d-flex gap-3 justify-content-center">
+        @if (Model.AccountStatus != "Suspended")
+        {
+            <form asp-action="SuspendUser" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-warning btn-action text-white" onclick="return confirm('Are you sure you want to suspend this user?');">
+                    <i class="fas fa-ban"></i> Suspend User
+                </button>
+            </form>
+        }
+        else
+        {
+            <form asp-action="VerifyUser" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success btn-action" onclick="return confirm('Re-activate this user?');">
+                    <i class="fas fa-check-circle"></i> Reactivate User
+                </button>
+            </form>
+        }
+        <button class="btn btn-outline-card btn-action"><i class="fas fa-pencil-alt"></i> Edit Info</button>
+        <button class="btn btn-outline-card btn-action"><i class="fas fa-envelope"></i> Send Email</button>
+    </div>
+</div>

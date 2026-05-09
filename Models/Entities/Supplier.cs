@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCM_System.Models.Entities
 {
@@ -13,7 +14,7 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(150)]
         [Display(Name = "Company Name")]
-        public string CompanyName { get; set; }
+        public string CompanyName { get; set; } = string.Empty;
 
         [StringLength(50)]
         [Display(Name = "Business Type")]
@@ -22,7 +23,7 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(100)]
         [Display(Name = "License Number")]
-        public string LicenseNumber { get; set; }
+        public string LicenseNumber { get; set; } = string.Empty;
 
         [StringLength(255)]
         [Display(Name = "License Document")]
@@ -35,11 +36,14 @@ namespace SCM_System.Models.Entities
         [Required]
         [StringLength(200)]
         [Display(Name = "Company Address")]
-        public string CompanyAddress { get; set; }
+        public string CompanyAddress { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
-        public string City { get; set; }
+        public string City { get; set; } = string.Empty;
+
+        [StringLength(100)]
+        public string? Region { get; set; } // Nullable to allow existing rows with NULL values
 
         [Required]
         [StringLength(100)]
@@ -60,7 +64,21 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Commission Tier")]
         public string CommissionTier { get; set; } = "Bronze"; // Bronze, Silver, Gold, Platinum
 
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal CommissionRate { get; set; } = 5.0m; // Default to Bronze
+
+        public static decimal GetRateByTier(string tier) => tier switch
+        {
+            "Silver" => 4.0m,
+            "Gold" => 3.0m,
+            "Platinum" => 2.5m,
+            _ => 5.0m // Bronze or default
+        };
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Balance { get; set; } = 0;
 
         public bool IsDeleted { get; set; } = false;
 
@@ -79,6 +97,11 @@ namespace SCM_System.Models.Entities
 
         // Navigation properties
         public ICollection<Product> Products { get; set; } = new List<Product>();
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        public ICollection<SupplierTransaction> SupplierTransactions { get; set; } = new List<SupplierTransaction>();
         public ICollection<Tender> Tenders { get; set; } = new List<Tender>();
         public ICollection<TenderBid> TenderBids { get; set; } = new List<TenderBid>();
         public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
@@ -90,6 +113,7 @@ namespace SCM_System.Models.Entities
         public ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
         public ICollection<SupplierCategory> SupplierCategories { get; set; } = new List<SupplierCategory>();
+        public ICollection<InboundShipment> InboundShipments { get; set; } = new List<InboundShipment>();
         public ICollection<BankAccount> BankAccounts { get; set; } = new List<BankAccount>();
     }
 }

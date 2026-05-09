@@ -7,6 +7,7 @@ using SCM_System.Services;
 
 namespace SCM_System.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Retailer,Supplier,WarehouseManager,Admin")]
     public class MessageController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -57,6 +58,21 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Message/Conversation/{id}
+        [HttpGet]
+        public async Task<IActionResult> GetUnreadCount()
+        {
+            int currentUserId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (currentUserId == 0) return Json(new { count = 0 });
+
+            int count = await _context.Messages
+                .Include(m => m.Conversation)
+                .Where(m => m.Conversation.RetailerId == currentUserId || m.Conversation.SupplierId == currentUserId || m.Conversation.WarehouseId == currentUserId)
+                .Where(m => m.SenderId != currentUserId && !m.IsRead)
+                .CountAsync();
+
+            return Json(new { count });
+        }
+
         public async Task<IActionResult> Conversation(int id) // id = other user's ID
         {
             int currentUserId = GetCurrentUserId();
@@ -68,6 +84,9 @@ namespace SCM_System.Controllers
             // Check if user can send messages
             ViewBag.CanSendMessage = await _penaltyService.CanSendMessage(currentUserId);
             ViewBag.PenaltyLevel = await _penaltyService.GetViolationCount(currentUserId) >= 3 ? "Restricted" : null;
+
+            // Load conversations for the left panel
+            ViewBag.Conversations = await GetUserConversations(currentUserId, currentUserRole);
 
             // ✅ ADD THIS: Get active penalty details for display
             var activePenalty = await _context.Penalties
@@ -119,12 +138,29 @@ namespace SCM_System.Controllers
                     IsBlocked = m.IsBlocked,
                     BlockedReason = m.BlockedReason,
                     TriggeredPenalty = m.TriggeredPenalty,
-                    IsFromCurrentUser = m.SenderId == currentUserId
+                    IsFromCurrentUser = m.SenderId == currentUserId,
+                    SeenAt = m.SeenAt
                 })
                 .ToListAsync();
 
             // Mark messages as read
             await MarkMessagesAsRead(conversation.Id, currentUserId);
+
+            // Enrich with Order Details if linked
+            if (conversation.OrderId.HasValue)
+            {
+                var order = await _context.Orders
+                    .Include(o => o.Supplier)
+                    .FirstOrDefaultAsync(o => o.Id == conversation.OrderId.Value);
+                
+                if (order != null)
+                {
+                    ViewBag.LinkedOrderId = order.Id;
+                    ViewBag.LinkedOrderNumber = order.OrderNumber ?? $"ORD-{order.Id}";
+                    ViewBag.LinkedOrderStatus = order.OrderStatus;
+                    ViewBag.LinkedSupplierName = order.Supplier?.CompanyName;
+                }
+            }
 
             // Get other user info
             var otherUser = await _context.Users.FindAsync(id);
@@ -134,6 +170,66 @@ namespace SCM_System.Controllers
             ViewBag.ConversationId = conversation.Id;
 
             return View(messages.OrderBy(m => m.CreatedAt).ToList());
+        }
+
+        // GET: /Message/StartOrderChat?orderId=123
+        [HttpGet]
+        public async Task<IActionResult> StartOrderChat(int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Supplier)
+                .Include(o => o.Retailer)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null) return NotFound();
+
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            var currentUserRole = HttpContext.Session.GetString("UserRole");
+
+            // Verify authority
+            if (currentUserRole == "Supplier" && order.Supplier.UserId != currentUserId) return Unauthorized();
+            if (currentUserRole == "Retailer" && order.Retailer.UserId != currentUserId) return Unauthorized();
+
+            // Find or create conversation for this order
+            // ✅ FIX: Check for ANY conversation between this pair to avoid unique index violation
+            var conversation = await _context.Conversations
+                .FirstOrDefaultAsync(c => c.SupplierId == order.SupplierId && c.RetailerId == order.RetailerId);
+
+            if (conversation == null)
+            {
+                conversation = new Conversation
+                {
+                    SupplierId = order.SupplierId,
+                    RetailerId = order.RetailerId,
+                    OrderId = orderId,
+                    Title = $"Order #ORD-{order.Id} Chat",
+                    CreatedAt = DateTime.Now,
+                    LastMessageAt = DateTime.Now
+                };
+                _context.Conversations.Add(conversation);
+                
+                // Add system message
+                var systemMsg = new Message
+                {
+                    Conversation = conversation,
+                    SenderId = 0, // System
+                    MessageText = $"💬 Order context initiated for ORD-{order.Id}. Discuss order details here.",
+                    MessageType = "System",
+                    CreatedAt = DateTime.Now
+                };
+                _context.Messages.Add(systemMsg);
+            }
+            else
+            {
+                // Update context if it's the first time linking this order
+                if (conversation.OrderId != orderId)
+                {
+                    conversation.OrderId = orderId;
+                    conversation.Title = $"Order #ORD-{order.Id} Chat";
+                }
+            }
+
+            return RedirectToAction("Conversation", new { id = (currentUserRole == "Supplier" ? order.Retailer.UserId : order.Supplier.UserId) });
         }
 
         // POST: /Message/Send
@@ -346,56 +442,11 @@ namespace SCM_System.Controllers
             }
         }
 
-        // GET: /Message/SendMessage/{receiverId}
         public async Task<IActionResult> SendMessage(int receiverId)
         {
-            int currentUserId = GetCurrentUserId();
-            if (currentUserId == 0)
-                return RedirectToAction("Login", "Account");
-
-            string currentUserRole = GetCurrentUserRole();
-
-            // Get or create conversation
-            var conversation = await GetOrCreateConversation(currentUserId, currentUserRole, receiverId);
-
-            if (conversation == null)
-            {
-                TempData["ErrorMessage"] = "Cannot start conversation: Missing Retailer or Supplier profile for the involved users.";
-                return RedirectToAction("Inbox");
-            }
-
-            // Get receiver info
-            var receiver = await _context.Users.FindAsync(receiverId);
-            if (receiver == null)
-                return NotFound();
-
-            var model = new SendMessageViewModel
-            {
-                ReceiverId = receiverId,
-                ReceiverName = receiver.FullName,
-                ConversationId = conversation.Id
-            };
-
-            return View(model);
+            return RedirectToAction("Conversation", new { id = receiverId });
         }
 
-        // GET: /Message/GetUnreadCount
-        [HttpGet]
-        public async Task<IActionResult> GetUnreadCount()
-        {
-            int currentUserId = GetCurrentUserId();
-            if (currentUserId == 0)
-                return Json(0);
-
-            var unreadCount = await _context.Messages
-                .Where(m => (m.Conversation.RetailerId == currentUserId ||
-                            m.Conversation.SupplierId == currentUserId) &&
-                            m.SenderId != currentUserId &&
-                            !m.IsRead)
-                .CountAsync();
-
-            return Json(unreadCount);
-        }
 
         // GET: /Message/GetRecentConversations
         [HttpGet]
@@ -428,45 +479,50 @@ namespace SCM_System.Controllers
 
         private async Task<Conversation> GetOrCreateConversation(int currentUserId, string currentUserRole, int otherUserId)
         {
-            // Get the IDs of the entities involved
-            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == currentUserId);
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == currentUserId);
-
-            // If we can't find the current user's profile, try finding the other user's profile
-            var otherSupplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == otherUserId);
-            var otherRetailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == otherUserId);
+            // 1. Identify the roles and profiles
+            var currentSupplier = await _context.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == currentUserId);
+            var currentRetailer = await _context.Retailers.AsNoTracking().FirstOrDefaultAsync(r => r.UserId == currentUserId);
+            
+            var otherSupplier = await _context.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == otherUserId);
+            var otherRetailer = await _context.Retailers.AsNoTracking().FirstOrDefaultAsync(r => r.UserId == otherUserId);
 
             int supplierId = 0;
             int retailerId = 0;
 
-            if (supplier != null && otherRetailer != null)
+            // Scenario A: Current is Supplier, Other is Retailer
+            if (currentSupplier != null && otherRetailer != null)
             {
-                supplierId = supplier.Id;
+                supplierId = currentSupplier.Id;
                 retailerId = otherRetailer.Id;
             }
-            else if (retailer != null && otherSupplier != null)
+            // Scenario B: Current is Retailer, Other is Supplier
+            else if (currentRetailer != null && otherSupplier != null)
             {
-                retailerId = retailer.Id;
+                retailerId = currentRetailer.Id;
                 supplierId = otherSupplier.Id;
             }
+            // Scenario C: Fallback - Resolve based on roles if one profile is missing but user exists
             else
             {
-                // Fallback to role-based lookup if one is missing but roles suggest intent
-                if (currentUserRole == "Supplier" && supplier != null)
+                var otherUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == otherUserId);
+                if (otherUser != null)
                 {
-                    supplierId = supplier.Id;
-                    if (otherRetailer != null) retailerId = otherRetailer.Id;
-                }
-                else if (currentUserRole == "Retailer" && retailer != null)
-                {
-                    retailerId = retailer.Id;
-                    if (otherSupplier != null) supplierId = otherSupplier.Id;
+                    if (currentUserRole == "Supplier" && currentSupplier != null && otherUser.Role == "Retailer")
+                    {
+                        supplierId = currentSupplier.Id;
+                        // Attempt to find or create a dummy retailer profile if missing? No, we need a real profile.
+                        if (otherRetailer != null) retailerId = otherRetailer.Id;
+                    }
+                    else if (currentUserRole == "Retailer" && currentRetailer != null && otherUser.Role == "Supplier")
+                    {
+                        retailerId = currentRetailer.Id;
+                        if (otherSupplier != null) supplierId = otherSupplier.Id;
+                    }
                 }
             }
 
             if (supplierId == 0 || retailerId == 0)
             {
-                // Return null instead of throwing an exception to prevent application crashes
                 return null;
             }
 
@@ -556,5 +612,7 @@ namespace SCM_System.Controllers
 
             await _context.SaveChangesAsync();
         }
+
+
     }
 }

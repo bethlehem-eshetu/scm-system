@@ -9,12 +9,10 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(50)]
-        public string OrderNumber { get; set; }
-
-
+        public string OrderNumber { get; set; } = string.Empty;
 
         [StringLength(255)]
-        public string DeliveryAddress { get; set; }
+        public string DeliveryAddress { get; set; } = string.Empty;
 
         [StringLength(100)]
         public string? DeliveryCity { get; set; }
@@ -34,6 +32,14 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
+        public decimal Subtotal { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal VAT { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal TotalAmount { get; set; }
 
         [Required]
@@ -45,19 +51,25 @@ namespace SCM_System.Models.Entities
         public string PaymentStatus { get; set; } = "Pending"; // Pending, Escrow, Released
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; set; }
 
         [StringLength(500)]
         public string? RejectionReason { get; set; }
 
         public DateTime? RejectedAt { get; set; }
 
-        // Navigation
-        public ICollection<OrderItem> OrderItems { get; set; }
-        public ICollection<OrderStatusHistory> StatusHistory { get; set; }
-        public ICollection<PurchaseOrder> PurchaseOrders { get; set; }
-        public Delivery Delivery { get; set; }
+        [StringLength(500)]
+        public string? CancellationReason { get; set; }
 
-        public ICollection<ReturnRequest> ReturnRequests { get; set; }
+        public DateTime? CancelledAt { get; set; }
+
+        // Navigation
+        public ICollection<OrderItem> OrderItems { get; set; } = [];
+        public ICollection<OrderStatusHistory> StatusHistory { get; set; } = [];
+        public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
+        public Delivery? Delivery { get; set; }
+
+        public ICollection<ReturnRequest> ReturnRequests { get; set; } = [];
 
         [StringLength(200)]
         public string? QRCodeValue { get; set; }

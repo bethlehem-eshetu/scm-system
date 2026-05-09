@@ -9,7 +9,7 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(50)]
-        public string PONumber { get; set; }
+        public string PONumber { get; set; } = string.Empty;
 
         [Required]
         public int RetailerId { get; set; }
@@ -38,18 +38,17 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Cancelled
+        public string Status { get; set; } = "Pending";
 
         [Required]
         [StringLength(255)]
-        public string DeliveryAddress { get; set; }
+        public string DeliveryAddress { get; set; } = string.Empty;
 
         [StringLength(100)]
         public string? DeliveryMethod { get; set; }
 
-        [Required]
-        public int WarehouseId { get; set; }
-        public Warehouse Warehouse { get; set; }
+        public int? WarehouseId { get; set; }
+        public Warehouse? Warehouse { get; set; }
 
         public int? DeliveryAgentId { get; set; }
         public SupplierEmployee DeliveryAgent { get; set; }
@@ -58,7 +57,7 @@ namespace SCM_System.Models.Entities
         public Vehicle Vehicle { get; set; }
 
         [StringLength(20)]
-        public string PaymentStatus { get; set; } = "Pending"; // Pending, Paid, Failed
+        public string PaymentStatus { get; set; } = "Pending";
 
         [StringLength(255)]
         public string? ProofOfDelivery { get; set; }
@@ -80,9 +79,32 @@ namespace SCM_System.Models.Entities
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
+        [StringLength(255)]
+        public string? SignaturePath { get; set; }
+
+        [StringLength(1000)]
+        public string? DeliveryNotes { get; set; }
+
+        public bool ChecklistVerified { get; set; } = false;
+
+        public bool IsQRVerified { get; set; } = false;
+
+        [StringLength(500)]
+        public string? FailureReason { get; set; }
+
+        [StringLength(500)]
+        public string? CancellationReason { get; set; }
+
+        // ERP Overrides & Smart Routing
+        public int LoadWeight { get; set; } = 1;
+        public bool IsDispatchOverride { get; set; } = false;
+        [StringLength(500)]
+        public string? DispatchOverrideReason { get; set; }
+
         // Navigation
-        public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; }
-        public ICollection<ReturnRequest> ReturnRequests { get; set; }
+        public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = [];
+        public ICollection<ReturnRequest> ReturnRequests { get; set; } = [];
+        public virtual ICollection<InventoryReservation> InventoryReservations { get; set; } = [];
 
         [Required]
         public int OrderId { get; set; }

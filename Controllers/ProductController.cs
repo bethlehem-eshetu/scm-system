@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
+using SCM_System.Services;
 using System.Security.Claims;
 
 namespace SCM_System.Controllers
@@ -15,11 +16,13 @@ namespace SCM_System.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IInventoryService _inventoryService;
 
-        public ProductController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public ProductController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, IInventoryService inventoryService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _inventoryService = inventoryService;
         }
 
         // Helper method to get current SupplierId
@@ -85,15 +88,23 @@ namespace SCM_System.Controllers
             var supplierId = await GetCurrentSupplierIdAsync();
             var supplier = await _context.Suppliers.FindAsync(supplierId);
 
-            var supplierCategories = await _context.SupplierCategories
+            // Get all category IDs the supplier is registered for
+            var supplierCategoryIds = await _context.SupplierCategories
                 .Where(sc => sc.SupplierId == supplierId)
-                .Select(sc => sc.Category)
+                .Select(sc => sc.CategoryId)
+                .ToListAsync();
+
+            // Find all Parent Categories that match the supplier's selected categories or their parents
+            var parentCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == null && 
+                           (supplierCategoryIds.Contains(c.Id) || 
+                            _context.ProductCategories.Any(sc => sc.ParentCategoryId == c.Id && supplierCategoryIds.Contains(sc.Id))))
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
             var model = new ProductViewModel
             {
-                CategoryList = new SelectList(supplierCategories, "Id", "CategoryName"),
+                CategoryList = new SelectList(parentCategories, "Id", "CategoryName"),
                 SupplierList = supplier != null ? new SelectList(new[] { supplier }, "Id", "CompanyName", supplierId) : null,
                 SupplierId = supplierId ?? 0
             };
@@ -128,6 +139,26 @@ namespace SCM_System.Controllers
             if (!isCategoryValid)
             {
                 ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
+
+            // Server-side Sub-Category Validation
+            if (model.SubCategoryId.HasValue)
+            {
+                var isSubCategoryValid = await _context.ProductCategories
+                    .AnyAsync(c => c.Id == model.SubCategoryId && c.ParentCategoryId == model.CategoryId);
+                if (!isSubCategoryValid)
+                {
+                    ModelState.AddModelError("SubCategoryId", "Invalid sub-category for selected category.");
+                }
+            }
+
+            // Check for duplicate product name
+            bool isDuplicateName = await _context.Products
+                .AnyAsync(p => p.SupplierId == model.SupplierId && p.ProductName == model.ProductName);
+            
+            if (isDuplicateName)
+            {
+                ModelState.AddModelError("ProductName", "A product with this name already exists in your catalog.");
             }
 
             if (ModelState.IsValid)
@@ -193,6 +224,36 @@ namespace SCM_System.Controllers
 
                 _context.Add(product);
                 await _context.SaveChangesAsync();
+
+                // Handle Gallery Images Upload
+                if (model.GalleryImages != null && model.GalleryImages.Any())
+                {
+                    string webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    string galleryFolder = Path.Combine(webRoot, "images", "products", "gallery");
+                    if (!Directory.Exists(galleryFolder)) Directory.CreateDirectory(galleryFolder);
+
+                    int order = 0;
+                    foreach (var galleryFile in model.GalleryImages.Take(10))
+                    {
+                        if (galleryFile.Length > 0)
+                        {
+                            string safeName = galleryFile.FileName.Replace(",", "_");
+                            string uniqueName = Guid.NewGuid().ToString() + "_" + safeName;
+                            using (var fs = new FileStream(Path.Combine(galleryFolder, uniqueName), FileMode.Create))
+                            {
+                                await galleryFile.CopyToAsync(fs);
+                            }
+                            _context.ProductImages.Add(new ProductImage
+                            {
+                                ProductId = product.Id,
+                                ImageUrl = "/images/products/gallery/" + uniqueName,
+                                DisplayOrder = order++
+                            });
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 
                 // Handle dynamic attribute saving
                 if (model.DynamicAttributes != null && model.DynamicAttributes.Any())
@@ -271,13 +332,21 @@ namespace SCM_System.Controllers
                 ModelState.AddModelError(string.Empty, "Validation errors: " + errors);
             }
 
-            var supplierCategories = await _context.SupplierCategories
+            // Get all category IDs the supplier is registered for
+            var supplierCategoryIds = await _context.SupplierCategories
                 .Where(sc => sc.SupplierId == supplierId)
-                .Select(sc => sc.Category)
+                .Select(sc => sc.CategoryId)
+                .ToListAsync();
+
+            // Find all Parent Categories that match the supplier's selected categories or their parents
+            var parentCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == null && 
+                           (supplierCategoryIds.Contains(c.Id) || 
+                            _context.ProductCategories.Any(sc => sc.ParentCategoryId == c.Id && supplierCategoryIds.Contains(sc.Id))))
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
-            model.CategoryList = new SelectList(supplierCategories, "Id", "CategoryName", model.CategoryId);
+            model.CategoryList = new SelectList(parentCategories, "Id", "CategoryName", model.CategoryId);
             var supplierObj = await _context.Suppliers.FindAsync(supplierId);
             model.SupplierList = supplierObj != null ? new SelectList(new[] { supplierObj }, "Id", "CompanyName", supplierId) : null;
             
@@ -310,6 +379,20 @@ namespace SCM_System.Controllers
             return Json(attributes);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetSubCategories(int categoryId)
+        {
+            var subCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == categoryId)
+                .OrderBy(c => c.CategoryName)
+                .Select(c => new { 
+                    id = c.Id, 
+                    categoryName = c.CategoryName 
+                })
+                .ToListAsync();
+            return Json(subCategories);
+        }
+
         // GET: Product/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -324,20 +407,38 @@ namespace SCM_System.Controllers
                 return Unauthorized();
             }
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.GalleryImages.OrderBy(gi => gi.DisplayOrder))
+                .FirstOrDefaultAsync(p => p.Id == id);
             
             if (product == null || product.SupplierId != supplierId || product.IsDeleted)
             {
                 return NotFound();
             }
 
-            var supplierCategories = await _context.SupplierCategories
+            // Load gallery images for the view
+            ViewBag.GalleryImages = product.GalleryImages.Select(gi => new GalleryImageViewModel
+            {
+                Id = gi.Id,
+                ImageUrl = gi.ImageUrl,
+                DisplayOrder = gi.DisplayOrder
+            }).ToList();
+
+            // Get all category IDs the supplier is registered for
+            var supplierCategoryIds = await _context.SupplierCategories
                 .Where(sc => sc.SupplierId == supplierId)
-                .Select(sc => sc.Category)
+                .Select(sc => sc.CategoryId)
+                .ToListAsync();
+
+            // Find all Parent Categories
+            var parentCategories = await _context.ProductCategories
+                .Where(c => c.ParentCategoryId == null && 
+                           (supplierCategoryIds.Contains(c.Id) || 
+                            _context.ProductCategories.Any(sc => sc.ParentCategoryId == c.Id && supplierCategoryIds.Contains(sc.Id))))
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
-            ViewBag.Categories = new SelectList(supplierCategories, "Id", "CategoryName", product.CategoryId);
+            ViewBag.Categories = new SelectList(parentCategories, "Id", "CategoryName", product.CategoryId);
             return View(product);
         }
 
@@ -390,6 +491,26 @@ namespace SCM_System.Controllers
             if (!isCategoryValid)
             {
                 ModelState.AddModelError("CategoryId", "You are not registered to sell products in this category.");
+            }
+
+            // Server-side Sub-Category Validation
+            if (model.SubCategoryId.HasValue)
+            {
+                var isSubCategoryValid = await _context.ProductCategories
+                    .AnyAsync(c => c.Id == model.SubCategoryId && c.ParentCategoryId == model.CategoryId);
+                if (!isSubCategoryValid)
+                {
+                    ModelState.AddModelError("SubCategoryId", "Invalid sub-category for selected category.");
+                }
+            }
+
+            // Check for duplicate product name
+            bool isDuplicateName = await _context.Products
+                .AnyAsync(p => p.SupplierId == supplierId && p.ProductName == model.ProductName && p.Id != id);
+            
+            if (isDuplicateName)
+            {
+                ModelState.AddModelError("ProductName", "Another product with this name already exists in your catalog.");
             }
 
             if (ModelState.IsValid)
@@ -469,6 +590,35 @@ namespace SCM_System.Controllers
 
                     _context.Update(product);
                     await _context.SaveChangesAsync();
+
+                    // Handle new gallery images in Edit
+                    var galleryFiles = HttpContext.Request.Form.Files.GetFiles("GalleryImages");
+                    if (galleryFiles != null && galleryFiles.Any())
+                    {
+                        string webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        string galleryFolder = Path.Combine(webRoot, "images", "products", "gallery");
+                        if (!Directory.Exists(galleryFolder)) Directory.CreateDirectory(galleryFolder);
+
+                        int maxOrder = await _context.ProductImages.Where(pi => pi.ProductId == product.Id).Select(pi => pi.DisplayOrder).DefaultIfEmpty(0).MaxAsync();
+                        foreach (var gf in galleryFiles.Take(10))
+                        {
+                            if (gf.Length > 0)
+                            {
+                                string uniqueName = Guid.NewGuid().ToString() + "_" + gf.FileName.Replace(",", "_");
+                                using (var fs = new FileStream(Path.Combine(galleryFolder, uniqueName), FileMode.Create))
+                                {
+                                    await gf.CopyToAsync(fs);
+                                }
+                                _context.ProductImages.Add(new ProductImage
+                                {
+                                    ProductId = product.Id,
+                                    ImageUrl = "/images/products/gallery/" + uniqueName,
+                                    DisplayOrder = ++maxOrder
+                                });
+                            }
+                        }
+                        await _context.SaveChangesAsync();
+                    }
                     
                     TempData["SuccessMessage"] = "Product updated successfully!";
                     return RedirectToAction(nameof(MyProducts));
@@ -489,6 +639,31 @@ namespace SCM_System.Controllers
             return View(model);
         }
 
+        // POST: Product/DeleteGalleryImage (AJAX)
+        [HttpPost]
+        public async Task<IActionResult> DeleteGalleryImage(int imageId)
+        {
+            var supplierId = await GetCurrentSupplierIdAsync();
+            if (supplierId == null) return Unauthorized();
+
+            var image = await _context.ProductImages
+                .Include(pi => pi.Product)
+                .FirstOrDefaultAsync(pi => pi.Id == imageId);
+
+            if (image == null || image.Product.SupplierId != supplierId)
+                return NotFound();
+
+            // Delete the physical file
+            string webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var filePath = Path.Combine(webRoot, image.ImageUrl.TrimStart('/'));
+            if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+
+            _context.ProductImages.Remove(image);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
         // GET: Product/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -505,6 +680,7 @@ namespace SCM_System.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.GalleryImages.OrderBy(gi => gi.DisplayOrder))
                 .Include(p => p.AttributeValues)
                     .ThenInclude(av => av.AttributeDefinition)
                 .FirstOrDefaultAsync(m => m.Id == id && m.SupplierId == supplierId && !m.IsDeleted);
@@ -541,48 +717,45 @@ namespace SCM_System.Controllers
             return View();
         }
 
-        // POST: Product/AddStock/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddStock(int id, int warehouseId, int quantity)
         {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
             var supplierId = await GetCurrentSupplierIdAsync();
             if (supplierId == null) return Unauthorized();
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.SupplierId == supplierId);
             if (product == null) return NotFound();
 
-            var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == id && i.WarehouseId == warehouseId);
-
-            if (inventory == null)
+            var adjustment = new InventoryAdjustment
             {
-                inventory = new Inventory
-                {
-                    ProductId = id,
-                    WarehouseId = warehouseId,
-                    QuantityOnHand = quantity,
-                    QuantityReserved = 0,
-                    WarehouseLocation = "Main Section", // Default or user input
-                    LastUpdated = DateTime.Now
-                };
-                _context.Inventories.Add(inventory);
-            }
-            else
+                ProductId = id,
+                WarehouseId = warehouseId,
+                QuantityChange = quantity,
+                AdjustmentType = "Initial Load",
+                Reason = "Supplier added initial stock through product management.",
+                DocumentReference = $"INIT-{id}-{DateTime.Now:yyyyMMdd}",
+                PerformedById = userId,
+                CreatedAt = DateTime.Now
+            };
+
+            try
             {
-                inventory.QuantityOnHand += quantity;
-                inventory.LastUpdated = DateTime.Now;
-                _context.Update(inventory);
+                await _inventoryService.AdjustInventoryAsync(adjustment);
+                
+                // Consistency check: Recalculate if needed
+                await _inventoryService.RecalculateInventoryAsync(warehouseId, id);
+
+                TempData["SuccessMessage"] = $"Stock added successfully! quantity: {quantity}";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error adding stock: " + ex.Message;
             }
 
-            await _context.SaveChangesAsync();
-
-            // Refresh product availability
-            var totalStock = await _context.Inventories.Where(i => i.ProductId == id).SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
-            product.IsAvailable = totalStock > 0;
-            _context.Update(product);
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"Stock added successfully! Total available: {totalStock}";
             return RedirectToAction(nameof(MyProducts));
         }
 
@@ -601,66 +774,33 @@ namespace SCM_System.Controllers
 
             try
             {
-                if (inventory == null)
-                {
-                    // If inventory record doesn't exist, only allow increase or set
-                    if (action == "increase" || action == "set")
-                    {
-                        inventory = new Inventory
-                        {
-                            ProductId = id,
-                            WarehouseId = warehouseId,
-                            QuantityOnHand = 0,
-                            QuantityReserved = 0,
-                            WarehouseLocation = "Main Section",
-                            LastUpdated = DateTime.Now
-                        };
-                        _context.Inventories.Add(inventory);
-                        
-                        // Apply stock change to the newly created record (starting from 0)
-                        inventory.QuantityOnHand = stockChange;
-                    }
-                    else
-                    {
-                        // For 'decrease', if it doesn't exist, we reject it
-                        TempData["ErrorMessage"] = "Cannot decrease stock: No inventory record exists for this warehouse.";
-                        return RedirectToAction(nameof(MyProducts));
-                    }
-                }
-                else
-                {
-                    if (action == "increase")
-                    {
-                        inventory.QuantityOnHand += stockChange;
-                    }
-                    else if (action == "decrease")
-                    {
-                        if (inventory.QuantityOnHand < stockChange)
-                        {
-                            TempData["ErrorMessage"] = "Cannot decrease stock below zero.";
-                            return RedirectToAction(nameof(MyProducts));
-                        }
-                        inventory.QuantityOnHand -= stockChange;
-                    }
-                    else if (action == "set")
-                    {
-                        inventory.QuantityOnHand = stockChange;
-                    }
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
-                    if (inventory.QuantityOnHand < 0) inventory.QuantityOnHand = 0;
-                    inventory.LastUpdated = DateTime.Now;
-                    _context.Update(inventory);
+                var adjustment = new InventoryAdjustment
+                {
+                    ProductId = id,
+                    WarehouseId = warehouseId,
+                    QuantityChange = action == "increase" ? stockChange : (action == "decrease" ? -stockChange : 0),
+                    AdjustmentType = "Correction",
+                    Reason = $"Supplier manual stock update: {action} by {stockChange}",
+                    DocumentReference = $"MAN-{id}-{DateTime.Now:yyyyMMdd}",
+                    CreatedAt = DateTime.Now
+                };
+
+                // If 'set', we need to calculate the delta
+                if (action == "set")
+                {
+                    int currentQty = inventory?.QuantityOnHand ?? 0;
+                    adjustment.QuantityChange = stockChange - currentQty;
                 }
 
-                await _context.SaveChangesAsync();
-
-                // Auto update availability
-                var totalStock = await _context.Inventories.Where(inv => inv.ProductId == id).SumAsync(inv => inv.QuantityOnHand - inv.QuantityReserved);
-                product.IsAvailable = totalStock > 0;
-                _context.Update(product);
-                await _context.SaveChangesAsync();
+                await _inventoryService.AdjustInventoryAsync(adjustment);
                 
-                TempData["SuccessMessage"] = $"Stock updated successfully. New warehouse quantity: {inventory.QuantityOnHand}";
+                // Force sync aggregate availability
+                await _inventoryService.RecalculateInventoryAsync(warehouseId, id);
+                
+                TempData["SuccessMessage"] = $"Stock updated successfully. Action: {action}";
             }
             catch (Exception ex)
             {

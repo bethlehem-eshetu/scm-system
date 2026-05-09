@@ -1,0 +1,256 @@
+@model SCM_System.Models.ViewModels.CommissionReportViewModel
+@using SCM_System.Models.Constants
+@{
+    ViewData["Title"] = "Commission & Revenue Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Financial Intelligence</h2>
+            <p class="text-muted mb-0">Track platform revenue, supplier tiers, and commission efficiency.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="ExportCommissionCsv" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
+                <i class="fas fa-file-export me-2"></i> Export CSV
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-indigo text-white rounded-pill px-4 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-calendar-alt me-2"></i> This Quarter
+                </button>
+                <ul class="dropdown-menu border-0 shadow-lg rounded-4">
+                    <li><a class="dropdown-item py-2" href="#">Last 30 Days</a></li>
+                    <li><a class="dropdown-item py-2" href="#">This Quarter</a></li>
+                    <li><a class="dropdown-item py-2" href="#">Year to Date</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-indigo bg-opacity-10 p-3 rounded-4">
+                            <i class="fas fa-money-bill-wave text-indigo fa-lg"></i>
+                        </div>
+                        <span class="text-success small fw-bold mt-1">+12.5% <i class="fas fa-arrow-up"></i></span>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small ls-1">Total Revenue (GMV)</h6>
+                    <h3 class="fw-bold mb-0">@Model.TotalRevenue.ToString("N0") <span class="fs-6 fw-normal text-muted">ETB</span></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-4">
+                            <i class="fas fa-percentage text-primary fa-lg"></i>
+                        </div>
+                        <span class="text-success small fw-bold mt-1">+8.2% <i class="fas fa-arrow-up"></i></span>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small ls-1">Platform Commission</h6>
+                    <h3 class="fw-bold mb-0">@Model.TotalCommissions.ToString("N0") <span class="fs-6 fw-normal text-muted">ETB</span></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-4">
+                            <i class="fas fa-hourglass-start text-warning fa-lg"></i>
+                        </div>
+                        <span class="text-warning small fw-bold mt-1">Pending</span>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small ls-1">Pending Payouts</h6>
+                    <h3 class="fw-bold mb-0">@Model.PendingPayouts.ToString("N0") <span class="fs-6 fw-normal text-muted">ETB</span></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-4">
+                            <i class="fas fa-users text-info fa-lg"></i>
+                        </div>
+                        <span class="badge bg-soft-info rounded-pill">@Model.TierStats.Sum(t => t.SupplierCount) Sellers</span>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small ls-1">Active Suppliers</h6>
+                    <h3 class="fw-bold mb-0">@Model.TierStats.Sum(t => t.SupplierCount) <span class="fs-6 fw-normal text-muted">Partners</span></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Revenue Trend Chart -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 py-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0">Monthly Revenue Growth</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <canvas id="revenueChart" style="max-height: 350px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tier Distribution -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 py-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0">Supplier Tier Efficiency</h5>
+                </div>
+                <div class="card-body px-4">
+                    <div class="list-group list-group-flush">
+                        @foreach (var tier in Model.TierStats.OrderBy(t => t.TierName))
+                        {
+                            var badgeClass = tier.TierName switch {
+                                "Platinum" => "bg-light text-primary border border-primary",
+                                "Gold" => "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+                                "Silver" => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+                                _ => "bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25"
+                            };
+
+                            <div class="list-group-item px-0 py-3 border-0 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge @badgeClass rounded-pill px-3">@tier.TierName</span>
+                                    <span class="small text-muted fw-bold">@tier.SupplierCount Suppliers</span>
+                                </div>
+                                <div class="progress rounded-pill mb-2" style="height: 6px;">
+                                    @{
+                                        var percent = Model.TotalRevenue > 0 ? (tier.TotalRevenue * 100 / Model.TotalRevenue) : 0;
+                                    }
+                                    <div class="progress-bar bg-indigo" role="progressbar" style="width: @percent%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span class="text-muted">Rev: @tier.TotalRevenue.ToString("N0")</span>
+                                    <span class="text-indigo fw-bold">Comm: @tier.TotalCommission.ToString("N0")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-dark mb-0">Recent Commission Settlements</h5>
+            <a href="#" class="text-indigo text-decoration-none small fw-bold">VIEW ALL TRANSACTIONS</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light bg-opacity-50">
+                    <tr>
+                        <th class="ps-4 py-3 border-0 text-muted small fw-bold">ORDER #</th>
+                        <th class="py-3 border-0 text-muted small fw-bold">SUPPLIER / RETAILER</th>
+                        <th class="py-3 border-0 text-muted small fw-bold">ORDER AMOUNT</th>
+                        <th class="py-3 border-0 text-muted small fw-bold">COMMISSION (%)</th>
+                        <th class="py-3 border-0 text-muted small fw-bold">FEE EARNED</th>
+                        <th class="py-3 border-0 text-muted small fw-bold text-center">STATUS</th>
+                        <th class="pe-4 py-3 border-0 text-muted small fw-bold text-end">DATE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tx in Model.RecentTransactions)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark">#@tx.OrderNumber</span>
+                            </td>
+                            <td>
+                                <div class="small fw-bold text-dark">@tx.SupplierName</div>
+                                <div class="smaller text-muted">via @tx.RetailerName</div>
+                            </td>
+                            <td>
+                                <span class="fw-medium">@tx.Amount.ToString("N2") ETB</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill px-3">@tx.Rate.ToString("F1")%</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-success">@tx.CommissionFee.ToString("N2") ETB</span>
+                            </td>
+                            <td class="text-center">
+                                @if (tx.Status == "Paid")
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i> SETTLED
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">
+                                        <i class="fas fa-clock me-1"></i> PENDING
+                                    </span>
+                                }
+                            </td>
+                            <td class="pe-4 text-end">
+                                <div class="small text-muted">@tx.Date.ToString("MMM dd, yyyy")</div>
+                                <div class="smaller text-muted">@tx.Date.ToString("HH:mm")</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-indigo { background-color: #4f46e5; }
+    .text-indigo { color: #4f46e5; }
+    .btn-indigo { background-color: #4f46e5; border-color: #4f46e5; }
+    .btn-indigo:hover { background-color: #4338ca; border-color: #4338ca; }
+    .ls-1 { letter-spacing: 0.5px; }
+    .smaller { font-size: 0.75rem; }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(d => d.Label))),
+                datasets: [{
+                    label: 'Platform Revenue (ETB)',
+                    data: @Html.Raw(Json.Serialize(Model.RevenueByMonth.Select(d => d.Value))),
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#4f46e5'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5], color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+}

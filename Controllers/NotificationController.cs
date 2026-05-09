@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Services;
@@ -88,6 +88,29 @@ namespace SCM_System.Controllers
 
             var count = await _notificationService.GetUnreadCountAsync(currentUserId);
             return Json(new { count });
+        }
+
+        // GET: /Notification/GetRecentJson  
+        [HttpGet]
+        public async Task<IActionResult> GetRecentJson()
+        {
+            int currentUserId = GetCurrentUserId();
+            if (currentUserId == 0)
+                return Json(new { count = 0, items = new object[0] });
+
+            var count = await _notificationService.GetUnreadCountAsync(currentUserId);
+            var recent = await _notificationService.GetUserNotificationsAsync(currentUserId, 5);
+            
+            var items = recent.Select(n => new {
+                n.Id,
+                n.Title,
+                n.Message,
+                n.IsRead,
+                n.CreatedAt,
+                ActionUrl = n.ActionUrl ?? "/Notification/Index"
+            }).ToList();
+
+            return Json(new { count, items });
         }
     }
 }

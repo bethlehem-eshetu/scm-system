@@ -8,22 +8,22 @@ namespace SCM_System.Models.Entities
 
         [Required]
         public int OrderId { get; set; }
-        public Order Order { get; set; }
+        public Order Order { get; set; } = null!;
 
         public int? DeliveryEmployeeId { get; set; }
-        public SupplierEmployee DeliveryEmployee { get; set; }
+        public SupplierEmployee? DeliveryEmployee { get; set; }
 
         [StringLength(50)]
         [Display(Name = "Tracking Number")]
-        public string TrackingNumber { get; set; }
+        public required string TrackingNumber { get; set; } = string.Empty;
 
         [StringLength(50)]
-        public string Carrier { get; set; }
+        public required string Carrier { get; set; } = string.Empty;
 
         [Required]
         [StringLength(20)]
         [Display(Name = "Delivery Status")]
-        public string DeliveryStatus { get; set; } = "Preparing"; // Preparing, OnTheWay, Delivered
+        public required string DeliveryStatus { get; set; } = "Preparing"; // Preparing, OnTheWay, Delivered
 
         public DateTime? DepartureTime { get; set; }
 
@@ -33,7 +33,7 @@ namespace SCM_System.Models.Entities
 
         [StringLength(255)]
         [Display(Name = "Proof of Delivery")]
-        public string ProofOfDelivery { get; set; }
+        public string? ProofOfDelivery { get; set; }
 
         public string? CustomerQRCode { get; set; }  // QR code shown to customer
         public bool IsQRVerified { get; set; } = false;
@@ -41,6 +41,6 @@ namespace SCM_System.Models.Entities
         public string? QRVerificationMethod { get; set; }
 
         // Navigation properties
-        public ICollection<DeliveryTracking> TrackingHistory { get; set; }
+        public ICollection<DeliveryTracking> TrackingHistory { get; set; } = [];
     }
 }

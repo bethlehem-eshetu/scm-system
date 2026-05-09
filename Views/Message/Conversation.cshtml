@@ -1,329 +1,251 @@
-﻿@using SCM_System.Models.ViewModels
+@using SCM_System.Models.ViewModels
 @model List<MessageViewModel>
 
 @{
+    Layout = "_DashboardLayout";
     ViewData["Title"] = $"Chat with {ViewBag.OtherUserName}";
     int otherUserId = ViewBag.OtherUserId;
     string otherUserName = ViewBag.OtherUserName;
     int conversationId = ViewBag.ConversationId;
     bool canSendMessage = ViewBag.CanSendMessage ?? true;
+    var conversations = ViewBag.Conversations as List<ConversationViewModel> ?? new List<ConversationViewModel>();
 }
 
+<link href="~/css/chat.css" rel="stylesheet" />
+
 <div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <!-- Chat Header -->
-                <div class="card-header bg-white py-3">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <a href="@Url.Action("Inbox")" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-arrow-left"></i>
-                            </a>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-circle @(ViewBag.OtherUserRole == "Supplier" ? "bg-warning" : "bg-info") text-white me-3">
-                                    @(otherUserName.Length > 0 ? otherUserName.Substring(0, 1).ToUpper() : "?")
-                                </div>
-                                <div>
-                                    <h5 class="mb-0">@otherUserName</h5>
-                                    <small class="text-muted">
-                                        <i class="fas fa-circle me-1 text-success" style="font-size: 8px;"></i>
-                                        @ViewBag.OtherUserRole
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Premium Messaging Center Layout -->
+    <div class="messaging-center shadow border-0">
+        
+        <!-- LEFT PANEL: Conversation List -->
+        <div class="conversation-list d-none d-lg-flex">
+            <div class="conversation-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-comment-dots text-primary me-2"></i>Messages</h5>
+                    <a href="@Url.Action("SelectRecipient")" class="btn btn-sm btn-light rounded-circle shadow-sm" title="New Message">
+                        <i class="fas fa-plus text-primary"></i>
+                    </a>
                 </div>
+            </div>
+            
+            <div class="conversation-search">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="Search chats..." id="chatSearch">
+                </div>
+            </div>
 
-                <!-- Penalty Warning Banner -->
-                @if (ViewBag.PenaltyLevel == "Restricted")
+            <div class="conversation-items">
+                @foreach (var conv in conversations)
                 {
-                    <div class="alert alert-warning alert-dismissible fade show m-3 mb-0" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-                            <div>
-                                <strong>⚠️ Message Restriction Active</strong>
-                                <p class="mb-0 small">@ViewBag.PenaltyMessage</p>
-                                <small class="text-muted">Repeated violations will lead to account suspension.</small>
-                            </div>
-                            <a href="@Url.Action("Index", "Penalty")" class="btn btn-sm btn-outline-warning ms-auto">
-                                View Details
-                            </a>
+                    bool isActive = conv.OtherUserId == otherUserId;
+                    <a href="@Url.Action("Conversation", new { id = conv.OtherUserId })" class="conversation-item @(isActive ? "active" : "")">
+                        <div class="conversation-avatar @(conv.OtherUserType == "Supplier" ? "bg-warning" : "bg-info") shadow-sm">
+                            @(conv.OtherUserName.Length > 0 ? conv.OtherUserName.Substring(0, 1).ToUpper() : "?")
+                            @if(isActive) { <div class="status-indicator status-online"></div> }
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-                else if (ViewBag.PenaltyLevel == "Suspended")
-                {
-                    <div class="alert alert-danger alert-dismissible fade show m-3 mb-0" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-ban fa-2x me-3"></i>
-                            <div>
-                                <strong>🔒 Account Suspended</strong>
-                                <p class="mb-0 small">@ViewBag.PenaltyMessage</p>
-                                <small class="text-muted">You cannot send messages during this period.</small>
-                            </div>
-                            <a href="@Url.Action("Index", "Penalty")" class="btn btn-sm btn-outline-danger ms-auto">
-                                View Details
-                            </a>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
-                <!-- Messages Area -->
-                <div class="card-body p-4" style="height: 500px; overflow-y: auto; background-color: #f8f9fa;" id="messageContainer">
-                    @if (!Model.Any())
-                    {
-                        <div class="text-center text-muted py-5">
-                            <i class="fas fa-comments fa-3x mb-3"></i>
-                            <p>No messages yet. Start the conversation!</p>
-                        </div>
-                    }
-                    else
-                    {
-                        foreach (var message in Model)
-                        {
-                            <div class="message-wrapper @(message.IsFromCurrentUser ? "text-end" : "text-start") mb-3">
-                                <div class="d-inline-block" style="max-width: 70%;">
-                                    @if (!message.IsFromCurrentUser)
+                        <div class="conversation-info">
+                            <div class="d-flex justify-content-between">
+                                <div class="conversation-name">
+                                    @conv.OtherUserName
+                                    @if (conv.UnreadCount > 0 && !isActive)
                                     {
-                                        <small class="text-muted ms-2 mb-1 d-block">@message.SenderName</small>
-                                    }
-                                    
-                                    @if (message.IsBlocked)
-                                    {
-                                        <!-- Blocked Message -->
-                                        <div class="message-blocked p-3 rounded-3" style="background-color: #fff3cd; border: 1px solid #ffc107;">
-                                            <div class="text-warning">
-                                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                                <strong>Message Blocked</strong>
-                                                <p class="mb-0 small mt-1">
-                                                    @if (!string.IsNullOrEmpty(message.BlockedReason))
-                                                    {
-                                                        @message.BlockedReason
-                                                    }
-                                                    else
-                                                    {
-                                                        @:This message was blocked because it contains contact information.
-                                                    }
-                                                </p>
-                                                @if (message.TriggeredPenalty && !message.IsFromCurrentUser)
-                                                {
-                                                    <span class="badge bg-danger mt-2">
-                                                        <i class="fas fa-gavel me-1"></i>Penalty Applied
-                                                    </span>
-                                                }
-                                            </div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <!-- Normal Message -->
-                                        <div class="message-bubble @(message.IsFromCurrentUser ? "message-bubble-sent" : "message-bubble-received") p-3">
-                                            <p class="mb-1">@message.Content</p>
-                                            <div class="d-flex align-items-center justify-content-end gap-2 mt-2">
-                                                <small class="@(message.IsFromCurrentUser ? "text-white-50" : "text-muted")">
-                                                    @message.TimeAgo
-                                                </small>
-                                                @if (message.IsFromCurrentUser && message.IsRead)
-                                                {
-                                                    <i class="fas fa-check-double @(message.IsFromCurrentUser ? "text-white-50" : "text-muted")"></i>
-                                                }
-                                                else if (message.IsFromCurrentUser)
-                                                {
-                                                    <i class="fas fa-check @(message.IsFromCurrentUser ? "text-white-50" : "text-muted")"></i>
-                                                }
-                                            </div>
-                                        </div>
+                                        <span class="badge bg-primary ms-1" style="font-size: 0.6rem;">@conv.UnreadCount</span>
                                     }
                                 </div>
+                                <div class="conversation-time">@conv.TimeSpanDisplay</div>
                             </div>
-                        }
-                    }
-                </div>
-
-                <!-- Alert Messages -->
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
-                @if (TempData["WarningMessage"] != null)
-                {
-                    <div class="alert alert-warning alert-dismissible fade show m-3" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>@TempData["WarningMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
-                <!-- Message Input Area -->
-                <div class="card-footer bg-white p-3">
-                    @if (canSendMessage)
-                    {
-                        @if (ViewBag.PenaltyLevel == "Restricted")
-                        {
-                            <div class="small text-warning mb-2">
-                                <i class="fas fa-info-circle me-1"></i>
-                                You have <strong>1 message remaining</strong> today due to previous violations.
+                            <div class="conversation-preview @(conv.UnreadCount > 0 && !isActive ? "fw-bold text-dark" : "")">
+                                @conv.LastMessage
                             </div>
-                        }
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Chat Area -->
+        <div class="chat-area flex-grow-1">
+            
+            <!-- Elite Chat Header -->
+            <div class="chat-header py-3 px-4 bg-white border-bottom shadow-sm">
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <div class="d-flex align-items-center">
+                        <!-- Mobile Back Button -->
+                        <a href="@Url.Action("Inbox")" class="btn btn-sm btn-light rounded-circle border d-lg-none me-3" title="Back">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
                         
-                        <form asp-action="Send" method="post" id="messageForm">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="receiverId" value="@otherUserId" />
-                            <input type="hidden" name="conversationId" value="@conversationId" />
-                            
-                            <div class="input-group">
-                                <textarea name="content" class="form-control" rows="2" 
-                                         placeholder="@(ViewBag.PenaltyLevel == "Restricted" ? "You have 1 message remaining today. Type carefully..." : "Type your message here...")" 
-                                         required id="messageInput" maxlength="5000"></textarea>
-                                <button class="btn btn-primary" type="submit" id="sendButton">
-                                    <i class="fas fa-paper-plane me-1"></i>Send
+                        <div class="conversation-avatar @(ViewBag.OtherUserRole == "Supplier" ? "bg-warning text-dark" : "bg-primary text-white") shadow-sm m-0 me-3" style="width: 42px; height: 42px; font-weight: 700;">
+                            @((otherUserName.Length > 0 ? otherUserName.Substring(0, 1).ToUpper() : "?"))
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">@otherUserName</h6>
+                            <div class="d-flex align-items-center">
+                                <span class="online-pulse"></span>
+                                <small class="text-success fw-600" style="font-size: 0.75rem;">Online</small>
+                                <span class="mx-2 text-muted">•</span>
+                                <small class="text-muted" style="font-size: 0.75rem;">@ViewBag.OtherUserRole</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        @if (ViewBag.LinkedOrderId != null)
+                        {
+                            <a href="@Url.Action("Details", "Order", new { id = ViewBag.LinkedOrderId })" class="btn btn-quick btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i> Open Order
+                            </a>
+                        }
+                        <button class="btn btn-quick btn-light text-muted border">
+                            <i class="fas fa-user-circle me-1"></i> View Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Elite Order Context Card -->
+            @if (ViewBag.LinkedOrderId != null)
+            {
+                <div class="px-4 pt-3">
+                    <div class="order-info-card shadow-sm border-primary border-opacity-10">
+                        <div class="order-info-icon">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <div class="flex-grow-1 min-width-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-0 fw-bold" style="font-size: 0.85rem;">@ViewBag.LinkedOrderNumber</h6>
+                                    <small class="text-muted">Supplier: @ViewBag.LinkedSupplierName</small>
+                                </div>
+                                <span class="order-pill">@ViewBag.LinkedOrderStatus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Penalty Warnings -->
+            @if (ViewBag.PenaltyLevel == "Restricted")
+            {
+                <div class="bg-warning text-dark p-2 text-center small fw-bold" style="font-size: 0.8rem;">
+                    <i class="fas fa-exclamation-triangle me-1"></i> Message Restriction Active: Limited sends today.
+                </div>
+            }
+            else if (ViewBag.PenaltyLevel == "Suspended")
+            {
+                <div class="bg-danger text-white p-2 text-center small fw-bold" style="font-size: 0.8rem;">
+                    <i class="fas fa-ban me-1"></i> Account Suspended: You cannot send messages right now.
+                </div>
+            }
+
+            <!-- Messages Area -->
+            <div class="chat-messages" id="messageContainer">
+                <div class="system-message">
+                    <span><i class="fas fa-lock me-1"></i> Messages are end-to-end encrypted</span>
+                </div>
+                
+                @if (!Model.Any())
+                {
+                    <div class="text-center text-muted py-5 mt-5">
+                        <i class="fas fa-hand-sparkles fa-3x mb-3 opacity-50"></i>
+                        <p>Say hello to start the conversation!</p>
+                    </div>
+                }
+                else
+                {
+                    foreach (var message in Model)
+                    {
+                        <div class="chat-bubble-container @(message.IsFromCurrentUser ? "me" : "them")">
+                            <div class="chat-bubble shadow-sm @(message.IsBlocked ? "bg-warning-subtle border-warning" : "")">
+                                @if (message.IsBlocked)
+                                {
+                                    <div class="text-warning-emphasis">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> <strong>Message Blocked</strong>
+                                        <div class="small mt-1 opacity-75">@(string.IsNullOrEmpty(message.BlockedReason) ? "Contains unauthorized contact info." : message.BlockedReason)</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @message.Content
+                                }
+                                <div class="chat-time text-end mt-1">
+                                    <span class="opacity-75" style="font-size: 0.65rem;">@message.CreatedAt.ToString("HH:mm")</span>
+                                    @if (message.IsFromCurrentUser)
+                                    {
+                                        <div class="seen-status d-inline-flex align-items-center ms-1">
+                                            @if (message.SeenAt.HasValue)
+                                            {
+                                                <span class="me-1">Seen @message.SeenAt.Value.ToString("HH:mm")</span>
+                                                <i class="fas fa-check-double" style="font-size: 0.75rem;"></i>
+                                            }
+                                            else
+                                            {
+                                                <span class="me-1">Sent</span>
+                                                <i class="fas fa-check" style="font-size: 0.75rem;"></i>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Input Area -->
+            <div class="chat-footer">
+                @if (canSendMessage)
+                {
+                    <form asp-action="Send" method="post" id="messageForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="receiverId" value="@otherUserId" />
+                        <input type="hidden" name="conversationId" value="@conversationId" />
+                        
+                        <div class="chat-input-wrapper shadow-sm border border-light">
+                            <button type="button" class="chat-action-btn border-0 bg-transparent"><i class="fas fa-paperclip"></i></button>
+                            <input type="text" name="content" class="chat-input" placeholder="Type your message..." id="messageInput" required autocomplete="off" />
+                            <div class="chat-actions">
+                                <button class="chat-send-btn border-0" type="submit" id="sendButton">
+                                    <i class="fas fa-paper-plane"></i>
                                 </button>
                             </div>
-                            
-                            <div class="mt-2 text-muted small">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Sharing contact information (phone, email, social media) is strictly prohibited.
-                            </div>
-                            
-                            <div class="text-end small text-muted mt-1">
-                                <span id="charCount">0</span>/5000
-                            </div>
-                        </form>
-                    }
-                    else
-                    {
-                        <div class="bg-light p-3 rounded text-center text-muted">
-                            <i class="fas fa-ban me-2"></i>
-                            You cannot send messages due to account restrictions.
-                            <a href="@Url.Action("Index", "Penalty")" class="text-primary d-block mt-2">View penalty details</a>
                         </div>
-                    }
-                </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="p-3 bg-light rounded text-center text-muted border border-danger border-opacity-25">
+                        <i class="fas fa-ban text-danger me-2"></i> Messaging currently disabled.
+                        <a href="@Url.Action("Index", "Penalty")" class="text-primary d-block mt-1 small">View penalty details</a>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .avatar-circle {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-    
-    .bg-warning {
-        background-color: #ffc107 !important;
-    }
-    
-    .bg-info {
-        background-color: #17a2b8 !important;
-    }
-    
-    .message-bubble {
-        border-radius: 18px;
-        word-wrap: break-word;
-    }
-    
-    .message-bubble-sent {
-        background-color: #0d6efd;
-        color: white;
-        border-bottom-right-radius: 4px;
-    }
-    
-    .message-bubble-received {
-        background-color: white;
-        color: #212529;
-        border: 1px solid #dee2e6;
-        border-bottom-left-radius: 4px;
-    }
-    
-    .message-blocked {
-        border-radius: 18px;
-        word-wrap: break-word;
-        max-width: 100%;
-    }
-    
-    .message-blocked:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .message-wrapper {
-        animation: fadeIn 0.3s ease;
-    }
-    
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    #messageContainer::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    #messageContainer::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-    
-    #messageContainer::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-</style>
-
 @section Scripts {
     <script>
-        // Scroll to bottom on page load
         document.addEventListener('DOMContentLoaded', function() {
             var messageContainer = document.getElementById('messageContainer');
-            messageContainer.scrollTop = messageContainer.scrollHeight;
-        });
-
-        // Character counter
-        document.getElementById('messageInput')?.addEventListener('input', function(e) {
-            var length = e.target.value.length;
-            document.getElementById('charCount').textContent = length;
-            
-            if (length > 4500) {
-                document.getElementById('charCount').classList.add('text-warning');
-            } else {
-                document.getElementById('charCount').classList.remove('text-warning');
+            if (messageContainer) {
+                messageContainer.scrollTop = messageContainer.scrollHeight;
             }
+            
+            // Search
+            $('#chatSearch').on('keyup', function () {
+                var value = $(this).val().toLowerCase();
+                $('.conversation-item').filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
         });
 
-        // Prevent empty messages
         document.getElementById('messageForm')?.addEventListener('submit', function(e) {
             var message = document.getElementById('messageInput').value.trim();
             if (message === '') {
                 e.preventDefault();
-                alert('Please type a message');
             }
         });
     </script>
