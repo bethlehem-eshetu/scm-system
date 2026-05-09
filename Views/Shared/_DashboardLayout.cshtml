@@ -129,7 +129,7 @@
             border-top-color: var(--border-color) !important;
         }
 
-        /* Sidebar Styling */
+        /* Premium Sidebar Styling */
         .wrapper {
             display: flex;
             width: 100%;
@@ -139,17 +139,18 @@
 
         #sidebar {
             width: var(--sidebar-width);
-            background: var(--sidebar-bg);
+            background: linear-gradient(180deg, #0B3B2F 0%, #06261E 100%);
             color: var(--sidebar-color);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
             position: fixed;
             height: 100vh;
             left: 0;
             top: 0;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         #sidebar.active {
@@ -157,117 +158,168 @@
         }
 
         .sidebar-header {
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 2.5rem 1.5rem;
             text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
         }
 
         .sidebar-header .brand {
             color: white;
-            font-weight: 700;
-            font-size: 1.25rem;
+            font-weight: 800;
+            font-size: 1.4rem;
             text-decoration: none;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
+            letter-spacing: -0.5px;
+            transition: transform 0.3s ease;
         }
         
+        .sidebar-header .brand:hover {
+            transform: scale(1.02);
+        }
+
         .sidebar-header .brand img {
-            height: 32px;
-            width: 32px;
-            border-radius: 8px;
+            height: 38px;
+            width: 38px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .sidebar-menu {
-            padding: 1rem 0;
+            padding: 1.5rem 0.8rem;
             list-style: none;
             margin: 0;
             flex-grow: 1;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
         }
 
         .sidebar-menu::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
         }
 
-        .sidebar-section {
-            padding: 0.5rem 1.5rem;
-            font-size: 12px;
+        .menu-label {
+            padding: 1.8rem 1.25rem 0.6rem;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #64748B;
-            font-weight: 600;
-            margin-top: 20px;
+            letter-spacing: 2.5px;
+            color: rgba(255,255,255,0.35);
+            font-weight: 800;
+            display: block;
+        }
+
+        .sidebar-section {
+            padding: 1.5rem 1.25rem 0.5rem;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: rgba(255,255,255,0.35);
+            font-weight: 800;
+            margin-top: 10px;
         }
 
         .sidebar-menu li a {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.95rem;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.92rem;
             font-weight: 500;
             display: flex;
             align-items: center;
-            color: var(--sidebar-color);
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
-            transition: all 0.2s;
-            border-left: 4px solid transparent;
-            margin: 4px 12px;
-            border-radius: 0 8px 8px 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 2px 0;
+            border-radius: 14px;
+            position: relative;
         }
 
         .sidebar-menu li a i {
-            width: 20px;
-            font-size: 1.1rem;
-            margin-right: 12px;
+            width: 24px;
+            font-size: 1.15rem;
+            margin-right: 14px;
             text-align: center;
-            color: #B8D0C5;
-            transition: transform 0.2s;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
         }
 
         .sidebar-menu li a:hover {
-            background: var(--sidebar-hover);
+            background: rgba(255, 255, 255, 0.06);
             color: #FFFFFF;
-        }
-
-        .sidebar-menu li.active > a {
-            background: var(--sidebar-active);
-            border-left: 4px solid var(--primary-color);
-            color: #FFFFFF;
+            transform: translateX(4px);
         }
 
         .sidebar-menu li a:hover i {
-            transform: translateX(3px);
+            color: var(--primary-color);
+            transform: scale(1.1);
         }
 
-        /* User Profile in Sidebar */
+        .sidebar-menu li.active > a {
+            background: linear-gradient(90deg, var(--primary-color) 0%, #3BAE86 100%);
+            color: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(46, 156, 122, 0.25);
+            font-weight: 600;
+        }
+
+        .sidebar-menu li.active > a i {
+            color: #FFFFFF;
+            opacity: 1;
+        }
+
+        /* Profile Card Styling */
         .sidebar-user {
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.15);
-            border-top: 1px solid rgba(255,255,255,0.05);
+            margin: 1.2rem;
+            padding: 1.2rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-user:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
         
         .sidebar-user .user-info {
             display: flex;
             align-items: center;
+            gap: 12px;
         }
         
         .sidebar-user .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: var(--primary-color);
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary-color), #248265);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-right: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
         /* Content Area */
@@ -861,17 +913,17 @@
 
             </ul>
 
-            @if (role != "Admin")
+            @if (role != null)
             {
                 <div class="sidebar-user">
                     <div class="user-info">
-                        <div class="avatar shadow-sm border border-2 border-white border-opacity-10 overflow-hidden">
+                        <div class="avatar">
                             @{
                                 var name = Context.Session.GetString("UserName") ?? "U";
                                 var pImg = Context.Session.GetString("ProfileImg");
                                 if (!string.IsNullOrEmpty(pImg))
                                 {
-                                    <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
+                                    <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" style="border-radius: inherit;" />
                                 }
                                 else
                                 {
@@ -879,9 +931,9 @@
                                 }
                             }
                         </div>
-                        <div>
-                            <div class="text-white fw-bold" style="font-size: 0.9rem;">@name</div>
-                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">@role</div>
+                        <div class="user-details overflow-hidden">
+                            <div class="text-white fw-bold text-truncate" style="font-size: 0.9rem;">@name</div>
+                            <div class="text-truncate" style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">@role</div>
                         </div>
                     </div>
                 </div>
