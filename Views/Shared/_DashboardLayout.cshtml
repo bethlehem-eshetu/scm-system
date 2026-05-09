@@ -15,20 +15,20 @@
     <style>
         :root {
             /* Light Theme Variables */
-            --bg-color: #F1F5F9;
-            --text-color: #0A1C16;
-            --text-muted: #4A6359;
+            --sidebar-width: 280px;
+            --sidebar-bg: #1E1E2D;         /* Dark Navy/Charcoal */
+            --sidebar-hover: rgba(255, 255, 255, 0.1);
+            --sidebar-color: #FFFFFF;      /* Pure White */
+            --sidebar-link-color: rgba(255, 255, 255, 0.8);
+            --sidebar-active: #FFFFFF;
+            --primary-color: #20C997;      /* Modern Teal/Green */
+            --bs-primary: #20C997;
+            --bs-primary-rgb: 32, 201, 151;
+            --bg-color: #F7F9FC;           /* Off-white background */
+            --text-color: #2C3E50;
             --card-bg: #FFFFFF;
-            --border-color: #E2E8E4;
+            --border-color: rgba(0, 0, 0, 0.05);
             --top-nav-bg: #FFFFFF;
-            --primary-color: #2E9C7A;
-            --sidebar-width: 260px;
-            --sidebar-bg: #0B3B2F;
-            --sidebar-hover: #1E5A48;
-            --sidebar-color: #F0F6F2;
-            --sidebar-active: #1A4D3A;
-            --input-bg: #FFFFFF;
-            --hover-state: #F0F4F2;
         }
 
         /* Dark Theme Variables */
@@ -212,12 +212,10 @@
             font-weight: 500;
             display: flex;
             align-items: center;
-            color: var(--sidebar-color);
+            color: var(--sidebar-link-color);
             text-decoration: none;
             transition: all 0.2s;
             border-left: 4px solid transparent;
-            margin: 4px 12px;
-            border-radius: 0 8px 8px 0;
         }
 
         .sidebar-menu li a i {
@@ -231,17 +229,18 @@
 
         .sidebar-menu li a:hover {
             background: var(--sidebar-hover);
-            color: #FFFFFF;
+            color: var(--sidebar-active);
         }
 
         .sidebar-menu li.active > a {
-            background: var(--sidebar-active);
-            border-left: 4px solid var(--primary-color);
-            color: #FFFFFF;
+            background: var(--primary-color) !important;
+            border-left-color: #FFFFFF !important;
+            font-weight: 600;
         }
 
         .sidebar-menu li a:hover i {
-            transform: translateX(3px);
+            transform: scale(1.1);
+            color: #FFFFFF;
         }
 
         /* User Profile in Sidebar */
@@ -348,14 +347,16 @@
         
         /* Dashboard Cards & Aesthetic Utilities */
         .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: #FFFFFF !important;
+            border: none !important;
+            border-radius: 1rem !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.3s ease;
         }
         
         .card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+            transform: translateY(-2px);
         }
         
         .btn-primary {
@@ -604,7 +605,7 @@
                 </a>
             </div>
 
-            <ul class="sidebar-menu">
+            <ul class="nav flex-column sidebar-menu">
                 <li class="menu-label">Menu</li>
                 
                 @{

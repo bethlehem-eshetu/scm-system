@@ -90,30 +90,78 @@ namespace SCM_System.Controllers
                 
                 // Comprehensive Metrics
                 ViewBag.TotalOrders = pos.Count;
-                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted || p.Status == POStatus.Picking);
+                ViewBag.PendingPrep = pos.Count(p => p.Status == POStatus.Issued || p.Status == POStatus.Accepted);
+                ViewBag.PackingInProgress = pos.Count(p => p.Status == POStatus.Processing);
+                ViewBag.PackedAndReady = pos.Count(p => p.Status == POStatus.Packed);
                 ViewBag.ReadyForPickup = pos.Count(p => p.Status == POStatus.Packed || p.Status == POStatus.Ready);
                 ViewBag.InProgress = pos.Count(p => p.Status == POStatus.InTransit);
                 ViewBag.Delivered = pos.Count(p => p.Status == POStatus.Delivered || p.Status == POStatus.Completed);
                 
                 // Stock Summary
                 var inventories = await _context.Inventories
+                    .Include(i => i.Product)
                     .Where(i => i.WarehouseId == wId)
                     .ToListAsync();
                 
                 ViewBag.TotalReserved = inventories.Sum(i => i.QuantityReserved);
                 ViewBag.TotalOnHand = inventories.Sum(i => i.QuantityOnHand);
-                ViewBag.LowStockCount = inventories.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 20);
-                ViewBag.LowStockAlertCount = inventories.Count(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 20));
+                ViewBag.TotalStockValue = inventories.Sum(i => i.QuantityOnHand * (i.Product.CostPrice ?? i.Product.BasePrice));
+                
+                // Mock Stock Value Trend (last 7 days)
+                var rand = new Random();
+                var stockTrend = Enumerable.Range(0, 7).Select(_ => rand.Next(100000, 500000)).ToList();
+                ViewBag.StockValueTrend = JsonSerializer.Serialize(stockTrend);
+
+                ViewBag.LowStockCount = inventories.Count(i => (i.QuantityOnHand - i.QuantityReserved) < (manager?.LowStockThreshold ?? 5));
+                ViewBag.LowStockAlertCount = inventories.Count(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 5));
+                ViewBag.LowStockProducts = inventories.Where(i => i.QuantityOnHand <= (manager?.LowStockThreshold ?? 5)).ToList();
 
                 // Audit Logs for this Warehouse
                 ViewBag.RecentLogs = await _auditLogService.GetLogsForEntityAsync("Warehouse", wId.ToString());
 
                 // Quick Stats (Fleet & Staff)
-                ViewBag.ActiveAgents = await _context.SupplierEmployees
-                    .CountAsync(e => e.SupplierId == sId && (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person") && e.IsActive);
+                var activeAgents = await _context.SupplierEmployees
+                    .Include(e => e.User)
+                    .Include(e => e.AssignedTasks)
+                    .Where(e => e.SupplierId == sId && (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person") && e.IsActive)
+                    .ToListAsync();
                 
+                ViewBag.ActiveAgents = activeAgents.Count;
                 ViewBag.AvailableVehicles = await _context.Vehicles
                     .CountAsync(v => v.SupplierId == sId && v.Status == SCM_System.Models.Enums.VehicleStatus.Available);
+
+                // Recommended Next Dispatch
+                var lightestAgent = activeAgents
+                    .OrderBy(e => e.AssignedTasks.Count(t => t.Status == "Pending" || t.Status == "In Progress"))
+                    .FirstOrDefault();
+                ViewBag.LightestAgent = lightestAgent;
+
+                var nextPackedOrder = await _context.PurchaseOrders
+                    .Include(p => p.Retailer)
+                    .Include(p => p.PurchaseOrderItems)
+                        .ThenInclude(i => i.Product)
+                    .Where(p => p.WarehouseId == wId && p.Status == POStatus.Packed)
+                    .OrderBy(p => p.UpdatedAt)
+                    .FirstOrDefaultAsync();
+                
+                if (nextPackedOrder != null)
+                {
+                    ViewBag.NextPackedOrderWeight = nextPackedOrder.PurchaseOrderItems.Sum(i => (i.Product.ShippingWeight ?? 0) * i.Quantity);
+                }
+                ViewBag.NextPackedOrder = nextPackedOrder;
+
+                // Chart Data: Orders picked per hour for current day (8 AM - 6 PM)
+                var today = DateTime.Today;
+                var pickingLogs = await _context.AuditLogs
+                    .Where(l => l.ActionType == "StatusUpdate" && l.PerformedAtUtc >= today.ToUniversalTime() && l.Notes.Contains("moved to Picked"))
+                    .ToListAsync();
+
+                var hourlyStats = Enumerable.Range(8, 11).Select(h => new {
+                    Hour = h,
+                    Count = pickingLogs.Count(l => l.PerformedAtUtc.ToLocalTime().Hour == h)
+                }).ToList();
+
+                ViewBag.HourlyPickingData = JsonSerializer.Serialize(hourlyStats);
 
                 // Notifications (Recent updates)
                 ViewBag.RecentAlerts = pos.OrderByDescending(p => p.UpdatedAt).Take(5).ToList();
@@ -1025,6 +1073,136 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(AccountSettings));
         }
 
+        [HttpGet("GetActivityLog")]
+        public async Task<IActionResult> GetActivityLog()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            int wId = manager.WarehouseId ?? manager.HubAccesses.FirstOrDefault()?.WarehouseId ?? 0;
+            
+            // Query OrderStatusHistory, StockAlerts, and DispatchTasks for events
+            var events = new List<object>();
+
+            var poUpdates = await _context.PurchaseOrders
+                .Include(p => p.Retailer)
+                .Where(p => p.WarehouseId == wId)
+                .OrderByDescending(p => p.UpdatedAt)
+                .Take(5)
+                .Select(p => new {
+                    actionType = "OrderUpdate",
+                    status = p.Status,
+                    time = p.UpdatedAt.ToLocalTime().ToString("HH:mm"),
+                    notes = $"Order #{p.PONumber} for {p.Retailer.BusinessName} is now {p.Status}.",
+                    color = p.Status == POStatus.Delivered ? "success" : (p.Status == POStatus.Processing ? "info" : "warning"),
+                    icon = "fa-box"
+                }).ToListAsync();
+            
+            events.AddRange(poUpdates);
+
+            // Add some mock logs if empty
+            if (!events.Any())
+            {
+                events.Add(new { actionType = "System", time = DateTime.Now.ToString("HH:mm"), notes = "Hub operational feed started.", color = "info", icon = "fa-info-circle" });
+            }
+
+            return Json(events.OrderByDescending(e => ((dynamic)e).time).Take(10));
+        }
+
+        [HttpGet("GetReplenishmentAlerts")]
+        public async Task<IActionResult> GetReplenishmentAlerts()
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Unauthorized();
+
+            int wId = manager.WarehouseId ?? manager.HubAccesses.FirstOrDefault()?.WarehouseId ?? 0;
+            var lowStock = await _context.Inventories
+                .Include(i => i.Product)
+                .Where(i => i.WarehouseId == wId && i.QuantityOnHand <= manager.LowStockThreshold)
+                .Select(i => new {
+                    id = i.ProductId,
+                    name = i.Product.ProductName,
+                    stock = i.QuantityOnHand,
+                    threshold = manager.LowStockThreshold
+                }).ToListAsync();
+
+            return Json(lowStock);
+        }
+
+        [HttpGet("GetHourlyPicks")]
+        public async Task<IActionResult> GetHourlyPicks()
+        {
+            var today = DateTime.Today;
+            var pickingLogs = await _context.AuditLogs
+                .Where(l => l.ActionType == "StatusUpdate" && l.PerformedAtUtc >= today.ToUniversalTime() && l.Notes.Contains("moved to Picked"))
+                .ToListAsync();
+
+            var hourlyStats = Enumerable.Range(8, 11).Select(h => new {
+                hour = $"{h}:00",
+                count = pickingLogs.Count(l => l.PerformedAtUtc.ToLocalTime().Hour == h)
+            }).ToList();
+
+            return Json(hourlyStats);
+        }
+
+        [HttpPost("AssignDispatch")]
+        public async Task<IActionResult> AssignDispatch(int orderId, int agentId)
+        {
+            var po = await _context.PurchaseOrders.FindAsync(orderId);
+            if (po == null) return Json(new { success = false, message = "Order not found." });
+
+            var agent = await _context.SupplierEmployees.FindAsync(agentId);
+            if (agent == null) return Json(new { success = false, message = "Agent not found." });
+
+            po.Status = POStatus.InTransit;
+            po.DeliveryAgentId = agentId;
+            po.UpdatedAt = DateTime.Now;
+
+            // Create Dispatch Task
+            var task = new DispatchTask
+            {
+                OrderId = po.OrderId, // PurchaseOrder has OrderId
+                DeliveryAgentId = agentId,
+                HubId = po.WarehouseId,
+                Status = "In Progress",
+                CreatedAt = DateTime.Now,
+                Notes = $"Automatically assigned via Warehouse Dashboard recommendation."
+            };
+
+            _context.DispatchTasks.Add(task);
+            
+            // Audit Log
+            await _auditLogService.LogActionAsync("PurchaseOrder", po.Id.ToString(), "DispatchAssigned", notes: $"Order #{po.PONumber} assigned to {agent.User?.FullName ?? "Agent"}");
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = $"Order #{po.PONumber} assigned to {agent.User?.FullName}." });
+        }
+
+        [HttpPost("ToggleVoicePicking")]
+        public async Task<IActionResult> ToggleVoicePicking([FromBody] bool enabled)
+        {
+            var manager = await GetCurrentManagerAsync();
+            if (manager == null) return Json(new { success = false });
+
+            manager.EnableVoicePicking = enabled;
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [Route("PrintPickingList/{id}")]
+        public async Task<IActionResult> PrintPickingList(int id)
+        {
+            var po = await _context.PurchaseOrders
+                .Include(p => p.PurchaseOrderItems)
+                .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (po == null) return NotFound();
+
+            // Mock PDF generation - in a real app, use a library like Rotativa or QuestPDF
+            return Content("Picking List PDF stub for Order #" + po.PONumber);
+        }
         [HttpPost("Toggle2FA")]
         public async Task<IActionResult> Toggle2FA(bool enable)
         {
@@ -1044,7 +1222,6 @@ namespace SCM_System.Controllers
             manager.User.TwoFactorSecret = secret;
             await _context.SaveChangesAsync();
 
-            // Using Google.Authenticator library
             var tfa = new Google.Authenticator.TwoFactorAuthenticator();
             var setupInfo = tfa.GenerateSetupCode("SCM System", manager.User.Email, secret, false, 3);
             
