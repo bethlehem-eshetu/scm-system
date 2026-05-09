@@ -30,7 +30,6 @@
     <div class="row mb-5 animate-slide-up">
         <div class="col-12">
             <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
-                <!-- Background Decorative Elements -->
                 <div class="banner-overlay"></div>
                 <div class="banner-glow"></div>
                 
@@ -251,22 +250,25 @@
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Recent Orders Table -->
-        <div class="col-lg-8">
+    <!-- Recent Procurements Table (Full Width) -->
+    <div class="row g-4 mb-5">
+        <div class="col-12">
             <div class="section-card">
                 <div class="d-flex justify-content-between align-items-center p-4">
-                    <h5 class="fw-bold mb-0">Recent Procurements</h5>
-                    <a asp-action="OrderTracking" class="btn btn-sm btn-outline-card px-3 fw-bold" style="border-radius: 8px;">View History</a>
+                    <div>
+                        <h5 class="fw-bold mb-0">Recent Procurements</h5>
+                        <p class="extra-small text-muted mb-0">Track your ongoing orders and historical acquisitions</p>
+                    </div>
+                    <a asp-action="OrderTracking" class="btn btn-sm btn-outline-card px-4 py-2 fw-bold" style="border-radius: 10px;">View Full History</a>
                 </div>
                 <div class="table-responsive">
                     <table class="admin-table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th class="ps-4">Order ID</th>
+                                <th class="ps-4">Order Details</th>
                                 <th>Supplier</th>
                                 <th>Status</th>
-                                <th class="text-end">Total</th>
+                                <th class="text-end">Total Amount</th>
                                 <th class="pe-4 text-end">Action</th>
                             </tr>
                         </thead>
@@ -287,13 +289,13 @@
                                         _ => "badge-soft-secondary"
                                     };
                                     
-                                    <tr onclick="window.location.href='/Order/Details/@o.Id'">
+                                    <tr onclick="window.location.href='/Order/Details/@o.Id'" style="cursor: pointer;">
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">#@o.OrderNumber</div>
                                             <div class="extra-small text-muted">@o.CreatedAt.ToString("MMM dd, yyyy")</div>
                                         </td>
                                         <td>
-                                            <div class="fw-bold">@o.Supplier?.CompanyName</div>
+                                            <div class="fw-bold small">@o.Supplier?.CompanyName</div>
                                             <div class="extra-small text-muted">@o.Supplier?.City</div>
                                         </td>
                                         <td>
@@ -301,11 +303,13 @@
                                                 <i class="fas fa-circle me-1" style="font-size: 6px;"></i> @o.OrderStatus
                                             </span>
                                         </td>
-                                        <td class="text-end fw-bold">@o.TotalAmount.ToString("N2") <span class="extra-small">ETB</span></td>
+                                        <td class="text-end fw-bold text-dark">
+                                            @o.TotalAmount.ToString("N2") <span class="extra-small">ETB</span>
+                                        </td>
                                         <td class="pe-4 text-end">
-                                            <a href="/Order/Details/@o.Id" class="btn btn-sm btn-icon-sm btn-outline-card">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                            <button class="btn btn-sm btn-icon-sm btn-outline-card">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 }
@@ -314,11 +318,11 @@
                             {
                                 <tr>
                                     <td colspan="5" class="text-center py-5">
-                                        <div class="empty-state">
-                                            <i class="fas fa-shopping-cart opacity-25 fa-3x mb-3"></i>
-                                            <h5>No Orders Yet</h5>
-                                            <p>Start sourcing products from our catalog.</p>
-                                            <a asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-4">Browse Products</a>
+                                        <div class="empty-state py-4 text-center">
+                                            <i class="fas fa-shopping-basket opacity-25 fa-3x mb-3 text-primary"></i>
+                                            <h5 class="fw-bold">No Recent Procurements</h5>
+                                            <p class="text-muted small mb-4">Start sourcing high-quality products from our verified suppliers.</p>
+                                            <a asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">Browse Catalog</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -328,83 +332,83 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Activity & Support Sidebar -->
-        <div class="col-lg-4">
-            <div class="d-flex flex-column gap-4">
-                <!-- Recent Activity Feed -->
-                <div class="section-card p-4">
-                    <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Live Activity Feed</h6>
-                    <div class="activity-timeline">
-                        @if (recentNotes != null && recentNotes.Any())
+    <!-- Secondary Insights Row -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card h-100">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Live Activity Feed</h6>
+                <div class="activity-timeline">
+                    @if (recentNotes != null && recentNotes.Any())
+                    {
+                        foreach (var n in recentNotes)
                         {
-                            foreach (var n in recentNotes)
-                            {
-                                <div class="timeline-item d-flex gap-3 mb-4">
-                                    <div class="timeline-icon bg-@(n.Type == "Success" ? "success" : (n.Type == "Error" ? "danger" : "primary"))-soft">
-                                        <i class="fas @(n.Type == "Success" ? "fa-check" : (n.Type == "Error" ? "fa-times" : "fa-bell")) small"></i>
-                                    </div>
-                                    <div class="timeline-content">
-                                        <div class="fw-bold small text-dark">@n.Title</div>
-                                        <div class="extra-small text-muted line-clamp-2">@n.Message</div>
-                                        <div class="extra-small text-muted opacity-50 mt-1">@n.CreatedAt.ToString("MMM dd, HH:mm")</div>
-                                    </div>
+                            <div class="timeline-item d-flex gap-3 mb-4">
+                                <div class="timeline-icon bg-@(n.Type == "Success" ? "success" : (n.Type == "Error" ? "danger" : "primary"))-soft">
+                                    <i class="fas @(n.Type == "Success" ? "fa-check" : (n.Type == "Error" ? "fa-times" : "fa-bell")) small"></i>
                                 </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="text-center py-4">
-                                <i class="fas fa-stream opacity-25 mb-3"></i>
-                                <p class="small text-muted">No recent activities.</p>
+                                <div class="timeline-content">
+                                    <div class="fw-bold small text-dark">@n.Title</div>
+                                    <div class="extra-small text-muted line-clamp-2">@n.Message</div>
+                                    <div class="extra-small text-muted opacity-50 mt-1">@n.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                                </div>
                             </div>
                         }
-                    </div>
-                </div>
-
-                <!-- Recent Conversations -->
-                <div class="section-card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-0">Active Conversations</h6>
-                        <a href="@Url.Action("Inbox", "Message")" class="extra-small text-primary text-decoration-none fw-bold">INBOX</a>
-                    </div>
-                    @if (ViewBag.RecentConversations != null && ViewBag.RecentConversations.Count > 0)
-                    {
-                        <div class="d-flex flex-column gap-3">
-                            @foreach (var conv in ViewBag.RecentConversations)
-                            {
-                                <a href="@Url.Action("Conversation", "Message", new { id = conv.OtherUserId })" class="text-decoration-none">
-                                    <div class="conversation-item p-3 rounded-4 border transition">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
-                                                @conv.OtherUserName.Substring(0, 1)
-                                            </div>
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div class="fw-bold small text-dark text-truncate">@conv.OtherUserName</div>
-                                                    <div class="extra-small text-muted">@conv.LastMessageAt.ToString("MMM dd")</div>
-                                                </div>
-                                                <div class="extra-small text-muted text-truncate">@conv.LastMessage</div>
-                                            </div>
-                                            @if (conv.UnreadCount > 0)
-                                            {
-                                                <span class="badge bg-danger rounded-circle p-1" style="width: 18px; height: 18px; font-size: 10px;">@conv.UnreadCount</span>
-                                            }
-                                        </div>
-                                    </div>
-                                </a>
-                            }
-                        </div>
                     }
                     else
                     {
-                        <div class="text-center py-4 bg-light rounded-4 border-dashed">
-                            <i class="fas fa-comments opacity-25 mb-2"></i>
-                            <p class="extra-small text-muted mb-2">No active chats</p>
-                            <a href="@Url.Action("SelectRecipient", "Message")" class="btn btn-sm btn-primary rounded-pill px-3 py-1 extra-small fw-bold">Start Chat</a>
+                        <div class="text-center py-5">
+                            <i class="fas fa-stream opacity-10 fa-3x mb-3"></i>
+                            <p class="small text-muted">Your activity feed is currently empty.</p>
                         </div>
                     }
                 </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-0">Active Conversations</h6>
+                    <a href="@Url.Action("Inbox", "Message")" class="extra-small text-primary text-decoration-none fw-bold tracking-widest">INBOX</a>
+                </div>
+                @if (ViewBag.RecentConversations != null && ViewBag.RecentConversations.Count > 0)
+                {
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var conv in (dynamic)ViewBag.RecentConversations)
+                        {
+                            <a href="@Url.Action("Conversation", "Message", new { id = conv.OtherUserId })" class="text-decoration-none">
+                                <div class="conversation-item p-3 rounded-4 border transition">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
+                                            @conv.OtherUserName.Substring(0, 1)
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="fw-bold small text-dark text-truncate">@conv.OtherUserName</div>
+                                                <div class="extra-small text-muted">@conv.LastMessageAt.ToString("MMM dd")</div>
+                                            </div>
+                                            <div class="extra-small text-muted text-truncate">@conv.LastMessage</div>
+                                        </div>
+                                        @if (conv.UnreadCount > 0)
+                                        {
+                                            <span class="badge bg-danger rounded-circle p-1" style="width: 18px; height: 18px; font-size: 10px;">@conv.UnreadCount</span>
+                                        }
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-comments opacity-10 fa-3x mb-3"></i>
+                        <h6 class="fw-bold small text-dark">No active chats</h6>
+                        <p class="extra-small text-muted mb-4">Connect with suppliers to discuss products and orders.</p>
+                        <a href="@Url.Action("Inbox", "Message")" class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">Start Chatting</a>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -412,118 +416,27 @@
 
 <style>
     /* Premium Enhanced Header Styles */
-    .welcome-banner {
-        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .banner-overlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: url('https://www.transparenttextures.com/patterns/cubes.png');
-        opacity: 0.05; z-index: 1;
-    }
-    .banner-glow {
-        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
-        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
-        filter: blur(50px); z-index: 1;
-    }
-    .text-gradient-gold {
-        background: linear-gradient(to right, #f1c40f, #f39c12);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-    }
-    .verified-badge {
-        color: #3498db;
-        font-size: 1.5rem;
-        filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.3));
-    }
-    .btn-glass {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-        transition: all 0.3s ease;
-        border-radius: 16px;
-    }
-    .btn-glass:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateY(-2px);
-        color: white;
-    }
-    .btn-gold {
-        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
-        border: none;
-        color: #000;
-        transition: all 0.3s ease;
-        border-radius: 16px;
-    }
-    .btn-gold:hover {
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
-    }
-    .btn-icon {
-        width: 38px; height: 38px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem;
-    }
+    .welcome-banner { background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .banner-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.05; z-index: 1; }
+    .banner-glow { position: absolute; top: -50%; right: -20%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%); filter: blur(50px); z-index: 1; }
+    .text-gradient-gold { background: linear-gradient(to right, #f1c40f, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
+    .verified-badge { color: #3498db; font-size: 1.5rem; filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.3)); }
+    .btn-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; border-radius: 16px; }
+    .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); color: white; }
+    .btn-gold { background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%); border: none; color: #000; transition: all 0.3s ease; border-radius: 16px; }
+    .btn-gold:hover { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3); }
+    .btn-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .z-index-2 { z-index: 2; }
     .tracking-widest { letter-spacing: 2px; }
 
-    /* Premium Dashboard Styles */
-    .kpi-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 24px;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .kpi-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    .kpi-icon-box {
-        width: 54px;
-        height: 54px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
-    .kpi-label {
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-    }
-    .kpi-value {
-        font-size: 1.85rem;
-        font-weight: 700;
-        color: var(--text-color);
-        line-height: 1.2;
-    }
-    .kpi-footer {
-        width: 100%;
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid var(--border-color);
-        font-size: 12px;
-        color: var(--text-muted);
-    }
-    
-    .section-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 24px;
-        overflow: hidden;
-    }
+    /* Dashboard Logic */
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 24px; display: flex; flex-wrap: wrap; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s, box-shadow 0.2s; }
+    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .kpi-icon-box { width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .kpi-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+    .kpi-value { font-size: 1.85rem; font-weight: 700; color: var(--text-color); line-height: 1.2; }
+    .kpi-footer { width: 100%; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-muted); }
+    .section-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; overflow: hidden; }
 
     .bg-primary-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
     .bg-warning-soft { background: rgba(230, 126, 34, 0.1); color: #E67E22; }
@@ -531,61 +444,34 @@
     .bg-success-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
     .bg-danger-soft { background: rgba(224, 90, 90, 0.1); color: #E05A5A; }
 
-    .timeline-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-    
-    .conversation-item:hover {
-        background: var(--hover-state);
-        border-color: var(--primary-color) !important;
-    }
-    
+    .timeline-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .conversation-item:hover { background: var(--hover-state); border-color: var(--primary-color) !important; }
     .extra-small { font-size: 0.75rem; }
     .tracking-wider { letter-spacing: 1px; }
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-    /* Dark Mode specific overrides */
-    .dark-mode .section-card, .dark-mode .kpi-card {
-        box-shadow: none;
-    }
-    .dark-mode .bg-light {
-        background-color: var(--hover-state) !important;
-    }
+    /* Dark Mode overrides */
+    .dark-mode .section-card, .dark-mode .kpi-card { box-shadow: none; }
+    .dark-mode .bg-light { background-color: var(--hover-state) !important; }
 </style>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function () {
-            // Load live counts
             loadCounts();
             setInterval(loadCounts, 30000);
 
-            // Chart.js Globals
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#64748B';
 
-            // 1. Spend Analytics Chart (Line)
             const ctxSpend = document.getElementById('spendAnalyticsChart').getContext('2d');
             let spendChart;
 
             function initSpendChart(data) {
                 const isDark = $('html').hasClass('dark-mode');
                 const accentColor = '#2E9C7A';
-                
                 if(spendChart) spendChart.destroy();
-                
                 spendChart = new Chart(ctxSpend, {
                     type: 'line',
                     data: {
@@ -610,42 +496,23 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
-                            tooltip: {
-                                backgroundColor: isDark ? '#1A1F1D' : '#0B3B2F',
-                                padding: 12,
-                                cornerRadius: 10,
-                                titleFont: { size: 12 },
-                                bodyFont: { size: 14, weight: 'bold' }
-                            }
+                            tooltip: { backgroundColor: isDark ? '#1A1F1D' : '#0B3B2F', padding: 12, cornerRadius: 10 }
                         },
                         scales: {
-                            y: { 
-                                beginAtZero: true,
-                                grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
-                                ticks: { font: { size: 11 } }
-                            },
-                            x: { 
-                                grid: { display: false },
-                                ticks: { font: { size: 11 } }
-                            }
+                            y: { beginAtZero: true, grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
+                            x: { grid: { display: false } }
                         }
                     }
                 });
             }
 
             function loadSpendData(months) {
-                $.get('/Retailer/GetSpendStats?months=' + months, function(res) {
-                    initSpendChart(res);
-                });
+                $.get('/Retailer/GetSpendStats?months=' + months, function(res) { initSpendChart(res); });
             }
 
-            $('#spendRangeFilter').on('change', function() {
-                loadSpendData($(this).val());
-            });
-
+            $('#spendRangeFilter').on('change', function() { loadSpendData($(this).val()); });
             loadSpendData(6);
 
-            // 2. Order Status Chart (Doughnut)
             const ctxStatus = document.getElementById('orderStatusChart').getContext('2d');
             new Chart(ctxStatus, {
                 type: 'doughnut',
@@ -662,17 +529,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '75%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#0B3B2F',
-                            cornerRadius: 8
-                        }
-                    }
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0B3B2F', cornerRadius: 8 } }
                 }
             });
 
-            // Theme Sync
             const observer = new MutationObserver(function() {
                 if(spendChart) {
                     const isDark = $('html').hasClass('dark-mode');
@@ -685,13 +545,46 @@
         });
 
         function loadCounts() {
-            $.get('/Notification/GetUnreadCount', function (data) {
-                if (data.count > 0) $('#notificationBadge').text(data.count).show();
-                else $('#notificationBadge').hide();
-            });
-            $.get('/Message/GetUnreadCount', function (data) {
-                if (data > 0) $('#messageBadge').text(data).show();
-                else $('#messageBadge').hide();
+            $.get('/Notification/GetUnreadCount', function (data) { if (data.count > 0) $('#notificationBadge').text(data.count).show(); else $('#notificationBadge').hide(); });
+            $.get('/Message/GetUnreadCount', function (data) { if (data > 0) $('#messageBadge').text(data).show(); else $('#messageBadge').hide(); });
+            loadActivityFeed();
+        }
+
+        function loadActivityFeed() {
+            $.get('/Notification/GetRecentJson', function (data) {
+                if (data && data.items && data.items.length > 0) {
+                    let html = '';
+                    data.items.forEach(function (n) {
+                        let typeColor = n.type === 'Success' ? 'success' : (n.type === 'Error' ? 'danger' : 'primary');
+                        let icon = n.type === 'Success' ? 'fa-check' : (n.type === 'Error' ? 'fa-times' : 'fa-bell');
+                        
+                        // Simple date formatting
+                        let dateObj = new Date(n.createdAt);
+                        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + 
+                                      dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                        
+                        html += `
+                            <div class="timeline-item d-flex gap-3 mb-4 animate-slide-up">
+                                <div class="timeline-icon bg-${typeColor}-soft">
+                                    <i class="fas ${icon} small text-${typeColor}"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="fw-bold small text-dark">${n.title}</div>
+                                    <div class="extra-small text-muted line-clamp-2">${n.message}</div>
+                                    <div class="extra-small text-muted opacity-50 mt-1">${dateStr}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('.activity-timeline').html(html);
+                } else {
+                    $('.activity-timeline').html(`
+                        <div class="text-center py-5">
+                            <i class="fas fa-stream opacity-10 fa-3x mb-3"></i>
+                            <p class="small text-muted">Your activity feed is currently empty.</p>
+                        </div>
+                    `);
+                }
             });
         }
     </script>

@@ -1380,7 +1380,7 @@ namespace SCM_System.Controllers
                 .Include(s => s.Products)
                 .Include(s => s.PurchaseOrders)
                     .ThenInclude(po => po.PurchaseOrderItems)
-                .Include(s => s.Tenders)
+                .Include(s => s.TenderBids)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (supplier == null)

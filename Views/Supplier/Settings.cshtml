@@ -6,16 +6,21 @@
 
 <div class="container-fluid py-4">
     <!-- Header Section -->
-    <div class="row mb-4">
+    <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="glass-panel p-4 mb-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--bs-primary) 0%, #0d6efd 100%); border-radius: 1rem;">
-                <div class="position-relative z-index-1 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+                <div class="banner-overlay"></div>
+                <div class="banner-glow"></div>
+                
+                <div class="position-relative z-index-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
-                        <h2 class="text-white mb-1 fw-bold"><i class="fas fa-user-cog me-2"></i>Control Center</h2>
-                        <p class="text-white-50 mb-0">Manage your business profile, security protocols, and operational preferences.</p>
+                        <h1 class="display-5 fw-bold text-white mb-2">
+                            <i class="fas fa-user-cog me-2"></i>Control <span class="text-gradient-gold">Center</span>
+                        </h1>
+                        <p class="text-white text-opacity-75 mb-0 fs-5">Manage your business profile, security protocols, and operational preferences.</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-light btn-sm rounded-pill px-3" onclick="location.reload()">
+                        <button type="button" class="btn btn-light btn-lg rounded-pill px-4 shadow-sm" onclick="location.reload()">
                             <i class="fas fa-sync-alt me-1"></i> Refresh
                         </button>
                     </div>
@@ -93,10 +98,7 @@
                                 <input type="hidden" asp-for="ExistingLogo" />
 
                                 <div class="row g-4">
-<<<<<<< HEAD
-=======
                                     <!-- Logo Upload -->
->>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
                                     <div class="col-12 text-center mb-2">
                                         <div class="position-relative d-inline-block">
                                             <div class="bg-light rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 120px; height: 120px; border: 4px solid #fff;">
@@ -387,19 +389,48 @@
     </div>
 </div>
 
-<style>
+    <style>
         :root {
-            --bs-primary-rgb: 13, 110, 253;
+            --bs-primary-rgb: 15, 62, 38; /* Deep Green */
         }
-        .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
+        
+        /* Premium Header Styles */
+        .welcome-banner {
+            background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .banner-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png');
+            opacity: 0.05; z-index: 1;
+        }
+        .banner-glow {
+            position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+            filter: blur(50px); z-index: 1;
+        }
+        .text-gradient-gold {
+            background: linear-gradient(to right, #f1c40f, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        .z-index-2 { z-index: 2; }
+        .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bg-soft-primary { background-color: rgba(15, 62, 38, 0.1); }
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
         .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
         .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
         .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1); }
         
-        .btn-soft-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; border: none; }
-        .btn-soft-primary:hover { background-color: #0d6efd; color: white; }
+        .btn-soft-primary { background-color: rgba(15, 62, 38, 0.1); color: #0f3e26; border: none; }
+        .btn-soft-primary:hover { background-color: #0f3e26; color: white; }
         .btn-soft-danger { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: none; }
         .btn-soft-danger:hover { background-color: #dc3545; color: white; }
         .btn-soft-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; border: none; }
@@ -445,8 +476,7 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-<<<<<<< HEAD
-=======
+
         $(document).ready(function() {
             // Re-initialize DataTables when switching tabs
             $('button[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
@@ -509,17 +539,11 @@
                 }
             });
         }
-
->>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
         function previewImage(input) {
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
                 reader.onload = function (e) {
-<<<<<<< HEAD
-                    $('#logoPreview').attr('src', e.target.result).removeClass('d-none');
-                    $('#logoPlaceholder').addClass('d-none');
-                    $('#sidebarLogoPreview').attr('src', e.target.result);
-=======
+
                     var preview = document.getElementById('logoPreview');
                     var placeholder = document.getElementById('logoPlaceholder');
                     var sidebarPreview = document.getElementById('sidebarLogoPreview');
@@ -532,13 +556,11 @@
                     if (sidebarPreview) {
                         sidebarPreview.src = e.target.result;
                     }
->>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
-<<<<<<< HEAD
-=======
+
 
         // Unsaved Changes Warning
         let formChanged = false;
@@ -551,6 +573,5 @@
                 return confirmationMessage;
             }
         });
->>>>>>> 47700b1a6e8051cc1875571bbc4501332e63360e
     </script>
 }

@@ -5,22 +5,27 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-body p-5 bg-gradient-dark text-white">
-            <div class="row align-items-center">
-                <div class="col-md-2 text-center text-md-start mb-4 mb-md-0">
-                    <div class="avatar-xl bg-primary rounded-4 shadow-lg mx-auto mx-md-0 d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
-                        <i class="fas fa-warehouse fs-1"></i>
+    <div class="row mb-5 animate-slide-up">
+        <div class="col-12">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+                <div class="banner-overlay"></div>
+                <div class="banner-glow"></div>
+                
+                <div class="row align-items-center position-relative z-index-2">
+                    <div class="col-md-2 text-center text-md-start mb-4 mb-md-0">
+                        <div class="avatar-xl bg-white bg-opacity-10 text-white rounded-4 shadow-lg mx-auto mx-md-0 d-flex align-items-center justify-content-center border border-white border-opacity-25" style="width: 100px; height: 100px;">
+                            <i class="fas fa-warehouse fs-1 text-gradient-gold"></i>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-7 text-center text-md-start">
-                    <h6 class="text-white-50 text-uppercase fw-bold mb-1">Facility Management</h6>
-                    <h1 class="fw-bold mb-2">@Model.Name</h1>
-                    <p class="lead text-white-50 mb-0"><i class="fas fa-map-marker-alt me-2"></i> @Model.Address, @Model.City, @Model.Region</p>
-                </div>
-                <div class="col-md-3 text-center text-md-end">
-                    <div class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 rounded-pill px-4 py-2 mb-2">Operational</div>
-                    <div class="text-white-50 small">Part of @Model.Supplier?.CompanyName Network</div>
+                    <div class="col-md-7 text-center text-md-start">
+                        <h6 class="text-white-50 text-uppercase fw-bold mb-1 tracking-widest">Facility Management</h6>
+                        <h1 class="fw-bold mb-2 text-white">@Model.Name</h1>
+                        <p class="lead text-white-50 mb-0"><i class="fas fa-map-marker-alt me-2 text-info"></i> @Model.Address, @Model.City, @Model.Region</p>
+                    </div>
+                    <div class="col-md-3 text-center text-md-end">
+                        <div class="badge bg-success bg-opacity-25 text-white border border-success border-opacity-50 rounded-pill px-4 py-2 mb-2 shadow-sm">Operational</div>
+                        <div class="text-white-50 small fw-bold">Part of @Model.Supplier?.CompanyName Network</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -80,6 +85,34 @@
 </div>
 
 <style>
-    .bg-gradient-dark { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+    /* Premium Header Styles */
+    .welcome-banner {
+        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .banner-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.05; z-index: 1;
+    }
+    .banner-glow {
+        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+        filter: blur(50px); z-index: 1;
+    }
+    .text-gradient-gold {
+        background: linear-gradient(to right, #f1c40f, #f39c12);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+    .z-index-2 { z-index: 2; }
+    .tracking-widest { letter-spacing: 2px; }
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     .extra-small { font-size: 0.65rem; }
 </style>
