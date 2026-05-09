@@ -107,6 +107,7 @@ namespace SCM_System.Controllers
                 n.Message,
                 n.IsRead,
                 n.CreatedAt,
+                n.Type,
                 ActionUrl = n.ActionUrl ?? "/Notification/Index"
             }).ToList();
 

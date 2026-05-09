@@ -606,6 +606,46 @@ namespace SCM_System.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "DeliveryAgent")]
+        public async Task<IActionResult> OptimizeRoute([FromBody] OptimizeRouteRequest request)
+        {
+            var employeeId = await GetEmployeeIdAsync();
+            if (employeeId == 0) return Json(new { success = false, message = "Unauthorized" });
+
+            // In a real application, this would call a routing engine API (like Google Maps Distance Matrix or OSRM)
+            // For now, we simulate an optimization delay and return an optimized order of points
+            await Task.Delay(1000);
+
+            if (request.CurrentPoints == null || !request.CurrentPoints.Any())
+            {
+                return Json(new { success = false, message = "No points provided" });
+            }
+
+            // Simulate optimization (e.g. reversing the points or just returning them as optimized)
+            var optimizedPoints = request.CurrentPoints.OrderBy(p => p.Lat).ToList();
+
+            return Json(new 
+            { 
+                success = true, 
+                message = "Route optimized successfully.",
+                optimizedRoute = optimizedPoints,
+                estimatedDistanceKm = (optimizedPoints.Count * 3.8).ToString("0.0")
+            });
+        }
+
+        public class OptimizeRouteRequest
+        {
+            public List<RoutePoint> CurrentPoints { get; set; } = new List<RoutePoint>();
+        }
+
+        public class RoutePoint
+        {
+            public decimal Lat { get; set; }
+            public decimal Lng { get; set; }
+            public int? PoId { get; set; }
+        }
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsFailed(int purchaseOrderId, string reason)
         {

@@ -185,7 +185,7 @@
                                 <div class="col-md-6">
                                     <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase">Secure Password</label>
                                     <div class="position-relative">
-                                        <input asp-for="Password" id="regPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" value="@Model?.Password" />
+                                        <input asp-for="Password" id="regPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" autocomplete="new-password" />
                                         <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegPassword">
                                             <i class="far fa-eye"></i>
                                         </button>
@@ -195,7 +195,7 @@
                                 <div class="col-md-6">
                                     <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
                                     <div class="position-relative">
-                                        <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" value="@Model?.ConfirmPassword" />
+                                        <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" autocomplete="new-password" />
                                         <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegConfirmPassword">
                                             <i class="far fa-eye"></i>
                                         </button>
@@ -801,6 +801,21 @@
                 } else {
                     $('#BusinessProfileSection').hide();
                 }
+            });
+            
+            // Password Toggle Logic
+            $('#toggleRegPassword').click(function() {
+                const passwordInput = $('#regPassword');
+                const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+                passwordInput.attr('type', type);
+                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+            });
+
+            $('#toggleRegConfirmPassword').click(function() {
+                const confirmPasswordInput = $('#regConfirmPassword');
+                const type = confirmPasswordInput.attr('type') === 'password' ? 'text' : 'password';
+                confirmPasswordInput.attr('type', type);
+                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
             });
 
             // Re-trigger if model error

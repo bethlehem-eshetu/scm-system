@@ -645,9 +645,6 @@ namespace SCM_System.Controllers
                         new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
-                    // Set success message
-                    TempData["SuccessMessage"] = $"👋 Welcome back, {user.FullName}!";
-
                     // Redirect based on role
                     if (user.Role == "Admin")
                     {

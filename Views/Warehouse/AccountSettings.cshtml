@@ -6,17 +6,22 @@
 
 <div class="container-fluid py-4">
     <!-- Glass Header -->
-    <div class="row mb-4">
+    <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="glass-panel p-4 position-relative overflow-hidden shadow-lg border-0" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); border-radius: 1.5rem;">
-                <div class="position-relative z-index-1 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+                <div class="banner-overlay"></div>
+                <div class="banner-glow"></div>
+                
+                <div class="position-relative z-index-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
-                        <h2 class="text-white mb-1 fw-bold"><i class="fas fa-tools me-2"></i>Control Center</h2>
-                        <p class="text-white-50 mb-0">Unified management for identity, operational logic, and system security.</p>
+                        <h1 class="display-5 fw-bold text-white mb-2">
+                            <i class="fas fa-tools me-2"></i>Control <span class="text-gradient-gold">Center</span>
+                        </h1>
+                        <p class="text-white text-opacity-75 mb-0 fs-5">Unified management for identity, operational logic, and system security.</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-white btn-sm rounded-pill px-4 shadow-sm fw-bold" onclick="location.reload()">
-                            <i class="fas fa-sync-alt me-1 text-primary"></i> Refresh
+                        <button type="button" class="btn btn-light btn-lg rounded-pill px-4 shadow-sm" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
                         </button>
                     </div>
                 </div>
@@ -434,12 +439,42 @@
 @section Styles {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
-        :root { --bs-primary-rgb: 13, 110, 253; }
-        .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
+        :root { --bs-primary-rgb: 15, 62, 38; } /* Deep Green */
+        
+        /* Premium Header Styles */
+        .welcome-banner {
+            background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .banner-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png');
+            opacity: 0.05; z-index: 1;
+        }
+        .banner-glow {
+            position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+            filter: blur(50px); z-index: 1;
+        }
+        .text-gradient-gold {
+            background: linear-gradient(to right, #f1c40f, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        .z-index-2 { z-index: 2; }
+        .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bg-soft-primary { background-color: rgba(15, 62, 38, 0.1); }
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
         .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
         .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
         .glass-panel { border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+        
         .nav-pills-custom .nav-link {
             border-radius: 0.75rem;
             padding: 0.8rem 1.2rem;
@@ -453,6 +488,7 @@
             color: white;
             box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.2);
         }
+        
         .w-20px { width: 20px; display: inline-block; }
         .extra-small { font-size: 0.75rem; }
         .object-fit-cover { object-fit: cover; }

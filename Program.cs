@@ -114,7 +114,7 @@ using (var scope = app.Services.CreateScope())
 
         // Seed the database
         logger.LogInformation("Starting database seeding...");
-        
+        SeedData.Initialize(services);
         FaydaSeeder.Seed(context);
         logger.LogInformation("Database seeded successfully with admin user and Fayda mock registry.");
     }

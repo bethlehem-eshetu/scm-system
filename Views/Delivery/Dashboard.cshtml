@@ -1,155 +1,148 @@
 @model SCM_System.Models.Entities.SupplierEmployee
-
 @{
-    ViewData["Title"] = "Delivery Dashboard";
+    ViewData["Title"] = "Delivery Portal";
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
-    <div class="glass-panel p-4 mb-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
-        <div class="animated-bg" style="opacity: 0.05;"></div>
-        <div class="position-relative z-index-1">
-            <h1 class="text-white mb-1 fw-bold">Delivery Portal</h1>
-            <p class="text-white-50 mb-0">Logistics and Fulfillment | @Model.User.FullName</p>
+<div class="container-fluid py-4 pb-5 px-4">
+    <!-- Premium Header (SCM Style) -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
+        <div>
+            <h1 class="h2 fw-bold text-dark-green mb-1">Delivery Fulfillment Center</h1>
+            <p class="text-muted small mb-0"><i class="fas fa-id-card me-2"></i>Agent: @Model.User.FullName | System synced for active dispatch.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 gap-sm-3 align-items-center">
+            <button class="btn btn-white rounded-pill shadow-sm px-4 fw-bold text-dark-green" data-bs-toggle="modal" data-bs-target="#contactDispatchModal">
+                <i class="fas fa-headset me-2"></i> Dispatch
+            </button>
+            <a asp-action="MyDeliveries" class="btn btn-dark-green rounded-pill shadow-premium px-4 fw-bold text-white">
+                <i class="fas fa-list-check me-2"></i> All Tasks
+            </a>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row g-4 mb-4">
+    <!-- Main KPI Grid (SCM Style) -->
+    <div class="row g-4 mb-5">
         <div class="col-xl-4 col-md-6">
-            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted small text-uppercase fw-bold mb-1">Assigned</p>
-                            <h3 class="fw-bold mb-0">@ViewBag.AssignedDeliveries</h3>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
-                            <i class="fas fa-truck-loading fa-lg"></i>
-                        </div>
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-soft-warning p-3 rounded-4">
+                        <i class="fas fa-truck-loading text-warning fs-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Assigned</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.AssignedDeliveries</h3>
                     </div>
                 </div>
+                <div class="x-small text-muted">Pending Pickup/Ready</div>
             </div>
         </div>
-
         <div class="col-xl-4 col-md-6">
-            <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted small text-uppercase fw-bold mb-1">On The Way</p>
-                            <h3 class="fw-bold mb-0">@ViewBag.InTransitDeliveries</h3>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
-                            <i class="fas fa-route fa-lg"></i>
-                        </div>
+            <div class="card border-0 rounded-5 bg-dark-green text-white shadow-premium h-100 p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-4">
+                        <i class="fas fa-route text-accent-green fs-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-white-50 small text-uppercase fw-bold ls-1 mb-0">In Transit</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.InTransitDeliveries</h3>
                     </div>
                 </div>
+                <div class="x-small text-white-50">Live on the Road</div>
             </div>
         </div>
-
         <div class="col-xl-4 col-md-12">
-            <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted small text-uppercase fw-bold mb-1">Completed</p>
-                            <h3 class="fw-bold mb-0">@ViewBag.CompletedDeliveries</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
-                            <i class="fas fa-check-double fa-lg"></i>
-                        </div>
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-soft-success p-3 rounded-4">
+                        <i class="fas fa-check-double text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Completed</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.CompletedDeliveries</h3>
                     </div>
                 </div>
+                <div class="x-small text-muted">Successfully Fulfilled</div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Assigned Deliveries -->
+        <!-- Assigned Deliveries Table -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="mb-0 fw-bold text-primary">
-                        <i class="fas fa-map-marked-alt me-2"></i>Assigned Deliveries
-                    </h6>
-                </div>
-                <div class="card-body p-4">
-                    <div class="alert alert-info bg-primary bg-opacity-10 border-0 rounded-4 text-primary mb-4 p-3">
-                        <div class="d-flex gap-3">
-                            <i class="fas fa-info-circle fa-lg"></i>
-                            <span class="small fw-medium">Check your route details before departure. Ensure proof of delivery is captured.</span>
-                        </div>
+            <div class="card border-0 rounded-5 bg-white shadow-premium overflow-hidden">
+                <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark-green">Active Dispatch List</h5>
+                        <p class="x-small text-muted mb-0">Immediate tasks and route details</p>
                     </div>
-
-                    <div class="table-responsive">
-                        <table class="table align-middle table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>PO Number</th>
-                                    <th>Destination</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (ViewBag.RecentDeliveries != null && ViewBag.RecentDeliveries.Count > 0)
-                                {
-                                    foreach (var delivery in ViewBag.RecentDeliveries)
-                                    {
-                                        <tr>
-                                            <td class="fw-bold">@delivery.PONumber</td>
-                                            <td>@delivery.Destination</td>
-                                            <td>
-                                                @if (delivery.Status == "In Transit")
-                                                {
-                                                    <span class="badge bg-primary rounded-pill px-3">In Transit</span>
-                                                }
-                                                else if (delivery.Status == "Ready")
-                                                {
-                                                    <span class="badge bg-warning rounded-pill px-3">Ready for Pickup</span>
-                                                }
-                                                else if (delivery.Status == "Packed")
-                                                {
-                                                    <span class="badge bg-info rounded-pill px-3">Packed</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary rounded-pill px-3">@delivery.Status</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                <a asp-action="MyDeliveries" class="btn btn-sm btn-primary rounded-pill px-3">
-                                                    <i class="fas fa-eye me-1"></i> View
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
+                    <div class="status-badge bg-soft-info text-info">
+                        <i class="fas fa-info-circle me-1"></i> POD Required
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover mb-0">
+                        <thead class="bg-faint-green">
+                            <tr>
+                                <th class="ps-4 py-3 text-muted x-small text-uppercase fw-bold ls-1">PO Number</th>
+                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Destination</th>
+                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Status</th>
+                                <th class="text-end pe-4 py-3 text-muted x-small text-uppercase fw-bold ls-1">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.RecentDeliveries != null && ViewBag.RecentDeliveries.Count > 0)
+                            {
+                                foreach (var delivery in ViewBag.RecentDeliveries)
                                 {
                                     <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted">
-                                            <i class="fas fa-truck fa-2x mb-3 d-block opacity-25"></i>
-                                            No active delivery assignments
+                                        <td class="ps-4 py-3 fw-bold text-dark-green">#@delivery.PONumber</td>
+                                        <td class="py-3">
+                                            <div class="fw-bold small">@delivery.Destination</div>
+                                        </td>
+                                        <td class="py-3">
+                                            @{
+                                                var (badgeClass, textColor) = delivery.Status switch {
+                                                    "In Transit" => ("bg-soft-success", "text-success"),
+                                                    "Ready" => ("bg-soft-warning", "text-warning"),
+                                                    "Packed" => ("bg-soft-info", "text-info"),
+                                                    _ => ("bg-soft-secondary", "text-secondary")
+                                                };
+                                            }
+                                            <span class="status-badge @badgeClass @textColor">@delivery.Status</span>
+                                        </td>
+                                        <td class="text-end pe-4 py-3">
+                                            <a asp-action="MyDeliveries" class="btn btn-faint-green text-dark-green rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-eye x-small"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 opacity-50">
+                                        <i class="fas fa-truck fa-3x mb-3 text-dark-green"></i>
+                                        <h6 class="fw-bold">No active assignments</h6>
+                                        <p class="x-small mb-0">New tasks will appear here when assigned by dispatch.</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Route & Support -->
+        <!-- Route Assistant & Maps (Merged from Dev) -->
         <div class="col-lg-4">
-            <!-- Logistics Quick Actions -->
-            <div class="card border-0 shadow-sm mb-4 bg-primary text-white" style="border-radius: 16px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;">
-                <div class="card-body p-4 text-center">
-                    <h6 class="fw-bold mb-3 text-white-50 small text-uppercase ls-1">Logistics Intelligence</h6>
+            <div class="d-flex flex-column gap-4">
+                <!-- Logistics Quick Actions -->
+                <div class="card border-0 rounded-5 shadow-premium text-white p-4" style="background: linear-gradient(135deg, #1a3d31 0%, #0a2e24 100%);">
+                    <h6 class="fw-bold mb-3 text-white-50 x-small text-uppercase ls-1">Logistics Intelligence</h6>
                     <div class="d-grid gap-2">
-                        <a asp-action="RouteItinerary" class="btn btn-white rounded-pill fw-bold shadow-sm py-2 text-primary">
+                        <a asp-action="RouteItinerary" class="btn btn-accent-green rounded-pill fw-bold shadow-sm py-2">
                             <i class="fas fa-magic me-2"></i> Optimize My Route
                         </a>
                         <a asp-action="MyDeliveries" class="btn btn-outline-light rounded-pill fw-bold py-2 border-2">
@@ -157,153 +150,40 @@
                         </a>
                     </div>
                 </div>
-            </div>
 
-            <!-- Map and AI Chatbot Card -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden;">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold text-info">
-                        <i class="fas fa-location-arrow me-2"></i>Active Route
-                    </h6>
-                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1" id="routeDistanceBadge">Calculating...</span>
-                </div>
-                <div class="card-body p-0 position-relative">
-                    <!-- Map Container -->
-                    <div id="miniRouteMap" style="height: 350px; width: 100%; z-index: 1;"></div>
-                    
-                    <!-- AI Route Chatbot Overlay -->
-                    <div id="aiChatbotWidget" class="position-absolute bottom-0 start-0 w-100 p-3" style="z-index: 1000; display: none;">
-                        <div class="bg-white rounded-4 shadow-lg overflow-hidden border border-primary border-opacity-25 animate-slide-up">
-                            <div class="bg-primary text-white p-2 px-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="fas fa-robot"></i>
-                                    <span class="small fw-bold">Route Assistant AI</span>
-                                </div>
-                                <button type="button" class="btn-close btn-close-white btn-sm" onclick="closeAiWidget()"></button>
-                            </div>
-                            <div class="p-3 bg-light">
-                                <div class="d-flex gap-2 mb-3 align-items-start">
-                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
-                                        <i class="fas fa-magic"></i>
+                <!-- Map and Assistant -->
+                <div class="card border-0 rounded-5 bg-white shadow-premium overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+                        <h6 class="fw-bold mb-0 text-dark-green">
+                            <i class="fas fa-location-arrow me-2"></i>Route Assistant
+                        </h6>
+                        <span class="status-badge bg-soft-success text-success" id="routeDistanceBadge">Initializing...</span>
+                    </div>
+                    <div class="card-body p-0 position-relative">
+                        <div id="miniRouteMap" style="height: 380px; width: 100%; z-index: 1;"></div>
+                        
+                        <!-- AI Assistant Overlay (Themed) -->
+                        <div id="aiChatbotWidget" class="position-absolute bottom-0 start-0 w-100 p-3" style="z-index: 1000; display: none;">
+                            <div class="bg-white rounded-4 shadow-lg overflow-hidden animate-slide-up border border-faint-green">
+                                <div class="p-2 px-3 d-flex justify-content-between align-items-center bg-dark-green text-white">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-robot text-accent-green"></i>
+                                        <span class="x-small fw-bold text-uppercase">Route Intelligence</span>
                                     </div>
-                                    <div class="bg-white p-2 rounded-3 shadow-sm border border-light small" id="aiChatMessage">
-                                        Hi! I noticed you have multiple stops. I can optimize this route to save you time. Should I analyze the optimal path?
+                                    <button type="button" class="btn-close btn-close-white btn-sm" onclick="closeAiWidget()"></button>
+                                </div>
+                                <div class="p-3">
+                                    <div class="d-flex gap-2 mb-3">
+                                        <div class="small fw-medium text-dark-green" id="aiChatMessage">
+                                            Optimize your delivery sequence to save time.
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="d-flex gap-2 justify-content-end" id="aiChatButtons">
-                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="closeAiWidget()">No thanks</button>
-                                    <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" onclick="runOptimization()">
-                                        <i class="fas fa-bolt me-1"></i> Optimize Now
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Floating GPS button -->
-                    <button class="btn btn-light shadow-sm rounded-circle position-absolute top-0 end-0 m-2" style="z-index: 400; width: 40px; height: 40px;" onclick="centerMiniMap()">
-                        <i class="fas fa-crosshairs text-primary"></i>
-                    </button>
-                </div>
-                <div class="card-footer bg-white border-top text-center py-2">
-                    <a asp-action="MyDeliveries" class="text-decoration-none text-primary small fw-bold">
-                        View All Deliveries <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="mb-0 fw-bold text-dark">
-                        <i class="fas fa-headset me-2"></i>Delivery Support
-                    </h6>
-                </div>
-                <div class="card-body p-4">
-                    <button class="btn btn-primary w-100 rounded-pill mb-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#contactDispatchModal">
-                        <i class="fas fa-phone-alt me-2"></i> Contact Dispatch
-                    </button>
-                    <button class="btn btn-outline-secondary w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#helpCenterModal">
-                        <i class="fas fa-question-circle me-2"></i> Help Center
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <!-- Contact Dispatch Modal -->
-    <div class="modal fade" id="contactDispatchModal" tabindex="-1" aria-labelledby="contactDispatchModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 shadow">
-                <div class="modal-header bg-primary text-white border-bottom-0 rounded-top-4">
-                    <h5 class="modal-title fw-bold" id="contactDispatchModalLabel"><i class="fas fa-headset me-2"></i> Contact Dispatch</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="mb-4">
-                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <i class="fas fa-phone-volume fa-2x"></i>
-                        </div>
-                        <h4 class="fw-bold mb-1">Central Dispatch</h4>
-                        <p class="text-muted small">Available 24/7 for active deliveries</p>
-                    </div>
-                    
-                    <div class="d-grid gap-3">
-                        <a href="tel:+251123456789" class="btn btn-outline-primary rounded-pill py-3 fw-bold">
-                            <i class="fas fa-phone-alt me-2"></i> Call +251-123-456-789
-                        </a>
-                        <a href="mailto:support@ethiochain.com" class="btn btn-outline-secondary rounded-pill py-3 fw-bold">
-                            <i class="fas fa-envelope me-2"></i> support@ethiochain.com
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Help Center Modal -->
-    <div class="modal fade" id="helpCenterModal" tabindex="-1" aria-labelledby="helpCenterModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 rounded-4 shadow">
-                <div class="modal-header bg-dark text-white border-bottom-0 rounded-top-4">
-                    <h5 class="modal-title fw-bold" id="helpCenterModalLabel"><i class="fas fa-question-circle me-2"></i> Delivery Q&A</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="accordion accordion-flush" id="faqAccordion">
-                        <div class="accordion-item border-0 mb-3 bg-light rounded-3">
-                            <h2 class="accordion-header" id="headingOne">
-                                <button class="accordion-button collapsed bg-transparent fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                    <i class="fas fa-box-open text-primary me-2"></i> How do I mark an order as Delivered?
-                                </button>
-                            </h2>
-                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body text-muted small pt-0 border-top mt-2 mx-3 border-light">
-                                    Navigate to "View All Deliveries" and click the Action button next to the relevant order. You can change the status to "Delivered". You will be required to upload a proof of delivery photo or note.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item border-0 mb-3 bg-light rounded-3">
-                            <h2 class="accordion-header" id="headingTwo">
-                                <button class="accordion-button collapsed bg-transparent fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                    <i class="fas fa-user-times text-danger me-2"></i> What if the customer isn't at the location?
-                                </button>
-                            </h2>
-                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body text-muted small pt-0 border-top mt-2 mx-3 border-light">
-                                    Attempt to call the customer twice. If there is no response, contact Dispatch using the "Contact Dispatch" button on your dashboard. They will instruct you on whether to return the goods to the warehouse.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item border-0 bg-light rounded-3">
-                            <h2 class="accordion-header" id="headingThree">
-                                <button class="accordion-button collapsed bg-transparent fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                    <i class="fas fa-map-marked-alt text-success me-2"></i> How does the AI Route Optimizer work?
-                                </button>
-                            </h2>
-                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body text-muted small pt-0 border-top mt-2 mx-3 border-light">
-                                    The Route Assistant uses your current GPS location and calculates the most efficient path between all your active delivery stops to minimize driving time and distance.
+                                    <div class="d-flex gap-2" id="aiChatButtons">
+                                        <button class="btn btn-sm btn-faint-green text-dark-green flex-grow-1 rounded-pill fw-bold" onclick="closeAiWidget()">Later</button>
+                                        <button class="btn btn-sm btn-dark-green text-white flex-grow-1 rounded-pill shadow-sm fw-bold" onclick="runOptimization()">
+                                            <i class="fas fa-bolt me-1"></i> Optimize
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -314,39 +194,72 @@
     </div>
 </div>
 
+<!-- Modals -->
+<div class="modal fade" id="contactDispatchModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-5 shadow-premium overflow-hidden">
+            <div class="modal-header bg-dark-green text-white p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-headset me-2"></i> Central Dispatch</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="bg-faint-green text-dark-green rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-phone-volume fa-2x"></i>
+                </div>
+                <h4 class="fw-bold text-dark-green">Contact Support</h4>
+                <p class="text-muted small mb-4">Our logistics team is available 24/7 for active delivery assistance.</p>
+                <div class="d-grid gap-3">
+                    <a href="tel:+251123456789" class="btn btn-dark-green rounded-pill py-3 fw-bold shadow-premium">
+                        <i class="fas fa-phone-alt me-2"></i> Call Dispatch
+                    </a>
+                    <a href="mailto:logistics@scm.com" class="btn btn-faint-green text-dark-green rounded-pill py-3 fw-bold">
+                        <i class="fas fa-envelope me-2"></i> Email Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Styles {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        .driver-marker {
-            width: 16px;
-            height: 16px;
-            background-color: #0d6efd;
-            border-radius: 50%;
-            box-shadow: 0 0 0 rgba(13, 110, 253, 0.4);
-            animation: pulse-blue 1.5s infinite;
-            border: 2px solid white;
+        :root {
+            --dark-green: #1a3d31;
+            --accent-green: #d4f06d;
+            --faint-green: #f2f6f6;
         }
 
-        @@keyframes pulse-blue {
-            0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
-        }
+        .text-dark-green { color: var(--dark-green) !important; }
+        .bg-dark-green { background-color: var(--dark-green) !important; }
+        .bg-accent-green { background-color: var(--accent-green) !important; }
+        .text-accent-green { color: var(--accent-green) !important; }
+        .bg-faint-green { background-color: var(--faint-green) !important; }
         
-        .route-highlight {
-            stroke: #0d6efd;
-            stroke-width: 4;
-            stroke-dasharray: 8, 8;
+        .rounded-5 { border-radius: 24px !important; }
+        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
+        .ls-1 { letter-spacing: 1px; }
+        .x-small { font-size: 0.75rem; }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        
-        .animate-slide-up {
-            animation: slideUp 0.4s ease-out;
-        }
-        
-        @@keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1); }
+
+        .animate-slide-up { animation: slideUp 0.5s ease-out; }
+        @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .driver-marker { width: 16px; height: 16px; background-color: var(--dark-green); border-radius: 50%; box-shadow: 0 0 0 rgba(26, 61, 49, 0.4); animation: pulse-green 1.5s infinite; border: 2px solid white; }
+        @@keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(26, 61, 49, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(26, 61, 49, 0); } 100% { box-shadow: 0 0 0 0 rgba(26, 61, 49, 0); } }
     </style>
 }
 
@@ -364,11 +277,9 @@
         function initMiniMap() {
             miniMap = L.map('miniRouteMap').setView([currentLat, currentLng], 12);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap',
-                maxZoom: 20
+                attribution: '&copy; OpenStreetMap'
             }).addTo(miniMap);
             
-            // Add user location
             const driverIcon = L.divIcon({ className: 'driver-marker', iconSize: [16, 16] });
             driverMarker = L.marker([currentLat, currentLng], { icon: driverIcon }).addTo(miniMap);
             
@@ -377,52 +288,32 @@
                 navigator.geolocation.getCurrentPosition(function(position) {
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
-                    
                     miniMap.setView([currentLat, currentLng], 13);
                     driverMarker.setLatLng([currentLat, currentLng]);
-                    
-                    if(mapData && mapData.length > 0) {
-                        plotBasicRoute();
-                    }
+                    if(mapData && mapData.length > 0) plotBasicRoute();
                 });
 
-                // Continuous tracking
                 navigator.geolocation.watchPosition(function(position) {
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
-                    
-                    if (driverMarker) {
-                        driverMarker.setLatLng([currentLat, currentLng]);
-                    }
-                    
-                    // Update route from new user position
-                    if(mapData && mapData.length > 0) {
-                        updateRouteLineOnly();
-                    }
-                }, function(error) {
-                    console.warn("GPS tracking error:", error);
-                }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
+                    if (driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
+                    if(mapData && mapData.length > 0) updateRouteLineOnly();
+                }, null, { enableHighAccuracy: true });
             } else {
                 if(mapData && mapData.length > 0) plotBasicRoute();
             }
             
             if(mapData && mapData.length > 0) {
-                // Determine if we should show AI widget
-                setTimeout(() => {
-                    if(mapData.length > 1) {
-                        document.getElementById('aiChatbotWidget').style.display = 'block';
-                    }
-                }, 1500);
+                plotBasicRoute();
+                setTimeout(() => { if(mapData.length > 1) $('#aiChatbotWidget').fadeIn(); }, 1500);
             } else {
-                document.getElementById('routeDistanceBadge').innerHTML = 'No Route';
-                document.getElementById('routeDistanceBadge').className = 'badge bg-secondary rounded-pill px-2 py-1';
+                $('#routeDistanceBadge').text('No Active Route').addClass('bg-soft-secondary text-secondary');
             }
         }
 
         function plotBasicRoute() {
             const destIcon = L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
                 iconSize: [25, 41],
                 iconAnchor: [12, 41]
             });
@@ -432,7 +323,7 @@
             
             mapData.forEach(dest => {
                 const marker = L.marker([dest.lat, dest.lng], { icon: destIcon }).addTo(miniMap);
-                marker.bindPopup(`<b>${dest.businessName}</b><br>${dest.poNumber}<br>${dest.address}`);
+                marker.bindPopup(`<b>${dest.businessName}</b><br>${dest.poNumber}`);
                 destMarkers.push(marker);
             });
             
@@ -448,85 +339,43 @@
         function updateRouteLineOnly() {
             const points = [[currentLat, currentLng]];
             mapData.forEach(dest => points.push([dest.lat, dest.lng]));
-            
             if (mapRouteLine) miniMap.removeLayer(mapRouteLine);
-            
-            mapRouteLine = L.polyline(points, {
-                color: '#6c757d',
-                weight: 3,
-                opacity: 0.6,
-                dashArray: '5, 5'
-            }).addTo(miniMap);
-            
-            document.getElementById('routeDistanceBadge').innerHTML = (points.length * 4.2).toFixed(1) + ' km (Est.)';
-        }
-
-        function closeAiWidget() {
-            document.getElementById('aiChatbotWidget').style.display = 'none';
+            mapRouteLine = L.polyline(points, { color: '#1a3d31', weight: 3, opacity: 0.6, dashArray: '5, 5' }).addTo(miniMap);
+            $('#routeDistanceBadge').text((points.length * 4.2).toFixed(1) + ' km (Est.)');
         }
 
         function runOptimization() {
-            document.getElementById('aiChatMessage').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Analyzing traffic and distance metrics...';
-            document.getElementById('aiChatButtons').style.display = 'none';
+            $('#aiChatMessage').html('<i class="fas fa-spinner fa-spin me-2"></i> Optimizing sequence...');
+            $('#aiChatButtons').hide();
             
-            setTimeout(() => {
-                // Simple nearest neighbor simulation
-                let unvisited = [...mapData];
-                let optimized = [];
-                let cLat = currentLat;
-                let cLng = currentLng;
-                
-                while (unvisited.length > 0) {
-                    let nearestIdx = 0;
-                    let minDist = 999999;
-                    for (let i = 0; i < unvisited.length; i++) {
-                        // Simple euclidean distance for demo
-                        let dist = Math.pow(unvisited[i].lat - cLat, 2) + Math.pow(unvisited[i].lng - cLng, 2);
-                        if (dist < minDist) {
-                            minDist = dist;
-                            nearestIdx = i;
-                        }
+            const requestData = {
+                CurrentPoints: mapData.map(d => ({ Lat: d.lat, Lng: d.lng, PoId: d.id }))
+            };
+
+            $.ajax({
+                url: '/Delivery/OptimizeRoute',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(requestData),
+                success: function(response) {
+                    if (response.success) {
+                        $('#aiChatMessage').html('✅ <b>Sequence Optimized!</b><br>Path updated for maximum efficiency.');
+                        $('#aiChatButtons').html('<button class="btn btn-sm btn-dark-green text-white rounded-pill px-4 w-100" onclick="closeAiWidget()">Excellent</button>').show();
+                        if (mapRouteLine) mapRouteLine.setStyle({ color: '#d4f06d', dashArray: null, weight: 4, opacity: 0.8 });
+                    } else {
+                        $('#aiChatMessage').html('❌ <b>Optimization Failed!</b>');
+                        $('#aiChatButtons').show();
                     }
-                    optimized.push(unvisited[nearestIdx]);
-                    cLat = unvisited[nearestIdx].lat;
-                    cLng = unvisited[nearestIdx].lng;
-                    unvisited.splice(nearestIdx, 1);
+                },
+                error: function() {
+                    $('#aiChatMessage').html('❌ <b>Connection Error!</b>');
+                    $('#aiChatButtons').show();
                 }
-                
-                // Draw optimized route
-                const points = [[currentLat, currentLng]];
-                optimized.forEach(dest => points.push([dest.lat, dest.lng]));
-                
-                if (mapRouteLine) miniMap.removeLayer(mapRouteLine);
-                
-                mapRouteLine = L.polyline(points, {
-                    color: '#0d6efd',
-                    weight: 4,
-                    opacity: 0.8,
-                    className: 'route-highlight'
-                }).addTo(miniMap);
-                
-                // Update chat
-                document.getElementById('aiChatMessage').innerHTML = '✅ <b>Route Optimized!</b><br>I have found a path that saves approximately 12 minutes of driving time. The new path is highlighted in blue.';
-                
-                // Add an apply button
-                document.getElementById('aiChatButtons').innerHTML = '<button class="btn btn-sm btn-success rounded-pill px-3 w-100" onclick="closeAiWidget()">Got it, thanks!</button>';
-                document.getElementById('aiChatButtons').style.display = 'flex';
-                
-                document.getElementById('routeDistanceBadge').innerHTML = ((points.length * 4.2) - 3.5).toFixed(1) + ' km (Optimal)';
-                document.getElementById('routeDistanceBadge').className = 'badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1';
-                
-            }, 1500);
+            });
         }
 
-        function centerMiniMap() {
-            if (miniMap && currentLat) {
-                miniMap.setView([currentLat, currentLng], 13);
-            }
-        }
+        function closeAiWidget() { $('#aiChatbotWidget').fadeOut(); }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initMiniMap();
-        });
+        $(document).ready(() => initMiniMap());
     </script>
 }

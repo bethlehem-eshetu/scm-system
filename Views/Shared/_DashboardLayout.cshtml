@@ -33,16 +33,22 @@
             --accent-color: #d4f06d;
             --accent-green: #d4f06d;
             --faint-green: #f2f6f6;
-            --sidebar-bg: #1a3d31;
+            --input-bg: #FFFFFF;
+            --hover-state: #F0F4F2;
         }
 
-        /* Dark Theme Variables */
+        /* Dark Theme Variables (Modernized Green-Dark) */
         html.dark-mode:root, body.dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg: #1e1e1e;
-            --border-color: #333333;
-            --top-nav-bg: #1e1e1e;
+            --bg-color: #0A0F0D;
+            --text-color: #EDEDED;
+            --text-muted: #B8C5BE;
+            --card-bg: #1A1F1D;
+            --border-color: #2A3530;
+            --top-nav-bg: #1A1F1D;
+            --primary-color: #3BAE86;
+            --sidebar-bg: #06261E;
+            --input-bg: #252A28;
+            --hover-state: #2A3530;
         }
 
         body {
@@ -56,24 +62,80 @@
 
         .dark-mode .card, .dark-mode .bg-white {
             background-color: var(--card-bg) !important;
-            color: var(--text-color);
-            border-color: var(--border-color);
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
         }
         
         .dark-mode .text-dark {
-            color: #ffffff !important;
+            color: var(--text-color) !important;
         }
         
-        .dark-mode .table, .dark-mode .table-hover tbody tr:hover {
+        .dark-mode .text-muted {
+            color: var(--text-muted) !important;
+        }
+        
+        .dark-mode .table {
             color: var(--text-color);
             background-color: transparent;
         }
         
-        .dark-mode .border-bottom {
-            border-bottom-color: var(--border-color) !important;
+        .dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            color: var(--text-color);
+        }
+        
+        .dark-mode .table-hover tbody tr:hover > * {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: var(--text-color);
+        }
+        
+        .dark-mode th, .dark-mode td {
+            border-color: var(--border-color);
+        }
+        
+        .dark-mode .border-bottom, .dark-mode .border {
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark-mode .bg-light {
+            background-color: var(--hover-state) !important;
+            color: var(--text-color) !important;
+        }
+        
+        .dark-mode .form-control, .dark-mode .form-select {
+            background-color: var(--input-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+        
+        .dark-mode .form-control::placeholder {
+            color: var(--text-muted) !important;
+            opacity: 1;
+        }
+        
+        .dark-mode .dropdown-menu {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+        }
+        
+        .dark-mode .dropdown-item {
+            color: var(--text-color) !important;
+        }
+        
+        .dark-mode .dropdown-item:hover {
+            background-color: var(--hover-state) !important;
+        }
+        
+        .dark-mode .dropdown-header {
+            color: var(--text-muted) !important;
+        }
+        
+        .dark-mode .dropdown-divider {
+            border-top-color: var(--border-color) !important;
         }
 
-        /* Sidebar Styling */
+        /* Premium Sidebar Styling */
         .wrapper {
             display: flex;
             width: 100%;
@@ -106,6 +168,8 @@
             background: transparent;
             text-align: left;
             border-bottom: 1px solid rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
         }
 
         .sidebar-header .brand {
@@ -134,6 +198,8 @@
             margin: 0;
             flex-grow: 1;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
         }
 
         .sidebar-menu::-webkit-scrollbar {
@@ -162,7 +228,7 @@
             font-size: 0.9rem;
             display: flex;
             align-items: center;
-            color: var(--sidebar-color);
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 12px;
@@ -203,24 +269,22 @@
             opacity: 1;
         }
 
-        .sidebar-menu li.active > a::after {
-            content: '';
-            position: absolute;
-            right: 12px;
-            width: 6px;
-            height: 6px;
-            background: var(--sidebar-active-color);
-            border-radius: 50%;
-            opacity: 0.5;
-        }
-
-
         /* User Profile in Sidebar */
         .sidebar-user {
-            padding: 1.5rem;
+            margin: 1.2rem;
+            padding: 1.2rem;
             background: rgba(0, 0, 0, 0.2);
-            border-top: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
             margin-top: auto;
+        }
+
+        .sidebar-user:hover {
+            background: rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
         }
         
         .sidebar-user .user-info {
@@ -242,6 +306,7 @@
             font-size: 1.1rem;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
 
         .sidebar-user .user-details .name {
@@ -259,9 +324,8 @@
             letter-spacing: 0.5px;
         }
 
-
         /* Content Area */
-        #content {
+        .main-content {
             width: calc(100% - var(--sidebar-width));
             min-height: 100vh;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -270,17 +334,19 @@
             right: 0;
             display: flex;
             flex-direction: column;
+            background-color: var(--bg-color);
         }
         
-        #content.active {
+        .main-content.active {
             width: 100%;
         }
 
         /* Top Navbar */
-        .top-navbar {
-            padding: 1rem 2rem;
+        .top-bar {
+            height: 70px;
+            padding: 0 24px;
             background: var(--top-nav-bg);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -307,8 +373,10 @@
         }
 
         /* Main Content Padding */
-        .main-container {
-            padding: 2rem;
+        .dashboard-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
             flex-grow: 1;
             width: 100%;
         }
@@ -339,92 +407,67 @@
             #sidebar.active {
                 margin-left: 0;
             }
-            #content {
-                width: 100% !important;
-                margin-left: 0 !important;
+            .main-content {
+                width: 100%;
             }
-            .top-navbar {
-                padding: 0.75rem 1rem;
+            .main-content.active {
+                transform: translateX(var(--sidebar-width));
             }
-            .main-container {
+            .dashboard-wrapper {
                 padding: 1rem;
             }
         }
-
-        @@media (max-width: 575.98px) {
-            .top-navbar {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            .navbar-actions {
-                width: 100%;
-                justify-content: space-between;
-                order: 2;
-                margin-top: 0.5rem;
-                padding-top: 0.5rem;
-                border-top: 1px solid var(--border-color);
-            }
-        }
-
         
-        /* Dashboard Cards & Aesthetic Utilities */
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s, box-shadow 0.2s;
+        /* Global Table Styling (Dev additions) */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-bottom: 0;
         }
-        
-        .card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        .admin-table th {
+            background: var(--faint-green);
+            color: var(--text-color);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        .upgrade-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
+        .admin-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            color: var(--text-color);
         }
-        
-        .upgrade-icon {
-            font-size: 1.5rem;
-            color: var(--sidebar-active-bg);
-        }
-        
-        .x-small { font-size: 0.7rem; }
-        .hover-white:hover { color: white !important; }
+        .dark-mode .admin-table th { background: rgba(255,255,255,0.05); }
 
-        .btn-accent-green {
-            background-color: var(--sidebar-active-bg);
-            border: none;
-            color: var(--sidebar-active-color);
-            transition: all 0.3s ease;
+        .badge-soft {
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
         }
-
-        .btn-accent-green:hover {
-            background-color: #ffffff;
-            color: var(--sidebar-active-color);
-            transform: translateY(-2px);
-        }
-
-        /* Top Navbar Refinement */
-        .search-bar-premium input:focus {
-            background-color: #ffffff !important;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-        }
+        .badge-soft-success { background: rgba(46,156,122,0.15); color: #2E9C7A; }
+        .badge-soft-warning { background: rgba(230,126,34,0.15); color: #E67E22; }
     </style>
-
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
+<body class="@(Context.Session.GetString("ThemePreference") == "Dark" ? "dark-mode" : "")">
     <div class="wrapper">
         <!-- Sidebar -->
         <nav id="sidebar">
-            <div class="sidebar-header border-0 mt-3">
-                <a href="/" class="brand d-flex align-items-center gap-3 ps-3">
-                    <div class="bg-accent-green text-dark-green rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
-                        <i class="fas fa-layer-group"></i>
+            <div class="sidebar-header">
+                <a href="/" class="brand">
+                    <div class="bg-accent-green p-2 rounded-3 text-dark-green d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-link"></i>
                     </div>
-                    <span class="fs-4 fw-bold text-white tracking-tight">SCM</span>
+                    <span>ETHIOCHAIN</span>
                 </a>
             </div>
 
@@ -432,732 +475,113 @@
                 var role = Context.Session.GetString("UserRole");
             }
 
-            <ul class="sidebar-menu">
-                @if (role != "DeliveryAgent")
-                {
-                    <li class="menu-label">Menu</li>
-                }
+            @if (role == "Supplier")
+            {
+                <partial name="_SupplierSidebar" />
+            }
+            else if (role == "Retailer")
+            {
+                <partial name="_RetailerSidebar" />
+            }
+            else if (role == "DeliveryAgent")
+            {
+                <partial name="_DeliverySidebar" />
+            }
+            else if (role == "WarehouseManager")
+            {
+                <partial name="_WarehouseSidebar" />
+            }
+            else if (role == "Admin")
+            {
+                <partial name="_AdminSidebar" />
+            }
 
-                @if (role == "Admin")
-                {
-                    <li>
-                        <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-check"></i> Verifications</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="AllUsers"><i class="fas fa-users"></i> All Users</a>
-                    </li>
-                    
-                    <li class="menu-label">Communication</li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope-open-text"></i> Message Monitoring</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="BlockedMessages"><i class="fas fa-ban"></i> Blocked Messages</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="Penalties"><i class="fas fa-gavel"></i> Penalties</a>
-                    </li>
-
-                    <li class="menu-label">Finance</li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-pie"></i> Commission Overview</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-exchange-alt"></i> Transactions</a>
-                    </li>
-
-
-                    <li class="menu-label">Report</li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-file-invoice-dollar"></i> Financial Reports</a>
-                    </li>
-
-                    <li class="menu-label">System Admin</li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-history"></i> Audit Logs</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-envelope-open-text"></i> Email Logs</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
-                    </li>
-                }
-                else if (role == "Supplier")
-                {
-                    <partial name="_SupplierSidebar" />
-                }
-                else if (role == "Retailer")
-                {
-                    <partial name="_RetailerSidebar" />
-                }
-                else if (role == "WarehouseManager")
-                {
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
-                    </li>
-                    <li class="menu-label">My Warehouse</li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Inventory"><i class="fas fa-boxes"></i> Inventory Control</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Alerts"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</a>
-                    </li>
-                    
-                    <li class="menu-label">Operations</li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="OrdersToPick"><i class="fas fa-clipboard-list"></i> Orders to Pick</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Packing"><i class="fas fa-box"></i> Packing Station</a>
-                    </li>
-
-                    <li class="menu-label">Logistics & Tracking</li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Ready"><i class="fas fa-truck-loading"></i> Ready Dispatch</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="AssignDelivery"><i class="fas fa-tasks"></i> Delivery Assignments</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="History"><i class="fas fa-history"></i> Dispatch History</a>
-                    </li>
-
-                    <li class="menu-label">Business Center</li>
-                    <li>
-                        <a asp-controller="Message" asp-action="Inbox"><i class="fas fa-comment-dots"></i> Messaging Hub</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Settings"><i class="fas fa-user-cog"></i> Account Settings</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Reports"><i class="fas fa-chart-line"></i> Performance Reports</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Warehouse" asp-action="Settings"><i class="fas fa-user-shield"></i> Security Settings</a>
-                    </li>
-                }
-                else if (role == "DeliveryAgent")
-                {
-                    <li class="menu-label">Main Menu</li>
-                    <li>
-                        <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Delivery" asp-action="MyDeliveries"><i class="fas fa-truck-loading"></i> Active Deliveries</a>
-                    </li>
-                    
-                    <li class="menu-label">Navigation</li>
-                    <li>
-                        <a asp-controller="Delivery" asp-action="RouteItinerary"><i class="fas fa-map-marked-alt"></i> Smart Route</a>
-                    </li>
-                }
-
-            </ul>
+            <div class="sidebar-user">
+                <div class="user-info">
+                    <div class="avatar">
+                        @(Context.Session.GetString("UserName")?[0].ToString() ?? "U")
+                    </div>
+                    <div class="user-details">
+                        <span class="name">@Context.Session.GetString("UserName")</span>
+                        <span class="role">@role</span>
+                    </div>
+                </div>
+            </div>
         </nav>
 
-
         <!-- Page Content -->
-        <div id="content">
-            <nav class="top-navbar">
-                <button type="button" id="sidebarCollapse" class="sidebar-toggler">
-                    <i class="fas fa-bars"></i>
-                </button>
+        <div id="content" class="main-content">
+            <!-- Top Navbar -->
+            <nav class="top-bar">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" id="sidebarCollapse" class="sidebar-toggler">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h5 class="mb-0 fw-bold d-none d-md-block">Dashboard</h5>
+                </div>
 
-                <div class="d-flex align-items-center">
-                    @if (Context.Session.GetString("UserRole") == "Admin")
-                    {
-                        <div class="dropdown me-3">
-                            <button class="btn btn-warning rounded-pill dropdown-toggle px-3 btn-sm fw-medium shadow-sm" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-bolt me-1 text-dark"></i> <span class="text-dark">Quick Actions</span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2">
-                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="PendingUsers"><i class="fas fa-user-clock me-2 text-primary"></i>User Verifications</a></li>
-                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="AllSuppliers"><i class="fas fa-building me-2 text-success"></i>All Suppliers</a></li>
-                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="AllRetailers"><i class="fas fa-store me-2 text-info"></i>All Retailers</a></li>
-                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="VerifiedSuppliers"><i class="fas fa-check-circle me-2 text-secondary"></i>Verified Suppliers</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope-open-text me-2 text-warning"></i>Message Monitoring</a></li>
-                                <li><a class="dropdown-item py-2" asp-controller="Admin" asp-action="Penalties"><i class="fas fa-gavel me-2 text-danger"></i>Penalty Management</a></li>
-                            </ul>
-                        </div>
-                    }
-                    @if (Context.Session.GetString("UserRole") == "Retailer")
-                    {
-                        <!-- Global Cart Toggle -->
-                        <button class="btn btn-light position-relative rounded-circle me-3 border-0 shadow-sm p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" id="cartToggleButton" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-shopping-cart text-primary"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="globalCartCount" style="display:none; font-size: 0.65em;">
-                                0
-                            </span>
-                        </button>
-                    }
-                    <div class="dropdown me-3">
-                        <button class="btn btn-light position-relative rounded-circle border-0 shadow-sm p-2" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-bell text-warning"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="globalNotificationCount" style="display:none; font-size: 0.65em;">0</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" aria-labelledby="notifDropdown" style="width: 340px; max-height: 420px; overflow-y: auto;" id="notifDropdownMenu">
-                            <li class="px-2 py-1 mb-1 d-flex justify-content-between align-items-center">
-                                <span class="fw-bold small">Notifications</span>
-                                <a href="/Notification/Index" class="text-dark-green fw-bold small text-decoration-none">View All</a>
-                            </li>
-                            <li><hr class="dropdown-divider my-1"></li>
-                            <div id="notifDropdownItems"><li class="text-center py-3 text-muted small"><i class="fas fa-spinner fa-spin"></i> Loading...</li></div>
-                        </ul>
-                    </div>
-
-                    <!-- User Profile in Top Bar -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Theme Toggle -->
+                    <button class="btn btn-faint-green rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" id="themeToggle">
+                        <i class="fas fa-moon text-dark-green"></i>
+                    </button>
+                    
                     <div class="dropdown">
-                        <button class="btn btn-light border-0 shadow-sm p-1 rounded-pill d-flex align-items-center gap-2 pe-3" type="button" id="userDropdown" data-bs-toggle="dropdown">
-                            <div class="avatar shadow-sm border-0 overflow-hidden d-flex align-items-center justify-content-center bg-dark-green" style="width: 34px; height: 34px; border-radius: 50%;">
-                                @{
-                                    var uName = Context.Session.GetString("UserName") ?? "User";
-                                    var profileImg = Context.Session.GetString("ProfileImg");
-                                    var finalImg = !string.IsNullOrEmpty(profileImg) ? profileImg : "/img/avatars/default.png";
-                                }
-                                <img src="@finalImg?v=@DateTime.Now.Ticks" 
-                                     class="img-fluid h-100 w-100 object-fit-cover @(string.IsNullOrEmpty(profileImg) ? "opacity-50" : "")" 
-                                     alt="User" 
-                                     onerror="this.src='/img/avatars/default.png'"/>
+                        <button class="btn btn-faint-green rounded-pill px-3 py-2 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                            <div class="bg-dark-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                                <i class="fas fa-user"></i>
                             </div>
-                            <span class="small fw-bold text-dark-green d-none d-md-inline">@uName</span>
-                            <i class="fas fa-chevron-down extra-small text-muted opacity-50"></i>
+                            <span class="small fw-bold text-dark-green">My Account</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2" aria-labelledby="userDropdown">
-                            @{
-                                string settingsController = role switch {
-                                    "Supplier" => "Supplier",
-                                    "Retailer" => "Retailer",
-                                    "WarehouseManager" => "Warehouse",
-                                    "DeliveryAgent" => "Delivery",
-                                    "Admin" => "Admin",
-                                    _ => "Account"
-                                };
-                            }
-                            <li><a class="dropdown-item py-2" asp-controller="@settingsController" asp-action="Settings"><i class="fas fa-user-cog me-2 text-dark-green"></i>Settings</a></li>
-                            <li><a class="dropdown-item py-2" asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt me-2 text-dark-green"></i>Support</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-premium p-2 mt-2">
+                            <li><a class="dropdown-item rounded-3" href="/@role/Settings"><i class="fas fa-cog me-2"></i> Settings</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item py-2 text-danger" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item rounded-3 text-danger" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>
                     </div>
                 </div>
             </nav>
 
-            <main class="main-container">
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
-                        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3">
-                        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
+            <div class="dashboard-wrapper">
                 @RenderBody()
-            </main>
+            </div>
+            
+            <footer class="bg-white border-top py-3 px-4 mt-auto">
+                <div class="container-fluid d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <p class="mb-0 small text-muted">&copy; @DateTime.Now.Year EthioChain SCM. All rights reserved.</p>
+                    <div class="d-flex gap-4">
+                        <a href="#" class="text-muted small text-decoration-none">Support</a>
+                        <a href="#" class="text-muted small text-decoration-none">Privacy Policy</a>
+                        <a href="#" class="text-muted small text-decoration-none">Terms</a>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
-    
-    <!-- Sidebar Overlay for Mobile -->
-    <div class="sidebar-overlay"></div>
 
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     
     <script>
         $(document).ready(function () {
-            $('#sidebarCollapse, .sidebar-overlay').on('click', function () {
-                $('#sidebar').toggleClass('active');
-                $('#content').toggleClass('active');
-                $('.sidebar-overlay').toggleClass('active');
+            $('#sidebarCollapse, #sidebarOverlay').on('click', function () {
+                $('#sidebar, #content, #sidebarOverlay').toggleClass('active');
             });
 
-            
-            // Highlight active menu item based on current URL path
-            var path = window.location.pathname;
-            $('.sidebar-menu li a').each(function() {
-                if ($(this).attr('href') === path || $(this).attr('href') === path + "/") {
-                    $(this).parent().addClass('active');
-                }
+            // Theme Toggle Logic
+            $('#themeToggle').on('click', function() {
+                $('html, body').toggleClass('dark-mode');
+                const isDark = $('html').hasClass('dark-mode');
+                $(this).find('i').toggleClass('fa-moon fa-sun');
+                
+                // Save preference via AJAX if needed, or just session
+                $.post('/Account/SetTheme', { theme: isDark ? 'Dark' : 'Light' });
             });
-
-            // Load Global Notifications Badge + Dropdown
-            function loadNotifications() {
-                $.get('/Notification/GetRecentJson', function(res) {
-                    if (res && res.count > 0) {
-                        $('#globalNotificationCount').text(res.count).show();
-                    } else {
-                        $('#globalNotificationCount').hide();
-                    }
-                    if (res && res.items && res.items.length > 0) {
-                        let html = '';
-                        res.items.forEach(function(n) {
-                            let url = n.actionUrl || '/Notification/Index';
-                            html += `<li>
-                                <a class="dropdown-item rounded-3 py-2 px-3 mb-1 notif-item ${n.isRead ? '' : 'bg-faint-green'}" href="${url}">
-                                    <div class="d-flex align-items-start gap-2">
-                                        <i class="fas fa-bell text-warning mt-1 flex-shrink-0"></i>
-                                        <div class="flex-grow-1 overflow-hidden">
-                                            <div class="fw-bold small text-truncate">${n.title}</div>
-                                            <div class="text-muted" style="font-size:0.75rem; white-space:normal;">${n.message}</div>
-                                        </div>
-                                    </div>
-                                </a></li>`;
-                        });
-                        $('#notifDropdownItems').html(html);
-                    } else {
-                        $('#notifDropdownItems').html('<li class="text-center py-3 text-muted small">No new notifications</li>');
-                    }
-                });
-            }
-            loadNotifications();
-            $('#notifDropdown').on('click', loadNotifications);
-            // --- Theme Init Logic ---
-            const htmlElement = document.documentElement;
-
-            // 1. Determine Initial Theme
-            // 1. Determine Initial Theme
-            // First check localStorage (client override), then fallback to server attribute (data-theme)
-            let currentTheme = localStorage.getItem('themePreference');
-            if (!currentTheme) {
-                currentTheme = htmlElement.getAttribute('data-theme') || 'light';
-            }
-
-            // Apply theme on load
-            if (currentTheme === 'dark') {
-                htmlElement.classList.add('dark-mode');
-                document.body.classList.add('dark-mode');
-            }
         });
     </script>
-    
     @await RenderSectionAsync("Scripts", required: false)
-
-    @if (Context.Session.GetString("UserRole") == "Retailer")
-    {
-        <!-- Premium Side Cart Offcanvas -->
-        <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 420px; background: #f8fafc;">
-            <div class="offcanvas-header bg-white border-bottom py-3">
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary-subtle p-2 rounded-3 me-3 text-primary">
-                        <i class="fas fa-shopping-basket fs-4"></i>
-                    </div>
-                    <div>
-                        <h5 class="offcanvas-title fw-bold mb-0" id="cartOffcanvasLabel">Your Basket</h5>
-                        <small class="text-muted" id="cartItemCountText">0 items selected</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            
-            <div class="offcanvas-body d-flex flex-column p-0">
-                <!-- Cart Items Container -->
-                <div id="cartItemsContainer" class="flex-grow-1 overflow-auto p-3">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <div class="mt-2 text-muted">Refreshing your selection...</div>
-                    </div>
-                </div>
-                
-                <!-- Financial Summary & Checkout -->
-                <div class="bg-white border-top shadow-lg p-4 mt-auto">
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Subtotal</span>
-                            <span class="fw-bold" id="cartSubtotal">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">VAT (15%)</span>
-                            <span class="fw-bold" id="cartTax">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-                            <span class="text-muted">Delivery Fee</span>
-                            <span class="fw-bold text-success" id="cartDelivery">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fs-5 fw-bold">Total</span>
-                            <span class="fs-4 fw-bold text-primary" id="cartGrandTotal">$0.00</span>
-                        </div>
-                    </div>
-                    
-                    <form asp-controller="Retailer" asp-action="Checkout" method="post" id="checkoutForm">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Delivery Destination</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-light border-0"><i class="fas fa-map-marker-alt text-primary"></i></span>
-                                <textarea name="deliveryAddress" class="form-control border-0 bg-light" rows="2" required placeholder="Enter full business address..."></textarea>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Scheduled Delivery</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-light border-0"><i class="fas fa-calendar-alt text-primary"></i></span>
-                                <input type="date" name="expectedDeliveryDate" class="form-control border-0 bg-light" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")" />
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-4 fw-bold shadow-sm mb-3 py-3" id="checkoutBtn">
-                            Proceed to Secure Payment <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
-                        
-                        <!-- Trust Badges -->
-                        <div class="text-center">
-                            <div class="d-flex justify-content-center gap-3 opacity-75 grayscale mb-2">
-                                <i class="fab fa-cc-visa fa-lg"></i>
-                                <i class="fab fa-cc-mastercard fa-lg"></i>
-                                <i class="fas fa-shield-alt fa-lg"></i>
-                            </div>
-                            <p class="text-muted mb-0" style="font-size: 0.7rem;">
-                                <i class="fas fa-lock text-success me-1"></i> Secured by EthioChain Escrow Protocol
-                            </p>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            $(document).ready(function() {
-                function loadGlobalCart() {
-                    $.get('/Retailer/GetCartJson', function(res) {
-                        if (res.success) {
-                            let count = 0;
-                            if (res.items && res.items.length > 0) {
-                                // Group items by supplier for B2B experience
-                                let grouped = {};
-                                res.items.forEach(function(item) {
-                                    count += item.quantity;
-                                    if (!grouped[item.supplierId]) {
-                                        grouped[item.supplierId] = {
-                                            name: item.supplierName,
-                                            eta: item.supplierEta,
-                                            items: []
-                                        };
-                                    }
-                                    grouped[item.supplierId].items.push(item);
-                                });
-
-                                let html = '';
-                                for (let sId in grouped) {
-                                    let group = grouped[sId];
-                                    html += `
-                                        <div class="cart-supplier-group mb-4 shadow-sm">
-                                            <div class="cart-supplier-header d-flex justify-content-between align-items-center">
-                                                <span><i class="fas fa-store me-1"></i> ${group.name}</span>
-                                                <span class="badge bg-soft-primary text-primary" style="font-size: 0.65rem;">ETA: ${group.eta}</span>
-                                            </div>`;
-                                    
-                                    group.items.forEach(function(item) {
-                                        html += `
-                                            <div class="cart-item-card mb-2 d-flex gap-3 bg-white p-2 rounded-3 border border-light" data-id="${item.id}">
-                                                <div class="cart-item-img" style="width: 70px; height: 70px; flex-shrink: 0;">
-                                                    <img src="${item.imageUrl}" class="w-100 h-100 object-fit-cover rounded-3 shadow-sm border">
-                                                </div>
-                                                <div class="flex-grow-1 min-width-0">
-                                                    <div class="d-flex justify-content-between">
-                                                        <h6 class="mb-1 fw-bold text-truncate" style="font-size: 0.9rem;">${item.productName}</h6>
-                                                        <button class="btn btn-sm text-danger p-0 btn-remove-item ms-2"><i class="fas fa-times"></i></button>
-                                                    </div>
-                                                    ${item.stockWarning ? `<div class="text-warning mb-1" style="font-size: 0.7rem;"><i class="fas fa-exclamation-circle me-1"></i>Limited Stock Left</div>` : ''}
-                                                    <div class="d-flex justify-content-between align-items-center mt-2">
-                                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">$${item.price.toFixed(2)}</div>
-                                                        <div class="qty-control d-flex align-items-center bg-light rounded-pill px-2 py-1 shadow-sm border border-light">
-                                                            <button class="btn btn-sm p-0 btn-update-qty text-muted" data-change="-1" style="width: 20px;"><i class="fas fa-minus fs-xs"></i></button>
-                                                            <input type="text" class="form-control form-control-sm text-center border-0 bg-transparent p-0 fw-bold item-qty mx-1" value="${item.quantity}" readonly style="width: 25px; font-size: 0.85rem;">
-                                                            <button class="btn btn-sm p-0 btn-update-qty text-muted" data-change="1" style="width: 20px;"><i class="fas fa-plus fs-xs"></i></button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>`;
-                                    });
-                                    html += `</div>`;
-                                }
-
-                                $('#cartItemsContainer').html(html);
-                                $('#globalCartCount').text(count).show();
-                                $('#cartItemCountText').text(count + ' item' + (count > 1 ? 's' : '') + ' selected');
-                                
-                                $('#cartSubtotal').text('$' + res.subtotal.toFixed(2));
-                                $('#cartTax').text('$' + (res.taxTotal || 0).toFixed(2));
-                                $('#cartDelivery').text('$' + (res.deliveryFee || 0).toFixed(2));
-                                
-                                let grandTotal = res.subtotal + (res.taxTotal || 0) + (res.deliveryFee || 0);
-                                $('#cartGrandTotal').text('$' + grandTotal.toFixed(2));
-                                $('#checkoutBtn').prop('disabled', false);
-                            } else {
-                                $('#cartItemsContainer').html(`
-                                    <div class="text-center py-5 mt-5 opacity-50">
-                                        <div class="mb-4">
-                                            <i class="fas fa-shopping-basket fa-5x text-muted"></i>
-                                        </div>
-                                        <h5 class="fw-bold">Your basket is empty</h5>
-                                        <p class="small px-4 text-center">Add premium products from our marketplace to begin your procurement journey.</p>
-                                    </div>
-                                `);
-                                $('#globalCartCount').hide();
-                                $('#cartItemCountText').text('0 items selected');
-                                $('#cartSubtotal').text('$0.00');
-                                $('#cartTax').text('$0.00');
-                                $('#cartDelivery').text('$0.00');
-                                $('#cartGrandTotal').text('$0.00');
-                                $('#checkoutBtn').prop('disabled', true);
-                            }
-                        }
-                    });
-                }
-
-                loadGlobalCart();
-                $('#cartToggleButton').on('click', function() {
-                    loadGlobalCart();
-                });
-
-                $(document).on('submit', '.ajax-add-to-cart', function(e) {
-                    e.preventDefault();
-                    let form = $(this);
-                    let btn = form.find('button[type="submit"]');
-                    let originalHtml = btn.html();
-                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-
-                    $.post('/Retailer/AddToCart', form.serialize(), function(res) {
-                        btn.html(originalHtml).prop('disabled', false);
-                        if (res.success) {
-                            $('#globalCartCount').text(res.cartItemCount).show();
-                            // Show success message if not in modal
-                            if (typeof bootstrap !== 'undefined') {
-                                var cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
-                                cartOffcanvas.show();
-                            }
-                            loadGlobalCart();
-                        } else {
-                            alert(res.message || 'Error adding to cart.');
-                        }
-                    }).fail(function() {
-                        btn.html(originalHtml).prop('disabled', false);
-                        alert('Error adding to cart.');
-                    });
-                });
-
-                $(document).on('click', '.btn-update-qty', function() {
-                    let btn = $(this);
-                    let itemCard = btn.closest('.cart-item');
-                    let id = itemCard.data('id');
-                    let qtyInput = itemCard.find('.item-qty');
-                    let currentQty = parseInt(qtyInput.val());
-                    let change = parseInt(btn.data('change'));
-                    let newQty = currentQty + change;
-                    
-                    if (newQty < 1) return;
-                    
-                    btn.prop('disabled', true);
-                    qtyInput.val(newQty);
-                    qtyInput.addClass('opacity-50');
-
-                    $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: newQty }, function(res) {
-                        btn.prop('disabled', false);
-                        qtyInput.removeClass('opacity-50');
-                        if (res.success) {
-                            loadGlobalCart();
-                        }
-                    }).fail(function() {
-                        btn.prop('disabled', false);
-                        qtyInput.removeClass('opacity-50').val(currentQty);
-                    });
-                });
-
-                $(document).on('click', '.btn-remove-item', function(e) {
-                    e.preventDefault();
-                    if(!confirm("Remove this item?")) return;
-                    let btn = $(this);
-                    let itemCard = btn.closest('[data-id]');
-                    let id = itemCard.data('id');
-                    
-                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-                    
-                    $.post('/Retailer/RemoveFromCart', { cartItemId: id }, function(res) {
-                        if (res.success) {
-                            loadGlobalCart();
-                        }
-                    });
-                });
-
-                // Elite Sidebar Unread Badge logic
-                function updateUnreadBadges() {
-                    $.get('/Message/GetUnreadCount', function(res) {
-                        if (res.count > 0) {
-                            $('#msgCountRetailer, #msgCountSupplier, #msgCountHub').text(res.count).show();
-                        } else {
-                            $('#msgCountRetailer, #msgCountSupplier, #msgCountHub').hide();
-                        }
-                    });
-                }
-                updateUnreadBadges();
-                setInterval(updateUnreadBadges, 30000); // Check every 30s
-            });
-        </script>
-    }
-
-    <!-- Floating Chatbot Widget -->
-    <div id="chatbot-widget" class="position-fixed shadow-lg rounded-4 d-flex flex-column" style="bottom: 80px; right: 20px; width: 350px; height: 450px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1050; display: none !important; border: 1px solid rgba(0,0,0,0.1); overflow: hidden; transform: scale(0.9); opacity: 0; transition: all 0.3s ease;">
-        <!-- Header -->
-        <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center rounded-top-4">
-            <div class="d-flex align-items-center">
-                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
-                    <i class="fas fa-robot text-primary"></i>
-                </div>
-                <div>
-                    <h6 class="mb-0 fw-bold">SCM Assistant</h6>
-                    <small class="text-white-50" style="font-size: 0.75rem;">Online</small>
-                </div>
-            </div>
-            <button class="btn btn-sm text-white border-0" id="close-chat"><i class="fas fa-times"></i></button>
-        </div>
-
-        <!-- Chat Body -->
-        <div class="flex-grow-1 p-3 overflow-auto" id="chat-body" style="background: #f8fafc;">
-            <!-- Initial Message -->
-            <div class="mb-3 d-flex">
-                <div class="bg-white p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; border-bottom-left-radius: 0 !important;">
-                    👋 Hello! I'm your SCM Assistant. How can I help you today?
-                </div>
-            </div>
-
-            <!-- Quick FAQ Options -->
-            <div class="mb-3 d-flex flex-wrap gap-2" id="chat-faq-options">
-                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I post a tender?" data-answer="To post a tender, navigate to the 'Sourcing' menu on the left and click 'Create Tender'. Fill in your required products and wait for suppliers to bid.">Post a Tender</button>
-                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I track my order?" data-answer="You can track your order in real-time by going to 'Order Tracking' under the My Purchases menu.">Track Order</button>
-                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I update inventory?" data-answer="Warehouse Managers can update inventory from the 'Inventory Control' section in the Dashboard.">Update Inventory</button>
-                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="I have a problem" data-answer="Please use the text box below to describe your issue, and it will be submitted as a support ticket to our admins.">Submit a Ticket</button>
-            </div>
-        </div>
-
-        <!-- Chat Input -->
-        <div class="p-2 border-top bg-white">
-            <form id="chat-form" class="d-flex gap-2">
-                <input type="text" id="chat-input" class="form-control form-control-sm rounded-pill" placeholder="Type feedback or a question..." required>
-                <button type="submit" class="btn btn-primary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Floating Chat Button -->
-    <button id="chatbot-toggle" class="btn btn-primary position-fixed rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1040; transition: transform 0.2s;">
-        <i class="fas fa-comment-dots fs-3"></i>
-    </button>
-
-    <script>
-        $(document).ready(function () {
-            // Toggle Chatbot
-            $('#chatbot-toggle').click(function () {
-                var widget = $('#chatbot-widget');
-                if (widget.css('display') === 'none') {
-                    widget.css('display', 'flex').hide().fadeIn(200, function() {
-                        $(this).css({ 'transform': 'scale(1)', 'opacity': '1' });
-                    });
-                    $(this).css('transform', 'scale(0.8)');
-                } else {
-                    $('#close-chat').click();
-                }
-            });
-
-            // Close Chatbot
-            $('#close-chat').click(function () {
-                $('#chatbot-widget').css({ 'transform': 'scale(0.9)', 'opacity': '0' });
-                setTimeout(() => {
-                    $('#chatbot-widget').fadeOut(200);
-                }, 200);
-                $('#chatbot-toggle').css('transform', 'scale(1)');
-            });
-
-            // Scroll to bottom helper
-            function scrollToBottom() {
-                var body = $('#chat-body');
-                body.scrollTop(body[0].scrollHeight);
-            }
-
-            // Append Message helper
-            function appendMessage(text, isUser = false) {
-                var align = isUser ? 'justify-content-end' : 'justify-content-start';
-                var bg = isUser ? 'bg-primary text-white' : 'bg-white text-dark';
-                var radius = isUser ? 'border-bottom-right-radius: 0 !important;' : 'border-bottom-left-radius: 0 !important;';
-                
-                var msgHtml = `
-                    <div class="mb-3 d-flex ${align}">
-                        <div class="${bg} p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; ${radius}">
-                            ${text}
-                        </div>
-                    </div>
-                `;
-                $('#chat-body').append(msgHtml);
-                scrollToBottom();
-            }
-
-            // FAQ Button Click
-            $('.btn-faq').click(function () {
-                var q = $(this).data('question');
-                var a = $(this).data('answer');
-                
-                appendMessage(q, true);
-                setTimeout(() => {
-                    appendMessage(a, false);
-                }, 500);
-            });
-
-            // Submit Support Ticket / Feedback
-            $('#chat-form').submit(function (e) {
-                e.preventDefault();
-                var msg = $('#chat-input').val().trim();
-                if (!msg) return;
-
-                appendMessage(msg, true);
-                $('#chat-input').val('');
-
-                // Show typing indicator
-                var typingId = 'typing-' + Date.now();
-                $('#chat-body').append(`
-                    <div id="${typingId}" class="mb-3 d-flex justify-content-start">
-                        <div class="bg-light text-muted p-2 rounded-3 shadow-sm" style="font-size: 0.8rem;">
-                            <i class="fas fa-ellipsis-h fa-fade"></i> Sending ticket...
-                        </div>
-                    </div>
-                `);
-                scrollToBottom();
-
-                // Send to backend SupportController
-                $.post('/Support/SubmitFeedback', { subject: "Chatbot Ticket", message: msg }, function(res) {
-                    $('#' + typingId).remove();
-                    if (res.success) {
-                        appendMessage("<i class='fas fa-check-circle text-success me-1'></i> " + res.message, false);
-                    } else {
-                        appendMessage("<i class='fas fa-exclamation-circle text-danger me-1'></i> " + res.message, false);
-                    }
-                }).fail(function() {
-                    $('#' + typingId).remove();
-                    appendMessage("Sorry, there was an error submitting your ticket.", false);
-                });
-            });
-        });
-    </script>
 </body>
 </html>

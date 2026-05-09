@@ -721,10 +721,14 @@ namespace SCM_System.Data
                 .HasIndex(v => v.LicensePlate)
                 .IsUnique();
 
-            // Warehouse unique constraints
+            // Warehouse unique constraints and properties
             modelBuilder.Entity<Warehouse>()
                 .HasIndex(w => w.WarehouseCode)
                 .IsUnique();
+            
+            modelBuilder.Entity<Warehouse>()
+                .Property(w => w.ReceivingAreaSizeM2)
+                .HasPrecision(18, 2);
 
             // SupplierEmployee unique constraints
             modelBuilder.Entity<SupplierEmployee>()

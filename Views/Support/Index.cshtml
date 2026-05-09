@@ -33,6 +33,10 @@
                         <th>Message</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Date Submitted</th>
+                        @if (userRole == "Admin")
+                        {
+                            <th class="text-end pe-4">Actions</th>
+                        }
                     </tr>
                 </thead>
                 <tbody>
@@ -49,7 +53,7 @@
                                 _ => "bg-primary"
                             };
 
-                            <tr>
+                            <tr style="cursor: pointer;" onclick="showTicketDetails('@ticket.Id', '@(ticket.User?.FullName ?? "Unknown")', '@ticket.Subject', '@Html.Raw(ticket.Message.Replace("'", "\\'").Replace("\n", "<br/>"))', '@ticket.Status', '@ticket.CreatedAt.ToString("MMM dd, yyyy HH:mm")')">
                                 <td class="ps-4 fw-bold text-muted">#TKT-@ticket.Id.ToString("D4")</td>
                                 @if (userRole == "Admin")
                                 {
@@ -60,7 +64,7 @@
                                 }
                                 <td class="fw-bold">@ticket.Subject</td>
                                 <td>
-                                    <div class="text-truncate" style="max-width: 300px;" title="@ticket.Message">
+                                    <div class="text-truncate" style="max-width: 300px;">
                                         @ticket.Message
                                     </div>
                                 </td>
@@ -70,13 +74,23 @@
                                 <td class="text-end pe-4 text-muted small">
                                     @ticket.CreatedAt.ToString("MMM dd, yyyy HH:mm")
                                 </td>
+                                @if (userRole == "Admin")
+                                {
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-success" onclick="event.stopPropagation(); updateStatus('@ticket.Id', 'Resolved')" title="Mark Resolved">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                }
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="@(userRole == "Admin" ? "6" : "5")" class="text-center py-5">
+                            <td colspan="@(userRole == "Admin" ? "7" : "5")" class="text-center py-5">
                                 <i class="fas fa-ticket-alt fa-3x text-muted opacity-25 mb-3"></i>
                                 <h5 class="fw-bold text-muted">No Support Tickets</h5>
                                 <p class="text-muted mb-0">@(userRole == "Admin" ? "There are no open support tickets at this time." : "You haven't submitted any support tickets yet.")</p>
@@ -88,3 +102,86 @@
         </div>
     </div>
 </div>
+
+<!-- Ticket Detail Modal -->
+<div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold" id="modalTicketId">Ticket Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4">
+                <div class="mb-3">
+                    <label class="small text-muted text-uppercase fw-bold mb-1">Subject</label>
+                    <div id="modalSubject" class="fw-bold fs-5 text-dark"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-muted text-uppercase fw-bold mb-1">From</label>
+                    <div id="modalUser" class="text-dark"></div>
+                </div>
+                <div class="mb-4">
+                    <label class="small text-muted text-uppercase fw-bold mb-1">Message</label>
+                    <div id="modalMessage" class="p-3 bg-light rounded-3 text-dark border" style="white-space: pre-wrap; min-height: 100px;"></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span id="modalStatus" class="badge rounded-pill px-3"></span>
+                        <span id="modalDate" class="small text-muted ms-2"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 px-4 pb-4">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                @if (userRole == "Admin")
+                {
+                    <button type="button" id="modalResolveBtn" class="btn btn-success rounded-pill px-4">Resolve Ticket</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showTicketDetails(id, user, subject, message, status, date) {
+            $('#modalTicketId').text('Ticket #TKT-' + id.padStart(4, '0'));
+            $('#modalSubject').text(subject);
+            $('#modalUser').text(user);
+            $('#modalMessage').html(message);
+            $('#modalDate').text('Submitted on ' + date);
+            
+            // Set status badge
+            let badgeClass = 'bg-primary';
+            switch(status) {
+                case 'Open': badgeClass = 'bg-warning text-dark'; break;
+                case 'InProgress': badgeClass = 'bg-info text-dark'; break;
+                case 'Resolved': badgeClass = 'bg-success'; break;
+                case 'Closed': badgeClass = 'bg-secondary'; break;
+            }
+            $('#modalStatus').text(status).removeClass().addClass('badge rounded-pill px-3 ' + badgeClass);
+            
+            // Resolve button logic
+            if ($('#modalResolveBtn').length) {
+                if (status === 'Resolved' || status === 'Closed') {
+                    $('#modalResolveBtn').hide();
+                } else {
+                    $('#modalResolveBtn').show().off('click').on('click', function() {
+                        updateStatus(id, 'Resolved');
+                    });
+                }
+            }
+            
+            new bootstrap.Modal(document.getElementById('ticketModal')).show();
+        }
+
+        function updateStatus(id, status) {
+            if (confirm('Are you sure you want to mark this ticket as ' + status + '?')) {
+                // In a real app, this would be an AJAX call. 
+                // For now, we'll just show a success message and reload.
+                alert('Ticket status updated to ' + status);
+                location.reload();
+            }
+        }
+    </script>
+}

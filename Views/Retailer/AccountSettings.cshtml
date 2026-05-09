@@ -8,23 +8,30 @@
 
 <div class="container-fluid py-4">
     <!-- Header & KPIs -->
-    <div class="row g-4 mb-4">
+    <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="glass-panel p-4 mb-0 position-relative overflow-hidden" style="background: var(--hero-bg);">
-                <div class="animated-bg" style="opacity: 0.05;"></div>
-                <div class="position-relative z-index-1 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+                <div class="banner-overlay"></div>
+                <div class="banner-glow"></div>
+                
+                <div class="position-relative z-index-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
-                        <h1 class="text-white mb-1 fw-bold"><i class="fas fa-store-alt me-2"></i>Control Center</h1>
-                        <p class="text-white-50 mb-0">Manage your business profile, preferences, and security</p>
+                        <h1 class="display-5 fw-bold text-white mb-2">
+                            <i class="fas fa-store-alt me-2"></i>Control <span class="text-gradient-gold">Center</span>
+                        </h1>
+                        <p class="text-white text-opacity-75 mb-0 fs-5">Manage your business profile, preferences, and security</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-glass btn-sm rounded-pill" onclick="location.reload()">
+                        <button type="button" class="btn btn-light btn-lg rounded-pill px-4 shadow-sm" onclick="location.reload()">
                             <i class="fas fa-sync-alt me-1"></i> Refresh
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    
+    <div class="row g-4 mb-4">
 
         <!-- KPI Cards -->
         <div class="col-md-3">
@@ -826,10 +833,38 @@
 }
 
 <style>
+    /* Premium Header Styles */
+    .welcome-banner {
+        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .banner-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.05; z-index: 1;
+    }
+    .banner-glow {
+        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+        filter: blur(50px); z-index: 1;
+    }
+    .text-gradient-gold {
+        background: linear-gradient(to right, #f1c40f, #f39c12);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+    .z-index-2 { z-index: 2; }
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     .w-20px { width: 20px; }
     .nav-pills .nav-link { color: #6c757d; border-radius: 12px; transition: all 0.3s; border: 1px solid transparent; }
     .nav-pills .nav-link:hover { background-color: rgba(var(--bs-primary-rgb), 0.05); color: var(--bs-primary); }
-    .nav-pills .nav-link.active { background: linear-gradient(45deg, var(--bs-primary), #4e73df); color: white; box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.3); }
+    .nav-pills .nav-link.active { background: linear-gradient(45deg, #0B3B2F, #1A4D3A); color: white; box-shadow: 0 4px 15px rgba(15, 62, 38, 0.3); }
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.3s ease; }
     .icon-shape { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
     .form-control, .form-select { border-color: #e9ecef; padding: 0.6rem 1rem; }

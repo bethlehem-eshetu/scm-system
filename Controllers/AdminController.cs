@@ -47,14 +47,17 @@ namespace SCM_System.Controllers
         {
             if (!IsAdmin())
             {
-                TempData["ErrorMessage"] = "⚠️ Please login as admin to access the dashboard.";
                 return RedirectToAction("Login", "Account");
             }
 
             var model = new AdminDashboardViewModel();
             try
             {
-                var orders = await _context.Orders.ToListAsync() ?? new List<Order>();
+                var orders = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(i => i.Product)
+                            .ThenInclude(p => p.Category)
+                    .ToListAsync() ?? new List<Order>();
                 var suppliers = await _context.Suppliers.ToListAsync() ?? new List<Supplier>();
                 var retailers = await _context.Retailers.Include(r => r.User).ToListAsync() ?? new List<Retailer>();
                 var products = await _context.Products.ToListAsync() ?? new List<Product>();
@@ -95,6 +98,62 @@ namespace SCM_System.Controllers
 
                 ViewBag.TotalProducts = model.TotalProducts;
                 ViewBag.TotalRevenue = model.TotalRevenue;
+                ViewBag.TotalOrders = model.TotalOrders;
+                ViewBag.ActiveSuppliers = model.TotalSuppliers;
+                ViewBag.ActiveRetailers = model.TotalRetailers;
+                ViewBag.PendingSuppliersCount = model.PendingSuppliersCount;
+                ViewBag.PendingRetailersCount = model.PendingRetailersCount;
+
+                // Dummy growth values matching mockup (can be replaced with real calc later)
+                ViewBag.OrderGrowth = 12;
+                ViewBag.RevenueGrowth = 8;
+                ViewBag.SupplierGrowth = model.PendingSuppliersCount + " pending";
+                ViewBag.RetailerGrowth = "1 new";
+
+                // --- Chart Data Logic (30 Day Trend) ---
+                var now = DateTime.Today;
+                var last30Days = Enumerable.Range(0, 30)
+                    .Select(i => now.AddDays(-i))
+                    .OrderBy(d => d)
+                    .ToList();
+
+                var dailyRevenue = last30Days.Select(date => 
+                    commissions.Where(c => c.CreatedAt.Date == date.Date && (c.Status == "Paid" || c.Status == "Success" || c.Status == "OperationComplete"))
+                              .Sum(c => c.CommissionAmount)
+                ).ToList();
+
+                var dailyOrders = last30Days.Select(date => 
+                    orders.Count(o => o.CreatedAt.Date == date.Date)
+                ).ToList();
+
+                ViewBag.Last30DaysLabels = last30Days.Select(d => d.ToString("MMM dd")).ToArray();
+                ViewBag.RevenueData = dailyRevenue.ToArray();
+                ViewBag.OrderData = dailyOrders.ToArray();
+
+                // --- Category Data (Top 5) ---
+                var topCategories = orders
+                    .SelectMany(o => o.OrderItems)
+                    .GroupBy(i => i.Product?.Category?.CategoryName ?? "Uncategorized")
+                    .OrderByDescending(g => g.Count())
+                    .Take(5)
+                    .Select(g => new { 
+                        Name = g.Key, 
+                        Percentage = orders.SelectMany(o => o.OrderItems).Count() > 0 
+                            ? (int)((double)g.Count() / orders.SelectMany(o => o.OrderItems).Count() * 100) 
+                            : 0 
+                    })
+                    .ToList();
+
+                ViewBag.CategoryLabels = topCategories.Select(c => c.Name).ToArray();
+                ViewBag.CategoryData = topCategories.Select(c => c.Percentage).ToArray();
+
+                // --- Recent Suppliers (Last 5 with status) ---
+                ViewBag.RecentSuppliers = suppliers.OrderByDescending(s => s.CreatedAt).Take(5).Select(s => new {
+                    s.CompanyName,
+                    Status = s.VerificationStatus ?? "Pending",
+                    s.CreatedAt
+                }).ToList();
+
 
                 return View(model);
             }
@@ -110,6 +169,36 @@ namespace SCM_System.Controllers
 
                 return View(new AdminDashboardViewModel());
             }
+        }
+
+        // GET: /Admin/GetDashboardStats (AJAX for Dynamic Chart)
+        [HttpGet]
+        public async Task<IActionResult> GetDashboardStats(int range = 7)
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var now = DateTime.Today;
+            var dates = Enumerable.Range(0, range)
+                .Select(i => now.AddDays(-i))
+                .OrderBy(d => d)
+                .ToList();
+
+            var orders = await _context.Orders
+                .Where(o => o.CreatedAt >= now.AddDays(-range))
+                .ToListAsync();
+
+            var commissions = await _context.Commissions
+                .Where(c => c.CreatedAt >= now.AddDays(-range) && (c.Status == "Paid" || c.Status == "Success" || c.Status == "OperationComplete"))
+                .ToListAsync();
+
+            var data = dates.Select(date => new
+            {
+                date = date.ToString("yyyy-MM-dd"),
+                orders = orders.Count(o => o.CreatedAt.Date == date.Date),
+                revenue = commissions.Where(c => c.CreatedAt.Date == date.Date).Sum(c => c.CommissionAmount)
+            });
+
+            return Json(data);
         }
 
         // GET: /Admin/PendingSuppliers
@@ -296,7 +385,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -391,7 +480,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -490,7 +579,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -599,7 +688,7 @@ namespace SCM_System.Controllers
                         Type = "Info",
                         IsRead = false,
                         CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingSuppliers"
+                        ActionUrl = "/Admin/PendingUsers"
                     };
                     _context.Notifications.Add(adminNotification);
                 }
@@ -795,6 +884,74 @@ namespace SCM_System.Controllers
             return RedirectToAction("PendingUsers");
         }
 
+        // POST: /Admin/RejectApplication (JSON Endpoint for Generic Rejections)
+        [HttpPost]
+        [Route("Admin/RejectApplication")]
+        public async Task<IActionResult> RejectApplication([FromBody] RejectRequest request)
+        {
+            try
+            {
+                if (!IsAdmin()) return Unauthorized(new { message = "Unauthorized access." });
+
+                if (string.IsNullOrWhiteSpace(request.RejectionReason))
+                {
+                    return BadRequest(new { message = "Rejection reason is required." });
+                }
+
+                // Check for user
+                var user = await _context.Users.FindAsync(request.UserId);
+                
+                if (user == null)
+                {
+                    return NotFound(new { message = $"{request.UserType} not found." });
+                }
+
+                user.IsApproved = false;
+                user.AccountStatus = "Rejected";
+                user.RejectionReason = request.RejectionReason;
+                user.ApprovalStatus = "Rejected";
+                user.ApprovalStatusType = "Rejected";
+                user.ApprovalStatusMessage = $"Your account was rejected. Reason: {request.RejectionReason}";
+
+                // Update associated roles
+                if (user.Role == "Supplier")
+                {
+                    var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == user.Id);
+                    if (supplier != null) supplier.VerificationStatus = "Rejected";
+                }
+                else if (user.Role == "Retailer")
+                {
+                    var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == user.Id);
+                    if (retailer != null) retailer.IsVerified = false;
+                }
+
+                // Log audit
+                await LogAudit(user.Id, "Rejected", request.RejectionReason);
+
+                await _context.SaveChangesAsync();
+
+                // Send Email if requested
+                if (request.SendEmail)
+                {
+                    try
+                    {
+                        await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, request.UserType ?? user.Role, request.RejectionReason);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send rejection email to {Email}", user.Email);
+                    }
+                }
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing generic rejection modal for ID: {UserId}", request.UserId);
+                return StatusCode(500, new { message = "An internal error occurred." });
+            }
+        }
+
         private async Task LogAudit(int targetUserId, string action, string? reason)
         {
             try
@@ -965,6 +1122,235 @@ namespace SCM_System.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SuspendUser([FromBody] SuspendUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Suspended";
+                user.RejectionReason = request.Reason; // Reuse field for suspension reason
+                
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "🔒 Account Suspended",
+                    Message = $"Your account has been suspended. Reason: {request.Reason}",
+                    Type = "Warning",
+                    CreatedAt = DateTime.Now
+                });
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyUser([FromBody] VerifyUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Active";
+                user.IsApproved = true;
+                user.IsFaydaVerified = true;
+                user.FaydaStatus = "Verified";
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "✅ Account Verified",
+                    Message = "Your account has been verified by an administrator.",
+                    Type = "Success",
+                    CreatedAt = DateTime.Now,
+                    ActionUrl = "/Dashboard"
+                });
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectUser([FromBody] RejectUserRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var user = await _context.Users.FindAsync(request.UserId);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+
+                user.AccountStatus = "Rejected";
+                user.RejectionReason = request.Reason;
+
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = "❌ Account Rejected",
+                    Message = $"Your account application was rejected. Reason: {request.Reason}",
+                    Type = "Error",
+                    CreatedAt = DateTime.Now
+                });
+
+                if (request.SendEmail)
+                {
+                    await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, user.Role, request.Reason);
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> BulkVerifyUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Active";
+                    user.IsApproved = true;
+                    user.IsFaydaVerified = true;
+                    user.FaydaStatus = "Verified";
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkSuspendUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Suspended";
+                    user.RejectionReason = request.Reason;
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkRejectUsers([FromBody] BulkActionRequest request)
+        {
+            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            try
+            {
+                var users = await _context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync();
+                foreach (var user in users)
+                {
+                    user.AccountStatus = "Rejected";
+                    user.RejectionReason = request.Reason;
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, count = users.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsersPaginated(int page = 1, int pageSize = 10, string searchTerm = "", string role = "All", string status = "All")
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(u => u.FullName.Contains(searchTerm) || u.Email.Contains(searchTerm) || u.Id.ToString() == searchTerm);
+            }
+
+            if (role != "All")
+            {
+                query = query.Where(u => u.Role == role);
+            }
+
+            if (status != "All")
+            {
+                query = query.Where(u => u.AccountStatus == status);
+            }
+
+            var totalCount = await query.CountAsync();
+            var users = await query
+                .OrderByDescending(u => u.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new {
+                    u.Id,
+                    u.FullName,
+                    u.Email,
+                    u.Role,
+                    u.AccountStatus,
+                    LastActive = u.LastLoginAt != null ? u.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never",
+                    CreatedAt = u.CreatedAt.ToString("yyyy-MM-dd")
+                })
+                .ToListAsync();
+
+            return Json(new { totalCount, users });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportUsers(string format = "csv")
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            var users = await _context.Users.OrderBy(u => u.CreatedAt).ToListAsync();
+            
+            var csv = new StringBuilder();
+            csv.AppendLine("ID,FullName,Email,Role,Status,LastActive,CreatedAt");
+            foreach (var u in users)
+            {
+                csv.AppendLine($"{u.Id},\"{u.FullName}\",{u.Email},{u.Role},{u.AccountStatus},{(u.LastLoginAt.HasValue ? u.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm") : "Never")},{u.CreatedAt:yyyy-MM-dd HH:mm}");
+            }
+            
+            byte[] buffer = Encoding.UTF8.GetBytes(csv.ToString());
+            return File(buffer, "text/csv", $"SCM_Users_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv");
+        }
+
         // GET: /Admin/AllSuppliers
         public async Task<IActionResult> AllSuppliers()
         {
@@ -994,12 +1380,12 @@ namespace SCM_System.Controllers
                 .Include(s => s.Products)
                 .Include(s => s.PurchaseOrders)
                     .ThenInclude(po => po.PurchaseOrderItems)
-                .Include(s => s.Tenders)
+                .Include(s => s.TenderBids)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (supplier == null)
             {
-                return NotFound();
+                return View((SCM_System.Models.Entities.Supplier)null);
             }
 
             return View(supplier);
@@ -1022,7 +1408,7 @@ namespace SCM_System.Controllers
 
             if (retailer == null)
             {
-                return NotFound();
+                return View((SCM_System.Models.Entities.Retailer)null);
             }
 
             return View(retailer);
@@ -2547,5 +2933,14 @@ namespace SCM_System.Controllers
             TempData["SuccessMessage"] = $"Fayda identity for {user.FullName} has been rejected.";
             return RedirectToAction("AllUsers");
         }
+    }
+
+    public class RejectRequest
+    {
+        public int UserId { get; set; }
+        public string UserType { get; set; }
+        public string RejectionReason { get; set; }
+        public string AdditionalComments { get; set; }
+        public bool SendEmail { get; set; }
     }
 }

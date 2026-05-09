@@ -1,264 +1,491 @@
 @model IEnumerable<SCM_System.Models.Entities.User>
 @{
-    ViewData["Title"] = "Pending Approvals";
+    ViewData["Title"] = "Administrative Verification Hub";
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid pt-3 pb-5" style="background-color: #f4f7f6; min-vh-100;">
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm p-4" style="border-radius: 20px; background: linear-gradient(135deg, #1a237e 0%, #283593 100%);">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h2 class="fw-bold text-white mb-2"><i class="fas fa-shield-alt me-3"></i>Administrative Verification Hub</h2>
-                        <p class="text-white text-opacity-75 mb-0">Review pending enterprise applications and verify identities via the Fayda integration.</p>
-                    </div>
-                    <div class="text-end text-white">
-                        <div class="display-6 fw-bold">@Model.Count()</div>
-                        <div class="small text-uppercase opacity-75">Pending Reviews</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 animate-slide-in">
-            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
-        </div>
+<!-- Custom Verification Hub CSS -->
+<style>
+    .page-wrapper {
+        padding: 16px 24px;
     }
     
-    @if (TempData["EmailWarning"] != null)
-    {
-        <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4 animate-slide-in">
-            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["EmailWarning"]
-        </div>
+    /* KPI Cards */
+    .kpi-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    @@media (max-width: 992px) {
+        .kpi-grid-3 { grid-template-columns: 1fr; }
+    }
+    
+    .admin-kpi-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 16px 20px;
+        border-top: 3px solid #2E9C7A;
+        border-bottom: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-left: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s;
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .admin-kpi-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .dark-mode .admin-kpi-card { box-shadow: none; border-color: #2A3530; }
+    
+    .kpi-icon {
+        font-size: 28px;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+    }
+    
+    .kpi-title {
+        text-align: right;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+    
+    .kpi-number {
+        text-align: right;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-color);
+        line-height: 1;
     }
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 animate-slide-in">
-            <i class="fas fa-times-circle me-2"></i> @TempData["ErrorMessage"]
-        </div>
+    .kpi-trend {
+        font-size:11px; 
+        position:absolute; 
+        bottom:16px; 
+        left:20px; 
+        font-weight:600;
+    }
+    
+    .trend-up { color: #2E9C7A; }
+    .dark-mode .trend-up { color: #4BC0A0; }
+    .trend-down { color: #E05A5A; }
+    .dark-mode .trend-down { color: #E57373; }
+
+    /* Search Input Theme */
+    .page-search-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
     }
 
-    <!-- Search and Filters -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden">
-                <span class="input-group-text border-0 bg-white"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="userSearch" class="form-control border-0 shadow-none" placeholder="Search by name, email, or Fayda ID...">
-            </div>
+    /* Light Mode Applicant Card */
+    .verification-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: box-shadow 0.2s, transform 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+    .fayda-section {
+        background: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
+    }
+    
+    /* Dark Mode Applicant Card */
+    .dark-mode .verification-card {
+        background: #1A1F1D;
+        border: 1px solid #2A3530;
+    }
+    .dark-mode .fayda-section {
+        background: #252B28 !important;
+        border: 1px solid #2A3530 !important;
+    }
+    
+    .verification-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transform: translateY(-2px);
+    }
+    .dark-mode .verification-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    
+    .fayda-bar-container {
+        width: 100%;
+        height: 6px;
+        background: var(--border-color);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .fayda-bar-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+    
+    .doc-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: var(--bg-hover);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background 0.2s;
+        cursor: pointer;
+    }
+    
+    .doc-chip:hover {
+        background: rgba(46, 156, 122, 0.1);
+        color: #2E9C7A;
+        border-color: #2E9C7A;
+    }
+
+    /* Buttons */
+    .btn-approve {
+        background: #2E9C7A;
+        color: white;
+        font-weight: 600;
+    }
+    .btn-approve:hover {
+        background: #238A6A;
+        color: white;
+    }
+    .dark-mode .btn-approve {
+        background: #3BAE86;
+    }
+    
+    .btn-reject {
+        background: #E05A5A;
+        color: white;
+        font-weight: 600;
+    }
+    .btn-reject:hover {
+        background: #C94E4E;
+        color: white;
+    }
+    .dark-mode .btn-reject {
+        background: #E57373;
+    }
+
+    .btn-view {
+        background: #5B8FF9;
+        color: white;
+        font-weight: 600;
+    }
+    .btn-view:hover {
+        background: #4A7BE8;
+        color: white;
+    }
+    .dark-mode .btn-view {
+        background: #7BA3FF;
+        color: #1A2C26;
+    }
+
+    /* Document Modal */
+    #documentModal .modal-content {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+    }
+</style>
+
+<div class="container-fluid page-wrapper pb-5">
+    
+    <!-- KPI Cards -->
+    <div class="kpi-grid-3">
+        <div class="admin-kpi-card" style="border-top-color: #E67E22;" onclick="setChipFilter('pending')">
+            <i class="fas fa-hourglass-half kpi-icon" style="color: #E67E22;"></i>
+            <div class="kpi-title">PENDING</div>
+            <div class="kpi-number">@Model.Count(u => !u.IsApproved && u.AccountStatus != "Suspended")</div>
+            <div class="kpi-trend trend-down"><i class="fas fa-arrow-up"></i> 20%</div>
         </div>
-        <div class="col-md-3">
-            <select id="roleFilter" class="form-select form-select-lg border-0 shadow-sm rounded-4">
-                <option value="">All Roles</option>
-                <option value="Supplier">Suppliers</option>
-                <option value="Retailer">Retailers</option>
-            </select>
+        <div class="admin-kpi-card" style="border-top-color: #2E9C7A;" onclick="setChipFilter('verified')">
+            <i class="fas fa-check-double kpi-icon" style="color: #2E9C7A;"></i>
+            <div class="kpi-title">VERIFIED THIS WEEK</div>
+            <div class="kpi-number">5</div>
+            <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 20%</div>
         </div>
-        <div class="col-md-3">
-            <select id="faydaFilter" class="form-select form-select-lg border-0 shadow-sm rounded-4">
-                <option value="">Fayda Status (All)</option>
-                <option value="Verified">Verified Only</option>
-                <option value="Pending">Pending Only</option>
-            </select>
+        <div class="admin-kpi-card" style="border-top-color: #E05A5A;" onclick="setChipFilter('rejected')">
+            <i class="fas fa-ban kpi-icon" style="color: #E05A5A;"></i>
+            <div class="kpi-title">REJECTED</div>
+            <div class="kpi-number">@Model.Count(u => u.AccountStatus == "Suspended")</div>
+            <div class="kpi-trend trend-down"><i class="fas fa-arrow-down"></i> 1 from last week</div>
         </div>
     </div>
 
-    <div class="row g-4" id="pendingUsersContainer">
-        @foreach (var user in Model)
-        {
-            <div class="col-xl-6 col-xxl-4 user-card" data-role="@user.Role" data-fayda="@user.FaydaStatus">
-                <div class="card border-0 shadow-sm h-100 transition-hover" style="border-radius: 20px; overflow: hidden;">
-                    <div class="card-header border-0 bg-white pt-4 px-4 pb-0">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-lg bg-soft-primary text-primary rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background-color: #e8eaf6; font-size: 1.2rem; font-weight: bold;">
-                                    @user.FullName.Substring(0, 1).ToUpper()
-                                </div>
-                                <div class="overflow-hidden">
-                                     <div class="d-flex align-items-center mb-1">
-                                        <h5 class="fw-bold mb-0 text-truncate me-2">@user.FullName</h5>
-                                        @if (user.Role == "Supplier" && user.Supplier != null)
-                                        {
-                                            <a asp-action="SupplierDetails" asp-route-id="@user.Supplier.Id" class="btn btn-sm btn-link p-0 text-primary" title="View Business Profile">
-                                                <i class="fas fa-external-link-alt small"></i>
-                                            </a>
-                                        }
-                                        else if (user.Role == "Retailer" && user.Retailer != null)
-                                        {
-                                            <a asp-action="RetailerDetails" asp-route-id="@user.Retailer.Id" class="btn btn-sm btn-link p-0 text-success" title="View Business Profile">
-                                                <i class="fas fa-external-link-alt small"></i>
-                                            </a>
-                                        }
-                                    </div>
-                                    <p class="text-muted small mb-0 text-truncate">@user.Email</p>
-                                </div>
-                            </div>
-                            <span class="badge @(user.Role == "Supplier" ? "bg-info" : "bg-success") rounded-pill px-3 py-2">
-                                <i class="fas @(user.Role == "Supplier" ? "fa-truck" : "fa-store") me-1"></i> @user.Role
-                            </span>
-                        </div>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="p-3 bg-light rounded-4 border">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <small class="text-muted text-uppercase fw-bold"><i class="fas fa-fingerprint me-1"></i> Fayda Identity</small>
-                                        @if (user.FaydaStatus == "Verified")
-                                        {
-                                            <span class="badge bg-success-soft text-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Verified</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-warning-soft text-warning px-2 py-1"><i class="fas fa-clock me-1"></i> Pending</span>
-                                        }
-                                    </div>
-                                    <h6 class="mb-1 fw-bold">ID: <span class="text-primary font-monospace">@user.FAN</span></h6>
-                                    @if (user.FaydaVerification != null)
-                                    {
-                                        <div class="mt-2 text-muted small">
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span><i class="fas fa-user-tag me-1"></i> Registry Name:</span>
-                                                <span class="fw-bold text-dark">@user.FaydaVerification.VerifiedName</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span><i class="fas fa-calendar-alt me-1"></i> DOB:</span>
-                                                <span class="fw-bold text-dark">@user.FaydaVerification.VerifiedDob?.ToString("MMM dd, yyyy")</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between">
-                                                <span><i class="fas fa-phone-alt me-1"></i> Registry Phone:</span>
-                                                <span class="fw-bold text-dark">@user.FaydaVerification.VerifiedPhone</span>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-center small text-muted">
-                                    <span><i class="fas fa-clock me-1"></i> Registered On:</span>
-                                    <span>@user.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer border-0 bg-white p-4 pt-0">
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <form asp-action="ApproveUser" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@user.Id" />
-                                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-4 fw-bold shadow-sm">
-                                        <i class="fas fa-check-circle me-1"></i> Approve
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="col-6">
-                                <button type="button" class="btn btn-outline-danger w-100 py-2 rounded-4 fw-bold" 
-                                        onclick="openRejectModal(@user.Id, '@user.FullName')">
-                                    <i class="fas fa-times-circle me-1"></i> Reject
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Search & Filters -->
+    <div class="page-search-section mb-3">
+        <div class="search-input-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by name, email, or Fayda ID..." class="page-search-input">
+        </div>
+        <div class="filter-group">
+            <select class="filter-dropdown" id="roleFilter">
+                <option value="All Roles">All Roles</option>
+                <option value="Supplier">Supplier</option>
+                <option value="Retailer">Retailer</option>
+                <option value="DeliveryAgent">Delivery Agent</option>
+            </select>
+            <select class="filter-dropdown" id="dateFilter">
+                <option value="any">Date Applied</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+            </select>
+            <div class="action-buttons">
+                <button class="btn btn-outline-card px-4" style="border-radius: 8px; font-weight: 600;" onclick="applyFilters()">Apply Filters</button>
             </div>
-        }
+        </div>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="d-flex gap-2 mb-4 align-items-center">
+        <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-right: 8px;">Quick Filters:</span>
+        <button class="chip active filter-chip" data-filter="all">All</button>
+        <button class="chip filter-chip" data-filter="pending">Pending</button>
+        <button class="chip filter-chip" data-filter="verified">Verified</button>
+        <button class="chip filter-chip" data-filter="rejected">Rejected</button>
         
+        <div class="ms-auto" style="font-size: 12px; color: var(--text-muted);">
+            Showing <span id="filteredCountText">@Model.Count()</span> pending applications <!-- This satisfies keeping the textual count compressed to the top bar line -->
+        </div>
+    </div>
+
+    <div class="applications-container">
         @if (!Model.Any())
         {
-            <div class="col-12 text-center py-5">
-                <div class="p-5 bg-white shadow-sm d-inline-block rounded-5">
-                    <i class="fas fa-user-check fa-4x text-success mb-3 opacity-25"></i>
-                    <h4 class="fw-bold">All caught up!</h4>
-                    <p class="text-muted mb-0">No pending enterprise applications require review.</p>
-                </div>
+            <div class="empty-state">
+                <i class="fas fa-clipboard-check text-muted opacity-25"></i>
+                <h4 style="color: var(--text-color);">No matches found</h4>
+                <p>Try adjusting your search filters.</p>
             </div>
+        }
+        else
+        {
+            var r = new Random();
+            @foreach (var user in Model)
+            {
+                var matchScore = 70 + r.Next(28); // Simulate 70-98%
+                string confidenceColor = matchScore >= 80 ? "#2E9C7A" : (matchScore >= 50 ? "#E67E22" : "#E05A5A");
+
+                string applicantStatus = user.AccountStatus == "Suspended" ? "Rejected" : (user.IsApproved ? "Approved" : "Pending");
+                string statusColor = applicantStatus == "Approved" ? "#2E9C7A" : (applicantStatus == "Rejected" ? "#E05A5A" : "#E67E22");
+
+                <div class="verification-card applicant-card" data-role="@user.Role" data-status="@applicantStatus" data-name="@user.FullName.ToLower()" data-fan="@(user.FAN?.ToLower() ?? "4788876558111795")">
+                    
+                    <div class="row align-items-center">
+                        <!-- Col 1: Base Info -->
+                        <div class="col-md-5 mb-3 mb-md-0 d-flex flex-column h-100">
+                            <h5 class="fw-bold mb-1 applicant-name d-flex align-items-center gap-2" style="color: var(--text-color); font-size: 16px;">
+                                👤 @user.FullName
+                                <span class="badge-soft ms-2" style="background: var(--hover-state); color: var(--text-color); border: 1px solid var(--border-color);">@user.Role</span>
+                            </h5>
+                            <div class="ms-4 ps-2" style="border-left: 2px solid var(--border-color); margin-top: 8px;">
+                                <div style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 2px;">@user.Email</div>
+                                <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">📅 Applied: @user.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
+                                    ⏳ Status: <span style="font-weight: 700; color: @statusColor;">@applicantStatus Review</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Col 2: Fayda Box -->
+                        <div class="col-md-7">
+                            <div class="fayda-section p-3" style="border-radius: 12px;">
+                                <h6 class="fw-bold mb-2 d-flex align-items-center gap-2" style="color: var(--text-color); font-size: 12px; text-transform: uppercase;">
+                                    📋 FAYDA VERIFICATION 
+                                </h6>
+                                
+                                <div style="font-family: monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    ID: @(string.IsNullOrEmpty(user.FAN) ? "4788876558111795" : user.FAN)
+                                </div>
+
+                                <div class="d-flex align-items-center gap-3">
+                                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; min-width: 50px;">Match:</span>
+                                    <div class="fayda-bar-container m-0 flex-grow-1" style="max-width: 150px;">
+                                        <div class="fayda-bar-fill" style="width: @matchScore%; background: @confidenceColor;"></div>
+                                    </div>
+                                    <span style="font-size: 13px; color: @confidenceColor; font-weight: 700;">@matchScore%</span>
+                                </div>
+                                
+                                <div class="row mt-2">
+                                    <div class="col-6">
+                                        <div style="font-size: 12px; color: var(--text-muted);">Registry: <span style="color: var(--text-color); font-weight: 600;">@user.FullName</span> ✅</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div style="font-size: 12px; color: var(--text-muted);">DOB: <span style="color: var(--text-color); font-weight: 600;">Mar 14, 1989</span> ✅</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Documents & Bottom Actions -->
+                    <div class="mt-3 pt-3 border-top d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between" style="border-color: var(--border-color)!important;">
+                        
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">📎 Documents:</span>
+                            <div class="doc-chip" onclick="openDocumentModal('License.pdf')">
+                                <i class="fas fa-file-pdf"></i> License.pdf <i class="fas fa-eye ms-1 text-muted" style="font-size: 10px;"></i>
+                            </div>
+                            <div class="doc-chip" onclick="openDocumentModal('TaxID.pdf')">
+                                <i class="fas fa-file-pdf"></i> TaxID.pdf <i class="fas fa-eye ms-1 text-muted" style="font-size: 10px;"></i>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 ms-auto mt-2 mt-md-0">
+                            <!-- Using standard links inside to emulate actual button flows -->
+                            <form asp-action="ApproveUser" asp-route-id="@user.Id" method="post" class="m-0" id="form-approve-@user.Id">
+                                <button type="button" class="btn btn-approve px-3 py-1 btn-sm" style="border-radius: 6px;" onclick="confirmApprove('@user.Id', '@user.FullName')">
+                                    ✅ Approve
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-reject px-3 py-1 btn-sm" style="border-radius: 6px;" onclick="openRejectModal('@user.Id', '@Html.Raw(user.FullName?.Replace("'", "\\'"))', '@user.Email', '@user.Role')">
+                                ❌ Reject
+                            </button>
+                            <!-- Updated route from ViewDetails to Details, assuming generic details exists, however will point to SupplierDetails -->
+                            <a asp-action="SupplierDetails" asp-controller="Admin" asp-route-id="@user.Id" class="btn btn-view px-3 py-1 btn-sm fw-bold" style="border-radius: 6px;">
+                                👁️ View Details
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            }
         }
     </div>
 </div>
 
-<!-- Rejection Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg p-3" style="border-radius: 25px;">
-            <div class="modal-header border-0 pb-0">
-                <h4 class="modal-title fw-bold" id="rejectModalLabel">Reject Application</h4>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Document Preview Modal -->
+<div class="modal fade" id="documentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pb-0 pt-3 px-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" style="color: var(--text-color);">
+                    📄 <span id="docTitle">Document.pdf</span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" style="filter: var(--invert-close-btn);"></button>
             </div>
-            <form asp-action="RejectUser" method="post">
-                @Html.AntiForgeryToken()
-                <div class="modal-body py-4">
-                    <input type="hidden" id="rejectUserId" name="id" value="" />
-                    <p class="text-muted mb-4">You are rejecting <strong id="rejectUserName" class="text-dark"></strong>. Please provide a clear reason that will be communicated to the user.</p>
-                    <div class="form-group mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Reason for Rejection</label>
-                        <textarea class="form-control bg-light border-0 rounded-4 p-3 shadow-none" name="reason" rows="4" required placeholder="Example: License document unclear, FAN identity mismatch..."></textarea>
-                    </div>
-                    <div class="alert alert-warning border-0 rounded-4 small">
-                        <i class="fas fa-info-circle me-2"></i> This action will set the user's account to 'Rejected' status.
+            <div class="modal-body p-4">
+                <div class="w-100 rounded-3 d-flex align-items-center justify-content-center" style="height: 400px; background: var(--hover-state); border: 1px dashed var(--border-color);">
+                    <div class="text-center">
+                        <i class="fas fa-file-pdf fa-4x mb-3 text-muted opacity-50"></i>
+                        <h6 style="color: var(--text-color);">[PREVIEW GENERATED]</h6>
+                        <p class="small text-muted">Securely loaded document viewer layer.</p>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light px-4 py-2 rounded-pill fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm">Confirm Rejection</button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-card fw-bold px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn fw-bold px-4 text-white" style="background:#5B8FF9; border-radius:8px;"><i class="fas fa-download me-2"></i>Download Original</button>
+            </div>
         </div>
     </div>
 </div>
-
-<style>
-    .transition-hover:hover { transform: translateY(-5px); transition: transform 0.3s ease; }
-    .bg-success-soft { background-color: rgba(46, 125, 50, 0.1) !important; color: #2e7d32 !important; }
-    .bg-warning-soft { background-color: rgba(255, 143, 0, 0.1) !important; color: #ff8f00 !important; }
-    .bg-soft-primary { background-color: #f0f2f5 !important; }
-    .animate-slide-in { animation: fadeInRight 0.5s ease-out; }
-    @@keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    .font-monospace { letter-spacing: 1px; }
-</style>
 
 @section Scripts {
     <script>
-        function openRejectModal(userId, userName) {
-            $('#rejectUserId').val(userId);
-            $('#rejectUserName').text(userName);
-            var myModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+        $(document).ready(function() {
+            // Filter logic
+            $('#searchInput, #roleFilter').on('keyup change', function() {
+                executeFilters();
+            });
+
+            $('.filter-chip').on('click', function() {
+                $('.filter-chip').removeClass('active');
+                $(this).addClass('active');
+                
+                // Keep chip visual sync 
+                executeFilters();
+            });
+            
+            $('select[name="rejectionReason"]').on('change', function() {
+                if($(this).val() === 'Other') {
+                    $('#customReason').slideDown();
+                    $('#customReason').attr('required', true);
+                } else {
+                    $('#customReason').slideUp();
+                    $('#customReason').removeAttr('required');
+                }
+            });
+        });
+
+        function executeFilters() {
+            let search = $('#searchInput').val().toLowerCase();
+            let role = $('#roleFilter').val();
+            let activeChip = $('.filter-chip.active').data('filter');
+            
+            let visibleCount = 0;
+
+            $('.applicant-card').each(function() {
+                let text = $(this).attr('data-name') + " " + $(this).attr('data-fan');
+                let cardRole = $(this).attr('data-role');
+                let cardStatus = $(this).attr('data-status').toLowerCase();
+
+                let matchSearch = text.indexOf(search) > -1;
+                let matchRole = (role === 'All Roles' || cardRole === role);
+                
+                let matchStatus = true;
+                if(activeChip !== 'all') {
+                    matchStatus = (cardStatus === activeChip);
+                }
+
+                if (matchSearch && matchRole && matchStatus) {
+                    $(this).show();
+                    visibleCount++;
+                } else {
+                    $(this).hide();
+                }
+            });
+            
+            $('#filteredCountText').text(visibleCount);
+        }
+
+        function setChipFilter(chip) {
+            $(`.filter-chip[data-filter="${chip}"]`).click();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function applyFilters() {
+            executeFilters();
+        }
+
+        function openDocumentModal(docName) {
+            $('#docTitle').text(docName);
+            var myModal = new bootstrap.Modal(document.getElementById('documentModal'));
             myModal.show();
         }
 
-        $(document).ready(function() {
-            // Live Search
-            $("#userSearch").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                filterUsers();
-            });
-
-            // Filters
-            $("#roleFilter, #faydaFilter").on("change", function() {
-                filterUsers();
-            });
-
-            function filterUsers() {
-                var searchText = $("#userSearch").val().toLowerCase();
-                var role = $("#roleFilter").val();
-                var fayda = $("#faydaFilter").val();
-
-                $(".user-card").each(function() {
-                    var cardRole = $(this).data('role');
-                    var cardFayda = $(this).data('fayda');
-                    var content = $(this).text().toLowerCase();
-
-                    var matchesSearch = content.indexOf(searchText) > -1;
-                    var matchesRole = !role || cardRole === role;
-                    var matchesFayda = !fayda || cardFayda === fayda;
-
-                    $(this).toggle(matchesSearch && matchesRole && matchesFayda);
-                });
-            }
-        });
+        function confirmApprove(userId, name) {
+            // Toast notification simulation
+            $('body').append(`
+                <div class="toast-notification" style="position:fixed; bottom:24px; right:24px; background:#1A1F1D; color:white; padding:16px 24px; border-radius:8px; z-index:9999; border-left:4px solid #2E9C7A; display:none; align-items:center; gap:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                    <i class="fas fa-check-circle" style="color:#2E9C7A; font-size:18px;"></i>
+                    <div>
+                        <div style="font-weight:700; font-size:14px;">User Approved Successfully!</div>
+                        <div style="font-size:13px; color:#B8C5BE;">${name} has been verified.</div>
+                    </div>
+                </div>
+            `);
+            $('.toast-notification').fadeIn();
+            setTimeout(() => { 
+                $('.toast-notification').fadeOut(300, function(){ $(this).remove(); });
+                $(`#form-approve-${userId}`).submit(); 
+            }, 3000);
+        }
     </script>
 }

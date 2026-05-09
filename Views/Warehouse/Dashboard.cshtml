@@ -7,127 +7,147 @@
     var warehouse = ViewBag.Warehouse as SCM_System.Models.Entities.Warehouse;
 }
 
-<div class="container-fluid px-4 py-3">
-    <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-dark mb-1 fs-3">Operational Hub: @(warehouse?.Name ?? "Facility")</h2>
-            <div class="d-flex align-items-center gap-3">
-                <p class="text-muted small mb-0 fw-medium">
-                    <i class="fas fa-map-marker-alt text-primary me-1"></i> @(ViewBag.WarehouseLocation ?? $"{warehouse?.City}, {warehouse?.Region}")
-                </p>
-                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill border py-2 px-3">
-                    <i class="fas fa-barcode me-1"></i> Hub Code: @warehouse?.WarehouseCode
-                </span>
-            </div>
-        </div>
-        <div class="d-flex gap-2">
-            @if (manager?.HubAccesses?.Count > 1)
-            {
-                <a asp-action="Dashboard" asp-route-warehouseId="" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
-                    <i class="fas fa-exchange-alt me-2"></i> Switch Hub
-                </a>
-            }
-            <div class="bg-white border rounded-pill px-3 py-2 shadow-sm d-flex align-items-center">
-                <div class="avatar-xs bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
-                    <i class="fas fa-user-shield" style="font-size: 0.7rem;"></i>
+<div class="container-fluid py-4 pb-5">
+    <!-- Premium Enhanced Header -->
+    <div class="row mb-5 animate-slide-up">
+        <div class="col-12">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+                <div class="banner-overlay"></div>
+                <div class="banner-glow"></div>
+                
+                <div class="row align-items-center position-relative z-index-2">
+                    <div class="col-lg-7 mb-4 mb-lg-0">
+                        <nav aria-label="breadcrumb" class="mb-3">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#" class="text-white text-opacity-50 text-decoration-none small fw-bold text-uppercase tracking-widest">Warehouse</a></li>
+                                <li class="breadcrumb-item active small fw-bold text-uppercase tracking-widest text-white" aria-current="page">Dashboard</li>
+                            </ol>
+                        </nav>
+                        <h1 class="display-5 fw-bold text-white mb-2">
+                            Operational <span class="text-gradient-gold">Hub</span>
+                        </h1>
+                        <p class="text-white text-opacity-75 mb-0 fs-5">
+                            <i class="fas fa-warehouse me-2 text-info"></i>Facility: @(warehouse?.Name ?? "Main Hub")
+                            <span class="mx-2 opacity-25">|</span>
+                            <i class="fas fa-user-shield me-2 text-success"></i>Manager: @manager?.User?.FullName
+                        </p>
+                    </div>
+                    <div class="col-lg-5 text-lg-end">
+                        <div class="d-flex flex-wrap justify-content-lg-end gap-3">
+                            @if (manager?.HubAccesses?.Count > 1)
+                            {
+                                <a asp-action="Dashboard" asp-route-warehouseId="" class="btn btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
+                                    <div class="btn-icon bg-white bg-opacity-10 rounded-3">
+                                        <i class="fas fa-exchange-alt text-white"></i>
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="extra-small text-white text-opacity-50 text-uppercase">Logistics</div>
+                                        <div class="text-white">Switch Hub</div>
+                                    </div>
+                                </a>
+                            }
+                            <a asp-action="AddStock" class="btn btn-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg">
+                                <div class="btn-icon bg-black bg-opacity-20 rounded-3">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="text-start">
+                                    <div class="extra-small text-black text-opacity-50 text-uppercase">Inventory</div>
+                                    <div class="text-black">New Stock In</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <span class="small fw-bold text-dark">@manager?.User?.FullName</span>
             </div>
-            <a asp-action="AddStock" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                <i class="fas fa-plus me-2"></i> New Stock In
-            </a>
         </div>
     </div>
 
-    <!-- 1️⃣ Summary Section Tiles -->
-    <div class="row g-4 mb-4">
+    <!-- Main KPI Grid -->
+    <div class="row g-4 mb-5">
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                <div class="card-body p-4 bg-gradient-light">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-3 p-3">
-                            <i class="fas fa-clipboard-list fs-4"></i>
-                        </div>
-                        <span class="badge bg-light text-primary border rounded-pill">Hub Load</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">@(ViewBag.TotalOrders ?? 0)</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Active Purchase Orders</p>
+            <div class="kpi-card">
+                <div class="kpi-icon-box bg-primary-soft text-primary">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <div class="kpi-label">Hub Load</div>
+                    <div class="kpi-value">@(ViewBag.TotalOrders ?? 0)</div>
+                </div>
+                <div class="kpi-footer">
+                    <span class="text-muted fw-bold">Active Purchase Orders</span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden border-start border-4 border-warning">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-3 p-3">
-                            <i class="fas fa-hourglass-half fs-4"></i>
-                        </div>
-                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">Picking Depth</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">@(ViewBag.PendingPrep ?? 0)</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Needs Picking/Packing</p>
+            <div class="kpi-card">
+                <div class="kpi-icon-box bg-warning-soft text-warning">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <div class="kpi-label">Picking Depth</div>
+                    <div class="kpi-value">@(ViewBag.PendingPrep ?? 0)</div>
+                </div>
+                <div class="kpi-footer">
+                    <span class="text-warning fw-bold">Needs Picking/Packing</span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden border-start border-4 border-success">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-success bg-opacity-10 text-success rounded-3 p-3">
-                            <i class="fas fa-box-check fs-4"></i>
-                        </div>
-                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Staging Area</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">@(ViewBag.ReadyForPickup ?? 0)</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">Packed & Awaiting Courier</p>
+            <div class="kpi-card">
+                <div class="kpi-icon-box bg-success-soft text-success">
+                    <i class="fas fa-box-check"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <div class="kpi-label">Staging Area</div>
+                    <div class="kpi-value">@(ViewBag.ReadyForPickup ?? 0)</div>
+                </div>
+                <div class="kpi-footer">
+                    <span class="text-success fw-bold">Awaiting Courier</span>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden border-start border-4 border-info">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-info bg-opacity-10 text-info rounded-3 p-3">
-                            <i class="fas fa-truck-moving fs-4"></i>
-                        </div>
-                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill">Outbound</span>
-                    </div>
-                    <h2 class="fw-bold mb-1">@(ViewBag.InProgress ?? 0)</h2>
-                    <p class="text-muted smaller mb-0 fw-bold">In Transit / Delivering</p>
+            <div class="kpi-card">
+                <div class="kpi-icon-box bg-info-soft text-info">
+                    <i class="fas fa-truck-moving"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <div class="kpi-label">Outbound</div>
+                    <div class="kpi-value">@(ViewBag.InProgress ?? 0)</div>
+                </div>
+                <div class="kpi-footer">
+                    <span class="text-info fw-bold">In Transit / Delivering</span>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- 2️⃣ Orders Management Section -->
+        <!-- Hub Worklist Table -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Hub Worklist & SLA Tracking</h5>
-                    <div class="d-flex gap-2">
-                        <div class="input-group input-group-sm" style="width: 200px;">
-                            <span class="input-group-text bg-light border-0"><i class="fas fa-search"></i></span>
-                            <input type="text" class="form-control bg-light border-0" placeholder="PO # or Retailer...">
-                        </div>
-                        <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-primary rounded-pill px-3">Full List</a>
+            <div class="section-card">
+                <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
+                    <div>
+                        <h5 class="fw-bold mb-0">Hub Worklist</h5>
+                        <p class="extra-small text-muted mb-0">SLA velocity and operational priority</p>
                     </div>
+                    <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-card px-3 fw-bold" style="border-radius: 8px;">Full List</a>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 border-0">
-                            <thead class="bg-light text-muted fw-bold" style="font-size: 0.75rem;">
-                                <tr>
-                                    <th class="ps-4 py-3">PO DETAILS</th>
-                                    <th>STATUS</th>
-                                    <th>SLA VELOCITY</th>
-                                    <th>RETAILER</th>
-                                    <th class="text-end pe-4">ACTION</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var po in Model.OrderByDescending(p => p.CreatedAt).Take(8))
+                <div class="table-responsive">
+                    <table class="admin-table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">PO Details</th>
+                                <th>Status</th>
+                                <th>SLA Velocity</th>
+                                <th>Retailer</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var po in Model.OrderByDescending(p => p.CreatedAt).Take(8))
                                 {
                                     var timeOpen = DateTime.Now - po.CreatedAt;
                                     var minutesOpen = timeOpen.TotalMinutes;
@@ -137,25 +157,25 @@
                                     <tr>
                                         <td class="ps-4">
                                             <div class="fw-bold text-dark">#@po.PONumber</div>
-                                            <div class="text-muted extra-small">Received @po.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                                            <div class="extra-small text-muted">@po.CreatedAt.ToString("MMM dd, HH:mm")</div>
                                         </td>
                                         <td>
                                             @{
-                                                var (bg, txt) = po.Status switch {
-                                                    POStatus.Issued => ("bg-warning-soft", "text-warning"),
-                                                    POStatus.Processing => ("bg-primary-soft", "text-primary"),
-                                                    POStatus.Picked => ("bg-info-soft", "text-info"),
-                                                    POStatus.Packed => ("bg-success-soft", "text-success"),
-                                                    POStatus.InTransit => ("bg-info", "text-white"),
-                                                    POStatus.Delivered => ("bg-dark", "text-white"),
-                                                    _ => ("bg-light", "text-muted")
+                                                var badgeStyle = po.Status switch {
+                                                    POStatus.Issued => "badge-soft-warning",
+                                                    POStatus.Processing => "badge-soft-primary",
+                                                    POStatus.Picked => "badge-soft-info",
+                                                    POStatus.Packed => "badge-soft-success",
+                                                    POStatus.InTransit => "badge-soft-primary",
+                                                    POStatus.Delivered => "badge-soft-dark",
+                                                    _ => "badge-soft-secondary"
                                                 };
                                             }
-                                            <span class="badge @bg @txt rounded-pill px-3">@po.Status</span>
+                                            <span class="badge-soft @badgeStyle">@po.Status</span>
                                         </td>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="rounded-circle bg-@slaClass me-2" style="width: 8px; height: 8px;" title="SLA Intensity"></div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle bg-@slaClass" style="width: 8px; height: 8px;"></div>
                                                 <div class="small fw-bold @(slaClass == "danger" ? "text-danger" : "")">@slaLabel</div>
                                             </div>
                                         </td>
@@ -163,22 +183,21 @@
                                             <div class="fw-bold small">@po.Retailer?.BusinessName</div>
                                         </td>
                                         <td class="text-end pe-4">
-                                            <div class="d-flex justify-content-end gap-1">
-                                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-light rounded-circle shadow-sm" title="View Details">
-                                                    <i class="fas fa-eye text-primary"></i>
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-icon-sm btn-outline-card">
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                                 @if (po.Status == POStatus.Issued || po.Status == POStatus.Accepted || po.Status == POStatus.Picking) 
                                                 {
                                                     var nextStatus = po.Status == POStatus.Picking ? POStatus.Picked : POStatus.Picking;
                                                     var btnIcon = po.Status == POStatus.Picking ? "fa-check-double" : "fa-hand-holding-box";
-                                                    var btnTitle = po.Status == POStatus.Picking ? "Mark as Picked" : "Start Picking";
                                                     var btnClass = po.Status == POStatus.Picking ? "text-info" : "text-warning";
 
                                                     <form asp-action="UpdateStatus" method="post" class="d-inline">
                                                         <input type="hidden" name="id" value="@po.Id" />
                                                         <input type="hidden" name="status" value="@nextStatus" />
                                                         <input type="hidden" name="returnAction" value="Dashboard" />
-                                                        <button type="submit" class="btn btn-sm btn-light rounded-circle shadow-sm" title="@btnTitle">
+                                                        <button type="submit" class="btn btn-sm btn-icon-sm btn-outline-card">
                                                             <i class="fas @btnIcon @btnClass"></i>
                                                         </button>
                                                     </form>
@@ -187,131 +206,151 @@
                                         </td>
                                     </tr>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- 3️⃣ Stock & Fleet Summary -->
+        <!-- Sidebar Insights -->
         <div class="col-lg-4">
-            <!-- Reserved Stock Summary -->
-            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border-top border-4 border-primary">
-                <div class="card-header bg-white border-0 py-4 px-4 border-start border-4 border-primary">
-                    <h6 class="fw-bold mb-0">Inventory Capacity & Reserved Stock</h6>
+            <div class="d-flex flex-column gap-4">
+                <!-- Inventory Capacity Card -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card">
+                    <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Hub Utilization</h6>
+                    @{
+                        double capUsed = warehouse?.MaxCapacity > 0 ? (double)(ViewBag.TotalOnHand ?? 0) / warehouse.MaxCapacity * 100 : 0;
+                    }
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <div class="display-6 fw-bold text-primary">@capUsed.ToString("F0")%</div>
+                        <div class="text-end">
+                            <div class="small fw-bold text-dark">@(ViewBag.TotalOnHand ?? 0) Units</div>
+                            <div class="extra-small text-muted">of @(warehouse?.MaxCapacity ?? 0) capacity</div>
+                        </div>
+                    </div>
+                    <div class="progress rounded-pill bg-light mb-4" style="height: 10px;">
+                        <div class="progress-bar @(capUsed > 85 ? "bg-danger" : "bg-primary") rounded-pill" style="width: @capUsed%;"></div>
+                    </div>
+                    <div class="p-3 bg-danger bg-opacity-10 rounded-4 d-flex justify-content-between align-items-center">
+                        <div class="small fw-bold text-danger">Low Stock Alerts</div>
+                        <div class="badge bg-danger rounded-pill">@(ViewBag.LowStockAlertCount ?? 0)</div>
+                    </div>
+                    <a asp-action="Inventory" class="btn btn-sm btn-outline-card w-100 py-2 mt-4 fw-bold" style="border-radius: 10px;">Manage Inventory</a>
                 </div>
-                <div class="card-body p-4 pt-0">
-                    <div class="d-flex align-items-center justify-content-between mb-2 pt-3">
-                        <div class="text-muted small">Hub Utilization</div>
-                        <div class="fw-bold fs-5 text-primary">
-                            @{
-                                double capUsed = warehouse?.MaxCapacity > 0 ? (double)(ViewBag.TotalOnHand ?? 0) / warehouse.MaxCapacity * 100 : 0;
-                            }
-                            @capUsed.ToString("F0")%
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="text-muted small">Total Committed Items</div>
-                        <div class="fw-bold fs-5 text-primary">@(ViewBag.TotalReserved ?? 0)</div>
-                    </div>
-                    <div class="progress mb-4" style="height: 10px; border-radius: 5px; background: rgba(0,0,0,0.05);">
-                        <div class="progress-bar @(capUsed > 85 ? "bg-danger" : "bg-primary")" style="width: @capUsed%;"></div>
-                    </div>
-                    <div class="row text-center g-2 mb-4">
-                        <div class="col-6 border-end">
-                            <h4 class="fw-bold mb-0">@(ViewBag.TotalOnHand ?? 0)</h4>
-                            <span class="text-muted smaller">Units On Hand</span>
-                        </div>
-                        <div class="col-6">
-                            <h4 class="fw-bold mb-0 @((ViewBag.LowStockAlertCount ?? 0) > 0 ? "text-danger" : "text-success")">@(ViewBag.LowStockAlertCount ?? 0)</h4>
-                            <span class="text-muted smaller">Replenish Alerts</span>
-                        </div>
-                    </div>
-                    <a asp-action="Inventory" class="btn btn-outline-primary w-100 rounded-pill fw-bold small">Manage Inventory</a>
-                </div>
-            </div>
 
-            <!-- Quick Stats: Fleet & Staff -->
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-body p-4">
-                    <h6 class="fw-bold mb-4">Logistics Resources</h6>
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-truck fa-sm"></i>
+                <!-- Logistics Resources -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card">
+                    <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Logistics Pool</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light border">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-info-soft text-info p-2 rounded-3">
+                                    <i class="fas fa-truck"></i>
                                 </div>
-                                <span class="small fw-bold">Available Fleet</span>
+                                <div class="fw-bold small">Available Fleet</div>
                             </div>
-                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.AvailableVehicles ?? 0) Units</span>
+                            <div class="fw-bold text-dark small">@(ViewBag.AvailableVehicles ?? 0) Units</div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-user-tie fa-sm"></i>
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light border">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-success-soft text-success p-2 rounded-3">
+                                    <i class="fas fa-user-tie"></i>
                                 </div>
-                                <span class="small fw-bold">Active Agents</span>
+                                <div class="fw-bold small">Active Agents</div>
                             </div>
-                            <span class="badge bg-light text-dark rounded-pill border">@(ViewBag.ActiveAgents ?? 0) Online</span>
+                            <div class="fw-bold text-dark small">@(ViewBag.ActiveAgents ?? 0) Online</div>
                         </div>
-                    </div>
-                    <div class="p-3 bg-light rounded-4 d-flex align-items-center">
-                        <div class="me-3 fs-3 text-primary opacity-50">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <div class="smaller text-muted fw-normal">
-                            All resources are currently synced with the supplier's main pool.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Hub Operational Log (Audit-Driven) -->
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-dark text-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0"><i class="fas fa-history me-2"></i> Hub Activity Log</h6>
-                    <span class="badge bg-primary">Live</span>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
-                        @if (ViewBag.RecentLogs != null && ((IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs).Any())
-                        {
-                            @foreach (var log in (IEnumerable<SCM_System.Models.Entities.AuditLog>)ViewBag.RecentLogs)
-                            {
-                                <div class="list-group-item p-3 border-0 border-bottom">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="fw-bold small text-primary">@log.ActionType</span>
-                                        <span class="text-muted extra-small">@log.PerformedAtUtc.ToLocalTime().ToString("HH:mm")</span>
-                                    </div>
-                                    <p class="text-muted mb-0 extra-small">@log.Notes</p>
-                                    <div class="mt-1 extra-small text-info">
-                                        <i class="fas fa-check-double me-1"></i> Hub Verified
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="text-center py-5 text-muted">
-                                <i class="fas fa-clipboard-list fa-2x mb-2 opacity-25"></i>
-                                <p class="small">No hub activity recorded yet.</p>
-                            </div>
-                        }
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-</div>
 
 <style>
-    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
-    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
-    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
-    .bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
+    /* Reuse global tokens */
+    .welcome-banner {
+        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .banner-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.05; z-index: 1;
+    }
+    .banner-glow {
+        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+        filter: blur(50px); z-index: 1;
+    }
+    .text-gradient-gold {
+        background: linear-gradient(to right, #f1c40f, #f39c12);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+    .z-index-2 { z-index: 2; }
+    .tracking-widest { letter-spacing: 2px; }
     
-    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .kpi-icon-box {
+        width: 54px; height: 54px;
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px;
+    }
+    .kpi-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+    .kpi-value { font-size: 1.85rem; font-weight: 700; color: var(--text-color); line-height: 1.2; }
+    .kpi-footer {
+        width: 100%; margin-top: 16px; padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        font-size: 12px; color: var(--text-muted);
+    }
+    
+    .section-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .bg-primary-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
+    .bg-warning-soft { background: rgba(230, 126, 34, 0.1); color: #E67E22; }
+    .bg-success-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
+    .bg-info-soft { background: rgba(91, 143, 249, 0.1); color: #5B8FF9; }
+    
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        transition: all 0.3s ease;
+        border-radius: 16px;
+    }
+    .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); color: white; }
+    .btn-gold {
+        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+        border: none; color: #000; transition: all 0.3s ease; border-radius: 16px;
+    }
+    .btn-gold:hover {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
+    }
+    .btn-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    
     .extra-small { font-size: 0.75rem; }
+    .tracking-wider { letter-spacing: 1px; }
 </style>

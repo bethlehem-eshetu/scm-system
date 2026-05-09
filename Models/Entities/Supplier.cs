@@ -96,14 +96,13 @@ namespace SCM_System.Models.Entities
         public string NotifyChannel { get; set; } = "Both"; // Email, SMS, Both
 
         // Navigation properties
-        public ICollection<Product> Products { get; set; } = new List<Product>();
+        public ICollection<Product> Products { get; set; } = [];
 
         [Timestamp]
         public byte[] RowVersion { get; set; }
 
         public ICollection<SupplierTransaction> SupplierTransactions { get; set; } = new List<SupplierTransaction>();
-        public ICollection<Tender> Tenders { get; set; } = new List<Tender>();
-        public ICollection<TenderBid> TenderBids { get; set; } = new List<TenderBid>();
+        public ICollection<TenderBid> TenderBids { get; set; } = [];
         public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
         public ICollection<Order> Orders { get; set; } = new List<Order>();
         public ICollection<SupplierEmployee> Employees { get; set; } = new List<SupplierEmployee>();
