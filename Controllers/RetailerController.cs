@@ -147,49 +147,26 @@ namespace SCM_System.Controllers
                 .ToListAsync();
             ViewBag.RecentConversations = recentConversations;
 
-            // --- Chart Data Calculations ---
-            
-            // 1. Spending Trend (Last 6 Months)
-            var sixMonthsAgo = DateTime.Now.AddMonths(-5);
-            sixMonthsAgo = new DateTime(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
-            
-            var spendingTrend = await _context.Orders
-                .Where(o => o.RetailerId == retailer.Id && o.OrderStatus == "Completed" && o.CreatedAt >= sixMonthsAgo)
-                .GroupBy(o => new { o.CreatedAt.Year, o.CreatedAt.Month })
-                .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, Total = g.Sum(o => o.TotalAmount) })
+            // Status Breakdown for Chart
+            var statusCounts = orders.GroupBy(o => o.OrderStatus)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToList();
+            ViewBag.StatusLabels = statusCounts.Select(x => x.Status).ToList();
+            ViewBag.StatusData = statusCounts.Select(x => x.Count).ToList();
+
+            // Category Breakdown for Chart
+            var categoryStats = await _context.OrderItems
+                .Include(oi => oi.Product)
+                    .ThenInclude(p => p.Category)
+                .Where(oi => oi.Order.RetailerId == retailer.Id)
+                .GroupBy(oi => oi.Product.Category.CategoryName)
+                .Select(g => new { Category = g.Key, Amount = g.Sum(oi => oi.UnitPrice * oi.Quantity) })
+                .OrderByDescending(x => x.Amount)
+                .Take(5)
                 .ToListAsync();
 
-            var monthlyLabels = new List<string>();
-            var monthlyData = new List<decimal>();
-            for (int i = 0; i < 6; i++)
-            {
-                var date = sixMonthsAgo.AddMonths(i);
-                monthlyLabels.Add(date.ToString("MMM yyyy"));
-                var match = spendingTrend.FirstOrDefault(x => x.Year == date.Year && x.Month == date.Month);
-                monthlyData.Add(match?.Total ?? 0);
-            }
-            ViewBag.MonthlySpendingLabels = monthlyLabels;
-            ViewBag.MonthlySpendingData = monthlyData;
-
-            // 2. Order Status Distribution
-            ViewBag.OrderStatusLabels = new List<string> { "Pending", "Processing", "In Transit", "Delivered" };
-            ViewBag.OrderStatusData = new List<int> { 
-                ViewBag.StatusPending, 
-                ViewBag.StatusProcessing, 
-                ViewBag.StatusInTransit, 
-                ViewBag.StatusDelivered 
-            };
-
-            // 3. Procurement Mix (Tenders vs Direct)
-            var totalSpend = (decimal)ViewBag.TotalSpent;
-            var tenderSpend = orders.Where(o => o.OrderStatus == "Completed" && o.TenderId != null).Sum(o => o.TotalAmount);
-            var directSpend = totalSpend - tenderSpend;
-            
-            ViewBag.ProcurementMixLabels = new List<string> { "Direct Purchase", "Tenders" };
-            ViewBag.ProcurementMixData = new List<decimal> { 
-                totalSpend > 0 ? (directSpend / totalSpend) * 100 : 0,
-                totalSpend > 0 ? (tenderSpend / totalSpend) * 100 : 0
-            };
+            ViewBag.CategoryLabels = categoryStats.Select(x => x.Category).ToList();
+            ViewBag.CategoryData = categoryStats.Select(x => x.Amount).ToList();
 
             ViewBag.AllCategories = await _context.ProductCategories
                 .Where(c => c.IsActive)
@@ -197,6 +174,44 @@ namespace SCM_System.Controllers
                 .ToListAsync();
 
             return View(retailer);
+        }
+
+        // GET: /Retailer/GetSpendStats
+        [HttpGet]
+        public async Task<JsonResult> GetSpendStats(int months = 6)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null) return Json(new { success = false });
+
+            var startDate = DateTime.Now.AddMonths(-months + 1);
+            startDate = new DateTime(startDate.Year, startDate.Month, 1);
+
+            var spendData = await _context.Orders
+                .Where(o => o.RetailerId == retailer.Id && o.CreatedAt >= startDate && (o.OrderStatus == "Completed" || o.OrderStatus == "Delivered"))
+                .GroupBy(o => new { o.CreatedAt.Year, o.CreatedAt.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Total = g.Sum(o => o.TotalAmount)
+                })
+                .ToListAsync();
+
+            // Fill missing months
+            var result = new List<object>();
+            for (int i = 0; i < months; i++)
+            {
+                var targetDate = startDate.AddMonths(i);
+                var monthData = spendData.FirstOrDefault(d => d.Year == targetDate.Year && d.Month == targetDate.Month);
+                result.Add(new
+                {
+                    Month = targetDate.ToString("MMM yyyy"),
+                    Amount = monthData?.Total ?? 0
+                });
+            }
+
+            return Json(result);
         }
 
         // GET: /Retailer/OrderTracking

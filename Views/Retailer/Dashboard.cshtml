@@ -26,97 +26,64 @@
         </div>
     }
 
-    <!-- Luxury Emerald Header -->
+    <!-- Premium Enhanced Header -->
     <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-2xl border-0 position-relative overflow-hidden">
-                <!-- Background Decorative Elements (Luxury Mesh) -->
-                <div class="banner-mesh"></div>
-                <div class="banner-circle-1"></div>
-                <div class="banner-circle-2"></div>
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+                <!-- Background Decorative Elements -->
+                <div class="banner-overlay"></div>
+                <div class="banner-glow"></div>
                 
                 <div class="row align-items-center position-relative z-index-2">
                     <div class="col-lg-7 mb-4 mb-lg-0">
-                        <div class="d-inline-flex align-items-center px-3 py-1 rounded-pill bg-white bg-opacity-10 border border-white border-opacity-10 mb-3 mb-lg-4">
-                            <span class="text-white text-opacity-75 small fw-bold text-uppercase tracking-widest" style="font-size: 10px;">
-                                <i class="fas fa-shield-alt me-2 text-info"></i>Retailer Portal
-                            </span>
-                            <span class="mx-2 text-white text-opacity-25">|</span>
-                            <span class="text-white text-opacity-75 small fw-bold text-uppercase tracking-widest" style="font-size: 10px;">Overview</span>
-                        </div>
-                        
-                        <h1 class="display-4 fw-bold text-white mb-3 tracking-tight">
-                            Hello, <span class="text-gradient-gold">@Model.BusinessName</span>
+                        <nav aria-label="breadcrumb" class="mb-3">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#" class="text-white text-opacity-50 text-decoration-none small fw-bold text-uppercase tracking-widest">Retailer</a></li>
+                                <li class="breadcrumb-item active small fw-bold text-uppercase tracking-widest text-white" aria-current="page">Overview</li>
+                            </ol>
+                        </nav>
+                        <h1 class="display-5 fw-bold text-white mb-2">
+                            Welcome back, <span class="text-gradient-gold">@Model.BusinessName</span>
                             @if (Model.User.IsFaydaVerified) { 
-                                <span class="premium-badge ms-2" title="Fayda Verified Business">
-                                    <i class="fas fa-certificate"></i>
-                                    <i class="fas fa-check small-check"></i>
+                                <span class="verified-badge ms-2" title="Fayda Verified Business">
+                                    <i class="fas fa-check-circle"></i>
                                 </span>
                             }
                         </h1>
-                        
-                        <div class="d-flex flex-wrap align-items-center gap-4 text-white text-opacity-75">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle-sm bg-info bg-opacity-20 me-2">
-                                    <i class="fas fa-map-marker-alt text-info"></i>
-                                </div>
-                                <span class="fw-medium">@Model.City, @Model.Region</span>
-                            </div>
-                            <div class="vr opacity-25 d-none d-md-block" style="height: 20px;"></div>
-                            <div class="d-flex align-items-center">
-                                <div class="pulse-container me-2">
-                                    <div class="pulse-dot"></div>
-                                </div>
-                                <span class="fw-medium">System synced at @DateTime.Now.ToString("HH:mm")</span>
-                            </div>
-                        </div>
+                        <p class="text-white text-opacity-75 mb-0 fs-5">
+                            <i class="fas fa-map-marker-alt me-2 text-info"></i>@Model.City, @Model.Region 
+                            <span class="mx-2 opacity-25">|</span>
+                            <i class="fas fa-sync-alt me-2 text-success"></i>System synced at @DateTime.Now.ToString("HH:mm")
+                        </p>
                     </div>
                     <div class="col-lg-5 text-lg-end">
                         <div class="d-flex flex-wrap justify-content-lg-end gap-3">
-                            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-luxury-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
-                                <div class="luxury-icon-box">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    @if(ViewBag.CartItemCount > 0) {
-                                        <span class="luxury-badge-dot"></span>
-                                    }
+                            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
+                                <div class="btn-icon bg-white bg-opacity-10 rounded-3">
+                                    <i class="fas fa-shopping-cart text-white"></i>
                                 </div>
                                 <div class="text-start">
-                                    <div class="extra-small opacity-50 text-uppercase tracking-wider" style="font-size: 9px;">Active Cart</div>
+                                    <div class="extra-small text-white text-opacity-50 text-uppercase">Your Cart</div>
                                     <div class="text-white">View Items</div>
                                 </div>
                             </a>
-                            
                             <div class="dropdown">
-                                <button class="btn btn-luxury-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg" type="button" data-bs-toggle="dropdown">
-                                    <div class="luxury-icon-box-gold">
-                                        <i class="fas fa-plus"></i>
+                                <button class="btn btn-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg" type="button" data-bs-toggle="dropdown">
+                                    <div class="btn-icon bg-black bg-opacity-20 rounded-3">
+                                        <i class="fas fa-bolt"></i>
                                     </div>
-                                    <div class="text-start text-dark">
-                                        <div class="extra-small opacity-60 text-uppercase tracking-wider" style="font-size: 9px;">Quick Action</div>
-                                        <div class="fw-bold">Create Order</div>
+                                    <div class="text-start">
+                                        <div class="extra-small text-black text-opacity-50 text-uppercase">Actions</div>
+                                        <div class="text-black">Quick Hub</div>
                                     </div>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-2xl p-2 mt-3 animate-fade-in" style="border-radius: 24px; min-width: 260px; backdrop-filter: blur(20px); background: rgba(255,255,255,0.95);">
-                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3 text-muted" style="font-size: 10px;">Main Procurement</h6></li>
-                                    <li><a class="dropdown-item py-3 px-4 rounded-4 mb-1 d-flex align-items-center" asp-controller="Retailer" asp-action="BrowseCatalog">
-                                        <div class="icon-sq-sm bg-primary bg-opacity-10 text-primary me-3"><i class="fas fa-search"></i></div>
-                                        <div>
-                                            <div class="fw-bold text-dark">Browse Marketplace</div>
-                                            <div class="extra-small text-muted">Order from 500+ suppliers</div>
-                                        </div>
-                                    </a></li>
-                                    <li><a class="dropdown-item py-3 px-4 rounded-4 mb-1 d-flex align-items-center" asp-controller="Tender" asp-action="Create">
-                                        <div class="icon-sq-sm bg-warning bg-opacity-10 text-warning me-3"><i class="fas fa-file-signature"></i></div>
-                                        <div>
-                                            <div class="fw-bold text-dark">New Tender</div>
-                                            <div class="extra-small text-muted">Get custom bids for bulk</div>
-                                        </div>
-                                    </a></li>
-                                    <li><hr class="dropdown-divider mx-3 opacity-10"></li>
-                                    <li><a class="dropdown-item py-3 px-4 rounded-4 d-flex align-items-center text-success" asp-action="OrderTracking">
-                                        <div class="icon-sq-sm bg-success bg-opacity-10 text-success me-3"><i class="fas fa-truck-moving"></i></div>
-                                        <div class="fw-bold">Track Shipments</div>
-                                    </a></li>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-2xl p-2 mt-2" style="border-radius: 20px; min-width: 240px;">
+                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Procurement</h6></li>
+                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search me-2 text-primary"></i> Browse Marketplace</a></li>
+                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle me-2 text-warning"></i> Initiate New Tender</a></li>
+                                    <li><hr class="dropdown-divider opacity-10"></li>
+                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Logistics</h6></li>
+                                    <li><a class="dropdown-item py-2 px-3 rounded-4" asp-action="OrderTracking"><i class="fas fa-truck-loading me-2 text-success"></i> Active Shipments</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -181,51 +148,45 @@
                     <div class="kpi-value" style="font-size: 1.5rem;">@ViewBag.TotalSpent.ToString("N0") <span class="small">ETB</span></div>
                 </div>
                 <div class="kpi-footer">
+                    <span class="text-muted">Avg: @ViewBag.AverageOrderValue.ToString("N0") / order</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Analytics Row -->
-    <div class="row g-4 mb-5">
+    <!-- Analytics Overview -->
+    <div class="row g-4 mb-5 animate-slide-up">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card h-100">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1">Spending Trend</h6>
-                        <p class="extra-small text-muted mb-0">Monthly procurement expenditure (Last 6 months)</p>
+                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1">Spend Analytics</h6>
+                        <h4 class="fw-bold mb-0">Purchasing Trends</h4>
                     </div>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light rounded-pill px-3 extra-small fw-bold border" type="button" data-bs-toggle="dropdown">
-                            Last 6 Months <i class="fas fa-chevron-down ms-1 opacity-50"></i>
-                        </button>
-                    </div>
+                    <select id="spendRangeFilter" class="form-select form-select-sm border-0 bg-light fw-bold" style="width: 140px; border-radius: 8px;">
+                        <option value="6" selected>Last 6 Months</option>
+                        <option value="12">Last 12 Months</option>
+                    </select>
                 </div>
-                <div style="height: 300px;">
-                    <canvas id="spendingChart"></canvas>
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="spendAnalyticsChart"></canvas>
                 </div>
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card h-100">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Order Status Distribution</h6>
-                <div style="height: 220px;" class="position-relative">
-                    <canvas id="statusChart"></canvas>
-                    <div class="chart-center-text">
-                        <div class="h3 fw-bold mb-0">@ViewBag.TotalOrders</div>
-                        <div class="extra-small text-muted">Total</div>
-                    </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Order Distribution</h6>
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="orderStatusChart"></canvas>
                 </div>
                 <div class="mt-4">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="small text-muted"><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i>Pending</span>
-                        <span class="small fw-bold">@ViewBag.StatusPending</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="small text-muted"><i class="fas fa-circle text-info me-2" style="font-size: 8px;"></i>Processing</span>
-                        <span class="small fw-bold">@ViewBag.StatusProcessing</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="small text-muted"><i class="fas fa-circle text-success me-2" style="font-size: 8px;"></i>Delivered</span>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-muted"><i class="fas fa-circle text-success me-2" style="font-size: 8px;"></i> Completed</span>
                         <span class="small fw-bold">@ViewBag.StatusDelivered</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted"><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i> Pending</span>
+                        <span class="small fw-bold">@ViewBag.StatusPending</span>
                     </div>
                 </div>
             </div>
@@ -234,24 +195,6 @@
 
     <!-- Performance Metrics Row -->
     <div class="row g-4 mb-5">
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Procurement Mix</h6>
-                <div style="height: 200px;">
-                    <canvas id="procurementMixChart"></canvas>
-                </div>
-                <div class="d-flex justify-content-around mt-3">
-                    <div class="text-center">
-                        <div class="extra-small text-muted">Direct</div>
-                        <div class="fw-bold">@(ViewBag.ProcurementMixData[0].ToString("F1"))%</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="extra-small text-muted">Tenders</div>
-                        <div class="fw-bold">@(ViewBag.ProcurementMixData[1].ToString("F1"))%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
                 <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Delivery Performance</h6>
@@ -266,6 +209,27 @@
                     <div class="progress-bar bg-primary rounded-pill" style="width: @ViewBag.OnTimeDeliveryRate%;"></div>
                 </div>
                 <p class="small text-muted mb-0">Calculated based on the last @ViewBag.TotalOrders orders completed.</p>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white dark-card">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Procurement Mix</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="small fw-bold"><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i>Direct Purchase</div>
+                        <div class="small fw-bold">75%</div>
+                    </div>
+                    <div class="progress rounded-pill bg-light" style="height: 6px;">
+                        <div class="progress-bar bg-warning rounded-pill" style="width: 75%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="small fw-bold"><i class="fas fa-circle text-info me-2" style="font-size: 8px;"></i>Tenders</div>
+                        <div class="small fw-bold">25%</div>
+                    </div>
+                    <div class="progress rounded-pill bg-light" style="height: 6px;">
+                        <div class="progress-bar bg-info rounded-pill" style="width: 25%;"></div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-lg-4">
@@ -447,134 +411,65 @@
 </div>
 
 <style>
+    /* Premium Enhanced Header Styles */
     .welcome-banner {
-        background: linear-gradient(135deg, #05261F 0%, #0B3B2F 100%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .banner-mesh {
+    .banner-overlay {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-        background-size: 30px 30px;
-        opacity: 0.2; z-index: 1;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.05; z-index: 1;
     }
-    .banner-circle-1 {
-        position: absolute; top: -100px; right: -100px; width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(46, 156, 122, 0.3) 0%, transparent 70%);
-        border-radius: 50%; z-index: 1;
-        filter: blur(40px);
-    }
-    .banner-circle-2 {
-        position: absolute; bottom: -150px; left: -100px; width: 500px; height: 500px;
-        background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, transparent 70%);
-        border-radius: 50%; z-index: 1;
-        filter: blur(60px);
+    .banner-glow {
+        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+        filter: blur(50px); z-index: 1;
     }
     .text-gradient-gold {
-        background: linear-gradient(135deg, #FFE8A3 0%, #FFD700 45%, #B8860B 100%);
+        background: linear-gradient(to right, #f1c40f, #f39c12);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
     }
-    .premium-badge {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #FFD700;
-        font-size: 1.8rem;
-        vertical-align: middle;
-        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+    .verified-badge {
+        color: #3498db;
+        font-size: 1.5rem;
+        filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.3));
     }
-    .small-check {
-        position: absolute;
-        font-size: 0.7rem;
-        color: #05261F;
-        top: 52%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    .btn-luxury-glass {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         color: white;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border-radius: 20px;
+        transition: all 0.3s ease;
+        border-radius: 16px;
     }
-    .btn-luxury-glass:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateY(-5px);
-        border-color: rgba(255, 255, 255, 0.3);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
         color: white;
     }
-    .btn-luxury-gold {
-        background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+    .btn-gold {
+        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
         border: none;
-        color: #05261F;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border-radius: 20px;
-        box-shadow: 0 10px 20px rgba(218, 165, 32, 0.3);
+        color: #000;
+        transition: all 0.3s ease;
+        border-radius: 16px;
     }
-    .btn-luxury-gold:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 20px 40px rgba(218, 165, 32, 0.4);
-        color: #05261F;
+    .btn-gold:hover {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
     }
-    .luxury-icon-box {
-        width: 44px; height: 44px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem;
-        position: relative;
-    }
-    .luxury-icon-box-gold {
-        width: 44px; height: 44px;
-        background: rgba(0,0,0,0.1);
-        border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem;
-    }
-    .luxury-badge-dot {
-        position: absolute; top: -2px; right: -2px;
-        width: 10px; height: 10px;
-        background: #FF4B2B;
-        border: 2px solid #0B3B2F;
-        border-radius: 50%;
-    }
-    .icon-circle-sm {
-        width: 28px; height: 28px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 0.8rem;
-    }
-    .icon-sq-sm {
-        width: 40px; height: 40px;
-        border-radius: 12px;
+    .btn-icon {
+        width: 38px; height: 38px;
         display: flex; align-items: center; justify-content: center;
         font-size: 1.1rem;
     }
-    .pulse-container {
-        width: 12px; height: 12px;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .pulse-dot {
-        width: 8px; height: 8px;
-        background: #2ecc71;
-        border-radius: 50%;
-        box-shadow: 0 0 0 rgba(46, 204, 113, 0.4);
-        animation: pulse 2s infinite;
-    }
-    @@keyframes pulse {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
-    }
-    .tracking-tight { letter-spacing: -1.5px; }
-    .shadow-2xl { box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.5); }
+    .z-index-2 { z-index: 2; }
+    .tracking-widest { letter-spacing: 2px; }
 
     /* Premium Dashboard Styles */
     .kpi-card {
@@ -667,130 +562,15 @@
     .dark-mode .bg-light {
         background-color: var(--hover-state) !important;
     }
-    .chart-center-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        pointer-events: none;
-    }
 </style>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@section Scripts {
     <script>
         $(document).ready(function () {
             // Load live counts
             loadCounts();
             setInterval(loadCounts, 30000);
-
-            // Initialize Charts
-            initSpendingChart();
-            initStatusChart();
-            initProcurementMixChart();
         });
-
-        function initSpendingChart() {
-            const ctx = document.getElementById('spendingChart').getContext('2d');
-            const labels = @Html.Raw(Json.Serialize(ViewBag.MonthlySpendingLabels));
-            const data = @Html.Raw(Json.Serialize(ViewBag.MonthlySpendingData));
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Spending (ETB)',
-                        data: data,
-                        borderColor: '#2E9C7A',
-                        backgroundColor: 'rgba(46, 156, 122, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#2E9C7A',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-                            ticks: { font: { size: 10 } }
-                        },
-                        x: {
-                            grid: { display: false, drawBorder: false },
-                            ticks: { font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
-
-        function initStatusChart() {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            const data = @Html.Raw(Json.Serialize(ViewBag.OrderStatusData));
-
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Pending', 'Processing', 'In Transit', 'Delivered'],
-                    datasets: [{
-                        data: data,
-                        backgroundColor: ['#f1c40f', '#3498db', '#9b59b6', '#2ecc71'],
-                        borderWidth: 0,
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '80%',
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        function initProcurementMixChart() {
-            const ctx = document.getElementById('procurementMixChart').getContext('2d');
-            const data = @Html.Raw(Json.Serialize(ViewBag.ProcurementMixData));
-
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Direct', 'Tenders'],
-                    datasets: [{
-                        data: data,
-                        backgroundColor: ['#e67e22', '#3498db'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            position: 'bottom',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: { size: 10 }
-                            }
-                        }
-                    }
-                }
-            });
-        }
 
         function loadCounts() {
             $.get('/Notification/GetUnreadCount', function (data) {
@@ -802,5 +582,122 @@
                 else $('#messageBadge').hide();
             });
         }
+    </script>
+}
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Chart.js Globals
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748B';
+
+            // 1. Spend Analytics Chart (Line)
+            const ctxSpend = document.getElementById('spendAnalyticsChart').getContext('2d');
+            let spendChart;
+
+            function initSpendChart(data) {
+                const isDark = $('html').hasClass('dark-mode');
+                const accentColor = '#2E9C7A';
+                
+                if(spendChart) spendChart.destroy();
+                
+                spendChart = new Chart(ctxSpend, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(x => x.month),
+                        datasets: [{
+                            label: 'Spend (ETB)',
+                            data: data.map(x => x.amount),
+                            borderColor: accentColor,
+                            backgroundColor: 'rgba(46, 156, 122, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: accentColor,
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: isDark ? '#1A1F1D' : '#0B3B2F',
+                                padding: 12,
+                                cornerRadius: 10,
+                                titleFont: { size: 12 },
+                                bodyFont: { size: 14, weight: 'bold' }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                                ticks: { font: { size: 11 } }
+                            },
+                            x: { 
+                                grid: { display: false },
+                                ticks: { font: { size: 11 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function loadSpendData(months) {
+                $.get('/Retailer/GetSpendStats?months=' + months, function(res) {
+                    initSpendChart(res);
+                });
+            }
+
+            $('#spendRangeFilter').on('change', function() {
+                loadSpendData($(this).val());
+            });
+
+            loadSpendData(6);
+
+            // 2. Order Status Chart (Doughnut)
+            const ctxStatus = document.getElementById('orderStatusChart').getContext('2d');
+            new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels)),
+                    datasets: [{
+                        data: @Html.Raw(Json.Serialize(ViewBag.StatusData)),
+                        backgroundColor: ['#2E9C7A', '#E67E22', '#5B8FF9', '#E05A5A', '#A3B3AC'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0B3B2F',
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+
+            // Theme Sync
+            const observer = new MutationObserver(function() {
+                if(spendChart) {
+                    const isDark = $('html').hasClass('dark-mode');
+                    spendChart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                    spendChart.options.plugins.tooltip.backgroundColor = isDark ? '#1A1F1D' : '#0B3B2F';
+                    spendChart.update();
+                }
+            });
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        });
     </script>
 }
