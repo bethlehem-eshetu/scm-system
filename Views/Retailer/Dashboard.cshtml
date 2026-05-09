@@ -26,35 +26,69 @@
         </div>
     }
 
-    <!-- Premium Header -->
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <nav aria-label="breadcrumb" class="mb-2">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none small fw-bold text-uppercase tracking-wider opacity-50">Retailer</a></li>
-                    <li class="breadcrumb-item active small fw-bold text-uppercase tracking-wider text-primary" aria-current="page">Dashboard</li>
-                </ol>
-            </nav>
-            <h2 class="fw-bold mb-1 display-6">
-                Welcome, <span class="text-primary">@Model.BusinessName</span>
-                @if (Model.User.IsFaydaVerified) { <i class="fas fa-certificate text-info ms-1" style="font-size: 1.2rem;" title="Verified Business"></i> }
-            </h2>
-            <p class="text-muted mb-0"><i class="fas fa-map-marker-alt me-1 opacity-50"></i> @Model.City, @Model.Region | <i class="fas fa-calendar-alt me-1 opacity-50"></i> Last sync: @DateTime.Now.ToString("HH:mm")</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-outline-card px-4 py-2 fw-bold d-flex align-items-center gap-2" style="border-radius: 12px;">
-                <i class="fas fa-shopping-cart text-primary"></i> View Cart
-            </a>
-            <div class="dropdown">
-                <button class="btn btn-primary px-4 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm" type="button" data-bs-toggle="dropdown" style="border-radius: 12px;">
-                    <i class="fas fa-bolt"></i> Quick Actions
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2" style="border-radius: 16px; min-width: 200px;">
-                    <li><a class="dropdown-item py-2 rounded-3" asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search me-2 opacity-50"></i> Browse Products</a></li>
-                    <li><a class="dropdown-item py-2 rounded-3" asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle me-2 opacity-50"></i> Create Tender</a></li>
-                    <li><hr class="dropdown-divider opacity-50"></li>
-                    <li><a class="dropdown-item py-2 rounded-3" asp-action="OrderTracking"><i class="fas fa-route me-2 opacity-50"></i> Track Deliveries</a></li>
-                </ul>
+    <!-- Premium Enhanced Header -->
+    <div class="row mb-5 animate-slide-up">
+        <div class="col-12">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+                <!-- Background Decorative Elements -->
+                <div class="banner-overlay"></div>
+                <div class="banner-glow"></div>
+                
+                <div class="row align-items-center position-relative z-index-2">
+                    <div class="col-lg-7 mb-4 mb-lg-0">
+                        <nav aria-label="breadcrumb" class="mb-3">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="#" class="text-white text-opacity-50 text-decoration-none small fw-bold text-uppercase tracking-widest">Retailer</a></li>
+                                <li class="breadcrumb-item active small fw-bold text-uppercase tracking-widest text-white" aria-current="page">Overview</li>
+                            </ol>
+                        </nav>
+                        <h1 class="display-5 fw-bold text-white mb-2">
+                            Welcome back, <span class="text-gradient-gold">@Model.BusinessName</span>
+                            @if (Model.User.IsFaydaVerified) { 
+                                <span class="verified-badge ms-2" title="Fayda Verified Business">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                            }
+                        </h1>
+                        <p class="text-white text-opacity-75 mb-0 fs-5">
+                            <i class="fas fa-map-marker-alt me-2 text-info"></i>@Model.City, @Model.Region 
+                            <span class="mx-2 opacity-25">|</span>
+                            <i class="fas fa-sync-alt me-2 text-success"></i>System synced at @DateTime.Now.ToString("HH:mm")
+                        </p>
+                    </div>
+                    <div class="col-lg-5 text-lg-end">
+                        <div class="d-flex flex-wrap justify-content-lg-end gap-3">
+                            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
+                                <div class="btn-icon bg-white bg-opacity-10 rounded-3">
+                                    <i class="fas fa-shopping-cart text-white"></i>
+                                </div>
+                                <div class="text-start">
+                                    <div class="extra-small text-white text-opacity-50 text-uppercase">Your Cart</div>
+                                    <div class="text-white">View Items</div>
+                                </div>
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg" type="button" data-bs-toggle="dropdown">
+                                    <div class="btn-icon bg-black bg-opacity-20 rounded-3">
+                                        <i class="fas fa-bolt"></i>
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="extra-small text-black text-opacity-50 text-uppercase">Actions</div>
+                                        <div class="text-black">Quick Hub</div>
+                                    </div>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-2xl p-2 mt-2" style="border-radius: 20px; min-width: 240px;">
+                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Procurement</h6></li>
+                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search me-2 text-primary"></i> Browse Marketplace</a></li>
+                                    <li><a class="dropdown-item py-2 px-3 rounded-4 mb-1" asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle me-2 text-warning"></i> Initiate New Tender</a></li>
+                                    <li><hr class="dropdown-divider opacity-10"></li>
+                                    <li><h6 class="dropdown-header text-uppercase tracking-widest fw-bold py-3">Logistics</h6></li>
+                                    <li><a class="dropdown-item py-2 px-3 rounded-4" asp-action="OrderTracking"><i class="fas fa-truck-loading me-2 text-success"></i> Active Shipments</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -338,6 +372,66 @@
 </div>
 
 <style>
+    /* Premium Enhanced Header Styles */
+    .welcome-banner {
+        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .banner-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.05; z-index: 1;
+    }
+    .banner-glow {
+        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+        filter: blur(50px); z-index: 1;
+    }
+    .text-gradient-gold {
+        background: linear-gradient(to right, #f1c40f, #f39c12);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+    .verified-badge {
+        color: #3498db;
+        font-size: 1.5rem;
+        filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.3));
+    }
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        transition: all 0.3s ease;
+        border-radius: 16px;
+    }
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+        color: white;
+    }
+    .btn-gold {
+        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+        border: none;
+        color: #000;
+        transition: all 0.3s ease;
+        border-radius: 16px;
+    }
+    .btn-gold:hover {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
+    }
+    .btn-icon {
+        width: 38px; height: 38px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+    }
+    .z-index-2 { z-index: 2; }
+    .tracking-widest { letter-spacing: 2px; }
+
     /* Premium Dashboard Styles */
     .kpi-card {
         background: var(--card-bg);
