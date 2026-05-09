@@ -16,10 +16,10 @@
         :root {
             /* Light Theme Variables */
             --bg-color: #F1F5F9;
-            --text-color: #0A1C16;
-            --text-muted: #4A6359;
+            --text-color: #1A2C26;
+            --text-muted: #4B5E55;
             --card-bg: #FFFFFF;
-            --border-color: #E2E8E4;
+            --border-color: #E2E8F0;
             --top-nav-bg: #FFFFFF;
             --primary-color: #2E9C7A;
             --sidebar-width: 260px;
@@ -29,6 +29,7 @@
             --sidebar-active: #1A4D3A;
             --input-bg: #FFFFFF;
             --hover-state: #F0F4F2;
+            --progress-track: #E2E8F0;
         }
 
         /* Dark Theme Variables */
@@ -43,6 +44,7 @@
             --sidebar-bg: #06261E;
             --input-bg: #252A28;
             --hover-state: #2A3530;
+            --progress-track: #2A3530;
         }
 
         body {
@@ -52,6 +54,32 @@
             margin: 0;
             overflow-x: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .text-primary { color: var(--primary-color) !important; }
+        .text-success { color: #2E9C7A !important; }
+        .text-warning { color: #E67E22 !important; }
+        .text-danger { color: #DC3545 !important; }
+        .text-info { color: #2C7DA0 !important; }
+
+        .btn-primary { 
+            background-color: var(--primary-color) !important; 
+            border-color: var(--primary-color) !important; 
+            color: white !important; 
+            font-weight: 600;
+        }
+        .btn-primary:hover { 
+            background-color: #247A5E !important; 
+            border-color: #247A5E !important; 
+        }
+
+        .btn-outline-primary { 
+            color: var(--primary-color) !important; 
+            border-color: var(--primary-color) !important; 
+        }
+        .btn-outline-primary:hover { 
+            background-color: var(--primary-color) !important; 
+            color: white !important; 
         }
 
         .dark-mode .card, .dark-mode .bg-white {
@@ -127,6 +155,36 @@
         
         .dark-mode .dropdown-divider {
             border-top-color: var(--border-color) !important;
+        }
+
+        /* Global Theme Components */
+        .card, .stat-card, .summary-card, .alert-card, .dashboard-card {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        .bg-white { background-color: var(--card-bg) !important; }
+        .bg-light { background-color: var(--hover-state) !important; }
+
+        .table th { 
+            background-color: var(--hover-state) !important; 
+            color: var(--text-color) !important;
+            border-bottom: 2px solid var(--border-color) !important;
+        }
+        .table td { 
+            color: var(--text-color) !important; 
+            border-bottom: 1px solid var(--border-color) !important;
+        }
+
+        .form-control, .form-select, textarea {
+            background-color: var(--input-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        .progress-track, .progress-bg, .progress {
+            background-color: var(--progress-track) !important;
         }
 
         /* Premium Sidebar Styling */

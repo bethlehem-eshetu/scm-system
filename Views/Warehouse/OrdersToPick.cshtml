@@ -5,10 +5,10 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid px-4 py-3">
+<div class="content-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Orders to Pick</h2>
+            <h2 class="fw-bold mb-1">Orders to Pick</h2>
             <p class="text-muted mb-0">Step 1: Verify inventory and start picking items from the shelves.</p>
         </div>
         <div class="d-flex gap-2">
@@ -17,7 +17,7 @@
             </span>
             <form asp-action="ReconcileInventory" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('Recalculate all reserved quantities? This will sync Inventory with the Reservation ledger.')">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('Recalculate all reserved quantities?')">
                     <i class="fas fa-sync-alt me-1"></i> Reconcile
                 </button>
             </form>
@@ -26,7 +26,7 @@
 
     @if (!Model.Any())
     {
-        <div class="card border-0 shadow-sm rounded-4 py-5 text-center">
+        <div class="dashboard-card py-5 text-center">
             <div class="opacity-25 mb-3">
                 <i class="fas fa-clipboard-check fa-4x text-muted"></i>
             </div>
@@ -40,24 +40,24 @@
             @foreach (var po in Model)
             {
                 <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
-                        <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div class="dashboard-card overflow-hidden mb-3">
+                        <div class="card-header bg-transparent border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="fw-bold text-primary">PO #@po.PONumber</span>
                                 <span class="mx-2 text-muted">|</span>
-                                <span class="small fw-bold text-dark">@po.Retailer?.BusinessName</span>
+                                <span class="small fw-bold text-theme">@po.Retailer?.BusinessName</span>
                             </div>
                             <div class="d-flex align-items-center gap-3">
                                 <span class="text-muted smaller">Issued: @po.CreatedAt.ToString("MMM dd, HH:mm")</span>
-                                <span class="badge bg-light text-primary border rounded-pill">@po.Status</span>
+                                <span class="badge bg-soft-secondary text-primary border border-theme rounded-pill">@po.Status</span>
                             </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
+                                <table class="table table-sm align-middle mb-0 border-0">
                                     @if (ViewBag.PicklistFormat == "Minimal")
                                     {
-                                        <thead class="bg-light smaller text-muted">
+                                        <thead class="bg-soft-secondary smaller text-muted">
                                             <tr>
                                                 <th class="ps-4">PRODUCT SUMMARY</th>
                                                 <th class="text-end pe-4">QTY</th>
@@ -66,8 +66,8 @@
                                         <tbody>
                                             @foreach (var item in po.PurchaseOrderItems)
                                             {
-                                                <tr>
-                                                    <td class="ps-4 py-2 small fw-bold">@item.Product?.ProductName</td>
+                                                <tr class="border-bottom border-theme">
+                                                    <td class="ps-4 py-2 small fw-bold text-theme">@item.Product?.ProductName</td>
                                                     <td class="text-end pe-4 fw-bold text-primary">@item.Quantity @item.Product?.Unit</td>
                                                 </tr>
                                             }
@@ -75,7 +75,7 @@
                                     }
                                     else if (ViewBag.PicklistFormat == "Summary")
                                     {
-                                        <thead class="bg-light smaller text-muted">
+                                        <thead class="bg-soft-secondary smaller text-muted">
                                             <tr>
                                                 <th class="ps-4">PRODUCT ITEM</th>
                                                 <th>UNIT</th>
@@ -85,20 +85,20 @@
                                         <tbody>
                                             @foreach (var item in po.PurchaseOrderItems)
                                             {
-                                                <tr>
+                                                <tr class="border-bottom border-theme">
                                                     <td class="ps-4 py-2">
-                                                        <div class="fw-bold text-dark mb-0">@item.Product?.ProductName</div>
+                                                        <div class="fw-bold text-theme mb-0">@item.Product?.ProductName</div>
                                                         <div class="extra-small text-muted">SKU: @item.Product?.Id.ToString("D5")</div>
                                                     </td>
                                                     <td class="small text-muted">@item.Product?.Unit</td>
-                                                    <td class="text-end pe-4 fw-bold">@item.Quantity</td>
+                                                    <td class="text-end pe-4 fw-bold text-theme">@item.Quantity</td>
                                                 </tr>
                                             }
                                         </tbody>
                                     }
                                     else // Detailed
                                     {
-                                        <thead class="bg-light smaller text-muted">
+                                        <thead class="bg-soft-secondary smaller text-muted">
                                             <tr>
                                                 <th class="ps-4">PRODUCT ITEM</th>
                                                 <th>SKU</th>
@@ -113,22 +113,22 @@
                                                 var reservation = po.InventoryReservations?.FirstOrDefault(r => r.ProductId == item.ProductId);
                                                 var activeStatuses = new[] { ReservationStatus.Pending, ReservationStatus.Accepted, ReservationStatus.Confirmed, ReservationStatus.Picking };
                                                 var isReserved = reservation != null && activeStatuses.Contains(reservation.Status);
-                                                <tr>
+                                                <tr class="border-bottom border-theme">
                                                     <td class="ps-4 py-3">
-                                                        <div class="fw-bold text-dark">@item.Product?.ProductName</div>
+                                                        <div class="fw-bold text-theme">@item.Product?.ProductName</div>
                                                     </td>
                                                     <td><span class="text-muted small">@item.Product?.Id.ToString("D5")</span></td>
-                                                    <td><span class="fw-bold">@item.Quantity @item.Product?.Unit</span></td>
+                                                    <td><span class="fw-bold text-theme">@item.Quantity @item.Product?.Unit</span></td>
                                                     <td>
                                                         @if (isReserved)
                                                         {
-                                                            <span class="badge bg-success-soft text-success rounded-pill px-2">
+                                                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">
                                                                 <i class="fas fa-check-circle me-1"></i> Stock Reserved
                                                             </span>
                                                         }
                                                         else
                                                         {
-                                                            <span class="badge bg-danger-soft text-danger rounded-pill px-2">
+                                                            <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2">
                                                                 <i class="fas fa-exclamation-triangle me-1"></i> Not Reserved
                                                             </span>
                                                         }
@@ -146,7 +146,7 @@
                                 </table>
                             </div>
                         </div>
-                        <div class="card-footer bg-light bg-opacity-50 border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div class="card-footer bg-soft-secondary border-0 py-3 px-4 d-flex justify-content-between align-items-center">
                             <div class="text-muted smaller">
                                 <i class="fas fa-info-circle me-1"></i> Confirming "Picked" will move this order to <strong>Packing</strong>.
                             </div>
@@ -171,7 +171,43 @@
 </div>
 
 <style>
-    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
-    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
     .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .extra-small { font-size: 0.65rem; }
 </style>

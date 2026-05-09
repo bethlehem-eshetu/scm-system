@@ -4,86 +4,148 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
+<div class="content-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1">Dispatch History</h2>
             <p class="text-muted small">Timeline of all orders fulfilled and shipped from this facility.</p>
         </div>
-        <a asp-action="Reports" class="btn btn-primary rounded-pill px-4">
+        <a asp-action="Reports" class="btn btn-primary rounded-pill px-4 shadow-sm">
             <i class="fas fa-file-invoice me-2"></i> View Performance Reports
         </a>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="ps-4 text-uppercase smaller text-muted">Manifest #</th>
-                        <th class="text-uppercase smaller text-muted">Retailer</th>
-                        <th class="text-uppercase smaller text-muted">Agent & Vehicle</th>
-                        <th class="text-uppercase smaller text-muted">Status</th>
-                        <th class="text-uppercase smaller text-muted">Fulfilled Date</th>
-                        <th class="text-end pe-4 text-uppercase smaller text-muted">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Any())
-                    {
+    <div class="card bg-ready-dispatch border-0 shadow-sm overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 border-0 dispatch-table">
+                    <thead>
                         <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <i class="fas fa-history fa-3x text-light mb-3"></i>
-                                <p class="text-muted">No completed dispatches found in history.</p>
-                            </td>
+                            <th class="ps-4">Manifest #</th>
+                            <th>Retailer</th>
+                            <th>Agent & Vehicle</th>
+                            <th>Status</th>
+                            <th>Fulfilled Date</th>
+                            <th class="text-end pe-4">Action</th>
                         </tr>
-                    }
-                    @foreach (var po in Model)
-                    {
-                        <tr>
-                            <td class="ps-4">
-                                <div class="fw-bold text-dark">#@po.PONumber</div>
-                                <div class="extra-small text-muted">ID: @po.Id</div>
-                            </td>
-                            <td>
-                                <div class="fw-bold">@po.Order?.Retailer?.BusinessName</div>
-                                <div class="extra-small text-muted">@po.Order?.Retailer?.City</div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-light rounded-circle p-2 me-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-truck text-primary extra-small"></i>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="opacity-25 mb-3">
+                                        <i class="fas fa-history fa-4x"></i>
                                     </div>
-                                    <div>
-                                        <div class="small fw-bold">@(po.DeliveryAgent?.User?.FullName ?? "Unknown")</div>
-                                        <div class="extra-small text-muted">@(po.Vehicle?.LicensePlate ?? "No Vehicle")</div>
+                                    <h5 class="text-muted">No completed dispatches found in history.</h5>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var po in Model)
+                        {
+                            <tr class="border-bottom">
+                                <td class="ps-4">
+                                    <div class="fw-bold">#@po.PONumber</div>
+                                    <div class="extra-small text-muted">ID: @po.Id</div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@(po.Order?.Retailer?.BusinessName ?? "N/A")</div>
+                                    <div class="extra-small text-muted">@(po.Order?.Retailer?.City ?? "N/A")</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle p-2 me-2 bg-soft-success" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-truck text-primary extra-small"></i>
+                                        </div>
+                                        <div>
+                                            <div class="small fw-bold">@(po.DeliveryAgent?.User?.FullName ?? "Unknown")</div>
+                                            <div class="extra-small text-muted">@(po.Vehicle?.LicensePlate ?? "No Vehicle")</div>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge @(po.Status == "Completed" ? "bg-success" : (po.Status == "In Transit" ? "bg-info" : "bg-primary")) rounded-pill px-3 py-2 smaller">
-                                    @po.Status
-                                </span>
-                            </td>
-                            <td>
-                                <div class="small">@po.UpdatedAt.ToString("MMM dd, yyyy")</div>
-                                <div class="extra-small text-muted">@po.UpdatedAt.ToString("HH:mm")</div>
-                            </td>
-                            <td class="text-end pe-4">
-                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-light btn-sm rounded-pill px-3 fw-bold">
-                                    View Manifest
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                </td>
+                                <td>
+                                    <span class="badge @(po.Status == "Completed" ? "bg-soft-success" : (po.Status == "In Transit" ? "bg-info bg-opacity-10 text-info" : "bg-primary bg-opacity-10 text-primary")) rounded-pill px-3 py-2 smaller">
+                                        @po.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small fw-bold">@po.UpdatedAt.ToString("MMM dd, yyyy")</div>
+                                    <div class="extra-small text-muted">@po.UpdatedAt.ToString("HH:mm")</div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold">
+                                        View Manifest
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    /* Layout - Universal */
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+    }
+
+    .bg-ready-dispatch {
+        border-radius: 1.25rem;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .dispatch-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .dispatch-table thead th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        padding: 1.25rem 1rem;
+        font-weight: 700;
+    }
+
+    .dispatch-table tbody td {
+        padding: 1.25rem 1rem;
+    }
+
     .smaller { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; }
     .extra-small { font-size: 0.65rem; }
-    .bg-light { background-color: #f8fafc !important; }
+
+    /* Theme Colors - Dynamic */
+    .content-wrapper { background-color: var(--bg-page); color: var(--text-primary); }
+    .bg-ready-dispatch { background-color: var(--bg-card) !important; border: 1px solid var(--border) !important; }
+    .dispatch-table { color: var(--text-primary); }
+    .dispatch-table thead th { background-color: var(--bg-table-header) !important; border-bottom: 1px solid var(--border) !important; }
+    .dispatch-table tbody td, .dispatch-table tbody tr { background-color: var(--bg-card) !important; border-color: var(--border) !important; }
+    .table-hover tbody tr:hover td { background-color: var(--bg-table-header) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
+    .bg-soft-success { background-color: rgba(46, 156, 122, 0.1); color: var(--primary-color); }
 </style>

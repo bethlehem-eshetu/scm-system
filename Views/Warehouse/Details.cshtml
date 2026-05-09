@@ -10,7 +10,7 @@
     if (currentIdx == -1 && Model.Status == "Ready for Pickup") currentIdx = 3;
 }
 
-<div class="container-fluid py-4">
+<div class="content-wrapper">
     <div class="mb-4">
         <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
             <i class="fas fa-arrow-left me-1"></i> Back to Hub
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Header Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="dashboard-card overflow-hidden mb-4 border-0">
         <div class="card-body p-4 bg-dark text-white">
             <div class="row align-items-center">
                 <div class="col-md-8">
@@ -30,25 +30,25 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer bg-white border-0 p-4">
+        <div class="card-footer bg-card-theme border-0 p-4 border-top border-theme">
             <div class="row g-4 text-center text-md-start">
-                <div class="col-md-3 border-end">
+                <div class="col-md-3 border-end border-theme">
                     <label class="smaller text-muted d-block">RETAILER</label>
-                    <span class="fw-bold text-dark">@Model.Order?.Retailer?.BusinessName</span>
+                    <span class="fw-bold text-theme">@Model.Order?.Retailer?.BusinessName</span>
                 </div>
-                <div class="col-md-3 border-end">
+                <div class="col-md-3 border-end border-theme">
                     <label class="smaller text-muted d-block">DISPATCH AGENT</label>
-                    <span class="fw-bold text-dark">@(Model.DeliveryAgent?.User?.FullName ?? "N/A")</span>
+                    <span class="fw-bold text-theme">@(Model.DeliveryAgent?.User?.FullName ?? "N/A")</span>
                     <div class="extra-small text-muted">@(Model.DeliveryAgent?.Phone)</div>
                 </div>
-                <div class="col-md-3 border-end">
+                <div class="col-md-3 border-end border-theme">
                     <label class="smaller text-muted d-block">VEHICLE</label>
-                    <span class="fw-bold text-dark">@(Model.Vehicle?.LicensePlate ?? "N/A")</span>
+                    <span class="fw-bold text-theme">@(Model.Vehicle?.LicensePlate ?? "N/A")</span>
                     <div class="extra-small text-muted">@(Model.Vehicle?.VehicleType) (@(Model.Vehicle?.MaxLoadCapacity)kg)</div>
                 </div>
                 <div class="col-md-3">
                     <label class="smaller text-muted d-block">DESTINATION</label>
-                    <span class="fw-bold text-dark">@Model.Order?.Retailer?.City</span>
+                    <span class="fw-bold text-theme">@Model.Order?.Retailer?.City</span>
                     <div class="extra-small text-muted text-truncate">@Model.Order?.DeliveryAddress</div>
                 </div>
             </div>
@@ -56,22 +56,22 @@
     </div>
 
     <!-- Fulfillment Journey -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 p-4">
+    <div class="dashboard-card mb-4 p-4">
         <h5 class="fw-bold mb-4">Shipment Lifecycle</h5>
         <div class="d-flex justify-content-between position-relative px-2 mb-2">
-            <div class="position-absolute top-50 start-0 translate-middle-y w-100 bg-light" style="height: 4px; z-index: 0;"></div>
+            <div class="position-absolute top-50 start-0 translate-middle-y w-100 bg-soft-secondary" style="height: 4px; z-index: 0;"></div>
             <div class="position-absolute top-50 start-0 translate-middle-y bg-primary" style="height: 4px; z-index: 1; width: @(currentIdx * 16.66)%; transition: width 1s ease;"></div>
             
             @for (int i = 0; i < statuses.Length; i++)
             {
                 var icon = i switch { 0 => "fa-file-invoice", 1 => "fa-sync", 2 => "fa-barcode", 3 => "fa-box-open", 4 => "fa-truck-fast", 5 => "fa-house-circle-check", _ => "fa-circle-check" };
-                var color = i <= currentIdx ? "bg-primary text-white" : "bg-white text-muted border border-light";
+                var color = i <= currentIdx ? "bg-primary text-white" : "bg-card-theme text-muted border border-theme";
                 
                 <div class="text-center position-relative" style="z-index: 2; width: 60px;">
                     <div class="mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center rounded-circle @color" style="width: 40px; height: 40px;">
                         <i class="fas @icon small"></i>
                     </div>
-                    <div class="smaller fw-bold @(i <= currentIdx ? "text-dark" : "text-muted")">@statuses[i]</div>
+                    <div class="smaller fw-bold @(i <= currentIdx ? "text-theme" : "text-muted")">@statuses[i]</div>
                 </div>
             }
         </div>
@@ -79,13 +79,13 @@
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white py-3 px-4 border-bottom">
+            <div class="dashboard-card overflow-hidden">
+                <div class="card-header bg-transparent py-3 px-4 border-bottom border-theme">
                     <h6 class="fw-bold mb-0">Manifest Items</h6>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
+                    <table class="table table-hover align-middle mb-0 border-0">
+                        <thead class="bg-soft-secondary">
                             <tr>
                                 <th class="ps-4 text-uppercase smaller text-muted">Product</th>
                                 <th class="text-center text-uppercase smaller text-muted">Quantity</th>
@@ -96,20 +96,20 @@
                         <tbody>
                             @foreach (var item in Model.PurchaseOrderItems ?? new List<SCM_System.Models.Entities.PurchaseOrderItem>())
                             {
-                                <tr>
+                                <tr class="border-bottom border-theme">
                                     <td class="ps-4">
-                                        <div class="fw-bold text-dark">@item.Product?.ProductName</div>
+                                        <div class="fw-bold text-theme">@item.Product?.ProductName</div>
                                         <div class="extra-small text-muted">SKU: @item.Product?.Id</div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-light text-dark border px-3">@item.Quantity Units</span>
+                                        <span class="badge bg-soft-secondary text-theme border border-theme px-3">@item.Quantity Units</span>
                                     </td>
-                                    <td>1.5 kg</td> @* Placeholder weight *@
-                                    <td class="text-end pe-4 fw-bold">@(item.Quantity * 1.5m) kg</td>
+                                    <td class="text-theme">1.5 kg</td>
+                                    <td class="text-end pe-4 fw-bold text-theme">@(item.Quantity * 1.5m) kg</td>
                                 </tr>
                             }
                         </tbody>
-                        <tfoot class="bg-light border-top">
+                        <tfoot class="bg-soft-secondary border-top border-theme">
                             <tr>
                                 <td colspan="3" class="text-end fw-bold py-3 text-uppercase smaller">Total Shipment Weight:</td>
                                 <td class="text-end pe-4 fw-bold text-primary py-3">@(Model.PurchaseOrderItems?.Sum(i => i.Quantity) * 1.5m ?? 0) kg</td>
@@ -121,24 +121,24 @@
         </div>
 
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <div class="dashboard-card p-4 mb-4">
                 <h6 class="fw-bold text-uppercase text-muted mb-4">Fulfillment Metadata</h6>
                 <div class="mb-4 d-flex align-items-center">
-                    <div class="icon-box bg-primary-subtle rounded-3 p-2 me-3">
+                    <div class="icon-box bg-primary bg-opacity-10 rounded-3 p-2 me-3">
                         <i class="fas fa-calendar text-primary"></i>
                     </div>
                     <div>
                         <label class="smaller text-muted d-block">PICKED AT</label>
-                        <span class="fw-bold text-dark">@Model.UpdatedAt.ToString("MMM dd, HH:mm")</span>
+                        <span class="fw-bold text-theme">@Model.UpdatedAt.ToString("MMM dd, HH:mm")</span>
                     </div>
                 </div>
                 <div class="mb-0 d-flex align-items-center">
-                    <div class="icon-box bg-success-subtle rounded-3 p-2 me-3">
+                    <div class="icon-box bg-success bg-opacity-10 rounded-3 p-2 me-3">
                         <i class="fas fa-clock text-success"></i>
                     </div>
                     <div>
                         <label class="smaller text-muted d-block">EXPECTED ARRIVAL</label>
-                        <span class="fw-bold text-dark">@Model.UpdatedAt.AddHours(24).ToString("MMM dd, yyyy")</span>
+                        <span class="fw-bold text-theme">@Model.UpdatedAt.AddHours(24).ToString("MMM dd, yyyy")</span>
                     </div>
                 </div>
             </div>
@@ -146,7 +146,7 @@
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white">
                 <h6 class="fw-bold text-uppercase text-white-50 mb-3">Operational Status</h6>
                 <p class="small mb-4 text-white-50">This order has been @Model.Status.ToLower() and is currently being tracked in the logistics system.</p>
-                <button class="btn btn-white btn-sm rounded-pill w-100 fw-bold" onclick="window.print()">
+                <button class="btn btn-light btn-sm rounded-pill w-100 fw-bold" onclick="window.print()">
                     <i class="fas fa-print me-2"></i> Print Manifest
                 </button>
             </div>
@@ -155,10 +155,45 @@
 </div>
 
 <style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .bg-card-theme { background-color: var(--bg-card) !important; }
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
+
     .smaller { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; }
     .extra-small { font-size: 0.65rem; }
-    .bg-primary-subtle { background-color: rgba(13, 110, 253, 0.1); }
-    .bg-success-subtle { background-color: rgba(25, 135, 84, 0.1); }
-    .btn-white { background: white; color: var(--brand-primary); border: none; }
-    .btn-white:hover { background: #f8f9fa; }
 </style>

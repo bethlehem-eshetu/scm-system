@@ -4,20 +4,20 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid px-4 py-3">
+<div class="content-wrapper inventory-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Inventory Management</h2>
-            <p class="text-muted mb-0">Live stock monitoring and allocation tracking for @ViewBag.WarehouseName</p>
+            <h2 class="fw-bold mb-1 text-theme">Inventory Management</h2>
+            <p class="text-secondary-muted mb-0">Live stock monitoring and allocation tracking for @ViewBag.WarehouseName</p>
         </div>
         <div class="d-flex gap-2">
-            <div class="bg-white border rounded-pill px-3 py-2 shadow-sm d-flex align-items-center">
-                <span class="small fw-bold text-muted me-2 text-uppercase">Total Skus:</span>
+            <div class="border rounded-pill px-3 py-2 shadow-sm d-flex align-items-center bg-card-theme border-theme">
+                <span class="small fw-bold text-secondary-muted me-2 text-uppercase">Total Skus:</span>
                 <span class="small fw-bold text-primary">@Model.Count()</span>
             </div>
             <form asp-action="ReconcileInventory" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 shadow-sm h-100" onclick="return confirm('Recalculate all reserved quantities? This will sync Inventory with the Reservation ledger.')">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 shadow-sm h-100" onclick="return confirm('Recalculate all reserved quantities?')">
                     <i class="fas fa-sync-alt me-1"></i> Reconcile
                 </button>
             </form>
@@ -39,19 +39,19 @@
             </div>
             <div>
                 <h6 class="fw-bold mb-1 text-warning">Low Stock Critical Alert</h6>
-                <p class="mb-0 small text-dark">There are <strong>@lowStockItems.Count</strong> items below the safety threshold (20 units). Immediate replenishment required.</p>
+                <p class="mb-0 small text-secondary-muted">There are <strong>@lowStockItems.Count</strong> items below the safety threshold (20 units).</p>
             </div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="dashboard-card bg-card-theme border-theme shadow-sm overflow-hidden table-wrapper">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-muted fw-bold" style="font-size: 0.75rem;">
-                        <tr>
-                            <th class="ps-4 py-3">PRODUCT DETAILS</th>
+                <table class="table table-hover align-middle mb-0 border-0">
+                    <thead>
+                        <tr class="border-bottom border-theme">
+                            <th class="ps-4">PRODUCT DETAILS</th>
                             <th class="text-center">ON HAND</th>
                             <th class="text-center">RESERVED</th>
                             <th class="text-center">AVAILABLE</th>
@@ -63,19 +63,24 @@
                     <tbody>
                         @foreach (var item in Model)
                         {
-                            var statusClass = item.QuantityAvailable < 20 ? "text-danger fw-bold" : (item.QuantityAvailable < 50 ? "text-warning fw-bold" : "text-success fw-bold");
-                            var bgClass = item.QuantityAvailable < 20 ? "bg-danger-soft" : "";
+                            var available = item.QuantityOnHand - item.QuantityReserved;
+                            var statusBadgeClass = available < 20 ? "badge-low-stock" : "badge-in-stock";
+                            var statusText = available < 20 ? "Low Stock" : "In Stock";
                             
-                            <tr class="@bgClass">
+                            <tr class="border-bottom border-theme">
                                 <td class="ps-4">
-                                    <div class="fw-bold text-dark">@item.Product?.ProductName</div>
-                                    <div class="text-muted extra-small">SKU: @(item.Product?.SKU ?? item.Product?.Id.ToString("D5"))</div>
+                                    <div class="fw-bold text-theme">@item.Product?.ProductName</div>
+                                    <div class="text-muted-extra extra-small">SKU: @(item.Product?.SKU ?? item.Product?.Id.ToString("D5"))</div>
                                 </td>
-                                <td class="text-center"><span class="fw-bold fs-6">@item.QuantityOnHand</span></td>
+                                <td class="text-center"><span class="fw-bold text-theme">@item.QuantityOnHand</span></td>
                                 <td class="text-center"><span class="text-primary fw-bold">@item.QuantityReserved</span></td>
-                                <td class="text-center @statusClass"><span class="fs-6">@item.QuantityAvailable</span></td>
-                                <td><span class="badge bg-light text-dark border">@item.WarehouseLocation</span></td>
-                                <td><div class="small text-muted">@item.LastUpdated.ToString("MMM dd, HH:mm")</div></td>
+                                <td class="text-center">
+                                    <span class="badge @statusBadgeClass rounded-pill px-3">@statusText (@available)</span>
+                                </td>
+                                <td>
+                                    <span class="badge border bg-soft-secondary border-theme text-theme">@item.WarehouseLocation</span>
+                                </td>
+                                <td><div class="small text-muted-extra">@item.LastUpdated.ToString("MMM dd, HH:mm")</div></td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex justify-content-end gap-2">
                                         <form asp-action="UpdateInventory" method="post" class="d-inline">
@@ -108,13 +113,13 @@
 <!-- Modal Audit -->
 <div class="modal fade" id="auditModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-content bg-card-theme border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Inventory Audit Notice</h5>
+                <h5 class="modal-title fw-bold text-theme">Inventory Audit Notice</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 py-3">
-                <p class="text-muted mb-0">System-wide inventory reconciliation is scheduled for every Friday. Manual adjustments are logged for supplier verification.</p>
+                <p class="text-secondary-muted mb-0">System-wide inventory reconciliation is scheduled for every Friday. Manual adjustments are logged for supplier verification.</p>
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-dismiss="modal">I Understand</button>
@@ -124,7 +129,94 @@
 </div>
 
 <style>
-    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.05); }
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+        --text-muted: #6F7E78;
+        --accent-green: #2E9C7A;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+        --text-muted: #8A9B92;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        border-radius: 1.25rem;
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+    }
+
+    .table thead th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        padding: 1.25rem 1rem;
+        font-weight: 700;
+        background-color: var(--bg-table-header) !important;
+        border-bottom: 1px solid var(--border) !important;
+        color: var(--text-primary);
+    }
+
+    .table tbody td {
+        padding: 1.25rem 1rem;
+        background-color: var(--bg-card) !important;
+        border-color: var(--border) !important;
+        color: var(--text-secondary);
+    }
+
+    .table-hover tbody tr:hover td {
+        background-color: var(--bg-table-header) !important;
+    }
+
+    .text-theme { color: var(--text-primary) !important; }
+    .text-secondary-muted { color: var(--text-secondary) !important; }
+    .text-muted-extra { color: var(--text-muted) !important; }
     .extra-small { font-size: 0.75rem; }
-    .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .bg-card-theme { background-color: var(--bg-card) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+
+    /* Badges */
+    .badge-in-stock {
+        background-color: rgba(46, 156, 122, 0.15) !important;
+        color: var(--accent-green) !important;
+    }
+    .badge-low-stock {
+        background-color: rgba(220, 53, 69, 0.15) !important;
+        color: #dc3545 !important;
+    }
+
+    /* Provided Overrides */
+    body.dark-mode .inventory-container,
+    body.dark-mode .table-wrapper {
+        background-color: #1A1F1D !important;
+    }
+    body.dark-mode table th {
+        background-color: #252B28 !important;
+        color: #EDEDED !important;
+    }
+    body.dark-mode table td {
+        background-color: #1A1F1D !important;
+        color: #B8C5BE !important;
+        border-bottom-color: #2A3530 !important;
+    }
 </style>
+

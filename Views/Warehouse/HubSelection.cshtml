@@ -4,9 +4,9 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container py-5">
+<div class="content-wrapper">
     <div class="text-center mb-5">
-        <div class="display-5 fw-bold text-dark mb-2">Welcome Back, Manager</div>
+        <h1 class="display-5 fw-bold text-theme mb-2">Welcome Back, Manager</h1>
         <p class="text-muted fs-5">Please select the operational hub you wish to oversee today.</p>
     </div>
 
@@ -14,15 +14,15 @@
         @foreach (var hub in Model)
         {
             <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hub-card">
+                <div class="dashboard-card h-100 overflow-hidden hub-card">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-4">
                             <div class="hub-icon bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
                                 <i class="fas fa-warehouse fs-3"></i>
                             </div>
                             <div>
-                                <h4 class="fw-bold mb-0">@hub.Name</h4>
-                                <span class="badge bg-light text-primary border rounded-pill small">@hub.WarehouseCode</span>
+                                <h4 class="fw-bold mb-0 text-theme">@hub.Name</h4>
+                                <span class="badge bg-soft-secondary text-primary border border-theme rounded-pill small">@hub.WarehouseCode</span>
                             </div>
                         </div>
                         
@@ -48,15 +48,51 @@
 </div>
 
 <style>
-    .hub-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: 1px solid rgba(0,0,0,0.05) !important;
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+        --bg-table-header: #F8FAFC;
     }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+        --bg-table-header: #252B28;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 4rem 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
     .hub-card:hover {
         transform: translateY(-10px);
         box-shadow: 0 1rem 3rem rgba(0,0,0,0.1) !important;
-        border-color: var(--bs-primary) !important;
+        border-color: var(--primary-color) !important;
     }
+
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
+
     .hub-icon {
         transition: transform 0.3s ease;
     }

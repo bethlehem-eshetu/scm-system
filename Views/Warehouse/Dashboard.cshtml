@@ -1,17 +1,195 @@
 @model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
 @using SCM_System.Models.Constants
 @{
-    ViewData["Title"] = "Warehouse Operational Hub";
+    ViewData["Title"] = "Warehouse Dashboard";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
-    var manager = ViewBag.Manager as SCM_System.Models.Entities.SupplierEmployee;
     var warehouse = ViewBag.Warehouse as SCM_System.Models.Entities.Warehouse;
+    var manager = ViewBag.Manager as SCM_System.Models.Entities.SupplierEmployee;
 }
 
-<div class="container-fluid py-4 pb-5">
+<style>
+    /* CSS Variables for this view */
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .dashboard-page-content {
+        background-color: var(--bg-page);
+        min-height: 100vh;
+        color: var(--text-primary);
+        padding-bottom: 3rem;
+    }
+
+    /* Premium Header Styles */
+    .welcome-banner {
+        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2rem !important;
+    }
+    .banner-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.05; z-index: 1;
+    }
+    .banner-glow {
+        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
+        filter: blur(50px); z-index: 1;
+    }
+    .text-gradient-gold {
+        background: linear-gradient(to right, #f1c40f, #f39c12);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+    .z-index-2 { z-index: 2; }
+    .tracking-widest { letter-spacing: 2px; }
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* KPI Cards */
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    
+    .kpi-icon-box {
+        width: 54px; height: 54px;
+        border-radius: 1rem;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px;
+        margin-right: 1rem;
+    }
+    .kpi-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    .kpi-value { font-size: 1.85rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; }
+    
+    .bg-primary-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
+    .bg-warning-soft { background: rgba(230, 126, 34, 0.1); color: #E67E22; }
+    .bg-success-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
+    .bg-info-soft { background: rgba(91, 143, 249, 0.1); color: #5B8FF9; }
+
+    /* Dashboard Cards */
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        height: 100%;
+    }
+
+    .section-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    /* Buttons */
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        transition: all 0.3s ease;
+        border-radius: 1rem;
+    }
+    .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); color: white; }
+    
+    .btn-gold {
+        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+        border: none; color: #000; transition: all 0.3s ease; border-radius: 1rem;
+    }
+    .btn-gold:hover {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
+    }
+
+    .btn-action-icon {
+        width: 42px; height: 42px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+    }
+    .btn-action-icon:hover {
+        background: var(--bg-hover);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: scale(1.05);
+    }
+
+    /* Tables */
+    .admin-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .admin-table th {
+        background: var(--bg-page);
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .admin-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+    .admin-table tr:hover td {
+        background-color: rgba(46, 156, 122, 0.02);
+    }
+
+    .badge-soft {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .badge-soft-warning { background: rgba(230, 126, 34, 0.1); color: #E67E22; }
+    .badge-soft-primary { background: rgba(91, 143, 249, 0.1); color: #5B8FF9; }
+    .badge-soft-info { background: rgba(44, 125, 160, 0.1); color: #2C7DA0; }
+    .badge-soft-success { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
+
+    .extra-small { font-size: 0.7rem; }
+</style>
+
+<div class="dashboard-page-content px-4 py-4">
     <!-- Premium Enhanced Header -->
     <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-lg border-0 position-relative overflow-hidden">
+            <div class="welcome-banner p-4 p-lg-5 shadow-lg border-0 position-relative overflow-hidden">
                 <div class="banner-overlay"></div>
                 <div class="banner-glow"></div>
                 
@@ -34,20 +212,17 @@
                     </div>
                     <div class="col-lg-5 text-lg-end">
                         <div class="d-flex flex-wrap justify-content-lg-end gap-3">
-                            @if (manager?.HubAccesses?.Count > 1)
-                            {
-                                <a asp-action="Dashboard" asp-route-warehouseId="" class="btn btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
-                                    <div class="btn-icon bg-white bg-opacity-10 rounded-3">
-                                        <i class="fas fa-exchange-alt text-white"></i>
-                                    </div>
-                                    <div class="text-start">
-                                        <div class="extra-small text-white text-opacity-50 text-uppercase">Logistics</div>
-                                        <div class="text-white">Switch Hub</div>
-                                    </div>
-                                </a>
-                            }
+                            <button class="btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3" id="btnChartToggle">
+                                <div class="bg-white bg-opacity-10 rounded-3 p-2">
+                                    <i class="fas fa-chart-line text-white"></i>
+                                </div>
+                                <div class="text-start">
+                                    <div class="extra-small text-white text-opacity-50 text-uppercase">Analytics</div>
+                                    <div class="text-white">Activity Trend</div>
+                                </div>
+                            </button>
                             <a asp-action="AddStock" class="btn btn-gold px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg">
-                                <div class="btn-icon bg-black bg-opacity-20 rounded-3">
+                                <div class="bg-black bg-opacity-20 rounded-3 p-2">
                                     <i class="fas fa-plus"></i>
                                 </div>
                                 <div class="text-start">
@@ -66,108 +241,93 @@
     <div class="row g-4 mb-5">
         <div class="col-xl-3 col-md-6">
             <div class="kpi-card">
-                <div class="kpi-icon-box bg-primary-soft text-primary">
+                <div class="kpi-icon-box bg-primary-soft">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
                 <div class="ms-auto text-end">
                     <div class="kpi-label">Hub Load</div>
-                    <div class="kpi-value">@(ViewBag.TotalOrders ?? 0)</div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-muted fw-bold">Active Purchase Orders</span>
+                    <div class="kpi-value">@(ViewBag.OrdersToPick ?? 0)</div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="kpi-card">
-                <div class="kpi-icon-box bg-warning-soft text-warning">
+                <div class="kpi-icon-box bg-warning-soft">
                     <i class="fas fa-hourglass-half"></i>
                 </div>
                 <div class="ms-auto text-end">
-                    <div class="kpi-label">Picking Depth</div>
-                    <div class="kpi-value">@(ViewBag.PendingPrep ?? 0)</div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-warning fw-bold">Needs Picking/Packing</span>
+                    <div class="kpi-label">Utilization</div>
+                    <div class="kpi-value">@ViewBag.HubUtilization%</div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="kpi-card">
-                <div class="kpi-icon-box bg-success-soft text-success">
-                    <i class="fas fa-box-check"></i>
+                <div class="kpi-icon-box bg-success-soft">
+                    <i class="fas fa-boxes"></i>
                 </div>
                 <div class="ms-auto text-end">
-                    <div class="kpi-label">Staging Area</div>
-                    <div class="kpi-value">@(ViewBag.ReadyForPickup ?? 0)</div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-success fw-bold">Awaiting Courier</span>
+                    <div class="kpi-label">On Hand</div>
+                    <div class="kpi-value">@ViewBag.OnHandUnits</div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <div class="kpi-card">
-                <div class="kpi-icon-box bg-info-soft text-info">
+                <div class="kpi-icon-box bg-info-soft">
                     <i class="fas fa-truck-moving"></i>
                 </div>
                 <div class="ms-auto text-end">
                     <div class="kpi-label">Outbound</div>
-                    <div class="kpi-value">@(ViewBag.InProgress ?? 0)</div>
-                </div>
-                <div class="kpi-footer">
-                    <span class="text-info fw-bold">In Transit / Delivering</span>
+                    <div class="kpi-value">@(ViewBag.InTransit ?? 0)</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Hub Worklist Table -->
+    <!-- Middle Section: Worklist & Alerts -->
+    <div class="row g-4 mb-5">
         <div class="col-lg-8">
-            <div class="section-card">
-                <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
-                    <div>
-                        <h5 class="fw-bold mb-0">Hub Worklist</h5>
-                        <p class="extra-small text-muted mb-0">SLA velocity and operational priority</p>
+            <div class="dashboard-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="section-title mb-0 text-primary"><i class="fas fa-tasks"></i> Active Worklist</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn-action-icon" title="Print Worklist" id="btnPrint"><i class="fas fa-print"></i></button>
+                        <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Full List</a>
                     </div>
-                    <a asp-action="OrdersToPick" class="btn btn-sm btn-outline-card px-3 fw-bold" style="border-radius: 8px;">Full List</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="admin-table table-hover mb-0">
+                    <table class="admin-table">
                         <thead>
                             <tr>
-                                <th class="ps-4">PO Details</th>
+                                <th>PO Details</th>
                                 <th>Status</th>
                                 <th>SLA Velocity</th>
-                                <th>Retailer</th>
-                                <th class="text-end pe-4">Action</th>
+                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if (Model != null && Model.Any())
                             {
-                                foreach (var po in Model.OrderByDescending(p => p.CreatedAt).Take(8))
+                                foreach (var po in Model.Take(6))
                                 {
                                     var timeOpen = DateTime.Now - po.CreatedAt;
                                     var minutesOpen = timeOpen.TotalMinutes;
-                                    var slaClass = minutesOpen > 120 ? "danger" : (minutesOpen > 30 ? "warning" : "success");
+                                    var slaClass = minutesOpen > 120 ? "text-danger" : (minutesOpen > 30 ? "text-warning" : "text-success");
                                     var slaLabel = minutesOpen < 60 ? $"{(int)minutesOpen}m" : $"{(timeOpen.TotalHours):F1}h";
-                                    
+
                                     <tr>
-                                        <td class="ps-4">
-                                            <div class="fw-bold text-dark">#@po.PONumber</div>
+                                        <td>
+                                            <div class="fw-bold">#@po.PONumber</div>
                                             <div class="extra-small text-muted">@po.CreatedAt.ToString("MMM dd, HH:mm")</div>
                                         </td>
                                         <td>
                                             @{
                                                 var badgeStyle = po.Status switch {
                                                     POStatus.Issued => "badge-soft-warning",
-                                                    POStatus.Processing => "badge-soft-primary",
-                                                    POStatus.Picked => "badge-soft-info",
-                                                    POStatus.Packed => "badge-soft-success",
-                                                    POStatus.InTransit => "badge-soft-primary",
-                                                    POStatus.Delivered => "badge-soft-dark",
+                                                    POStatus.Accepted => "badge-soft-primary",
+                                                    POStatus.Picking => "badge-soft-info",
+                                                    POStatus.Picked => "badge-soft-success",
                                                     _ => "badge-soft-secondary"
                                                 };
                                             }
@@ -175,37 +335,26 @@
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
-                                                <div class="rounded-circle bg-@slaClass" style="width: 8px; height: 8px;"></div>
-                                                <div class="small fw-bold @(slaClass == "danger" ? "text-danger" : "")">@slaLabel</div>
+                                                <i class="fas fa-clock @slaClass"></i>
+                                                <span class="fw-bold @slaClass">@slaLabel</span>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div class="fw-bold small">@po.Retailer?.BusinessName</div>
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <div class="d-flex justify-content-end gap-2">
-                                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-icon-sm btn-outline-card">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                @if (po.Status == POStatus.Issued || po.Status == POStatus.Accepted || po.Status == POStatus.Picking) 
-                                                {
-                                                    var nextStatus = po.Status == POStatus.Picking ? POStatus.Picked : POStatus.Picking;
-                                                    var btnIcon = po.Status == POStatus.Picking ? "fa-check-double" : "fa-hand-holding-box";
-                                                    var btnClass = po.Status == POStatus.Picking ? "text-info" : "text-warning";
-
-                                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
-                                                        <input type="hidden" name="id" value="@po.Id" />
-                                                        <input type="hidden" name="status" value="@nextStatus" />
-                                                        <input type="hidden" name="returnAction" value="Dashboard" />
-                                                        <button type="submit" class="btn btn-sm btn-icon-sm btn-outline-card">
-                                                            <i class="fas @btnIcon @btnClass"></i>
-                                                        </button>
-                                                    </form>
-                                                }
-                                            </div>
+                                        <td class="text-end">
+                                            <a asp-action="Details" asp-route-id="@po.Id" class="btn-action-icon ms-auto">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <i class="fas fa-check-circle fa-3x text-success opacity-25 mb-3"></i>
+                                        <h6 class="fw-bold">No active orders – all caught up!</h6>
+                                    </td>
+                                </tr>
                             }
                         </tbody>
                     </table>
@@ -213,144 +362,129 @@
             </div>
         </div>
 
-        <!-- Sidebar Insights -->
         <div class="col-lg-4">
             <div class="d-flex flex-column gap-4">
-                <!-- Inventory Capacity Card -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card">
-                    <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Hub Utilization</h6>
-                    @{
-                        double capUsed = warehouse?.MaxCapacity > 0 ? (double)(ViewBag.TotalOnHand ?? 0) / warehouse.MaxCapacity * 100 : 0;
-                    }
-                    <div class="d-flex justify-content-between align-items-end mb-2">
-                        <div class="display-6 fw-bold text-primary">@capUsed.ToString("F0")%</div>
-                        <div class="text-end">
-                            <div class="small fw-bold text-dark">@(ViewBag.TotalOnHand ?? 0) Units</div>
-                            <div class="extra-small text-muted">of @(warehouse?.MaxCapacity ?? 0) capacity</div>
+                <!-- Replenishment Alerts -->
+                <div class="dashboard-card">
+                    <h6 class="section-title text-warning"><i class="fas fa-exclamation-triangle"></i> Replenishment Alerts</h6>
+                    @if (ViewBag.LowStockProducts != null && ((IEnumerable<dynamic>)ViewBag.LowStockProducts).Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var p in ViewBag.LowStockProducts)
+                            {
+                                <div class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center border-0 border-bottom">
+                                    <div>
+                                        <div class="fw-bold small">@p.Name</div>
+                                        <div class="extra-small text-danger">Stock: @p.Stock</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="requestReplenishment('@p.Id')">Restock</button>
+                                </div>
+                            }
                         </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle text-success fa-2x mb-2 opacity-25"></i>
+                            <p class="text-muted small">All stock levels optimal.</p>
+                        </div>
+                    }
+                    <div class="mt-3">
+                        <a href="@Url.Action("Inventory", "Warehouse")" class="extra-small fw-bold text-primary text-decoration-none">VIEW ALL INVENTORY <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
-                    <div class="progress rounded-pill bg-light mb-4" style="height: 10px;">
-                        <div class="progress-bar @(capUsed > 85 ? "bg-danger" : "bg-primary") rounded-pill" style="width: @capUsed%;"></div>
-                    </div>
-                    <div class="p-3 bg-danger bg-opacity-10 rounded-4 d-flex justify-content-between align-items-center">
-                        <div class="small fw-bold text-danger">Low Stock Alerts</div>
-                        <div class="badge bg-danger rounded-pill">@(ViewBag.LowStockAlertCount ?? 0)</div>
-                    </div>
-                    <a asp-action="Inventory" class="btn btn-sm btn-outline-card w-100 py-2 mt-4 fw-bold" style="border-radius: 10px;">Manage Inventory</a>
                 </div>
 
                 <!-- Logistics Resources -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white dark-card">
-                    <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small">Logistics Pool</h6>
-                    <div class="d-flex flex-column gap-3">
-                        <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light border">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-info-soft text-info p-2 rounded-3">
-                                    <i class="fas fa-truck"></i>
-                                </div>
-                                <div class="fw-bold small">Available Fleet</div>
+                <div class="dashboard-card">
+                    <h6 class="section-title text-info"><i class="fas fa-truck-loading"></i> Logistics Pool</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-3 rounded-4 bg-info bg-opacity-10 text-center border border-info border-opacity-25">
+                                <i class="fas fa-truck text-info mb-2"></i>
+                                <div class="extra-small text-muted text-uppercase fw-bold">Fleet</div>
+                                <div class="fw-bold text-info">@(ViewBag.AvailableFleet ?? 0) Units</div>
                             </div>
-                            <div class="fw-bold text-dark small">@(ViewBag.AvailableVehicles ?? 0) Units</div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light border">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-success-soft text-success p-2 rounded-3">
-                                    <i class="fas fa-user-tie"></i>
-                                </div>
-                                <div class="fw-bold small">Active Agents</div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-4 bg-success bg-opacity-10 text-center border border-success border-opacity-25">
+                                <i class="fas fa-user-check text-success mb-2"></i>
+                                <div class="extra-small text-muted text-uppercase fw-bold">Agents</div>
+                                <div class="fw-bold text-success">@(ViewBag.ActiveAgents ?? 0) Online</div>
                             </div>
-                            <div class="fw-bold text-dark small">@(ViewBag.ActiveAgents ?? 0) Online</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Hidden Chart Section -->
+    <div id="chartContainer" class="row animate-slide-up" style="display: none;">
+        <div class="col-12">
+            <div class="dashboard-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="section-title mb-0"><i class="fas fa-chart-area text-primary"></i> Hourly Picking Velocity</h6>
+                    <button class="btn-close" onclick="$('#chartContainer').fadeOut()"></button>
+                </div>
+                <canvas id="hourlyChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
 
-<style>
-    /* Reuse global tokens */
-    .welcome-banner {
-        background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .banner-overlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: url('https://www.transparenttextures.com/patterns/cubes.png');
-        opacity: 0.05; z-index: 1;
-    }
-    .banner-glow {
-        position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
-        background: radial-gradient(circle, rgba(46, 156, 122, 0.2) 0%, transparent 70%);
-        filter: blur(50px); z-index: 1;
-    }
-    .text-gradient-gold {
-        background: linear-gradient(to right, #f1c40f, #f39c12);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-    }
-    .z-index-2 { z-index: 2; }
-    .tracking-widest { letter-spacing: 2px; }
-    
-    .kpi-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 24px;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-    .kpi-icon-box {
-        width: 54px; height: 54px;
-        border-radius: 16px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 24px;
-    }
-    .kpi-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
-    .kpi-value { font-size: 1.85rem; font-weight: 700; color: var(--text-color); line-height: 1.2; }
-    .kpi-footer {
-        width: 100%; margin-top: 16px; padding-top: 16px;
-        border-top: 1px solid var(--border-color);
-        font-size: 12px; color: var(--text-muted);
-    }
-    
-    .section-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 24px;
-        overflow: hidden;
-    }
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            let chartShown = false, hourlyChart = null;
+            
+            $('#btnChartToggle').on('click', function() {
+                const container = $('#chartContainer');
+                if (chartShown) { 
+                    container.fadeOut(); 
+                    chartShown = false; 
+                } else {
+                    container.fadeIn(); 
+                    chartShown = true;
+                    if (!hourlyChart) {
+                        const ctx = document.getElementById('hourlyChart').getContext('2d');
+                        hourlyChart = new Chart(ctx, { 
+                            type: 'line', 
+                            data: { 
+                                labels: @Html.Raw(Json.Serialize(ViewBag.HourlyLabels ?? new[] { "8 AM","9 AM","10 AM","11 AM","12 PM","1 PM","2 PM","3 PM","4 PM","5 PM" })), 
+                                datasets: [{ 
+                                    label: 'Picks', 
+                                    data: @Html.Raw(Json.Serialize(ViewBag.HourlyPicks ?? new int[10])), 
+                                    borderColor: '#2E9C7A', 
+                                    backgroundColor: 'rgba(46, 156, 122, 0.1)',
+                                    tension: 0.4, 
+                                    fill: true,
+                                    pointBackgroundColor: '#2E9C7A',
+                                    pointRadius: 4
+                                }] 
+                            }, 
+                            options: { 
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: { 
+                                    y: { 
+                                        beginAtZero: true,
+                                        grid: { color: 'rgba(0,0,0,0.05)' }
+                                    },
+                                    x: { grid: { display: false } }
+                                } 
+                            } 
+                        });
+                    }
+                }
+            });
 
-    .bg-primary-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
-    .bg-warning-soft { background: rgba(230, 126, 34, 0.1); color: #E67E22; }
-    .bg-success-soft { background: rgba(46, 156, 122, 0.1); color: #2E9C7A; }
-    .bg-info-soft { background: rgba(91, 143, 249, 0.1); color: #5B8FF9; }
-    
-    .btn-glass {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-        transition: all 0.3s ease;
-        border-radius: 16px;
-    }
-    .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); color: white; }
-    .btn-gold {
-        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
-        border: none; color: #000; transition: all 0.3s ease; border-radius: 16px;
-    }
-    .btn-gold:hover {
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
-    }
-    .btn-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    
-    .extra-small { font-size: 0.75rem; }
-    .tracking-wider { letter-spacing: 1px; }
-</style>
+            $('#btnPrint').on('click', () => window.print());
+        });
+
+        function requestReplenishment(productId) { 
+            alert("Replenishment request sent for Inventory Item #" + productId); 
+        }
+    </script>
+}

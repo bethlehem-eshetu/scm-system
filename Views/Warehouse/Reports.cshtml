@@ -4,7 +4,7 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
+<div class="content-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1">Operational Performance Report</h2>
@@ -17,7 +17,7 @@
 
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white">
+            <div class="dashboard-card p-4 text-center">
                 <div class="bg-primary bg-opacity-10 text-primary rounded-circle mx-auto p-3 mb-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-check-double fs-4"></i>
                 </div>
@@ -26,7 +26,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white">
+            <div class="dashboard-card p-4 text-center">
                 <div class="bg-info bg-opacity-10 text-info rounded-circle mx-auto p-3 mb-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-truck-ramp-box fs-4"></i>
                 </div>
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white">
+            <div class="dashboard-card p-4 text-center">
                 <div class="bg-warning bg-opacity-10 text-warning rounded-circle mx-auto p-3 mb-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-boxes-stacked fs-4"></i>
                 </div>
@@ -44,7 +44,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white">
+            <div class="dashboard-card p-4 text-center">
                 <div class="bg-success bg-opacity-10 text-success rounded-circle mx-auto p-3 mb-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-clock-rotate-left fs-4"></i>
                 </div>
@@ -56,10 +56,10 @@
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="dashboard-card p-4 mb-4">
                 <h5 class="fw-bold mb-4">Volume & Fulfillment Timeline</h5>
-                <div class="p-5 text-center text-muted border border-dashed rounded-4">
-                    <i class="fas fa-chart-line fa-4x mb-3 text-light"></i>
+                <div class="p-5 text-center text-muted border border-dashed rounded-4 border-theme">
+                    <i class="fas fa-chart-line fa-4x mb-3 text-light opacity-25"></i>
                     <p>Fulfillment analytics chart visualization will appear here based on weekly historical data.</p>
                 </div>
             </div>
@@ -78,15 +78,15 @@
                 <p class="small mb-0">This report is automatically synced with the Supplier Admin Dashboard.</p>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white shadow-gradient">
+            <div class="dashboard-card p-4">
                 <h6 class="fw-bold text-uppercase text-muted mb-4">Recommended Actions</h6>
                 <div class="mb-3 d-flex align-items-start gap-3">
                     <div class="badge bg-warning rounded-pill p-1">1</div>
-                    <p class="small text-dark mb-0">Replenish top 5 low stock items to avoid fulfillment delays.</p>
+                    <p class="small mb-0">Replenish top 5 low stock items to avoid fulfillment delays.</p>
                 </div>
                 <div class="mb-0 d-flex align-items-start gap-3">
                     <div class="badge bg-primary rounded-pill p-1">2</div>
-                    <p class="small text-dark mb-0">Assign additional delivery agents for the Monday morning peak.</p>
+                    <p class="small mb-0">Assign additional delivery agents for the Monday morning peak.</p>
                 </div>
             </div>
         </div>
@@ -94,13 +94,47 @@
 </div>
 
 <style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        padding: 2rem;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        height: 100%;
+    }
+
     .smaller { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; }
     .extra-small { font-size: 0.65rem; }
-    .border-dashed { border: 2px dashed #f1f5f9 !important; }
-    .shadow-gradient { background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%); }
+    .border-theme { border-color: var(--border) !important; }
+    .border-dashed { border: 2px dashed !important; }
+    .text-muted { color: var(--text-secondary) !important; }
+
     @@media print {
         .btn-dark, .sidebar, .navbar { display: none !important; }
-        .container-fluid { padding: 0 !important; }
-        .card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+        .content-wrapper { padding: 0 !important; background: white !important; }
+        .dashboard-card { box-shadow: none !important; border: 1px solid #dee2e6 !important; background: white !important; }
     }
 </style>

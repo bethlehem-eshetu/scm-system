@@ -390,7 +390,7 @@ namespace SCM_System.Controllers
             if (!ModelState.IsValid)
             {
                 model.BankAccounts = await _context.BankAccounts.Where(ba => ba.SupplierId == model.SupplierId).ToListAsync();
-                model.ActiveSessions = await _context.UserSessions.Where(us => us.UserId != null && us.IsActive).ToListAsync(); // Simplified for error state
+                model.ActiveSessions = await _context.UserSessions.Where(us => us.IsActive).ToListAsync(); // Simplified for error state
                 return View(model);
             }
 
