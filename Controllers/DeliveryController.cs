@@ -260,12 +260,13 @@ namespace SCM_System.Controllers
                 .ToListAsync();
 
             ViewBag.RecentDeliveries = recentDeliveries;
-
             var activeDeliveries = await _context.PurchaseOrders
                 .Include(po => po.Order)
                     .ThenInclude(o => o.Retailer)
                 .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
                 .ToListAsync();
+
+            ViewBag.ActiveDeliveries = activeDeliveries;
 
             var mapDataList = new List<object>();
             var random = new Random();

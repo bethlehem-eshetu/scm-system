@@ -87,10 +87,10 @@
     <!-- Dynamic Filter Bar -->
     <div class="card border-0 shadow-premium rounded-5 mb-5 bg-white">
         <div class="card-body p-4">
-            <form method="get" class="row g-3 align-items-end">
+            <form id="filterForm" method="get" class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Fiscal Period</label>
-                    <select name="dateRange" class="form-select nexus-input border-0 bg-faint-green rounded-4 py-2 px-3 fw-bold small text-dark-green">
+                    <select name="dateRange" class="form-select nexus-input border-0 bg-faint-green rounded-4 py-2 px-3 fw-bold small text-dark-green" onchange="this.form.submit()">
                         <option value="all">Historical Ledger</option>
                         <option value="month">Current Quarter</option>
                         <option value="30days">Active Month</option>
@@ -98,7 +98,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Clearance Status</label>
-                    <select name="status" class="form-select nexus-input border-0 bg-faint-green rounded-4 py-2 px-3 fw-bold small text-dark-green">
+                    <select name="status" class="form-select nexus-input border-0 bg-faint-green rounded-4 py-2 px-3 fw-bold small text-dark-green" onchange="this.form.submit()">
                         <option value="all">All States</option>
                         <option value="Paid">Cleared / Finalized</option>
                         <option value="Pending">In Pipeline</option>
@@ -109,7 +109,7 @@
                     <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Asset Search</label>
                     <div class="input-group">
                         <span class="input-group-text border-0 bg-faint-green text-dark-green opacity-50"><i class="fas fa-search"></i></span>
-                        <input type="text" name="search" class="form-control nexus-input border-0 bg-faint-green py-2 fw-bold text-dark-green" placeholder="PO Reference or TX ID...">
+                        <input type="text" id="liveSearch" name="search" class="form-control nexus-input border-0 bg-faint-green py-2 fw-bold text-dark-green" placeholder="PO Reference or TX ID...">
                     </div>
                 </div>
                 <div class="col-md-2">

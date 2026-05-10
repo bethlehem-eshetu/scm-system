@@ -5,7 +5,7 @@
     var isSupplier = User.IsInRole("Supplier");
 }
 
-<div class="container-fluid py-4 px-4">
+<div class="py-2">
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h1 class="h2 fw-bold text-dark-green mb-1">
@@ -208,19 +208,6 @@
 
 @section Styles {
     <style>
-        :root {
-            --dark-green: #1a3d31;
-            --accent-green: #d4f06d;
-            --faint-green: #f2f6f6;
-        }
-
-        .text-dark-green { color: var(--dark-green) !important; }
-        .bg-dark-green { background-color: var(--dark-green) !important; }
-        .bg-faint-green { background-color: var(--faint-green) !important; }
-        .btn-dark-green { background-color: var(--dark-green); color: white; border: none; }
-        .btn-dark-green:hover { background-color: #244d3e; color: white; }
-        .text-accent-green { color: var(--accent-green) !important; }
-
         .rounded-5 { border-radius: 24px !important; }
         .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
         .ls-1 { letter-spacing: 1px; }
@@ -245,7 +232,7 @@
         .border-dashed-custom { border: 2px dashed rgba(26, 61, 49, 0.1); }
 
         .nexus-filter-btn { border: none; transition: all 0.3s ease; }
-        .nexus-filter-btn.active { background-color: var(--dark-green) !important; color: var(--accent-green) !important; box-shadow: 0 4px 12px rgba(26,61,49,0.2); }
+        .nexus-filter-btn.active { background-color: var(--primary-color) !important; color: var(--accent-green) !important; box-shadow: 0 4px 12px rgba(26,61,49,0.2); }
 
         .hover-lift { transition: all 0.3s ease; }
         .hover-lift:hover { transform: translateY(-10px); }

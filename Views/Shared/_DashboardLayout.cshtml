@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <style>
@@ -35,6 +36,10 @@
             --faint-green: #f2f6f6;
             --input-bg: #FFFFFF;
             --hover-state: #F0F4F2;
+            
+            /* Global Design Tokens */
+            --dark-green: #1a3d31;
+            --extra-small: 0.75rem;
         }
 
         /* Dark Theme Variables (Modernized Green-Dark) */
@@ -49,6 +54,11 @@
             --sidebar-bg: #06261E;
             --input-bg: #252A28;
             --hover-state: #2A3530;
+            
+            /* Dark Mode Overrides */
+            --dark-green: #3BAE86;
+            --faint-green: #252A28;
+            --accent-green: #d4f06d;
         }
 
         body {
@@ -133,6 +143,17 @@
         
         .dark-mode .dropdown-divider {
             border-top-color: var(--border-color) !important;
+        }
+
+        .dark-mode .btn-white {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark-mode .bg-faint-green {
+            background-color: var(--faint-green) !important;
+            color: var(--text-color) !important;
         }
 
         /* Premium Sidebar Styling */
@@ -455,6 +476,25 @@
         }
         .badge-soft-success { background: rgba(46,156,122,0.15); color: #2E9C7A; }
         .badge-soft-warning { background: rgba(230,126,34,0.15); color: #E67E22; }
+
+        /* Premium Theme Utilities */
+        .bg-accent-green { background-color: var(--accent-green) !important; }
+        .text-accent-green { color: var(--accent-green) !important; }
+        .bg-dark-green { background-color: var(--primary-color) !important; }
+        .text-dark-green { color: var(--primary-color) !important; }
+        .btn-faint-green { 
+            background-color: var(--faint-green); 
+            color: var(--primary-color);
+            border: none;
+        }
+        .btn-faint-green:hover {
+            background-color: var(--accent-green);
+            color: var(--primary-color);
+        }
+        .dark-mode .btn-faint-green {
+            background-color: var(--hover-state);
+            color: var(--text-color);
+        }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -475,6 +515,7 @@
                 var role = Context.Session.GetString("UserRole");
             }
 
+            <ul class="sidebar-menu">
             @if (role == "Supplier")
             {
                 <partial name="_SupplierSidebar" />
@@ -495,18 +536,7 @@
             {
                 <partial name="_AdminSidebar" />
             }
-
-            <div class="sidebar-user">
-                <div class="user-info">
-                    <div class="avatar">
-                        @(Context.Session.GetString("UserName")?[0].ToString() ?? "U")
-                    </div>
-                    <div class="user-details">
-                        <span class="name">@Context.Session.GetString("UserName")</span>
-                        <span class="role">@role</span>
-                    </div>
-                </div>
-            </div>
+            </ul>
         </nav>
 
         <!-- Page Content -->
@@ -527,11 +557,27 @@
                     </button>
                     
                     <div class="dropdown">
-                        <button class="btn btn-faint-green rounded-pill px-3 py-2 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                            <div class="bg-dark-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.7rem;">
-                                <i class="fas fa-user"></i>
+                        <button class="btn btn-faint-green rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm border" type="button" data-bs-toggle="dropdown">
+                            @{
+                                var userImg = Context.Session.GetString("ProfileImg");
+                                if (!string.IsNullOrEmpty(userImg))
+                                {
+                                    <div class="rounded-circle overflow-hidden d-flex align-items-center justify-content-center border border-2 border-white" style="width: 32px; height: 32px;">
+                                        <img src="@userImg" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="bg-dark-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        @(Context.Session.GetString("UserName")?[0].ToString().ToUpper() ?? "U")
+                                    </div>
+                                }
+                            }
+                            <div class="text-start d-none d-lg-block ms-1">
+                                <div class="small fw-bold text-dark-green mb-0" style="line-height: 1;">@Context.Session.GetString("UserName")</div>
+                                <div style="font-size: 0.65rem;" class="text-muted opacity-75">@role</div>
                             </div>
-                            <span class="small fw-bold text-dark-green">My Account</span>
+                            <i class="fas fa-chevron-down extra-small text-muted ms-1"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow-premium p-2 mt-2">
                             <li><a class="dropdown-item rounded-3" href="/@role/Settings"><i class="fas fa-cog me-2"></i> Settings</a></li>
@@ -563,6 +609,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     
     <script>
@@ -579,6 +626,15 @@
                 
                 // Save preference via AJAX if needed, or just session
                 $.post('/Account/SetTheme', { theme: isDark ? 'Dark' : 'Light' });
+            });
+
+            // Highlight active menu item based on current URL path
+            var path = window.location.pathname;
+            $('.sidebar-menu li a').each(function() {
+                var href = $(this).attr('href');
+                if (href === path || href === path + "/") {
+                    $(this).closest('li').addClass('active');
+                }
             });
         });
     </script>

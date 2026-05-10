@@ -117,10 +117,12 @@
                                                     <img id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover d-none" alt="Logo" />
                                                 }
                                             </div>
-                                            <label for="CompanyLogoFile" class="btn btn-dark-green btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-premium p-3 border border-3 border-white" style="cursor: pointer;">
+                                            <label for="profilePictureInput" class="btn btn-dark-green btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-premium p-3 border border-3 border-white" style="cursor: pointer;">
                                                 <i class="fas fa-camera text-accent-green"></i>
                                             </label>
-                                            <input asp-for="CompanyLogoFile" type="file" class="d-none" accept="image/*" onchange="previewImage(this)" />
+                                            <form id="profilePicForm" asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" class="d-none">
+                                                <input type="file" id="profilePictureInput" name="profilePicture" accept="image/*" onchange="previewImage(this); document.getElementById('profilePicForm').submit();" />
+                                            </form>
                                         </div>
                                         <p class="text-muted small mt-3 fw-bold opacity-75 text-dark-green">Corporate Identity Asset</p>
                                     </div>
@@ -393,6 +395,7 @@
                     $('#logoPreview').attr('src', e.target.result).removeClass('d-none');
                     $('#logoPlaceholder').addClass('d-none');
                     $('#sidebarLogoPreview').attr('src', e.target.result);
+                    toastr.info("Logo preview updated. Syncing with server...");
                 }
                 reader.readAsDataURL(input.files[0]);
             }
