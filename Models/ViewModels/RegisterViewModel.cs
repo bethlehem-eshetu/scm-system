@@ -31,6 +31,9 @@ namespace SCM_System.Models.ViewModels
         [Phone(ErrorMessage = "Invalid phone number")]
         public string PhoneNumber { get; set; }
 
+        [Display(Name = "Address")]
+        public string? Address { get; set; }
+
         [Required(ErrorMessage = "Please select a role")]
         [Display(Name = "Register As")]
         public string Role { get; set; }

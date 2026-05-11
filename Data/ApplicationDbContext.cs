@@ -931,6 +931,86 @@ namespace SCM_System.Data
 
             modelBuilder.Entity<SupplierTransaction>()
                 .HasIndex(st => st.SupplierId);
+
+            // ========== DECIMAL PRECISION CONFIGURATIONS ==========
+
+            // Vehicle
+            modelBuilder.Entity<Vehicle>().Property(v => v.MaxLoadCapacity).HasPrecision(18, 2);
+            modelBuilder.Entity<Vehicle>().Property(v => v.InternalVolumeM3).HasPrecision(18, 2);
+            modelBuilder.Entity<Vehicle>().Property(v => v.FuelTankCapacity).HasPrecision(18, 2);
+            modelBuilder.Entity<Vehicle>().Property(v => v.Mileage).HasPrecision(18, 2);
+            modelBuilder.Entity<Vehicle>().Property(v => v.CurrentMileage).HasPrecision(18, 2);
+            modelBuilder.Entity<Vehicle>().Property(v => v.FuelEfficiency).HasPrecision(18, 2);
+            modelBuilder.Entity<Vehicle>().Property(v => v.TireChangeDueMileage).HasPrecision(18, 2);
+
+            // Warehouse
+            modelBuilder.Entity<Warehouse>().Property(w => w.ReceivingAreaSizeM2).HasPrecision(18, 2);
+
+            // MaintenanceRecord
+            modelBuilder.Entity<MaintenanceRecord>().Property(m => m.OdometerAtService).HasPrecision(18, 2);
+            modelBuilder.Entity<MaintenanceRecord>().Property(m => m.NextServiceMileage).HasPrecision(18, 2);
+
+            // IncidentReport
+            modelBuilder.Entity<IncidentReport>().Property(i => i.Lat).HasPrecision(18, 8);
+            modelBuilder.Entity<IncidentReport>().Property(i => i.Long).HasPrecision(18, 8);
+
+            // DispatchTask
+            modelBuilder.Entity<DispatchTask>().Property(d => d.DeliveryLat).HasPrecision(18, 8);
+            modelBuilder.Entity<DispatchTask>().Property(d => d.DeliveryLong).HasPrecision(18, 8);
+
+            // Supplier
+            modelBuilder.Entity<Supplier>().Property(s => s.CommissionRate).HasPrecision(5, 2);
+            modelBuilder.Entity<Supplier>().Property(s => s.Balance).HasPrecision(18, 2);
+
+            // SupplierEmployee
+            modelBuilder.Entity<SupplierEmployee>().Property(s => s.MonthlySalary).HasPrecision(18, 2);
+
+            // Order
+            modelBuilder.Entity<Order>().Property(o => o.Subtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<Order>().Property(o => o.VAT).HasPrecision(18, 2);
+            modelBuilder.Entity<Order>().Property(o => o.TotalAmount).HasPrecision(18, 2);
+
+            // PurchaseOrder
+            modelBuilder.Entity<PurchaseOrder>().Property(p => p.Subtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<PurchaseOrder>().Property(p => p.VAT).HasPrecision(18, 2);
+            modelBuilder.Entity<PurchaseOrder>().Property(p => p.Discount).HasPrecision(18, 2);
+            modelBuilder.Entity<PurchaseOrder>().Property(p => p.TotalAmount).HasPrecision(18, 2);
+
+            // PurchaseOrderItem & OrderItem
+            modelBuilder.Entity<PurchaseOrderItem>().Property(p => p.UnitPrice).HasPrecision(18, 2);
+            modelBuilder.Entity<OrderItem>().Property(o => o.UnitPrice).HasPrecision(18, 2);
+
+            // Product
+            modelBuilder.Entity<Product>().Property(p => p.BasePrice).HasPrecision(18, 2);
+            modelBuilder.Entity<Product>().Property(p => p.CostPrice).HasPrecision(18, 2);
+            modelBuilder.Entity<Product>().Property(p => p.WholesalePrice).HasPrecision(18, 2);
+            modelBuilder.Entity<Product>().Property(p => p.DiscountPercentage).HasPrecision(5, 2);
+            modelBuilder.Entity<Product>().Property(p => p.TaxRate).HasPrecision(5, 2);
+            modelBuilder.Entity<Product>().Property(p => p.ShippingWeight).HasPrecision(18, 2);
+            modelBuilder.Entity<Product>().Property(p => p.ShippingLength).HasPrecision(18, 2);
+            modelBuilder.Entity<Product>().Property(p => p.ShippingWidth).HasPrecision(18, 2);
+            modelBuilder.Entity<Product>().Property(p => p.ShippingHeight).HasPrecision(18, 2);
+
+            // Commission
+            modelBuilder.Entity<Commission>().Property(c => c.OrderAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Commission>().Property(c => c.CommissionRate).HasPrecision(5, 2);
+            modelBuilder.Entity<Commission>().Property(c => c.CommissionAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Commission>().Property(c => c.CommissionRateAtTransaction).HasPrecision(5, 2);
+
+            // Payment
+            modelBuilder.Entity<Payment>().Property(p => p.Amount).HasPrecision(18, 2);
+
+            // Refund
+            modelBuilder.Entity<Refund>().Property(r => r.Amount).HasPrecision(18, 2);
+
+            // Tender & TenderBid
+            modelBuilder.Entity<Tender>().Property(t => t.BudgetMin).HasPrecision(18, 2);
+            modelBuilder.Entity<Tender>().Property(t => t.BudgetMax).HasPrecision(18, 2);
+            modelBuilder.Entity<TenderBid>().Property(t => t.UnitPrice).HasPrecision(18, 2);
+            modelBuilder.Entity<TenderBid>().Property(t => t.ProposedTotalAmount).HasPrecision(18, 2);
+
+            // GPSLog
+            modelBuilder.Entity<GPSLog>().Property(g => g.SpeedKph).HasPrecision(18, 2);
         }
     }
 }

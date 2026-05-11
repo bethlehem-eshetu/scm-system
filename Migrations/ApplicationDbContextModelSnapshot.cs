@@ -200,12 +200,15 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("CommissionAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("CommissionRate")
+                        .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("CommissionRateAtTransaction")
+                        .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -224,6 +227,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal>("OrderAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("OrderId")
@@ -518,10 +522,12 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("DeliveryLat")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 8)
+                        .HasColumnType("decimal(18,8)");
 
                     b.Property<decimal?>("DeliveryLong")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 8)
+                        .HasColumnType("decimal(18,8)");
 
                     b.Property<string>("DeliveryPhotoPath")
                         .HasColumnType("nvarchar(max)");
@@ -918,6 +924,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal?>("SpeedKph")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("Timestamp")
@@ -1041,10 +1048,12 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("Lat")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 8)
+                        .HasColumnType("decimal(18,8)");
 
                     b.Property<decimal?>("Long")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 8)
+                        .HasColumnType("decimal(18,8)");
 
                     b.Property<DateTime>("ObservedAt")
                         .HasColumnType("datetime2");
@@ -1553,9 +1562,11 @@ namespace SCM_System.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("NextServiceMileage")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("OdometerAtService")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("ServiceDate")
@@ -1794,18 +1805,21 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("VAT")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -1843,6 +1857,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -1898,6 +1913,7 @@ namespace SCM_System.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -2021,6 +2037,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("BasePrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Brand")
@@ -2031,6 +2048,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("CostPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -2048,6 +2066,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("DiscountPercentage")
+                        .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<int>("DispatchedStock")
@@ -2124,15 +2143,19 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal?>("ShippingHeight")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("ShippingLength")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("ShippingWeight")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("ShippingWidth")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ShortDescription")
@@ -2154,6 +2177,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<decimal>("TaxRate")
+                        .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("Unit")
@@ -2162,6 +2186,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal?>("WholesalePrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -2344,6 +2369,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<decimal>("Discount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("DispatchOverrideReason")
@@ -2413,6 +2439,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("SupplierId")
@@ -2422,12 +2449,14 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("VAT")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("VehicleId")
@@ -2481,6 +2510,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -2561,6 +2591,7 @@ namespace SCM_System.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -3072,6 +3103,7 @@ namespace SCM_System.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Balance")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("BusinessType")
@@ -3084,6 +3116,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("CommissionRate")
+                        .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("CommissionTier")
@@ -3350,6 +3383,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("MonthlySalary")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("NationalID")
@@ -3607,9 +3641,11 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("BudgetMax")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("BudgetMin")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CategoryId")
@@ -3741,6 +3777,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("ProposedTotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("QualityCertifications")
@@ -3779,6 +3816,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("VATPercentage")
@@ -4075,6 +4113,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("CurrentMileage")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("DeletedAt")
@@ -4088,9 +4127,11 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal?>("FuelEfficiency")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("FuelTankCapacity")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("FuelType")
@@ -4111,6 +4152,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal?>("InternalVolumeM3")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
@@ -4135,9 +4177,11 @@ namespace SCM_System.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("MaxLoadCapacity")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("Mileage")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Model")
@@ -4181,6 +4225,7 @@ namespace SCM_System.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal?>("TireChangeDueMileage")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")

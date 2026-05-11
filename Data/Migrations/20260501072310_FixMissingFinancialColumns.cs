@@ -29,12 +29,14 @@ namespace SCM_System.Data.Migrations
                 nullable: false,
                 defaultValue: new byte[0]);
 
+/*
             migrationBuilder.AddColumn<string>(
                 name: "TxRef",
                 table: "Payments",
                 type: "nvarchar(100)",
                 maxLength: 100,
                 nullable: true);
+*/
 
             migrationBuilder.AlterColumn<int>(
                 name: "Status",

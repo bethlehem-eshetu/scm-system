@@ -169,10 +169,18 @@
         </div>
         <div class="col-lg-8">
              <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="min-height: 400px; max-height: 400px; overflow-y: auto;">
-                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom sticky-top">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom sticky-top flex-wrap gap-3">
                     <h5 class="fw-bold mb-0 text-dark">Global Transaction Stream</h5>
-                    <div class="d-flex gap-2">
-                         <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">Live Status</span>
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
+                            <button class="btn btn-light px-3 admin-filter active" data-status="all">All</button>
+                            <button class="btn btn-light px-3 admin-filter" data-status="Paid">Cleared</button>
+                            <button class="btn btn-light px-3 admin-filter" data-status="Pending">Pending</button>
+                        </div>
+                        <div class="search-mini position-relative">
+                            <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted extra-small"></i>
+                            <input type="text" id="adminTransSearch" class="form-control form-control-sm border-0 bg-light rounded-pill ps-5" placeholder="Search ledger..." style="width: 180px;">
+                        </div>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -189,7 +197,7 @@
                         <tbody>
                             @foreach (var c in Model.Take(10))
                             {
-                                <tr>
+                                <tr class="admin-trans-row" data-status="@c.Status">
                                     <td class="ps-4">
                                         <div class="fw-bold text-dark">@c.PaymentType</div>
                                         <small class="text-muted">ID: #@c.Id | @c.CreatedAt.ToString("MMM dd HH:mm")</small>
@@ -229,6 +237,28 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Filtration Logic
+        $('.admin-filter').click(function() {
+            var status = $(this).data('status');
+            $('.admin-filter').removeClass('active btn-primary text-white').addClass('btn-light');
+            $(this).removeClass('btn-light').addClass('active btn-primary text-white');
+
+            if (status === 'all') {
+                $('.admin-trans-row').fadeIn();
+            } else {
+                $('.admin-trans-row').hide();
+                $('.admin-trans-row[data-status="' + status + '"]').fadeIn();
+            }
+        });
+
+        // Search Logic
+        $('#adminTransSearch').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            $('.admin-trans-row').filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+
         function handlePdfExport() {
             window.print();
         }
