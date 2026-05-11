@@ -195,12 +195,16 @@
                 </div>
                 <div class="mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small text-muted"><i class="fas fa-circle text-success me-2" style="font-size: 8px;"></i> Completed</span>
+                        <span class="small text-muted"><i class="fas fa-circle me-2" style="font-size: 8px; color: #06261E;"></i> Delivered</span>
                         <span class="small fw-bold text-dark-green">@ViewBag.StatusDelivered</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="small text-muted"><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i> Pending</span>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-muted"><i class="fas fa-circle me-2" style="font-size: 8px; color: #1A4D3A;"></i> Pending Settlement</span>
                         <span class="small fw-bold text-dark-green">@ViewBag.StatusPending</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted"><i class="fas fa-circle me-2" style="font-size: 8px; color: #2E9C7A;"></i> In Transit</span>
+                        <span class="small fw-bold text-dark-green">@ViewBag.DeliveriesInProgress</span>
                     </div>
                 </div>
             </div>
@@ -416,20 +420,51 @@
 
             const ctxStatus = document.getElementById('orderStatusChart').getContext('2d');
             new Chart(ctxStatus, {
-                type: 'doughnut',
+                type: 'polarArea',
                 data: {
                     labels: ['Delivered', 'Pending', 'In Transit'],
                     datasets: [{
                         data: [@ViewBag.StatusDelivered, @ViewBag.StatusPending, @ViewBag.DeliveriesInProgress],
-                        backgroundColor: ['#1a3d31', '#d4f06d', '#4da699'],
-                        borderWidth: 0
+                        backgroundColor: [
+                            '#06261E', // Deepest Green
+                            '#1A4D3A', // Medium Forest
+                            '#2E9C7A'  // Vibrant Emerald
+                        ],
+                        hoverBackgroundColor: [
+                            '#0B3B2F',
+                            '#1E5A48',
+                            '#3BAE86'
+                        ],
+                        borderWidth: 0,
+                        spacing: 8 // This creates the separated "petal" effect
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '75%',
-                    plugins: { legend: { display: false } }
+                    startAngle: -0.5 * Math.PI,
+                    scales: {
+                        r: {
+                            display: false,
+                            ticks: { display: false },
+                            grid: { display: false },
+                            suggestedMin: 0
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(6, 38, 30, 0.95)',
+                            padding: 15,
+                            cornerRadius: 15,
+                            displayColors: false,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    layout: {
+                        padding: 10
+                    }
                 }
             });
         });
