@@ -10,39 +10,29 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <style>
         :root {
-            /* Premium Green Theme Variables */
-            --sidebar-width: 280px;
-            --sidebar-bg: #1a3d31;
-            --sidebar-hover: rgba(212, 240, 109, 0.1);
-            --sidebar-color: rgba(255, 255, 255, 0.6);
-            --sidebar-active: #ffffff;
-            --sidebar-active-bg: #d4f06d;
-            --sidebar-active-color: #1a3d31;
-            --bg-color: #f7f9f9;
-            --text-color: #1a3d31;
-            --card-bg: #ffffff;
-            --border-color: #edf2f2;
-            --top-nav-bg: #ffffff;
-            --primary-color: #1a3d31;
-            --bs-primary: #1a3d31;
-            --bs-primary-rgb: 26, 61, 49;
-            --accent-color: #d4f06d;
-            --accent-green: #d4f06d;
-            --faint-green: #f2f6f6;
+            /* Light Theme Variables */
+            --bg-color: #F1F5F9;
+            --text-color: #1A2C26;
+            --text-muted: #4B5E55;
+            --card-bg: #FFFFFF;
+            --border-color: #E2E8F0;
+            --top-nav-bg: #FFFFFF;
+            --primary-color: #2E9C7A;
+            --sidebar-width: 260px;
+            --sidebar-bg: #0B3B2F;
+            --sidebar-hover: #1E5A48;
+            --sidebar-color: #F0F6F2;
+            --sidebar-active: #1A4D3A;
             --input-bg: #FFFFFF;
             --hover-state: #F0F4F2;
-            
-            /* Global Design Tokens */
-            --dark-green: #1a3d31;
-            --extra-small: 0.75rem;
+            --progress-track: #E2E8F0;
         }
 
-        /* Dark Theme Variables (Modernized Green-Dark) */
+        /* Dark Theme Variables */
         html.dark-mode:root, body.dark-mode {
             --bg-color: #0A0F0D;
             --text-color: #EDEDED;
@@ -54,11 +44,7 @@
             --sidebar-bg: #06261E;
             --input-bg: #252A28;
             --hover-state: #2A3530;
-            
-            /* Dark Mode Overrides */
-            --dark-green: #3BAE86;
-            --faint-green: #252A28;
-            --accent-green: #d4f06d;
+            --progress-track: #2A3530;
         }
 
         body {
@@ -68,6 +54,32 @@
             margin: 0;
             overflow-x: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .text-primary { color: var(--primary-color) !important; }
+        .text-success { color: #2E9C7A !important; }
+        .text-warning { color: #E67E22 !important; }
+        .text-danger { color: #DC3545 !important; }
+        .text-info { color: #2C7DA0 !important; }
+
+        .btn-primary { 
+            background-color: var(--primary-color) !important; 
+            border-color: var(--primary-color) !important; 
+            color: white !important; 
+            font-weight: 600;
+        }
+        .btn-primary:hover { 
+            background-color: #247A5E !important; 
+            border-color: #247A5E !important; 
+        }
+
+        .btn-outline-primary { 
+            color: var(--primary-color) !important; 
+            border-color: var(--primary-color) !important; 
+        }
+        .btn-outline-primary:hover { 
+            background-color: var(--primary-color) !important; 
+            color: white !important; 
         }
 
         .dark-mode .card, .dark-mode .bg-white {
@@ -145,15 +157,34 @@
             border-top-color: var(--border-color) !important;
         }
 
-        .dark-mode .btn-white {
+        /* Global Theme Components */
+        .card, .stat-card, .summary-card, .alert-card, .dashboard-card {
             background-color: var(--card-bg) !important;
-            color: var(--text-color) !important;
             border-color: var(--border-color) !important;
-        }
-        
-        .dark-mode .bg-faint-green {
-            background-color: var(--faint-green) !important;
             color: var(--text-color) !important;
+        }
+
+        .bg-white { background-color: var(--card-bg) !important; }
+        .bg-light { background-color: var(--hover-state) !important; }
+
+        .table th { 
+            background-color: var(--hover-state) !important; 
+            color: var(--text-color) !important;
+            border-bottom: 2px solid var(--border-color) !important;
+        }
+        .table td { 
+            color: var(--text-color) !important; 
+            border-bottom: 1px solid var(--border-color) !important;
+        }
+
+        .form-control, .form-select, textarea {
+            background-color: var(--input-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        .progress-track, .progress-bg, .progress {
+            background-color: var(--progress-track) !important;
         }
 
         /* Premium Sidebar Styling */
@@ -166,7 +197,7 @@
 
         #sidebar {
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #122921 100%);
+            background: linear-gradient(180deg, #0B3B2F 0%, #06261E 100%);
             color: var(--sidebar-color);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
@@ -174,7 +205,7 @@
             height: 100vh;
             left: 0;
             top: 0;
-            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -185,36 +216,49 @@
         }
 
         .sidebar-header {
-            padding: 2rem 1.5rem;
-            background: transparent;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
             position: relative;
             overflow: hidden;
+        }
+
+        .sidebar-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
         }
 
         .sidebar-header .brand {
             color: white;
             font-weight: 800;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            gap: 15px;
+            justify-content: center;
+            gap: 12px;
             letter-spacing: -0.5px;
-        }
-        
-        .sidebar-header .brand div {
             transition: transform 0.3s ease;
         }
+        
+        .sidebar-header .brand:hover {
+            transform: scale(1.02);
+        }
 
-        .sidebar-header .brand:hover div {
-            transform: rotate(15deg) scale(1.1);
+        .sidebar-header .brand img {
+            height: 38px;
+            width: 38px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .sidebar-menu {
-            padding: 1.5rem 0.75rem;
+            padding: 1.5rem 0.8rem;
             list-style: none;
             margin: 0;
             flex-grow: 1;
@@ -227,84 +271,91 @@
             width: 4px;
         }
         .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(212, 240, 109, 0.1);
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
         }
 
         .menu-label {
-            padding: 1.5rem 1.25rem 0.5rem;
-            font-size: 0.7rem;
+            padding: 1.8rem 1.25rem 0.6rem;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            color: rgba(255,255,255,0.3);
-            font-weight: 700;
+            letter-spacing: 2.5px;
+            color: rgba(255,255,255,0.35);
+            font-weight: 800;
+            display: block;
         }
 
-        .sidebar-menu li {
-            margin-bottom: 4px;
+        .sidebar-section {
+            padding: 1.5rem 1.25rem 0.5rem;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: rgba(255,255,255,0.35);
+            font-weight: 800;
+            margin-top: 10px;
         }
 
         .sidebar-menu li a {
-            padding: 0.9rem 1.25rem;
-            font-size: 0.9rem;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.92rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
             color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 12px;
+            margin: 2px 0;
+            border-radius: 14px;
             position: relative;
-            font-weight: 500;
         }
 
         .sidebar-menu li a i {
-            width: 28px;
-            font-size: 1.1rem;
-            margin-right: 12px;
+            width: 24px;
+            font-size: 1.15rem;
+            margin-right: 14px;
             text-align: center;
-            transition: all 0.3s;
-            opacity: 0.7;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
         }
 
         .sidebar-menu li a:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            padding-left: 1.5rem;
+            background: rgba(255, 255, 255, 0.06);
+            color: #FFFFFF;
+            transform: translateX(4px);
         }
 
         .sidebar-menu li a:hover i {
-            opacity: 1;
+            color: var(--primary-color);
             transform: scale(1.1);
-            color: var(--accent-green);
         }
 
         .sidebar-menu li.active > a {
-            background: var(--sidebar-active-bg);
-            color: var(--sidebar-active-color) !important;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(212, 240, 109, 0.2);
+            background: linear-gradient(90deg, var(--primary-color) 0%, #3BAE86 100%);
+            color: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(46, 156, 122, 0.25);
+            font-weight: 600;
         }
 
         .sidebar-menu li.active > a i {
-            color: var(--sidebar-active-color) !important;
+            color: #FFFFFF;
             opacity: 1;
         }
 
-        /* User Profile in Sidebar */
+        /* Profile Card Styling */
         .sidebar-user {
             margin: 1.2rem;
             padding: 1.2rem;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             transition: all 0.3s ease;
-            margin-top: auto;
         }
 
         .sidebar-user:hover {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
         }
         
@@ -318,31 +369,15 @@
             width: 42px;
             height: 42px;
             border-radius: 14px;
-            background: var(--accent-green);
-            color: var(--sidebar-active-color);
+            background: linear-gradient(135deg, var(--primary-color), #248265);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
+            font-weight: 700;
             font-size: 1.1rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             flex-shrink: 0;
-        }
-
-        .sidebar-user .user-details .name {
-            display: block;
-            color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .sidebar-user .user-details .role {
-            display: block;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         /* Content Area */
@@ -402,26 +437,8 @@
             width: 100%;
         }
 
-        /* Overlay for Mobile Sidebar */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(2px);
-            z-index: 999;
-            top: 0;
-            left: 0;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-        }
-
-        /* Responsive Breakpoints */
-        @@media (max-width: 991.98px) {
+        /* Responsive */
+        @@media (max-width: 768px) {
             #sidebar {
                 margin-left: calc(-1 * var(--sidebar-width));
             }
@@ -439,205 +456,1011 @@
             }
         }
         
-        /* Global Table Styling (Dev additions) */
+        /* Dashboard Cards & Aesthetic Utilities */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        /* ---------------------------------------------------- 
+            PREMIUM GLOBAL COMPONENT STYLES
+        ----------------------------------------------------- */
+
+        /* Badge System */
+        .badge-soft {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .badge-soft-success { background: rgba(46,156,122,0.15); color: #2E9C7A; }
+        .badge-soft-warning { background: rgba(230,126,34,0.15); color: #E67E22; }
+        .badge-soft-danger { background: rgba(224,90,90,0.15); color: #E05A5A; }
+        .badge-soft-info { background: rgba(91,143,249,0.15); color: #5B8FF9; }
+        
+        /* Action Buttons */
+        .btn-outline-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline-card:hover {
+            background-color: var(--hover-state);
+            color: #2E9C7A;
+            border-color: #2E9C7A;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Filter Chips */
+        .chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .chip.active {
+            background: #2E9C7A;
+            color: white;
+            border-color: #2E9C7A;
+        }
+
+        .chip:hover:not(.active) {
+            background: var(--hover-state);
+            border-color: #2E9C7A;
+            color: #2E9C7A;
+        }
+        
+        .dark-mode .chip:hover:not(.active) {
+            border-color: #4BC0A0;
+            color: #4BC0A0;
+        }
+
+        /* Global Table Styling */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .dark-mode .table-container { box-shadow: none; }
+
         .admin-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
             margin-bottom: 0;
         }
+
         .admin-table th {
-            background: var(--faint-green);
-            color: var(--text-color);
+            background: var(--hover-state);
+            color: var(--text-muted);
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-weight: 700;
+            font-weight: 600;
             padding: 16px 20px;
             border-bottom: 1px solid var(--border-color);
         }
+
         .admin-table td {
             padding: 16px 20px;
             border-bottom: 1px solid var(--border-color);
             vertical-align: middle;
             color: var(--text-color);
         }
-        .dark-mode .admin-table th { background: rgba(255,255,255,0.05); }
 
-        .badge-soft {
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            display: inline-flex;
+        .table-hover tbody tr { transition: background-color 0.2s; }
+        .table-hover tbody tr:hover { background-color: var(--hover-state); cursor: pointer; }
+        .admin-table tr:last-child td { border-bottom: none; }
+
+        /* Search Section Framework */
+        .page-search-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .badge-soft-success { background: rgba(46,156,122,0.15); color: #2E9C7A; }
-        .badge-soft-warning { background: rgba(230,126,34,0.15); color: #E67E22; }
+        
+        .dark-mode .page-search-section { box-shadow: none; }
 
-        /* Premium Theme Utilities */
-        .bg-accent-green { background-color: var(--accent-green) !important; }
-        .text-accent-green { color: var(--accent-green) !important; }
-        .bg-dark-green { background-color: var(--primary-color) !important; }
-        .text-dark-green { color: var(--primary-color) !important; }
-        .btn-faint-green { 
-            background-color: var(--faint-green); 
-            color: var(--primary-color);
-            border: none;
+        .search-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-width: 250px;
+            max-width: 400px;
         }
-        .btn-faint-green:hover {
-            background-color: var(--accent-green);
-            color: var(--primary-color);
+
+        .search-input-wrapper i {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
         }
-        .dark-mode .btn-faint-green {
-            background-color: var(--hover-state);
+
+        .page-search-input {
+            width: 100%;
+            padding: 10px 16px 10px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
             color: var(--text-color);
+            background: var(--input-bg);
+            outline: none;
+            transition: all 0.2s;
         }
+
+        .page-search-input:focus { border-color: #2E9C7A; }
+        .dark-mode .page-search-input:focus { border-color: #4BC0A0; }
+
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-dropdown {
+            height: 40px;
+            background: var(--input-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 0 32px 0 16px;
+            font-size: 14px;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .filter-dropdown:hover, .filter-dropdown:focus { border-color: #2E9C7A; }
+        .dark-mode .filter-dropdown:hover, .dark-mode .filter-dropdown:focus { border-color: #4BC0A0; }
+
+        /* General Empty State */
+        .empty-state {
+            padding: 48px;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .empty-state h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* ---------------------------------------------------- */
     </style>
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="@(Context.Session.GetString("ThemePreference") == "Dark" ? "dark-mode" : "")">
+<body>
     <div class="wrapper">
         <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="brand">
-                    <div class="bg-accent-green p-2 rounded-3 text-dark-green d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                        <i class="fas fa-link"></i>
-                    </div>
-                    <span>ETHIOCHAIN</span>
+                    <span>EthioChain SCM</span>
                 </a>
             </div>
 
-            @{
-                var role = Context.Session.GetString("UserRole");
-            }
-
             <ul class="sidebar-menu">
-            @if (role == "Supplier")
-            {
-                <partial name="_SupplierSidebar" />
-            }
-            else if (role == "Retailer")
-            {
-                <partial name="_RetailerSidebar" />
-            }
-            else if (role == "DeliveryAgent")
-            {
-                <partial name="_DeliverySidebar" />
-            }
-            else if (role == "WarehouseManager")
-            {
-                <partial name="_WarehouseSidebar" />
-            }
-            else if (role == "Admin")
-            {
-                <partial name="_AdminSidebar" />
-            }
+                <li class="menu-label">Menu</li>
+                
+                @{
+                    var role = Context.Session.GetString("UserRole");
+                }
+
+                @if (role == "Admin")
+                {
+                    <li>
+                        <a asp-controller="Admin" asp-action="Dashboard" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")"><i class="fas fa-chart-bar"></i> Dashboard</a>
+                    </li>
+                    
+                    <li class="sidebar-section">👥 USERS</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="PendingUsers" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingUsers" ? "active" : "")">
+                            <i class="fas fa-check-circle"></i> Verifications
+                            <span class="badge rounded-pill ms-auto" style="background:#E05A5A; font-size:10px;">🔴 @(ViewBag.PendingSuppliersCount ?? 0) pending</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AllUsers" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "AllUsers" ? "active" : "")"><i class="fas fa-user"></i> All Users</a>
+                    </li>
+
+                    <li class="sidebar-section">💬 COMMUNICATION</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="MessageLog"><i class="fas fa-envelope"></i> Message Monitoring</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="BlockedMessages"><i class="fas fa-ban"></i> Blocked Messages</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Penalties"><i class="fas fa-exclamation-triangle"></i> Penalties</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+
+                    <li class="sidebar-section">💰 FINANCE</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-line"></i> Commission Overview</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-money-bill-alt"></i> Transactions</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Payouts"><i class="fas fa-wallet"></i> Payouts</a>
+                    </li>
+
+                    <li class="sidebar-section">📄 REPORTS</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-chart-pie"></i> Financial Reports</a>
+                    </li>
+
+                    <li class="sidebar-section">⚙️ SYSTEM</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-scroll"></i> Audit Logs</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-inbox"></i> Email Logs</a>
+                    </li>
+                }
+                else if (role == "Supplier")
+                {
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    
+                    <li class="menu-label">Workforce</li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees"><i class="fas fa-users"></i> All Employees</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees" asp-route-role="warehouse_manager"><i class="fas fa-user-tie"></i> Warehouse Managers</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees" asp-route-role="delivery_agent"><i class="fas fa-id-card"></i> Delivery Agents</a>
+                    </li>
+
+                    <li class="menu-label">Logistics Infrastructure</li>
+                    <li>
+                        <a asp-controller="Hub" asp-action="Warehouses"><i class="fas fa-warehouse"></i> Hubs & Warehouses</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Fleet" asp-action="Vehicles"><i class="fas fa-truck"></i> Fleet Management</a>
+                    </li>
+
+                    <li class="menu-label">Operations</li>
+                    <li>
+                        <a asp-controller="Logistics" asp-action="DispatchCenter"><i class="fas fa-shipping-fast"></i> Dispatch Center</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="OrderTracking"><i class="fas fa-map-marker-alt"></i> Route Visibility</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Logistics" asp-action="InventoryTransfers"><i class="fas fa-exchange-alt"></i> Stock Transfers</a>
+                    </li>
+
+                    <li class="menu-label">Orders & Sales</li>
+                    <li>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-basket"></i> Customer Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice-dollar"></i> Purchase Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-boxes"></i> Product Catalog</a>
+                    </li>
+
+                    <li class="menu-label">Finance & Assets</li>
+                    <li>
+                        <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-wallet"></i> Earnings Ledger</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Payments"><i class="fas fa-file-invoice-dollar"></i> Commission History</a>
+                    </li>
+                    <li>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#withdrawModal"><i class="fas fa-university"></i> Payout Requests</a>
+                    </li>
+
+                    <li class="menu-label">Insights & Reports</li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Reports"><i class="fas fa-chart-line"></i> Supply Chain Analytics</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Rating" asp-action="SupplierRatings"><i class="fas fa-star"></i> Performance Reviews</a>
+                    </li>
+
+                    <li class="menu-label">Administration</li>
+                    <li>
+                        <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Alerts & Notifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
+                    </li>
+                }
+                else if (role == "Retailer")
+                {
+                    <li>
+                        <a asp-controller="Retailer" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    <li class="menu-label">Marketplace</li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="BrowseCatalog"><i class="fas fa-search"></i> Browse Catalog</a>
+                    </li>
+                    
+                    <li class="menu-label">My Purchases</li>
+                    <li>
+                        <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-cart"></i> Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice"></i> Purchase Orders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="OrderTracking"><i class="fas fa-shipping-fast"></i> Order Tracking</a>
+                    </li>
+
+                    <li class="menu-label">Sourcing</li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="Index"><i class="fas fa-gavel"></i> My Tenders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="Create"><i class="fas fa-plus-circle"></i> Create Tender</a>
+                    </li>
+                    <li class="menu-label">Payments</li>
+<li>
+    <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-credit-card"></i> My Payments</a>
+</li>
+
+<li class="menu-label">Reviews</li>
+<li>
+    <a asp-controller="Rating" asp-action="MyRatings"><i class="fas fa-star"></i> My Ratings</a>
+</li>
+<li class="menu-label">Support</li>
+<li>
+    <a asp-controller="Return" asp-action="MyReturns"><i class="fas fa-undo-alt"></i> My Returns</a>
+</li>
+<li>
+    <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+</li>
+                    <li class="menu-label">Settings</li>
+                    <li>
+                        <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Notifications</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="Settings"><i class="fas fa-user-cog"></i> Account Settings</a>
+                    </li>
+                }
+                else if (role == "WarehouseManager")
+                {
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    <li class="menu-label">My Warehouse</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Inventory"><i class="fas fa-boxes"></i> Inventory Control</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Alerts"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</a>
+                    </li>
+                    
+                    <li class="menu-label">Operations</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="OrdersToPick"><i class="fas fa-clipboard-list"></i> Orders to Pick</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Packing"><i class="fas fa-box"></i> Packing Station</a>
+                    </li>
+
+                    <li class="menu-label">Logistics & Tracking</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Ready"><i class="fas fa-truck-loading"></i> Ready Dispatch</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="AssignDelivery"><i class="fas fa-tasks"></i> Delivery Assignments</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="History"><i class="fas fa-history"></i> Dispatch History</a>
+                    </li>
+
+                    <li class="menu-label">Management</li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Reports"><i class="fas fa-chart-line"></i> Performance Reports</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="Details"><i class="fas fa-warehouse"></i> Warehouse Profile</a>
+                    </li>
+                }
+                else if (role == "DeliveryAgent")
+                {
+                    <li>
+                        <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Delivery" asp-action="MyDeliveries"><i class="fas fa-route"></i> My Deliveries</a>
+                    </li>
+                    <li class="menu-label">Account</li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Delivery" asp-action="Settings"><i class="fas fa-user-cog"></i> Settings</a>
+                    </li>
+                }
+                
+
             </ul>
+
+            @if (role != null && role != "Retailer")
+            {
+                <div class="sidebar-user">
+                    <div class="user-info">
+                        <div class="avatar">
+                            @{
+                                var name = Context.Session.GetString("UserName") ?? "U";
+                                var pImg = Context.Session.GetString("ProfileImg");
+                                if (!string.IsNullOrEmpty(pImg))
+                                {
+                                    <img src="@pImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" style="border-radius: inherit;" />
+                                }
+                                else
+                                {
+                                    @name.Substring(0, 1).ToUpper()
+                                }
+                            }
+                        </div>
+                        <div class="user-details overflow-hidden">
+                            <div class="text-white fw-bold text-truncate" style="font-size: 0.9rem;">@name</div>
+                            <div class="text-truncate" style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">@role</div>
+                        </div>
+                    </div>
+                </div>
+            }
         </nav>
 
-        <!-- Page Content -->
-        <div id="content" class="main-content">
-            <!-- Top Navbar -->
-            <nav class="top-bar">
+        <!-- Main Content -->
+        <main class="main-content" id="content">
+            <header class="top-bar">
                 <div class="d-flex align-items-center gap-3">
                     <button type="button" id="sidebarCollapse" class="sidebar-toggler">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h5 class="mb-0 fw-bold d-none d-md-block">Dashboard</h5>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Theme Toggle -->
-                    <button class="btn btn-faint-green rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" id="themeToggle">
-                        <i class="fas fa-moon text-dark-green"></i>
-                    </button>
+                <div class="d-flex align-items-center gap-4">
+                    <!-- Weather & Time (Premium Capsule) -->
+                    <div class="d-none d-lg-flex align-items-center bg-light bg-opacity-50 px-3 py-1 rounded-pill border shadow-sm" style="font-size: 13px; font-weight: 600;">
+                        <span class="text-warning me-3 d-flex align-items-center">
+                            <i class="fas fa-sun me-2"></i> 82°F
+                        </span>
+                        <div class="vr me-3 opacity-25" style="height: 16px;"></div>
+                        <span class="text-muted me-3">
+                            <i class="fas fa-clock me-1 opacity-50"></i> @DateTime.Now.ToString("h:mm tt")
+                        </span>
+                        <div class="vr me-3 opacity-25" style="height: 16px;"></div>
+                        <span class="text-muted">
+                            <i class="fas fa-calendar-day me-1 opacity-50"></i> @DateTime.Now.ToString("MMM d, yyyy")
+                        </span>
+                    </div>
+
+                    <!-- Dark Mode Toggle -->
+                    <a href="#" class="text-muted text-decoration-none me-2 d-flex align-items-center justify-content-center border-0 rounded-circle" onclick="toggleTheme(event);" title="Toggle Dark Mode" style="width: 36px; height: 36px; background-color: var(--hover-state); transition: all 0.2s;">
+                        <i class="fas fa-moon fs-5" style="color: var(--text-color);"></i>
+                    </a>
+
+                    <!-- Notifications -->
+                    <a asp-controller="Notification" asp-action="Index" class="text-muted position-relative text-decoration-none me-3 d-flex align-items-center justify-content-center rounded-circle" title="Notifications" style="width: 36px; height: 36px; background-color: var(--hover-state); transition: all 0.2s;">
+                        <i class="fas fa-bell fs-5" style="color: var(--text-color);"></i>
+                        <span class="position-absolute rounded-circle text-white d-flex align-items-center justify-content-center shadow-sm" style="top: -4px; right: -4px; background-color: #E05A5A; font-size: 10px; width: 18px; height: 18px; font-weight: bold; border: 2px solid var(--top-nav-bg);">3</span>
+                    </a>
+
+                    @if (Context.Session.GetString("UserRole") == "Retailer")
+                    {
+                        <!-- Global Cart Toggle -->
+                        <button class="btn btn-light position-relative rounded-circle border-0 shadow-sm p-2 d-flex align-items-center justify-content-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" id="cartToggleButton" style="width: 36px; height: 36px; background-color: var(--hover-state); color: var(--text-color);">
+                            <i class="fas fa-shopping-cart text-primary"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2" id="globalCartCount" style="display:none; font-size: 0.65em; border-color: var(--top-nav-bg)!important;">
+                                0
+                            </span>
+                        </button>
+                    }
                     
                     <div class="dropdown">
-                        <button class="btn btn-faint-green rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm border" type="button" data-bs-toggle="dropdown">
-                            @{
-                                var userImg = Context.Session.GetString("ProfileImg");
-                                if (!string.IsNullOrEmpty(userImg))
-                                {
-                                    <div class="rounded-circle overflow-hidden d-flex align-items-center justify-content-center border border-2 border-white" style="width: 32px; height: 32px;">
-                                        <img src="@userImg" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
-                                    </div>
+                        <a href="#" class="d-flex align-items-center text-decoration-none text-dark" data-bs-toggle="dropdown">
+                            <div class="avatar-sm text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm overflow-hidden" style="width: 44px; height: 44px; background: #2E9C7A; font-size: 18px;">
+                                @{
+                                    var navName = Context.Session.GetString("UserName") ?? "Admin";
+                                    var navPImg = Context.Session.GetString("ProfileImg");
+                                    if (!string.IsNullOrEmpty(navPImg))
+                                    {
+                                        <img src="@navPImg" class="img-fluid h-100 w-100 object-fit-cover" alt="User" />
+                                    }
+                                    else
+                                    {
+                                        @navName.Substring(0, 1).ToUpper()
+                                    }
                                 }
-                                else
-                                {
-                                    <div class="bg-dark-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                                        @(Context.Session.GetString("UserName")?[0].ToString().ToUpper() ?? "U")
-                                    </div>
-                                }
-                            }
-                            <div class="text-start d-none d-lg-block ms-1">
-                                <div class="small fw-bold text-dark-green mb-0" style="line-height: 1;">@Context.Session.GetString("UserName")</div>
-                                <div style="font-size: 0.65rem;" class="text-muted opacity-75">@role</div>
                             </div>
-                            <i class="fas fa-chevron-down extra-small text-muted ms-1"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-premium p-2 mt-2">
-                            <li><a class="dropdown-item rounded-3" href="/@role/Settings"><i class="fas fa-cog me-2"></i> Settings</a></li>
+                            <i class="fas fa-chevron-down ms-1 text-muted" style="font-size: 12px; margin-right: 10px;"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; margin-top: 10px;">
+                            <li><h6 class="dropdown-header">@Context.Session.GetString("UserName")</h6></li>
+                            <li><a class="dropdown-item py-2" href="/Retailer/Settings"><i class="fas fa-user-circle me-2 text-muted"></i> View Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item rounded-3 text-danger" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                            <li>
+                                <a class="dropdown-item text-danger fw-bold" asp-controller="Account" asp-action="Logout">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>
-            </nav>
+            </header>
 
             <div class="dashboard-wrapper">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
                 @RenderBody()
             </div>
-            
-            <footer class="bg-white border-top py-3 px-4 mt-auto">
-                <div class="container-fluid d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <p class="mb-0 small text-muted">&copy; @DateTime.Now.Year EthioChain SCM. All rights reserved.</p>
-                    <div class="d-flex gap-4">
-                        <a href="#" class="text-muted small text-decoration-none">Support</a>
-                        <a href="#" class="text-muted small text-decoration-none">Privacy Policy</a>
-                        <a href="#" class="text-muted small text-decoration-none">Terms</a>
-                    </div>
-                </div>
-            </footer>
-        </div>
+        </main>
     </div>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     
     <script>
         $(document).ready(function () {
-            $('#sidebarCollapse, #sidebarOverlay').on('click', function () {
-                $('#sidebar, #content, #sidebarOverlay').toggleClass('active');
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+                $('#content').toggleClass('active');
             });
-
-            // Theme Toggle Logic
-            $('#themeToggle').on('click', function() {
-                $('html, body').toggleClass('dark-mode');
-                const isDark = $('html').hasClass('dark-mode');
-                $(this).find('i').toggleClass('fa-moon fa-sun');
-                
-                // Save preference via AJAX if needed, or just session
-                $.post('/Account/SetTheme', { theme: isDark ? 'Dark' : 'Light' });
-            });
-
+            
             // Highlight active menu item based on current URL path
             var path = window.location.pathname;
             $('.sidebar-menu li a').each(function() {
-                var href = $(this).attr('href');
-                if (href === path || href === path + "/") {
-                    $(this).closest('li').addClass('active');
+                if ($(this).attr('href') === path || $(this).attr('href') === path + "/") {
+                    $(this).parent().addClass('active');
                 }
+            });
+
+            // --- Theme Init Logic ---
+            const htmlElement = document.documentElement;
+
+            // 1. Determine Initial Theme
+            let currentTheme = localStorage.getItem('themePreference');
+            if (!currentTheme) {
+                currentTheme = htmlElement.getAttribute('data-theme') || 'light';
+            }
+
+            // Apply theme on load
+            if (currentTheme === 'dark') {
+                htmlElement.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            }
+            
+            // Toggle Theme function
+            window.toggleTheme = function(e) {
+                if (e) e.preventDefault();
+                document.documentElement.classList.toggle('dark-mode');
+                document.body.classList.toggle('dark-mode');
+                
+                const isDark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('themePreference', isDark ? 'dark' : 'light');
+                
+                // If there's an API point to save preference:
+                $.post('/Account/SetTheme', { theme: isDark ? 'dark' : 'light' }).fail(function() {
+                    console.log('Saved theme locally only');
+                });
+            }
+        });
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+
+    @if (Context.Session.GetString("UserRole") == "Retailer")
+    {
+        <!-- Global Cart Offcanvas -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 400px; box-shadow: -5px 0 15px rgba(0,0,0,0.05);">
+            <div class="offcanvas-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                <h5 class="offcanvas-title fw-bold" id="cartOffcanvasLabel"><i class="fas fa-shopping-cart me-2"></i> Your Cart</h5>
+                <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column" style="background-color: var(--bg-color);">
+                <div id="cartItemsContainer" class="flex-grow-1 overflow-auto pe-2">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div class="mt-2 text-muted">Loading cart...</div>
+                    </div>
+                </div>
+                
+                <div class="border-top pt-3 bg-white mt-auto rounded-3 shadow-sm p-3 border">
+                    <div class="d-flex justify-content-between mb-3 align-items-center">
+                        <span class="fw-bold text-muted">Subtotal:</span>
+                        <span class="fw-bold fs-5" style="color: #10b981;" id="cartSubtotal">$0.00</span>
+                    </div>
+                    
+                    <form asp-controller="Retailer" asp-action="Checkout" method="post" id="checkoutForm">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-muted">Delivery Address <span class="text-danger">*</span></label>
+                            <textarea name="deliveryAddress" class="form-control form-control-sm border-0 bg-light" rows="2" required placeholder="Full delivery address..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Expected Delivery Date <span class="text-danger">*</span></label>
+                            <input type="date" name="expectedDeliveryDate" class="form-control form-control-sm border-0 bg-light" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold" id="checkoutBtn">
+                            <i class="fas fa-check-circle me-1"></i> Checkout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                function loadGlobalCart() {
+                    $.get('/Retailer/GetCartJson', function(res) {
+                        if (res.success) {
+                            let count = 0;
+                            if (res.items && res.items.length > 0) {
+                                let html = '';
+                                res.items.forEach(function(item) {
+                                    count += item.quantity;
+                                    html += `<div class="card mb-3 border-0 shadow-sm cart-item" data-id="${item.id}">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="mb-0 fw-bold text-truncate" style="max-width: 200px;" title="${item.productName}">${item.productName}</h6>
+                                                            <small class="text-muted"><i class="fas fa-store me-1"></i>${item.supplierName}</small>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="fw-bold" style="color: #10b981;">$${item.price.toFixed(2)}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                                            <button class="btn btn-outline-secondary btn-update-qty border-end-0" data-change="-1" type="button"><i class="fas fa-minus small"></i></button>
+                                                            <input type="text" class="form-control text-center border-secondary border-start-0 border-end-0 item-qty" value="${item.quantity}" readonly>
+                                                            <button class="btn btn-outline-secondary btn-update-qty border-start-0" data-change="1" type="button"><i class="fas fa-plus small"></i></button>
+                                                        </div>
+                                                        <button class="btn btn-link text-danger p-0 btn-remove-item" type="button"><i class="fas fa-trash"></i></button>
+                                                    </div>
+                                                </div>
+                                             </div>`;
+                                });
+                                $('#cartItemsContainer').html(html);
+                                $('#globalCartCount').text(count).show();
+                                $('#cartSubtotal').text('$' + res.subtotal.toFixed(2));
+                                $('#checkoutBtn').prop('disabled', false);
+                            } else {
+                                $('#cartItemsContainer').html(`
+                                    <div class="text-center py-5 opacity-50">
+                                        <i class="fas fa-shopping-basket fa-4x mb-3"></i>
+                                        <h5>Your cart is empty</h5>
+                                        <p class="small">Add items to proceed to checkout.</p>
+                                    </div>
+                                `);
+                                $('#globalCartCount').hide();
+                                $('#cartSubtotal').text('$0.00');
+                                $('#checkoutBtn').prop('disabled', true);
+                            }
+                        }
+                    });
+                }
+
+                loadGlobalCart();
+                $('#cartToggleButton').on('click', function() {
+                    loadGlobalCart();
+                });
+
+                $(document).on('submit', '.ajax-add-to-cart', function(e) {
+                    e.preventDefault();
+                    let form = $(this);
+                    let btn = form.find('button[type="submit"]');
+                    let originalHtml = btn.html();
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+                    $.post('/Retailer/AddToCart', form.serialize(), function(res) {
+                        btn.html(originalHtml).prop('disabled', false);
+                        if (res.success) {
+                            $('#globalCartCount').text(res.cartItemCount).show();
+                            // Show success message if not in modal
+                            if (typeof bootstrap !== 'undefined') {
+                                var cartOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
+                                cartOffcanvas.show();
+                            }
+                            loadGlobalCart();
+                        } else {
+                            alert(res.message || 'Error adding to cart.');
+                        }
+                    }).fail(function() {
+                        btn.html(originalHtml).prop('disabled', false);
+                        alert('Error adding to cart.');
+                    });
+                });
+
+                $(document).on('click', '.btn-update-qty', function() {
+                    let btn = $(this);
+                    let itemCard = btn.closest('.cart-item');
+                    let id = itemCard.data('id');
+                    let qtyInput = itemCard.find('.item-qty');
+                    let currentQty = parseInt(qtyInput.val());
+                    let change = parseInt(btn.data('change'));
+                    let newQty = currentQty + change;
+                    
+                    if (newQty < 1) return;
+                    
+                    btn.prop('disabled', true);
+                    qtyInput.val(newQty);
+                    qtyInput.addClass('opacity-50');
+
+                    $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: newQty }, function(res) {
+                        btn.prop('disabled', false);
+                        qtyInput.removeClass('opacity-50');
+                        if (res.success) {
+                            loadGlobalCart();
+                        }
+                    }).fail(function() {
+                        btn.prop('disabled', false);
+                        qtyInput.removeClass('opacity-50').val(currentQty);
+                    });
+                });
+
+                $(document).on('click', '.btn-remove-item', function() {
+                    if(!confirm("Remove this item?")) return;
+                    let btn = $(this);
+                    let itemCard = btn.closest('.cart-item');
+                    let id = itemCard.data('id');
+                    
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                    
+                    $.post('/Retailer/RemoveFromCart', { cartItemId: id }, function(res) {
+                        if (res.success) {
+                            loadGlobalCart();
+                        }
+                    });
+                });
+            });
+        </script>
+    }
+
+    <!-- Floating Chatbot Widget -->
+    <div id="chatbot-widget" class="position-fixed shadow-lg rounded-4 d-flex flex-column" style="bottom: 80px; right: 20px; width: 350px; height: 450px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1050; display: none !important; border: 1px solid rgba(0,0,0,0.1); overflow: hidden; transform: scale(0.9); opacity: 0; transition: all 0.3s ease;">
+        <!-- Header -->
+        <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center rounded-top-4">
+            <div class="d-flex align-items-center">
+                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                    <i class="fas fa-robot text-primary"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">SCM Assistant</h6>
+                    <small class="text-white-50" style="font-size: 0.75rem;">Online</small>
+                </div>
+            </div>
+            <button class="btn btn-sm text-white border-0" id="close-chat"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="flex-grow-1 p-3 overflow-auto" id="chat-body" style="background: #f8fafc;">
+            <!-- Initial Message -->
+            <div class="mb-3 d-flex">
+                <div class="bg-white p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; border-bottom-left-radius: 0 !important;">
+                    👋 Hello! I'm your SCM Assistant. How can I help you today?
+                </div>
+            </div>
+
+            <!-- Quick FAQ Options -->
+            <div class="mb-3 d-flex flex-wrap gap-2" id="chat-faq-options">
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I post a tender?" data-answer="To post a tender, navigate to the 'Sourcing' menu on the left and click 'Create Tender'. Fill in your required products and wait for suppliers to bid.">Post a Tender</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I track my order?" data-answer="You can track your order in real-time by going to 'Order Tracking' under the My Purchases menu.">Track Order</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="How do I update inventory?" data-answer="Warehouse Managers can update inventory from the 'Inventory Control' section in the Dashboard.">Update Inventory</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill btn-faq" data-question="I have a problem" data-answer="Please use the text box below to describe your issue, and it will be submitted as a support ticket to our admins.">Submit a Ticket</button>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-2 border-top bg-white">
+            <form id="chat-form" class="d-flex gap-2">
+                <input type="text" id="chat-input" class="form-control form-control-sm rounded-pill" placeholder="Type feedback or a question..." required>
+                <button type="submit" class="btn btn-primary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Chat Button -->
+    <button id="chatbot-toggle" class="btn btn-primary position-fixed rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1040; transition: transform 0.2s;">
+        <i class="fas fa-comment-dots fs-3"></i>
+    </button>
+
+    <script>
+        $(document).ready(function () {
+            // Toggle Chatbot
+            $('#chatbot-toggle').click(function () {
+                var widget = $('#chatbot-widget');
+                if (widget.css('display') === 'none') {
+                    widget.css('display', 'flex').hide().fadeIn(200, function() {
+                        $(this).css({ 'transform': 'scale(1)', 'opacity': '1' });
+                    });
+                    $(this).css('transform', 'scale(0.8)');
+                } else {
+                    $('#close-chat').click();
+                }
+            });
+
+            // Close Chatbot
+            $('#close-chat').click(function () {
+                $('#chatbot-widget').css({ 'transform': 'scale(0.9)', 'opacity': '0' });
+                setTimeout(() => {
+                    $('#chatbot-widget').fadeOut(200);
+                }, 200);
+                $('#chatbot-toggle').css('transform', 'scale(1)');
+            });
+
+            // Scroll to bottom helper
+            function scrollToBottom() {
+                var body = $('#chat-body');
+                body.scrollTop(body[0].scrollHeight);
+            }
+
+            // Append Message helper
+            function appendMessage(text, isUser = false) {
+                var align = isUser ? 'justify-content-end' : 'justify-content-start';
+                var bg = isUser ? 'bg-primary text-white' : 'bg-white text-dark';
+                var radius = isUser ? 'border-bottom-right-radius: 0 !important;' : 'border-bottom-left-radius: 0 !important;';
+                
+                var msgHtml = `
+                    <div class="mb-3 d-flex ${align}">
+                        <div class="${bg} p-2 rounded-3 shadow-sm" style="max-width: 85%; font-size: 0.9rem; ${radius}">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+                $('#chat-body').append(msgHtml);
+                scrollToBottom();
+            }
+
+            // FAQ Button Click
+            $('.btn-faq').click(function () {
+                var q = $(this).data('question');
+                var a = $(this).data('answer');
+                
+                appendMessage(q, true);
+                setTimeout(() => {
+                    appendMessage(a, false);
+                }, 500);
+            });
+
+            // Submit Support Ticket / Feedback
+            $('#chat-form').submit(function (e) {
+                e.preventDefault();
+                var msg = $('#chat-input').val().trim();
+                if (!msg) return;
+
+                appendMessage(msg, true);
+                $('#chat-input').val('');
+
+                // Show typing indicator
+                var typingId = 'typing-' + Date.now();
+                $('#chat-body').append(`
+                    <div id="${typingId}" class="mb-3 d-flex justify-content-start">
+                        <div class="bg-light text-muted p-2 rounded-3 shadow-sm" style="font-size: 0.8rem;">
+                            <i class="fas fa-ellipsis-h fa-fade"></i> Sending ticket...
+                        </div>
+                    </div>
+                `);
+                scrollToBottom();
+
+                // Send to backend SupportController
+                $.post('/Support/SubmitFeedback', { subject: "Chatbot Ticket", message: msg }, function(res) {
+                    $('#' + typingId).remove();
+                    if (res.success) {
+                        appendMessage("<i class='fas fa-check-circle text-success me-1'></i> " + res.message, false);
+                    } else {
+                        appendMessage("<i class='fas fa-exclamation-circle text-danger me-1'></i> " + res.message, false);
+                    }
+                }).fail(function() {
+                    $('#' + typingId).remove();
+                    appendMessage("Sorry, there was an error submitting your ticket.", false);
+                });
             });
         });
     </script>
-    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
