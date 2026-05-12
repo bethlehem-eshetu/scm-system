@@ -10,17 +10,15 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-0"><i class="fas fa-file-contract text-primary me-2"></i>Procurement Control</h2>
+            <h2 class="fw-bold text-dark mb-0"><i class="fas fa-file-contract text-success me-2"></i>Procurement Control</h2>
             <p class="text-muted mb-0 small">Manage commercial commitments, escrow payments, and fulfillment health.</p>
         </div>
         <div class="d-flex gap-2">
-            <div class="input-group shadow-sm" style="width: 300px;">
-                <form asp-action="RetailerIndex" method="get" class="d-flex w-100">
-                    <input type="text" name="searchTerm" class="form-control border-0 rounded-start-pill px-3" placeholder="Search PO Number..." value="@ViewBag.SearchTerm">
-                    <button type="submit" class="btn btn-white bg-white border-0 rounded-end-pill"><i class="fas fa-search text-muted"></i></button>
-                </form>
+            <div class="search-input-wrapper shadow-sm" style="width: 300px;">
+                <i class="fas fa-search text-muted"></i>
+                <input type="text" id="poSearch" class="form-control page-search-input border-0 rounded-pill" placeholder="Live search POs..." value="@ViewBag.SearchTerm">
             </div>
-            <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+            <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
                 <i class="fas fa-shopping-basket me-2"></i> New
             </a>
         </div>
@@ -35,11 +33,11 @@
     }
     <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-bottom border-4 border-primary">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-bottom border-4 border-success">
                 <label class="smaller text-muted text-uppercase fw-bold d-block mb-1">Committed Capital</label>
                 <h3 class="fw-bold text-dark mb-0">@committedCapital.ToString("N0") <span class="smaller font-normal">ETB</span></h3>
                 <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar" style="width: 70%"></div>
+                    <div class="progress-bar bg-success" style="width: 70%"></div>
                 </div>
             </div>
         </div>
@@ -75,17 +73,10 @@
                         <div class="col">
                             <h6 class="fw-bold mb-0">Commercial Registry</h6>
                         </div>
-                        <div class="col-auto">
-                            <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
-                                <button class="btn btn-light active px-3">All</button>
-                                <button class="btn btn-light px-3">Active</button>
-                                <button class="btn btn-light px-3">Completed</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" id="poTable">
                         <thead class="bg-light">
                             <tr class="smaller text-muted text-uppercase">
                                 <th class="ps-4">Document ID</th>
@@ -102,17 +93,17 @@
                                 var needsPayment = po.Status == "Delivered" && po.Commission != null && po.Commission.Status == "Pending" && po.PaymentStatus != "Paid";
                                 var isPaid = (po.Commission != null && po.Commission.Status == "Paid") || po.PaymentStatus == "Paid";
 
-                                <tr>
+                                <tr class="po-row">
                                     <td class="ps-4">
-                                        <div class="fw-bold text-dark mb-0">#@po.PONumber</div>
+                                        <div class="fw-bold text-dark mb-0 po-number">#@po.PONumber</div>
                                         <div class="smaller text-muted">Issued: @po.CreatedAt.ToString("MMM dd, yyyy")</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark">@po.Supplier?.CompanyName</div>
+                                        <div class="fw-bold text-dark supplier-name">@po.Supplier?.CompanyName</div>
                                         <div class="smaller text-muted"><i class="fas fa-truck-loading me-1"></i> Delivery to @po.DeliveryAddress</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-primary">@po.TotalAmount.ToString("N2") ETB</div>
+                                        <div class="fw-bold text-success">@po.TotalAmount.ToString("N2") ETB</div>
                                         <div class="smaller text-muted">@po.PurchaseOrderItems?.Count() Items</div>
                                     </td>
                                     <td class="text-center">
@@ -168,13 +159,13 @@
                 <!-- Pagination Footer -->
                 @if (ViewBag.TotalPages > 1)
                 {
-                    <div class="card-footer bg-white border-top border-light py-3">
+                    <div class="card-footer bg-white border-top border-light py-3" id="paginationFooter">
                         <nav aria-label="Page navigation">
                             <ul class="pagination pagination-sm justify-content-center mb-0">
                                 @for (int i = 1; i <= ViewBag.TotalPages; i++)
                                 {
                                     <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                                        <a class="page-link rounded-circle mx-1 border-0 @(i == ViewBag.CurrentPage ? "bg-primary text-white" : "text-dark bg-light")" 
+                                        <a class="page-link rounded-circle mx-1 border-0 @(i == ViewBag.CurrentPage ? "bg-success text-white" : "text-dark bg-light")" 
                                            asp-action="RetailerIndex" asp-route-page="@i" asp-route-searchTerm="@ViewBag.SearchTerm">@i</a>
                                     </li>
                                 }
@@ -193,14 +184,34 @@
         return status switch
         {
             "Delivered" => "bg-success text-white shadow-sm",
-            "In Transit" => "bg-primary text-white shadow-sm",
+            "In Transit" => "bg-success text-white shadow-sm", // Changed from primary
             "Processing" => "bg-info text-white shadow-sm",
-            "Accepted" => "bg-indigo text-white shadow-sm",
+            "Accepted" => "bg-success text-white shadow-sm opacity-75", // Changed from indigo
             "Issued" => "bg-warning text-dark shadow-sm",
             "Rejected" => "bg-danger text-white shadow-sm",
             _ => "bg-secondary text-white shadow-sm"
         };
     }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#poSearch").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $("#poTable tbody tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+                
+                // Hide pagination if searching
+                if(value.length > 0) {
+                    $("#paginationFooter").hide();
+                } else {
+                    $("#paginationFooter").show();
+                }
+            });
+        });
+    </script>
 }
 
 <style>
@@ -216,5 +227,17 @@
         0% { opacity: 1; }
         50% { opacity: 0.6; }
         100% { opacity: 1; }
+    }
+    .search-input-wrapper {
+        position: relative;
+    }
+    .search-input-wrapper i {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+    }
+    .page-search-input {
+        padding-left: 35px !important;
     }
 </style>

@@ -86,7 +86,7 @@
                                 </div>
                             }
                             <div class="position-absolute top-0 end-0 p-2">
-                                <span class="badge bg-primary rounded-pill">@product.Category?.CategoryName</span>
+                                <span class="badge badge-category rounded-pill">@product.Category?.CategoryName</span>
                             </div>
                         </div>
                         <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
@@ -139,6 +139,17 @@
 </div>
 
 <style>
+    .badge-category {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        font-weight: 600;
+        font-size: 0.7rem;
+        padding: 0.5em 1em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
     .product-card {
         transition: transform 0.2s, box-shadow 0.2s;
         display: flex;
