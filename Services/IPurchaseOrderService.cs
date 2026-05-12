@@ -12,6 +12,5 @@ namespace SCM_System.Services
         Task<PurchaseOrder> GeneratePurchaseOrderFromBidAsync(int tenderBidId, string deliveryAddress);
         Task<PurchaseOrder> CreateDirectPurchaseOrderAsync(PurchaseOrder po, List<PurchaseOrderItem> items);
         Task<PurchaseOrder> UpdatePurchaseOrderStatusAsync(int id, string status, int userId);
-        Task<bool> CancelPurchaseOrderAsync(int poId, int userId, string reason);
     }
 }

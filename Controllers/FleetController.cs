@@ -102,7 +102,7 @@ namespace SCM_System.Controllers
         // POST: /Supplier/CreateVehicle
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateVehicle([Bind(Prefix="")] Vehicle vehicle, IFormFile? registrationDoc, IFormFile? insuranceDoc)
+        public async Task<IActionResult> CreateVehicle([Bind("LicensePlate,AssetCode,VehicleType,Brand,Model,ManufactureYear,Color,MaxLoadCapacity,InternalVolumeM3,TemperatureControlled,FuelType,FuelTankCapacity,GPSInstalled,Mileage,CurrentMileage,FuelEfficiency,LastServiceDate,NextServiceDueDate,TireChangeDue,InsuranceExpiryDate,RegistrationExpiryDate,WarehouseId,PurchaseDate,PurchaseCost,InsuranceProvider,FuelCardNumber,DriverEligibilityType")] Vehicle vehicle, IFormFile? registrationDoc, IFormFile? insuranceDoc)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
@@ -119,14 +119,10 @@ namespace SCM_System.Controllers
             if (plateExists) 
                 ModelState.AddModelError("LicensePlate", "This License Plate is already registered to your fleet");
 
-            // Extensive Validation Cleanup
-            string[] navProps = { "Supplier", "PrimaryDriver", "Warehouse", "Assignments", "DeliveryAgents", "VehicleAssignments", "Documents", "MaintenanceRecords", "AssetDispatches", "AssetIncidents", "GPSLogs", "DriverHistories" };
-            foreach (var prop in navProps)
-            {
-                ModelState.Remove(prop);
-                ModelState.Remove("model." + prop);
-                ModelState.Remove("vehicle." + prop);
-            }
+            ModelState.Remove("Supplier");
+            ModelState.Remove("DeliveryAgents");
+            ModelState.Remove("VehicleAssignments");
+            ModelState.Remove("Assignments");
 
             if (ModelState.IsValid)
             {
@@ -189,7 +185,7 @@ namespace SCM_System.Controllers
         // POST: /Supplier/EditVehicle/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditVehicle(int id, [Bind(Prefix="")] Vehicle model, IFormFile? registrationDoc, IFormFile? insuranceDoc)
+        public async Task<IActionResult> EditVehicle(int id, [Bind("Id,SupplierId,LicensePlate,AssetCode,VehicleType,Brand,Model,ManufactureYear,Color,MaxLoadCapacity,InternalVolumeM3,TemperatureControlled,Status,CreatedAt,FuelType,FuelTankCapacity,GPSInstalled,LastServiceDate,NextServiceDueDate,Mileage,CurrentMileage,FuelEfficiency,InsuranceExpiryDate,RegistrationExpiryDate,WarehouseId,PurchaseDate,PurchaseCost,InsuranceProvider,FuelCardNumber,DriverEligibilityType")] Vehicle vehicle, IFormFile? registrationDoc, IFormFile? insuranceDoc)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
@@ -197,71 +193,34 @@ namespace SCM_System.Controllers
             var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
             if (supplier == null) return RedirectToAction("AccessDenied", "Home");
 
-            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id && v.SupplierId == supplier.Id);
-            if (vehicle == null) return NotFound();
+            if (id != vehicle.Id || vehicle.SupplierId != supplier.Id) return NotFound();
 
-            // Extensive Validation Cleanup for Navigation Properties
-            string[] navProps = { "Supplier", "PrimaryDriver", "Warehouse", "Assignments", "DeliveryAgents", "VehicleAssignments", "Documents", "MaintenanceRecords", "AssetDispatches", "AssetIncidents", "GPSLogs", "DriverHistories" };
-            foreach (var prop in navProps)
-            {
-                ModelState.Remove(prop);
-                ModelState.Remove("model." + prop);
-                ModelState.Remove("vehicle." + prop);
-            }
+            ModelState.Remove("Supplier");
+            ModelState.Remove("DeliveryAgents");
+            ModelState.Remove("VehicleAssignments");
+            ModelState.Remove("Assignments");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Update Core Identity
-                    vehicle.LicensePlate = model.LicensePlate;
-                    vehicle.AssetCode = model.AssetCode;
-                    vehicle.VehicleType = model.VehicleType;
-                    vehicle.Brand = model.Brand;
-                    vehicle.Model = model.Model;
-                    vehicle.ManufactureYear = model.ManufactureYear;
-                    vehicle.Color = model.Color;
-                    
-                    // Technical Specs
-                    vehicle.MaxLoadCapacity = model.MaxLoadCapacity;
-                    vehicle.InternalVolumeM3 = model.InternalVolumeM3;
-                    vehicle.FuelType = model.FuelType;
-                    vehicle.FuelTankCapacity = model.FuelTankCapacity;
-                    vehicle.FuelEfficiency = model.FuelEfficiency;
-                    vehicle.Mileage = model.Mileage;
-                    vehicle.CurrentMileage = model.CurrentMileage ?? model.Mileage; // Sync if only one provided
-                    
-                    // Features
-                    vehicle.GPSInstalled = model.GPSInstalled;
-                    vehicle.TemperatureControlled = model.TemperatureControlled;
-                    
-                    // Operations
-                    vehicle.Status = model.Status;
-                    vehicle.WarehouseId = model.WarehouseId;
-                    vehicle.DriverEligibilityType = model.DriverEligibilityType;
-                    
-                    // Maintenance & Compliance
-                    vehicle.LastServiceDate = model.LastServiceDate;
-                    vehicle.NextServiceDueDate = model.NextServiceDueDate;
-                    vehicle.RegistrationExpiryDate = model.RegistrationExpiryDate;
-                    vehicle.InsuranceExpiryDate = model.InsuranceExpiryDate;
-                    
-                    // Financials
-                    vehicle.PurchaseDate = model.PurchaseDate;
-                    vehicle.PurchaseCost = model.PurchaseCost;
-                    vehicle.InsuranceProvider = model.InsuranceProvider;
-                    vehicle.FuelCardNumber = model.FuelCardNumber;
+                    var existingVehicle = await _context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id);
+                    if (existingVehicle != null)
+                    {
+                        if (registrationDoc != null)
+                            vehicle.RegistrationCertificateUrl = await SaveFileAsync(registrationDoc, "vehicles");
+                        else
+                            vehicle.RegistrationCertificateUrl = existingVehicle.RegistrationCertificateUrl;
 
-                    // Document Uploads
-                    if (registrationDoc != null)
-                        vehicle.RegistrationCertificateUrl = await SaveFileAsync(registrationDoc, "vehicles");
-                    if (insuranceDoc != null)
-                        vehicle.InsuranceCertificateUrl = await SaveFileAsync(insuranceDoc, "vehicles");
+                        if (insuranceDoc != null)
+                            vehicle.InsuranceCertificateUrl = await SaveFileAsync(insuranceDoc, "vehicles");
+                        else
+                            vehicle.InsuranceCertificateUrl = existingVehicle.InsuranceCertificateUrl;
+                            
+                        vehicle.VehiclePhotosUrls = existingVehicle.VehiclePhotosUrls;
+                    }
 
-                    // Audit Info
-                    vehicle.UpdatedAt = DateTime.Now;
-                    vehicle.UpdatedBy = userId.ToString();
-
+                    _context.Update(vehicle);
                     await _context.SaveChangesAsync();
 
                     // AUDIT LOG
@@ -269,39 +228,31 @@ namespace SCM_System.Controllers
                         "Vehicle", 
                         vehicle.Id.ToString(), 
                         "Update", 
-                        notes: $"Vehicle {vehicle.LicensePlate} profile updated successfully",
+                        notes: $"Vehicle {vehicle.LicensePlate} profile updated",
                         performedByUserId: userId
                     );
 
-                    TempData["SuccessMessage"] = "Vehicle profile updated successfully.";
+                    TempData["SuccessMessage"] = "Vehicle details updated successfully.";
                     return RedirectToAction(nameof(Vehicles));
                 }
-                catch (Exception ex)
+                catch (DbUpdateConcurrencyException)
                 {
-                    ModelState.AddModelError("", "Update failed: " + ex.Message);
-                    TempData["ErrorMessage"] = "Database Update Error: " + ex.Message;
+                    if (!VehicleExists(vehicle.Id, supplier.Id)) return NotFound();
+                    else throw;
                 }
             }
-            else
-            {
-                var errors = string.Join(" | ", ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => string.IsNullOrEmpty(e.ErrorMessage) ? e.Exception?.Message : e.ErrorMessage));
-                TempData["ErrorMessage"] = "Validation Failed: " + errors;
-            }
 
-            // Re-populate dropdowns if validation fails
             ViewBag.Warehouses = await _context.Warehouses
-                .Where(w => w.SupplierId == supplier.Id && (w.IsActive || w.Id == model.WarehouseId))
+                .Where(w => w.SupplierId == supplier.Id && (w.IsActive || w.Id == vehicle.WarehouseId))
                 .Select(w => new SelectListItem 
                 { 
                     Value = w.Id.ToString(), 
                     Text = $"{w.Name} ({w.City})",
-                    Selected = w.Id == model.WarehouseId
+                    Selected = w.Id == vehicle.WarehouseId
                 })
                 .ToListAsync();
 
-            return View(model);
+            return View(vehicle);
         }
 
         // POST: /Supplier/DeleteVehicle/5

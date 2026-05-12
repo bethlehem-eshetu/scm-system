@@ -1,332 +1,179 @@
-@using Microsoft.AspNetCore.Http
-@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
-    Layout = null;
+    ViewData["Title"] = "EthioChain SCM - The Digital Backbone for SMEs";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EthioChain SCM - Empowering Supply Chains</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+@section Styles {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
-        @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
         :root {
-            --brand-green: #4da699;
-            --brand-green-dark: #1a3d31;
-            --brand-green-light: #e0f2ef;
-            --brand-green-hue: #f4fcfb;
-            --text-dark: #1a1a1a;
-            --text-muted: #666666;
-            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --ethio-blue: #0b3d60;
+            --ethio-blue-dark: #07253b;
+            --ethio-gold: #cba052;
+            --ethio-gold-light: #e6c587;
+            --bg-surface: #f8f9fc;
         }
 
-        body {
-            font-family: var(--font-main);
-            color: var(--text-dark);
-            background-color: var(--brand-green-hue);
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            scroll-behavior: smooth;
+        /* Fullscreen Video Background */
+        .video-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2;
         }
-
-        /* Navbar Customization */
-        .navbar-custom {
-            padding: 20px 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .navbar-custom.scrolled {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            padding: 15px 0;
-            background: white;
-        }
-        .nav-link {
-            font-weight: 600;
-            color: var(--text-dark) !important;
-            margin: 0 12px;
-            font-size: 0.95rem;
-        }
-        .nav-link:hover { color: var(--brand-green) !important; }
-
-        .btn-login {
-            color: var(--brand-green-dark) !important;
-            font-weight: 700;
-            padding: 10px 20px;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        .btn-login:hover { color: var(--brand-green) !important; }
-
-        .btn-demo {
-            background-color: var(--brand-green-dark);
-            color: white !important;
-            border-radius: 30px;
-            padding: 10px 25px;
-            font-weight: 700;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-demo:hover {
-            background-color: var(--brand-green);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(77, 166, 153, 0.2);
+        .video-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(7, 37, 59, 0.85) 0%, rgba(11, 61, 96, 0.70) 50%, rgba(7, 37, 59, 0.95) 100%);
+            z-index: -1;
         }
 
         /* Hero Section */
         .hero-section {
-            padding: 80px 0 120px;
-            background: radial-gradient(circle at top right, #e6f7f4, var(--brand-green-hue));
-            position: relative;
-            overflow: hidden;
+            position: relative; min-height: 100vh; display: flex; align-items: center; padding: 120px 0 80px; z-index: 1;
+        }
+        .hero-title { font-size: 4rem; line-height: 1.1; letter-spacing: -0.02em; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        @@media (max-width: 991.98px) { .hero-title { font-size: 3rem; } }
+        
+        .text-gradient-gold {
+            background: linear-gradient(90deg, var(--ethio-gold-light) 0%, var(--ethio-gold) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
-        .hero-tagline {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--brand-green-light);
-            color: var(--brand-green-dark);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            margin-bottom: 25px;
+        /* Buttons */
+        .btn-brand {
+            background: linear-gradient(135deg, var(--ethio-gold) 0%, #a67c33 100%);
+            color: #fff !important; border: none; font-weight: 700;
+            padding: 1rem 2.5rem; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(203, 160, 82, 0.3);
+        }
+        .btn-brand:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(203, 160, 82, 0.5); }
+        
+        .btn-outline-glass {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff !important; font-weight: 700; padding: 1rem 2.5rem; border-radius: 50px;
+            text-transform: uppercase; letter-spacing: 1px;  backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .btn-outline-glass:hover { background: rgba(255,255,255,1); color: var(--ethio-blue-dark) !important; transform: translateY(-3px); }
+
+        /* Sections */
+        .bg-light-surface { background-color: var(--bg-surface); position: relative; z-index: 2; padding: 100px 0; }
+        .bg-white-pure { background-color: #ffffff; position: relative; z-index: 2; padding: 100px 0; }
+
+        /* Feature Cards */
+        .premium-card {
+            background: #fff; border-radius: 20px; border: none; padding: 3rem 2rem;
+            box-shadow: 0 20px 40px -10px rgba(11, 61, 96, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .premium-card:hover { transform: translateY(-10px); box-shadow: 0 30px 60px -15px rgba(11, 61, 96, 0.15); }
+        .icon-circle {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(11, 61, 96, 0.05) 0%, rgba(11, 61, 96, 0.15) 100%);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;
+            color: var(--ethio-blue); font-size: 2rem;
         }
 
-        .hero-title {
-            font-size: 4rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 25px;
-            color: var(--brand-green-dark);
+        /* Timeline / Pipeline */
+        .timeline-step { text-align: center; position: relative; z-index: 2; }
+        .timeline-icon {
+            width: 70px; height: 70px; margin: 0 auto 1.5rem; border-radius: 50%;
+            background: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: var(--ethio-gold); border: 2px solid var(--ethio-gold);
+            position: relative; z-index: 2; transition: all 0.3s ease;
         }
-        .hero-title span { color: var(--brand-green); }
-
-        .hero-desc {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            max-width: 550px;
-            line-height: 1.6;
-        }
-
-        .hero-btns { display: flex; gap: 20px; }
-        .btn-explore {
-            background: var(--brand-green-dark);
-            color: white !important;
-            padding: 15px 35px;
-            border-radius: 50px;
-            font-weight: 700;
-            box-shadow: 0 20px 40px rgba(26, 61, 49, 0.2);
-            text-decoration: none;
-        }
-        .btn-view-all {
-            background: transparent;
-            color: var(--brand-green-dark) !important;
-            padding: 15px 35px;
-            border-radius: 50px;
-            font-weight: 700;
-            border: 2px solid transparent;
-            text-decoration: none;
-        }
-        .btn-view-all:hover { color: var(--brand-green) !important; }
-
-        /* Bento Grid */
-        .hero-bento {
-            position: relative;
-            height: 550px;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 20px;
-        }
-        .bento-item {
-            position: relative;
-            border-radius: 40px;
-            overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
-            background: #ffffff;
-        }
-        .bento-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-        .bento-item:hover img { transform: scale(1.05); }
-
-        .bento-1 { grid-row: span 2; }
-        .bento-2 { grid-column: span 1; }
-        .bento-3 { grid-column: span 1; }
-
-        .bento-badge {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.75rem;
-            color: var(--brand-green-dark);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            z-index: 2;
+        .timeline-step:hover .timeline-icon { background: var(--ethio-gold); color: #fff; transform: scale(1.1); }
+        .timeline-line {
+            position: absolute; top: 35px; left: 50%; width: 100%; height: 2px;
+            background: linear-gradient(90deg, var(--ethio-gold) 0%, rgba(203, 160, 82, 0.2) 100%);
+            z-index: 1;
         }
 
-        /* Features Section */
-        .features-section { padding: 100px 0; background: #ffffff; }
-        .section-header { text-align: center; margin-bottom: 60px; }
-        .section-header h2 { font-size: 3rem; font-weight: 800; color: var(--brand-green-dark); }
-        .section-header p { color: var(--text-muted); font-size: 1.1rem; }
-
-        .feature-card {
-            padding: 40px;
-            border-radius: 30px;
-            background: #ffffff;
-            border: 1px solid #e0f2ef;
-            transition: all 0.3s;
-            height: 100%;
+        /* CTA */
+        .cta-box {
+            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
+            border-radius: 30px; padding: 4rem; position: relative; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(11, 61, 96, 0.5);
         }
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 30px 60px rgba(77, 166, 153, 0.1);
-            border-color: var(--brand-green);
+        .cta-bg-motif {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(203, 160, 82, 0.1) 0%, transparent 60%); z-index: 0;
+            animation: rotateSlow 30s linear infinite;
         }
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--brand-green-light);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: var(--brand-green);
-            margin-bottom: 25px;
+        @@keyframes rotateSlow { 100% { transform: rotate(360deg); } }
+        
+        /* SME-specific badge */
+        .sme-badge {
+            background: rgba(203, 160, 82, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(203, 160, 82, 0.4);
         }
-
-        /* About Section */
-        .about-section { padding: 100px 0; background: var(--brand-green-hue); }
-        .about-img { border-radius: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); width: 100%; }
-
-        /* Stats Section */
-        .stats-section { padding: 80px 0; background: var(--brand-green-dark); color: white; border-radius: 50px; margin: 0 20px 80px; }
-        .stat-item h3 { font-size: 3rem; font-weight: 800; margin-bottom: 5px; color: var(--brand-green); }
-        .stat-item p { font-size: 1rem; opacity: 0.8; }
-
-        /* Contact Section */
-        .contact-section { padding: 100px 0; background: #ffffff; }
-        .contact-card { background: var(--brand-green-hue); border-radius: 40px; padding: 50px; }
-        .form-control { border-radius: 15px; padding: 15px; border: 2px solid #e0f2ef; }
-        .form-control:focus { border-color: var(--brand-green); box-shadow: none; }
-
-        /* CTA Section */
-        .cta-section { padding: 80px 0; text-align: center; }
-        .cta-container {
-            background: linear-gradient(135deg, var(--brand-green-dark) 0%, #122921 100%);
-            padding: 80px 40px;
-            border-radius: 40px;
-            color: white;
-            position: relative;
-            overflow: hidden;
+        .sme-stat-card {
+            transition: all 0.3s ease;
         }
-
-        footer {
-            padding: 40px 0;
-            text-align: center;
-            border-top: 1px solid #e0f2ef;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            background: white;
-        }
-
-        @@media (max-width: 992px) {
-            .hero-title { font-size: 2.5rem; }
-            .hero-bento { height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
-            .bento-1 { grid-row: auto; height: 300px; }
-            .bento-2, .bento-3 { height: 200px; }
-            .hero-btns { flex-direction: column; }
+        .sme-stat-card:hover {
+            transform: translateY(-5px);
         }
     </style>
-</head>
-<body>
+}
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-custom">
-    <div class="container-fluid px-lg-5">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-            <img src="~/images/ethiochain-logo.jpg" alt="Logo" height="35" style="border-radius: 8px;">
-            <span class="fw-bold fs-4" style="color: var(--brand-green-dark); letter-spacing: -0.5px;">ETHIOCHAIN</span>
-        </a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#features">Services</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Home/About">About Us</a></li>
-                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-                @if (Context.Session.GetInt32("UserId") == null)
-                {
-                    <li class="nav-item ms-lg-3"><a href="/Account/Login" class="btn-login">Login</a></li>
-                    <li class="nav-item ms-lg-2"><a href="/Account/Register" class="btn btn-demo">Get Started</a></li>
-                }
-                else
-                {
-                    <li class="nav-item ms-lg-3 mt-3 mt-lg-0"><a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-demo">Dashboard</a></li>
-                }
-            </ul>
-        </div>
-    </div>
-</nav>
+<!-- Fullscreen Video Background -->
+<video class="video-background" autoplay muted loop playsinline>
+    <source src="~/videos/HOME.mp4" type="video/mp4">
+</video>
+<div class="video-overlay"></div>
 
 <!-- Hero Section -->
 <section class="hero-section">
-    <div class="container">
+    <div class="container position-relative z-index-2">
         <div class="row align-items-center">
-            <div class="col-lg-6" data-aos="fade-right">
-                <div class="hero-tagline">
-                    <i class="fas fa-bolt"></i>
-                    <span>ELEVATE YOUR SUPPLY CHAIN WITH US</span>
+            <div class="col-lg-8" data-aos="fade-up" data-aos-duration="1000">
+                <div class="sme-badge badge bg-white bg-opacity-10 text-white px-4 py-2 rounded-pill mb-4 border border-white border-opacity-25" style="backdrop-filter: blur(5px);">
+                    <i class="fas fa-chart-line me-2 text-warning"></i> Built for Small & Medium Enterprises
                 </div>
-                <h1 class="hero-title">
-                    Empowering Your <br />
-                    Success with <span>Digital SCM.</span>
+                <h1 class="fw-bolder hero-title text-white mb-4">
+                    The Digital Backbone for <br />
+                    <span class="text-gradient-gold">Small & Medium Supply Chains.</span>
                 </h1>
-                <p class="hero-desc">
-                    Streamline your procurement, inventory, and logistics with Ethiopia's most intuitive digital supply chain platform built specifically for SMEs.
+                <p class="lead text-white text-opacity-75 mb-5 fw-light" style="max-width: 650px; font-size: 1.25rem;">
+                    Empowering retailers, distributors, and local suppliers across Ethiopia with accessible milestone tracking, smart procurement, and automated logistics — no enterprise overhead required.
                 </p>
-                <div class="hero-btns">
-                    <a href="/Account/Register" class="btn btn-explore btn-lg">Explore More <i class="fas fa-arrow-right ms-2"></i></a>
-                    <a href="#features" class="btn btn-view-all btn-lg">View All Services</a>
+                <div class="d-flex flex-wrap gap-4">
+                    @if (Context.Session.GetInt32("UserId") == null)
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-brand">
+                            <i class="fas fa-building me-2"></i> Start Free Trial
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-glass">
+                            <i class="fas fa-desktop me-2"></i> Business Login
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-brand">Access Dashboard</a>
+                    }
                 </div>
-            </div>
-            <div class="col-lg-6" data-aos="fade-left">
-                <div class="hero-bento mt-5 mt-lg-0">
-                    <div class="bento-item bento-1">
-                        <img src="~/images/anime-warehouse.png" alt="Warehouse">
-                        <div class="bento-badge">SMART STORAGE</div>
-                    </div>
-                    <div class="bento-item bento-2">
-                        <img src="~/images/anime-delivery.png" alt="Delivery">
-                        <div class="bento-badge">FAST LOGISTICS</div>
-                    </div>
-                    <div class="bento-item bento-3">
-                        <img src="~/images/anime-analytics.png" alt="Analytics">
-                        <div class="bento-badge">LIVE INSIGHTS</div>
+                
+                <!-- SME Trust Indicators -->
+                <div class="trust-badge-group">
+                    <p class="small fw-bold text-white text-opacity-50 text-uppercase letter-spacing-1 mb-4">Trusted by growing businesses across Ethiopia</p>
+                    <div class="row g-3 mt-2">
+                        <div class="col-sm-4">
+                            <div class="d-flex align-items-center gap-2 text-white">
+                                <i class="fas fa-store fs-4 text-gold"></i>
+                                <div><small class="d-block text-white text-opacity-75">Retailers</small><strong class="fs-5">500+</strong></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="d-flex align-items-center gap-2 text-white">
+                                <i class="fas fa-truck fs-4 text-gold"></i>
+                                <div><small class="d-block text-white text-opacity-75">Suppliers</small><strong class="fs-5">200+</strong></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="d-flex align-items-center gap-2 text-white">
+                                <i class="fas fa-chart-simple fs-4 text-gold"></i>
+                                <div><small class="d-block text-white text-opacity-75">Monthly Orders</small><strong class="fs-5">2.5K+</strong></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -334,161 +181,234 @@
     </div>
 </section>
 
-<!-- Features Section -->
-<section class="features-section" id="features">
+<!-- SME Value Proposition -->
+<section class="bg-light-surface">
     <div class="container">
-        <div class="section-header" data-aos="fade-up">
-            <h2 class="mb-4">Everything you need to grow</h2>
-            <p>From manual chaos to digital clarity — our tools are built to help you scale.</p>
+        <div class="text-center mb-5 pb-4" data-aos="fade-up">
+            <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">Why SMEs Choose EthioChain</div>
+            <h2 class="display-5 fw-bolder text-dark-blue mb-3">From manual chaos to digital clarity</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 700px;">We level the playing field — giving small businesses the same supply chain superpowers as industry giants.</p>
         </div>
-        <div class="row g-4">
+        <div class="row g-5">
             <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-handshake"></i></div>
-                    <h4 class="fw-bold mb-3">Smart Bidding</h4>
-                    <p class="text-muted">Post procurement requests and compare quotes instantly. Save up to 40% on sourcing costs.</p>
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Pay-as-you-grow</h4>
+                    <p class="text-muted mb-0">No massive upfront costs. Scale your plan as your business expands — from single warehouse to multi-location operations.</p>
                 </div>
             </div>
             <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-warehouse"></i></div>
-                    <h4 class="fw-bold mb-3">Inventory Hub</h4>
-                    <p class="text-muted">Real-time stock tracking across multiple locations. Never lose track of your inventory again.</p>
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Mobile-first design</h4>
+                    <p class="text-muted mb-0">Manage your entire supply chain from your phone — perfect for business owners on the move across Ethiopia.</p>
                 </div>
             </div>
             <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-route"></i></div>
-                    <h4 class="fw-bold mb-3">Delivery Tracker</h4>
-                    <p class="text-muted">GPS-verified logistics. Share real-time status with your customers for ultimate transparency.</p>
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Amharic support</h4>
+                    <p class="text-muted mb-0">Full platform support in Amharic and English, with local customer service and onboarding assistance.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- About Section -->
-<section class="about-section" id="about">
+<!-- Core Features Grid -->
+<section class="bg-white-pure">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6" data-aos="fade-right">
-                <img src="~/images/anime-analytics.png" alt="About EthioChain" class="about-img">
+        <div class="text-center mb-5 pb-4" data-aos="fade-up">
+            <h2 class="display-5 fw-bolder text-dark-blue mb-3">Everything you need to grow</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 700px;">Powerful tools designed specifically for Ethiopian SMEs — no complexity, no bloat.</p>
+        </div>
+        <div class="row g-5">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Smart Bidding</h4>
+                    <p class="text-muted mb-0">Post procurement requests and compare supplier quotes. Find the best prices without endless phone calls.</p>
+                </div>
             </div>
-            <div class="col-lg-6 mt-5 mt-lg-0 ps-lg-5" data-aos="fade-left">
-                <h2 class="fw-bold mb-4" style="color: var(--brand-green-dark); font-size: 2.5rem;">Who We Are</h2>
-                <p class="lead mb-4">EthioChain is Ethiopia's leading digital supply chain ecosystem, built to empower SMEs with enterprise-grade tools.</p>
-                <p class="text-muted mb-5">We bridge the gap between local retailers and global-standard logistics. Our mission is to digitize every step of the supply chain, ensuring transparency, efficiency, and growth for every business in our network.</p>
-                <a asp-controller="Home" asp-action="About" class="btn btn-demo px-4 py-2">Learn More About Our Journey</a>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Inventory Hub</h4>
+                    <p class="text-muted mb-0">Know exactly what's in stock, what's moving, and what needs reordering — simple dashboards for real decisions.</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="premium-card text-center h-100">
+                    <div class="icon-circle shadow-sm">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-blue mb-3">Delivery Tracker</h4>
+                    <p class="text-muted mb-0">Real-time visibility on every shipment. Share tracking links with customers and reduce "where's my order?" calls.</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Stats Section -->
-<section class="stats-section" data-aos="zoom-in">
+<!-- How It Works Section -->
+<section class="bg-light-surface">
+    <div class="container">
+        <div class="text-center mb-5 pb-5" data-aos="fade-up">
+            <h2 class="display-5 fw-bolder text-dark-blue mb-3">Simple as 1-2-3-4-5</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 600px;">From order to delivery — watch your business run like clockwork.</p>
+        </div>
+        <div class="row g-4 justify-content-center px-4">
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-file-contract fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">1. Request</h5>
+                    <p class="small text-muted">Post what you need</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-clipboard-check fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">2. Compare</h5>
+                    <p class="small text-muted">Review supplier bids</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-box-open fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">3. Pack</h5>
+                    <p class="small text-muted">Warehouse prepares</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="400">
+                <div class="timeline-step">
+                    <div class="timeline-line d-none d-lg-block"></div>
+                    <div class="timeline-icon"><i class="fas fa-truck-loading fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">4. Ship</h5>
+                    <p class="small text-muted">Driver confirms pickup</p>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="500">
+                <div class="timeline-step">
+                    <div class="timeline-icon"><i class="fas fa-check-circle fs-4"></i></div>
+                    <h5 class="fw-bold text-dark-blue">5. Receive</h5>
+                    <p class="small text-muted">Digital proof of delivery</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Success Stats Section -->
+<section class="bg-white-pure">
     <div class="container">
         <div class="row g-4 text-center">
-            <div class="col-md-3 col-6">
-                <div class="stat-item">
-                    <h3>500+</h3>
-                    <p>Active Retailers</p>
+            <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="sme-stat-card">
+                    <div class="display-4 fw-bold text-gold mb-2">40%</div>
+                    <p class="text-muted mb-0">Average cost reduction</p>
+                    <small class="text-success">through smart bidding</small>
                 </div>
             </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-item">
-                    <h3>200+</h3>
-                    <p>Verified Suppliers</p>
+            <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="sme-stat-card">
+                    <div class="display-4 fw-bold text-gold mb-2">60%</div>
+                    <p class="text-muted mb-0">Faster order processing</p>
+                    <small class="text-success">from request to delivery</small>
                 </div>
             </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-item">
-                    <h3>2.5K</h3>
-                    <p>Monthly Orders</p>
+            <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="sme-stat-card">
+                    <div class="display-4 fw-bold text-gold mb-2">99%</div>
+                    <p class="text-muted mb-0">On-time delivery rate</p>
+                    <small class="text-success">verified by GPS tracking</small>
                 </div>
             </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-item">
-                    <h3>99%</h3>
-                    <p>Delivery Rate</p>
+            <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="400">
+                <div class="sme-stat-card">
+                    <div class="display-4 fw-bold text-gold mb-2">24/7</div>
+                    <p class="text-muted mb-0">Local support team</p>
+                    <small class="text-success">Amharic & English</small>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Contact Section -->
-<section class="contact-section" id="contact">
-    <div class="container">
-        <div class="contact-card" data-aos="fade-up">
-            <div class="row">
-                <div class="col-lg-6 mb-5 mb-lg-0">
-                    <h2 class="fw-bold mb-4" style="color: var(--brand-green-dark);">Get in touch</h2>
-                    <p class="text-muted mb-5">Have questions? Our team is here to help you get onboarded and scale your operations.</p>
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="feature-icon mb-0 me-3"><i class="fas fa-envelope"></i></div>
-                        <div>
-                            <h6 class="fw-bold mb-0">Email us</h6>
-                            <span class="text-muted">support@ethiochain.com</span>
-                        </div>
+<!-- Final CTA -->
+<section class="bg-light-surface">
+    <div class="container" data-aos="zoom-in">
+        <div class="cta-box text-center text-white">
+            <div class="cta-bg-motif"></div>
+            <div class="position-relative z-index-2">
+                <h2 class="display-5 fw-bolder mb-4">Ready to grow your business?</h2>
+                <p class="lead text-white text-opacity-75 mb-5 mx-auto" style="max-width: 600px;">
+                    Join hundreds of Ethiopian SMEs already using EthioChain to streamline their supply chain and boost profits.
+                </p>
+                <div class="d-flex justify-content-center gap-4 flex-wrap">
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-brand btn-lg px-5">
+                        <i class="fas fa-rocket me-2"></i> Start Free Trial
+                    </a>
+                    <a href="#" class="btn btn-outline-glass btn-lg px-5" data-bs-toggle="modal" data-bs-target="#demoModal">
+                        <i class="fas fa-calendar-alt me-2"></i> Book a Demo
+                    </a>
+                </div>
+                <p class="mt-4 text-white text-opacity-50 small">No credit card required • Free 14-day trial • Cancel anytime</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Request Modal (Placeholder) -->
+<div class="modal fade" id="demoModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Schedule a free demo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Our team will reach out within 24 hours to schedule your personalized walkthrough.</p>
+                <form>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" placeholder="Your name">
                     </div>
-                    <div class="d-flex align-items-center">
-                        <div class="feature-icon mb-0 me-3"><i class="fas fa-phone"></i></div>
-                        <div>
-                            <h6 class="fw-bold mb-0">Call us</h6>
-                            <span class="text-muted">+251 911 223344</span>
-                        </div>
+                    <div class="mb-3">
+                        <input type="email" class="form-control" placeholder="Email address">
                     </div>
-                </div>
-                <div class="col-lg-6">
-                    <form>
-                        <div class="mb-3">
-                            <input type="text" class="form-control" placeholder="Your Name">
-                        </div>
-                        <div class="mb-3">
-                            <input type="email" class="form-control" placeholder="Your Email">
-                        </div>
-                        <div class="mb-3">
-                            <textarea class="form-control" rows="4" placeholder="Your Message"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-demo w-100 py-3">Send Message</button>
-                    </form>
-                </div>
+                    <div class="mb-3">
+                        <input type="tel" class="form-control" placeholder="Phone number">
+                    </div>
+                    <div class="mb-3">
+                        <select class="form-select">
+                            <option>Retail business</option>
+                            <option>Wholesale / Distribution</option>
+                            <option>Manufacturing</option>
+                            <option>Logistics provider</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-brand w-100">Request Demo</button>
+                </form>
             </div>
         </div>
     </div>
-</section>
+</div>
 
-<!-- CTA Section -->
-<section class="cta-section">
-    <div class="container" data-aos="flip-up">
-        <div class="cta-container">
-            <h2 class="display-5 fw-bold mb-4">Ready to modernize your business?</h2>
-            <p class="lead mb-5 opacity-75">Join hundreds of Ethiopian SMEs already scaling with EthioChain.</p>
-            <a href="/Account/Register" class="btn btn-explore btn-lg px-5 py-3">Start Your Free Trial</a>
-        </div>
-    </div>
-</section>
-
-<footer>
-    <div class="container">
-        <p class="mb-0">&copy; @DateTime.Now.Year EthioChain SCM. All rights reserved.</p>
-    </div>
-</footer>
-
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script>
-    AOS.init({ duration: 1000, once: true });
-    
-    window.addEventListener('scroll', function() {
-        const nav = document.querySelector('.navbar-custom');
-        if (window.scrollY > 50) {
-            nav.classList.add('scrolled');
-        } else {
-            nav.classList.remove('scrolled');
-        }
-    });
-</script>
-</body>
-</html>
+@section Scripts {
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: true });
+    </script>
+}

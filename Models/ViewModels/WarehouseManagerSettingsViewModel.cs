@@ -9,7 +9,7 @@ namespace SCM_System.Models.ViewModels
         [Display(Name = "Profile Picture")]
         public IFormFile? ProfilePicture { get; set; }
 
-        public string? ExistingProfilePhoto { get; set; }
+        public string? ExistingProfileImage { get; set; }
 
         [Required]
         [Display(Name = "Full Name")]

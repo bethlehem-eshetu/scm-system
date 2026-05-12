@@ -1,49 +1,77 @@
-                    <li class="menu-label">Operations</li>
                     <li>
                         <a asp-controller="Supplier" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
                     </li>
+                    <li class="menu-label">Product Management</li>
+                    <li>
+                        <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-boxes"></i> My Products</a>
+                    </li>
+                    
+                    <li class="menu-label">Orders & Logistics</li>
                     <li>
                         <a asp-controller="Order" asp-action="Index"><i class="fas fa-shopping-basket"></i> Customer Orders</a>
                     </li>
-                    <li>
-                        <a asp-controller="Product" asp-action="MyProducts"><i class="fas fa-boxes"></i> Inventory</a>
-                    </li>
-                    
-                    <li class="menu-label">Supply Chain</li>
                     <li>
                         <a asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice-dollar"></i> Purchase Orders</a>
                     </li>
                     <li>
                         <a asp-controller="Logistics" asp-action="InventoryTransfers"><i class="fas fa-exchange-alt"></i> Stock Transfers</a>
                     </li>
+
+                    <li class="menu-label">Market Opportunities</li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="AvailableTenders"><i class="fas fa-bullhorn"></i> Available Tenders</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="MyBids"><i class="fas fa-file-contract"></i> My Bids</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Tender" asp-action="AwardedContracts"><i class="fas fa-award"></i> Awarded Contracts</a>
+                    </li>
+
+                    <li class="menu-label">Infrastructure</li>
+                    <li>
+                        <a asp-controller="Workforce" asp-action="Employees"><i class="fas fa-users-cog"></i> My Employees</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Hub" asp-action="Warehouses"><i class="fas fa-warehouse"></i> My Warehouses</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Fleet" asp-action="Vehicles"><i class="fas fa-truck-moving"></i> Fleet Management</a>
+                    </li>
                     <li>
                         <a asp-controller="Supplier" asp-action="OrderTracking"><i class="fas fa-map-marker-alt"></i> Live Tracking</a>
                     </li>
 
-                    <li class="menu-label">Marketplace</li>
+                    <li class="menu-label">Finance & Assets</li>
                     <li>
-                        <a asp-controller="Tender" asp-action="AvailableTenders"><i class="fas fa-bullhorn"></i> Tenders</a>
+                        <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-wallet"></i> Earnings Ledger</a>
                     </li>
                     <li>
-                        <a asp-controller="Tender" asp-action="MyBids"><i class="fas fa-file-contract"></i> Active Bids</a>
-                    </li>
-
-                    <li class="menu-label">Finance</li>
-                    <li>
-                        <a asp-controller="Payment" asp-action="MyPayments"><i class="fas fa-wallet"></i> Earnings</a>
+                        <a asp-controller="Supplier" asp-action="Payments"><i class="fas fa-file-invoice-dollar"></i> Commission History</a>
                     </li>
                     <li>
-                        <a asp-controller="Supplier" asp-action="Payments"><i class="fas fa-file-invoice-dollar"></i> Commissions</a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#withdrawModal"><i class="fas fa-university"></i> Payout Requests</a>
                     </li>
 
-                    <li class="menu-label">Business</li>
+                    <li class="menu-label">Performance & Service</li>
+                    <li>
+                        <a asp-controller="Return" asp-action="SupplierReturns"><i class="fas fa-undo-alt"></i> Returns Handling</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Rating" asp-action="SupplierRatings"><i class="fas fa-star"></i> My Ratings</a>
+                    </li>
+                    <li class="menu-label">Business Center</li>
                     <li>
                         <a asp-controller="Message" asp-action="Inbox" class="d-flex align-items-center">
                             <i class="fas fa-comment-dots"></i>
                             <span>Messages</span>
-                            <span class="badge bg-accent-green text-dark-green rounded-pill ms-auto px-2" id="msgCountSupplier" style="display:none; font-size: 0.65rem;">0</span>
+                            <span class="badge bg-danger rounded-pill ms-auto px-2" id="msgCountSupplier" style="display:none; font-size: 0.65rem;">0</span>
                         </a>
                     </li>
+                    
                     <li>
-                        <a asp-controller="Supplier" asp-action="Settings"><i class="fas fa-user-cog"></i> Settings</a>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Supplier" asp-action="Settings"><i class="fas fa-cog"></i> Account Settings</a>
                     </li>

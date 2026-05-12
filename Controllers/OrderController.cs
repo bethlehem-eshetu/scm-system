@@ -210,32 +210,6 @@ namespace SCM_System.Controllers
             }
             return RedirectToAction(nameof(Details), new { id });
         }
-
-        [HttpPost]
-        [Route("Order/CancelOrder/{id}")]
-        [Authorize(Roles = "Retailer")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelOrder(int id)
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out int userId))
-            {
-                try
-                {
-                    await _orderService.CancelOrderAsync(id, userId);
-                    return Json(new { success = true, message = "Order cancelled successfully." });
-                }
-                catch (InvalidOperationException ex)
-                {
-                    return Json(new { success = false, message = ex.Message });
-                }
-                catch (Exception)
-                {
-                    return Json(new { success = false, message = "An unexpected error occurred while cancelling the order." });
-                }
-            }
-            return Json(new { success = false, message = "Unauthorized." });
-        }
         private async Task<int> GetRetailerIdAsync()
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);

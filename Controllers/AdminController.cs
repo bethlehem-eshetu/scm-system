@@ -2715,13 +2715,6 @@ namespace SCM_System.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Update session for immediate UI reflect
-            HttpContext.Session.SetString("UserName", user.FullName);
-            if (!string.IsNullOrEmpty(user.ProfileImage))
-            {
-                HttpContext.Session.SetString("ProfileImg", user.ProfileImage);
-            }
-
             TempData["SuccessMessage"] = "Admin settings updated successfully.";
             return RedirectToAction("Settings");
         }

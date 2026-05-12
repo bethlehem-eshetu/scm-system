@@ -97,19 +97,47 @@ namespace SCM_System.Controllers
             return View(model);
         }
 
-        [Authorize(Roles = "DeliveryAgent")]
-        public async Task<IActionResult> RouteItinerary()
+        public class QRCodeRequest
         {
-            var employeeId = await GetEmployeeIdAsync();
-            if (employeeId == 0) return Unauthorized();
+            public int purchaseOrderId { get; set; }
+            public string qrCode { get; set; }
+            public bool? isManual { get; set; }
+        }
 
-            var activeDeliveries = await _context.PurchaseOrders
-                .Include(po => po.Order)
-                    .ThenInclude(o => o.Retailer)
-                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
-                .ToListAsync();
+        [HttpPost]
+        [Authorize(Roles = "DeliveryAgent")]
+        public async Task<IActionResult> VerifyQRCode([FromBody] QRCodeRequest request)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Json(new { success = false, message = "Unauthorized" });
 
-            return View(activeDeliveries);
+            var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == userId);
+            if (employee == null) return Json(new { success = false, message = "Employee profile not found" });
+
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Order)
+                .FirstOrDefaultAsync(p => p.Id == request.purchaseOrderId && p.DeliveryAgentId == employee.Id);
+
+            if (po == null)
+            {
+                return Json(new { success = false, message = "Purchase order not found or not assigned to you." });
+            }
+
+            // Expected QR format: "ORDER-{OrderNumber}"
+            var expectedQR = $"ORDER-{po.Order.OrderNumber}";
+
+            if (request.isManual == true)
+            {
+                // Manual confirmation, don't verify strict format, just return success so form can submit
+                return Json(new { success = true });
+            }
+
+            if (!string.IsNullOrEmpty(request.qrCode) && request.qrCode.Trim().Equals(expectedQR, StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new { success = true, message = "QR Code verified successfully." });
+            }
+
+            return Json(new { success = false, message = "Invalid QR Code for this order." });
         }
 
         [HttpPost]
@@ -152,10 +180,6 @@ namespace SCM_System.Controllers
                     await model.ProfilePicture.CopyToAsync(stream);
                 }
                 employee.ProfilePhotoPath = $"/uploads/profiles/{fileName}";
-                employee.User.ProfileImage = employee.ProfilePhotoPath;
-
-                // Sync Session for real-time header update
-                HttpContext.Session.SetString("ProfileImg", employee.User.ProfileImage ?? "/img/avatars/default.png");
             }
 
             // Update Password if requested
@@ -189,13 +213,6 @@ namespace SCM_System.Controllers
             employee.UpdatedBy = User.Identity?.Name ?? "System";
 
             await _context.SaveChangesAsync();
-
-            // Update Session for real-time UI reflect
-            HttpContext.Session.SetString("UserName", employee.User.FullName ?? "");
-            if (!string.IsNullOrEmpty(employee.ProfilePhotoPath))
-            {
-                HttpContext.Session.SetString("ProfileImg", employee.ProfilePhotoPath);
-            }
 
             TempData["SuccessMessage"] = "Settings updated successfully.";
             return RedirectToAction(nameof(Settings));
@@ -260,13 +277,12 @@ namespace SCM_System.Controllers
                 .ToListAsync();
 
             ViewBag.RecentDeliveries = recentDeliveries;
+
             var activeDeliveries = await _context.PurchaseOrders
                 .Include(po => po.Order)
                     .ThenInclude(o => o.Retailer)
                 .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
                 .ToListAsync();
-
-            ViewBag.ActiveDeliveries = activeDeliveries;
 
             var mapDataList = new List<object>();
             var random = new Random();
@@ -290,46 +306,24 @@ namespace SCM_System.Controllers
             return View(employee);
         }
 
-        public async Task<IActionResult> MyDeliveries(string? searchTerm = null, string? status = null)
+        public async Task<IActionResult> MyDeliveries()
         {
             var employeeId = await GetEmployeeIdAsync();
             if (employeeId == 0) return Unauthorized();
 
-            // Fetch POs assigned to this delivery agent with filtering
-            var query = _context.PurchaseOrders
+            // Fetch POs assigned to this delivery agent
+            var assignedPOs = await _context.PurchaseOrders
                 .Include(po => po.Order)
                     .ThenInclude(o => o.Retailer)
                         .ThenInclude(r => r.User)
-                .Include(po => po.Supplier)
                 .Include(po => po.PurchaseOrderItems)
                     .ThenInclude(i => i.Product)
-                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Completed");
-
-            // Apply Search Filter
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                var search = searchTerm.ToLower();
-                query = query.Where(po => po.PONumber.ToLower().Contains(search) || 
-                                        po.Order.Retailer.BusinessName.ToLower().Contains(search) ||
-                                        po.Supplier.CompanyName.ToLower().Contains(search));
-            }
-
-            // Apply Status Filter
-            if (!string.IsNullOrEmpty(status))
-            {
-                query = query.Where(po => po.Status == status);
-            }
-
-            var assignedPOs = await query
+                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Completed")
                 .OrderByDescending(po => po.CreatedAt)
                 .ToListAsync();
 
-            ViewBag.SearchTerm = searchTerm;
-            ViewBag.Status = status;
-
             return View(assignedPOs);
         }
-
 
 
         [HttpPost]
@@ -568,22 +562,13 @@ namespace SCM_System.Controllers
                 // Check if QR code matches the order
                 bool isValid = false;
 
-                if (po.Order != null)
+                if (po.Order != null && !string.IsNullOrEmpty(po.Order.QRCodeValue))
                 {
-                    // Check against OrderNumber (what is displayed to user)
-                    if (request.QRCode == $"ORDER-{po.Order.OrderNumber}")
-                    {
-                        isValid = true;
-                    }
-                    // Check against the stored QRCodeValue if exists
-                    else if (!string.IsNullOrEmpty(po.Order.QRCodeValue) && po.Order.QRCodeValue == request.QRCode)
-                    {
-                        isValid = true;
-                    }
+                    isValid = (po.Order.QRCodeValue == request.QRCode);
                 }
 
-                // Also check against common patterns for robustness
-                if (!isValid && (request.QRCode == $"ORDER-{po.OrderId}-DELIVERY" || request.QRCode == $"PO-{po.Id}"))
+                // Also check against a simple expected value for testing
+                if (!isValid && request.QRCode == $"ORDER-{po.OrderId}-DELIVERY")
                 {
                     isValid = true;
                 }

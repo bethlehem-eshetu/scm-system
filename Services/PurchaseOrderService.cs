@@ -402,25 +402,5 @@ namespace SCM_System.Services
                 throw; 
             }
         }
-
-        public async Task<bool> CancelPurchaseOrderAsync(int poId, int userId, string reason)
-        {
-            var po = await _context.PurchaseOrders
-                .Include(p => p.Order)
-                .Include(p => p.PurchaseOrderItems)
-                .FirstOrDefaultAsync(p => p.Id == poId);
-
-            if (po == null) return false;
-
-            var blockedStatuses = new[] { POStatus.Picked, POStatus.Packing, POStatus.Packed, POStatus.Ready, POStatus.InTransit, POStatus.Delivered, POStatus.Completed, POStatus.Cancelled };
-            if (blockedStatuses.Contains(po.Status) || po.PickedAt != null) return false;
-
-            po.Status = POStatus.Cancelled;
-            po.CancellationReason = reason;
-            po.UpdatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-            return true;
-        }
     }
 }

@@ -330,7 +330,7 @@ namespace SCM_System.Controllers
                             LicenseNumber = model.LicenseNumber,
                             LicenseFilePath = licenseFilePath,
                             TaxIdentificationNumber = model.TaxIdentificationNumber,
-                            CompanyAddress = model.Address ?? model.CompanyAddress,
+                            CompanyAddress = model.CompanyAddress,
                             City = model.City,
                             Country = string.IsNullOrEmpty(model.Country) ? "Ethiopia" : model.Country,
                             Website = model.Website,
@@ -395,7 +395,7 @@ namespace SCM_System.Controllers
                             BusinessType = model.RetailerBusinessType,
                             TaxIdentificationNumber = model.TaxIdentificationNumber,
                             BusinessLicenseNumber = model.RetailerLicenseNumber,
-                            BusinessAddress = model.Address ?? model.BusinessAddress,
+                            BusinessAddress = model.BusinessAddress,
                             City = model.City,
                             Country = string.IsNullOrEmpty(model.Country) ? "Ethiopia" : model.Country,
                             StoreSize = model.StoreSize,
@@ -727,7 +727,7 @@ namespace SCM_System.Controllers
         // POST: /Account/ForgotPassword
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordRequest request)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             try
             {

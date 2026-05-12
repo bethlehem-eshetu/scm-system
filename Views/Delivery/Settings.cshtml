@@ -4,43 +4,38 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4 px-4">
-    <div class="mb-5">
-        <h1 class="h2 fw-bold text-dark-green mb-1">Agent Settings</h1>
-        <p class="text-muted small">Manage your profile, vehicle status, and preferences.</p>
-    </div>
-
-    <div class="row g-4">
+<div class="container-fluid py-4">
+    <div class="row">
         <!-- Left Column: Profile & Performance -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-premium rounded-5 mb-4 overflow-hidden bg-white">
-                <div class="card-body text-center pt-5 pb-4">
+            <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-body text-center pt-5">
                     <div class="position-relative d-inline-block mb-4">
-                        <div class="rounded-circle overflow-hidden shadow-premium" style="width: 150px; height: 150px; border: 6px solid var(--faint-green);">
+                        <div class="rounded-circle overflow-hidden shadow-sm" style="width: 150px; height: 150px; border: 5px solid #fff;">
                             @if (!string.IsNullOrEmpty(Model.ExistingProfilePicture))
                             {
                                 <img src="@Model.ExistingProfilePicture" id="profilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
                             }
                             else
                             {
-                                <div class="bg-faint-green h-100 w-100 d-flex align-items-center justify-content-center">
-                                    <i class="fas fa-user-tie fa-4x text-dark-green opacity-25"></i>
+                                <div class="bg-light h-100 w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-user-tie fa-4x text-muted"></i>
                                 </div>
                                 <img id="profilePreview" class="img-fluid h-100 w-100 object-fit-cover d-none" alt="Profile" />
                             }
                         </div>
-                        <label for="ProfilePicture" class="btn btn-sm btn-dark-green position-absolute bottom-0 end-0 rounded-circle shadow-premium" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 3px solid white;">
+                        <label for="ProfilePicture" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle shadow" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-camera"></i>
                         </label>
                     </div>
-                    <h4 class="fw-bold text-dark-green mb-1">@Model.FullName</h4>
-                    <p class="text-muted small mb-4">Professional Delivery Agent</p>
+                    <h5 class="fw-bold mb-1">@Model.FullName</h5>
+                    <p class="text-muted small mb-3">Delivery Agent</p>
                     
-                    <div class="d-flex justify-content-center mb-2">
-                        <div class="form-check form-switch px-4 py-2 bg-faint-green rounded-pill border shadow-sm">
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="form-check form-switch px-4 py-2 bg-light rounded-pill">
                             <input class="form-check-input" type="checkbox" id="isOnDutySwitch" @(Model.IsOnDuty ? "checked" : "") onchange="updateDutyStatus(this)">
-                            <label class="form-check-label fw-bold ms-2 text-dark-green small" for="isOnDutySwitch" id="dutyLabel">
-                                @(Model.IsOnDuty ? "ACTIVE ON DUTY" : "OFF DUTY")
+                            <label class="form-check-label fw-bold ms-2" for="isOnDutySwitch" id="dutyLabel">
+                                @(Model.IsOnDuty ? "ON DUTY" : "OFF DUTY")
                             </label>
                         </div>
                     </div>
@@ -50,29 +45,29 @@
             <!-- Performance Cards -->
             <div class="row g-3">
                 <div class="col-6">
-                    <div class="card border-0 shadow-premium rounded-5 bg-dark-green text-white p-4 text-center h-100">
-                        <h2 class="fw-bold mb-0">@Model.TotalDeliveriesMonth</h2>
-                        <span class="x-small text-white-50 fw-bold text-uppercase ls-1">Monthly Jobs</span>
+                    <div class="card shadow-sm border-0 bg-primary text-white p-3 text-center h-100">
+                        <h3 class="fw-bold mb-0">@Model.TotalDeliveriesMonth</h3>
+                        <span class="small opacity-75">Monthly Jobs</span>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="card border-0 shadow-premium rounded-5 bg-accent-green text-dark-green p-4 text-center h-100">
-                        <h2 class="fw-bold mb-0">@Model.OnTimePercentage%</h2>
-                        <span class="x-small text-dark-green opacity-50 fw-bold text-uppercase ls-1">On-Time</span>
+                    <div class="card shadow-sm border-0 bg-success text-white p-3 text-center h-100">
+                        <h3 class="fw-bold mb-0">@Model.OnTimePercentage%</h3>
+                        <span class="small opacity-75">On-Time Rate</span>
                     </div>
                 </div>
                 <div class="col-12">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white p-4 text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-1">
-                            <h2 class="fw-bold mb-0 me-3 text-dark-green">@Model.AverageRating</h2>
-                            <div class="text-accent-green fs-4">
+                    <div class="card shadow-sm border-0 bg-warning p-3 text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <h3 class="fw-bold mb-0 me-2 text-dark">@Model.AverageRating</h3>
+                            <div class="text-dark">
                                 @for (int i = 1; i <= 5; i++)
                                 {
-                                    <i class="fas fa-star @(i <= Math.Round(Model.AverageRating) ? "" : "opacity-25 text-muted")"></i>
+                                    <i class="fas fa-star @(i <= Math.Round(Model.AverageRating) ? "" : "opacity-25")"></i>
                                 }
                             </div>
                         </div>
-                        <span class="x-small text-muted fw-bold text-uppercase ls-1">Customer Satisfaction</span>
+                        <span class="small text-dark opacity-75">Customer Rating</span>
                     </div>
                 </div>
             </div>
@@ -82,41 +77,39 @@
         <div class="col-lg-8">
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="alert bg-soft-success text-success border-0 shadow-sm rounded-5 mb-4 px-4 py-3 animate-slide-down" role="alert">
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
                     <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
 
             <form asp-action="Settings" method="post" enctype="multipart/form-data" id="settingsForm">
                 <input type="file" asp-for="ProfilePicture" class="d-none" onchange="previewProfile(this)" />
                 
-                <div class="accordion accordion-custom" id="settingsAccordion">
+                <div class="accordion shadow-sm" id="settingsAccordion">
                     <!-- Profile Info -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
                         <h2 class="accordion-header">
-                            <button class="accordion-button fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#profileCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-id-card text-dark-green"></i>
-                                </div>
-                                Profile Information
+                            <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#profileCollapse">
+                                <i class="fas fa-id-card me-2 text-primary"></i>Profile Information
                             </button>
                         </h2>
                         <div id="profileCollapse" class="accordion-collapse collapse show" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="FullName" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Full Name</label>
-                                        <input asp-for="FullName" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="FullName" class="form-label small fw-bold"></label>
+                                        <input asp-for="FullName" class="form-control rounded-pill" />
                                         <span asp-validation-for="FullName" class="text-danger small"></span>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="Email" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Email Address</label>
-                                        <input asp-for="Email" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Email" class="form-label small fw-bold"></label>
+                                        <input asp-for="Email" class="form-control rounded-pill" />
                                         <span asp-validation-for="Email" class="text-danger small"></span>
                                     </div>
-                                    <div class="col-md-12">
-                                        <label asp-for="Phone" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Phone Number</label>
-                                        <input asp-for="Phone" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
+                                    <div class="col-md-12 mb-3">
+                                        <label asp-for="Phone" class="form-label small fw-bold"></label>
+                                        <input asp-for="Phone" class="form-control rounded-pill" />
                                         <span asp-validation-for="Phone" class="text-danger small"></span>
                                     </div>
                                 </div>
@@ -125,20 +118,17 @@
                     </div>
 
                     <!-- Vehicle & Availability -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#vehicleCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-truck text-dark-green"></i>
-                                </div>
-                                Vehicle & Availability
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#vehicleCollapse">
+                                <i class="fas fa-truck me-2 text-success"></i>Vehicle & Availability
                             </button>
                         </h2>
                         <div id="vehicleCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
+                            <div class="accordion-body">
                                 <div class="mb-4">
-                                    <label class="form-label x-small fw-bold text-muted text-uppercase ls-1">Assigned Vehicle</label>
-                                    <select asp-for="VehicleId" class="form-select rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold">
+                                    <label class="form-label small fw-bold">Assigned Vehicle</label>
+                                    <select asp-for="VehicleId" class="form-select rounded-pill">
                                         <option value="">No Vehicle Assigned</option>
                                         @foreach (var v in (IEnumerable<SCM_System.Models.Entities.Vehicle>)ViewBag.Vehicles)
                                         {
@@ -146,18 +136,19 @@
                                         }
                                     </select>
                                 </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1">Start Time</label>
-                                        <input asp-for="WorkingHoursStart" type="time" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label small fw-bold">Working Hours Start</label>
+                                        <input asp-for="WorkingHoursStart" type="time" class="form-control rounded-pill" />
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1">End Time</label>
-                                        <input asp-for="WorkingHoursEnd" type="time" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label small fw-bold">Working Hours End</label>
+                                        <input asp-for="WorkingHoursEnd" type="time" class="form-control rounded-pill" />
                                     </div>
-                                    <div class="col-md-12 mt-4">
-                                        <label asp-for="MaxDailyDeliveries" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Daily Cap: <span id="maxLabel">@Model.MaxDailyDeliveries</span> Jobs</label>
-                                        <input asp-for="MaxDailyDeliveries" type="range" class="form-range" min="1" max="50" oninput="document.getElementById('maxLabel').innerText = this.value">
+                                    <div class="col-md-12">
+                                        <label asp-for="MaxDailyDeliveries" class="form-label small fw-bold"></label>
+                                        <input asp-for="MaxDailyDeliveries" type="range" class="form-range" min="1" max="50" oninput="this.nextElementSibling.value = this.value">
+                                        <output class="badge bg-primary rounded-pill">@Model.MaxDailyDeliveries</output>
                                     </div>
                                 </div>
                                 <input type="hidden" asp-for="IsOnDuty" id="isOnDutyHidden" />
@@ -166,84 +157,109 @@
                     </div>
 
                     <!-- Delivery Preferences -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#preferencesCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-clipboard-check text-dark-green"></i>
-                                </div>
-                                Delivery Preferences
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#preferencesCollapse">
+                                <i class="fas fa-clipboard-check me-2 text-info"></i>Delivery Preferences
                             </button>
                         </h2>
                         <div id="preferencesCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
+                            <div class="accordion-body">
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" asp-for="AutoAcceptAssignments">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="AutoAcceptAssignments">Auto-Accept New Assignments</label>
+                                    <label class="form-check-label small" asp-for="AutoAcceptAssignments">Auto-Accept New Assignments</label>
                                 </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" asp-for="RequireProofPhoto">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="RequireProofPhoto">Always Require Proof Photo</label>
+                                    <label class="form-check-label small" asp-for="RequireProofPhoto">Always Require Proof Photo on Delivery</label>
                                 </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" asp-for="RequireSignature">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="RequireSignature">Always Require Signature</label>
+                                    <label class="form-check-label small" asp-for="RequireSignature">Always Require Signature on Delivery</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="AllowNightDeliveries">
+                                    <label class="form-check-label small" asp-for="AllowNightDeliveries">Allow Night-Time Deliveries</label>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Notifications -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#notifyCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-bell text-dark-green"></i>
-                                </div>
-                                Notifications
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#notifyCollapse">
+                                <i class="fas fa-bell me-2 text-warning"></i>Notifications
                             </button>
                         </h2>
                         <div id="notifyCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
+                            <div class="accordion-body">
+                                <partial name="_ThemeToggle" />
+                                <hr class="my-3 opacity-25" />
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" asp-for="NotifyNewAssignment">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="NotifyNewAssignment">In-App Job Notifications</label>
+                                    <label class="form-check-label small" asp-for="NotifyNewAssignment">In-App Notification for New Jobs</label>
                                 </div>
-                                <div class="mb-2">
-                                    <label asp-for="SmsNotificationNumber" class="form-label x-small fw-bold text-muted text-uppercase ls-1">SMS Alert Number</label>
-                                    <input asp-for="SmsNotificationNumber" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" placeholder="+123..." />
+                                <div class="mb-3">
+                                    <label asp-for="SmsNotificationNumber" class="form-label small fw-bold"></label>
+                                    <input asp-for="SmsNotificationNumber" class="form-control rounded-pill" placeholder="+1234567890" />
+                                    <div class="form-text small">Leave blank to disable SMS alerts.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security -->
+                    <div class="accordion-item border-0 mb-3 rounded shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#securityCollapse">
+                                <i class="fas fa-key me-2 text-secondary"></i>Security
+                            </button>
+                        </h2>
+                        <div id="securityCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label asp-for="CurrentPassword" class="form-label small fw-bold"></label>
+                                    <input asp-for="CurrentPassword" class="form-control rounded-pill" />
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="NewPassword" class="form-label small fw-bold"></label>
+                                        <input asp-for="NewPassword" class="form-control rounded-pill" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ConfirmPassword" class="form-label small fw-bold"></label>
+                                        <input asp-for="ConfirmPassword" class="form-control rounded-pill" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Danger Zone -->
-                    <div class="accordion-item border-0 rounded-5 shadow-premium overflow-hidden bg-white">
+                    <div class="accordion-item border-0 rounded shadow-sm overflow-hidden">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-danger bg-soft-danger py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#dangerCollapse">
-                                <div class="bg-white p-2 rounded-circle me-3">
-                                    <i class="fas fa-exclamation-triangle text-danger"></i>
-                                </div>
-                                Danger Zone
+                            <button class="accordion-button collapsed fw-bold text-danger bg-danger bg-opacity-10" type="button" data-bs-toggle="collapse" data-bs-target="#dangerCollapse">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
                             </button>
                         </h2>
                         <div id="dangerCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
-                                <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="accordion-body">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="fw-bold mb-0 text-dark-green">Deactivate Account</h6>
-                                        <p class="text-muted x-small mb-0">Temporarily suspend your account.</p>
+                                        <h6 class="fw-bold mb-0">Deactivate Account</h6>
+                                        <p class="text-muted small mb-0">Temporarily suspend your delivery agent account.</p>
                                     </div>
-                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">Deactivate</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-4">Deactivate</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="text-end mt-5">
-                    <button type="submit" class="btn btn-dark-green btn-lg rounded-pill px-5 shadow-premium fw-bold">
-                        <i class="fas fa-save me-2"></i>SAVE CHANGES
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 shadow">
+                        <i class="fas fa-save me-2"></i>Save All Settings
                     </button>
                 </div>
             </form>
@@ -251,48 +267,22 @@
     </div>
 </div>
 
-<style>
-    :root {
-        --dark-green: #1a3d31;
-        --accent-green: #d4f06d;
-        --faint-green: #f2f6f6;
-    }
-
-    .text-dark-green { color: var(--dark-green) !important; }
-    .bg-dark-green { background-color: var(--dark-green) !important; }
-    .bg-accent-green { background-color: var(--accent-green) !important; }
-    .text-accent-green { color: var(--accent-green) !important; }
-    .bg-faint-green { background-color: var(--faint-green) !important; }
-    .shadow-premium { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important; }
-    .rounded-5 { border-radius: 24px !important; }
-    .x-small { font-size: 0.7rem; }
-    .ls-1 { letter-spacing: 1px; }
-
-    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
-
-    .accordion-button:not(.collapsed) {
-        background-color: white !important;
-        color: var(--dark-green) !important;
-    }
-    
-    .form-range::-webkit-slider-thumb {
-        background: var(--dark-green);
-    }
-    
-    .object-fit-cover {
-        object-fit: cover;
-    }
-
-    .animate-slide-down {
-        animation: slideDown 0.4s ease-out;
-    }
-
-    @@keyframes slideDown {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
+@section Styles {
+    <style>
+        .accordion-button:not(.collapsed) {
+            background-color: transparent;
+            color: inherit;
+            box-shadow: none;
+        }
+        .form-switch-lg .form-check-input {
+            width: 3rem;
+            height: 1.5rem;
+        }
+        .object-fit-cover {
+            object-fit: cover;
+        }
+    </style>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

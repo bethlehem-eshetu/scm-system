@@ -222,8 +222,7 @@ namespace SCM_System.Services
 
         public async Task<bool> ReleaseReservationAsync(int reservationId, string reason)
         {
-            var existingTransaction = _context.Database.CurrentTransaction;
-            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 var reservation = await _context.InventoryReservations
@@ -271,13 +270,13 @@ namespace SCM_System.Services
                 _context.InventoryMovements.Add(movement);
                 await _context.SaveChangesAsync();
 
-                if (transaction != null) await transaction.CommitAsync();
+                await transaction.CommitAsync();
                 _logger.LogInformation("Released reservation {ReservationId}. Stock returned.", reservationId);
                 return true;
             }
             catch (Exception ex)
             {
-                if (transaction != null) await transaction.RollbackAsync();
+                await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error releasing reservation {ReservationId}", reservationId);
                 return false;
             }
@@ -406,8 +405,7 @@ namespace SCM_System.Services
 
         public async Task<bool> ReturnStockOnCancelAsync(int orderId)
         {
-            var existingTransaction = _context.Database.CurrentTransaction;
-            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 var reservations = await _context.InventoryReservations
@@ -424,8 +422,6 @@ namespace SCM_System.Services
                 foreach (var reservation in reservations)
                 {
                     var product = reservation.Product;
-                    var beforeAvailable = product.AvailableStock;
-                    var beforeReserved = product.ReservedStock;
 
                     reservation.Status = ReservationStatus.Cancelled;
                     reservation.ReleasedAt = DateTime.Now;
@@ -449,35 +445,16 @@ namespace SCM_System.Services
                     product.AvailableStock = await GetAvailableStockFromInventoriesAsync(product.Id);
                     product.ReservedStock = await GetReservedStockFromInventoriesAsync(product.Id);
                     product.LastStockUpdate = DateTime.Now;
-
-                    // Log inventory movement for audit trail
-                    _context.InventoryMovements.Add(new InventoryMovement
-                    {
-                        ProductId = reservation.ProductId,
-                        WarehouseId = reservation.WarehouseId,
-                        MovementType = "CancellationReturn",
-                        Quantity = reservation.Quantity,
-                        BeforeAvailableStock = beforeAvailable,
-                        BeforeReservedStock = beforeReserved,
-                        AfterAvailableStock = product.AvailableStock,
-                        AfterReservedStock = product.ReservedStock,
-                        ReferenceNumber = orderId.ToString(),
-                        ReferenceType = "Order",
-                        ReferenceId = orderId,
-                        DocumentReference = $"CANCEL-{orderId}",
-                        Reason = "Order Cancelled by Retailer",
-                        CreatedAt = DateTime.Now
-                    });
                 }
                 await _context.SaveChangesAsync();
 
-                if (transaction != null) await transaction.CommitAsync();
+                await transaction.CommitAsync();
                 _logger.LogInformation("Stock returned for cancelled order {OrderId}. {Count} items returned.", orderId, reservations.Count);
                 return true;
             }
             catch (Exception ex)
             {
-                if (transaction != null) await transaction.RollbackAsync();
+                await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error returning stock for order {OrderId}", orderId);
                 return false;
             }

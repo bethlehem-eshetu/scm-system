@@ -434,7 +434,6 @@ namespace SCM_System.Controllers
                 }
 
                 supplier.CompanyLogo = "/uploads/suppliers/" + uniqueFileName;
-                supplier.User.ProfileImage = supplier.CompanyLogo;
             }
 
             // Update User Info
@@ -464,12 +463,6 @@ namespace SCM_System.Controllers
             await _context.SaveChangesAsync();
 
             await _auditLogService.LogActionAsync("Supplier", supplier.Id.ToString(), "UpdateSettings", notes: "Profile and company info updated", performedByUserId: userId);
-
-            // Update session for immediate UI reflect
-            if (!string.IsNullOrEmpty(supplier.CompanyLogo))
-            {
-                HttpContext.Session.SetString("ProfileImg", supplier.CompanyLogo);
-            }
 
             TempData["SuccessMessage"] = "Settings updated successfully.";
             return RedirectToAction(nameof(Settings));
@@ -598,50 +591,6 @@ namespace SCM_System.Controllers
         private bool VerifyPassword(string password, string hash)
         {
             return HashPassword(password) == hash;
-        }
-        [HttpPost]
-        public async Task<IActionResult> UploadProfilePicture(IFormFile profilePicture)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null) return RedirectToAction("Login", "Account");
-
-            var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.UserId == userId);
-            if (supplier == null) return NotFound();
-
-            if (profilePicture != null && profilePicture.Length > 0)
-            {
-                try
-                {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "suppliers");
-                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(profilePicture.FileName);
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await profilePicture.CopyToAsync(fileStream);
-                    }
-
-                    supplier.CompanyLogo = "/uploads/suppliers/" + fileName;
-                    if (supplier.User != null)
-                    {
-                        supplier.User.ProfileImage = supplier.CompanyLogo;
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    // Update session
-                    HttpContext.Session.SetString("ProfileImg", supplier.CompanyLogo);
-                    TempData["SuccessMessage"] = "Company logo updated successfully!";
-                }
-                catch (Exception ex)
-                {
-                    TempData["ErrorMessage"] = "Failed to upload logo: " + ex.Message;
-                }
-            }
-
-            return RedirectToAction("Settings");
         }
     }
 }

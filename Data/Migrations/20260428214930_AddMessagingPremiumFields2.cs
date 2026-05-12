@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -35,13 +35,11 @@ namespace SCM_System.Data.Migrations
                 type: "datetime2",
                 nullable: true);
 
-/*
             migrationBuilder.AddColumn<int>(
                 name: "OrderId",
                 table: "Conversations",
                 type: "int",
                 nullable: true);
-*/
 
             migrationBuilder.AddColumn<string>(
                 name: "Title",

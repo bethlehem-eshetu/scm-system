@@ -40,14 +40,10 @@
 
     <!-- Commission Ledger -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0">Commission Ledger</h5>
-            <div class="d-flex gap-3 align-items-center">
-                <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
-                    <button class="btn btn-light px-3 filter-ledger active" data-status="all">All</button>
-                    <button class="btn btn-light px-3 filter-ledger text-success fw-bold" data-status="Paid">Paid</button>
-                    <button class="btn btn-light px-3 filter-ledger text-warning fw-bold" data-status="Pending">Pending</button>
-                </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light btn-sm rounded-pill px-3 border"><i class="fas fa-filter me-1"></i> Filter</button>
                 <button class="btn btn-light btn-sm rounded-pill px-3 border"><i class="fas fa-file-export me-1"></i> Statement</button>
             </div>
         </div>
@@ -69,7 +65,7 @@
                         {
                             foreach (var commission in Model)
                             {
-                                <tr class="commission-row" data-status="@commission.Status">
+                                <tr>
                                     <td class="ps-4">
                                         <div class="fw-bold text-primary">#COM-@commission.Id</div>
                                         <div class="text-muted small">@commission.CreatedAt.ToString("MMM dd, yyyy")</div>
@@ -143,23 +139,5 @@
             pointer-events: none;
             z-index: -1;
         }
-        .commission-row { transition: all 0.3s ease; }
     </style>
-}
-
-@section Scripts {
-    <script>
-        $('.filter-ledger').click(function() {
-            var status = $(this).data('status');
-            $('.filter-ledger').removeClass('active btn-dark').addClass('btn-light');
-            $(this).removeClass('btn-light').addClass('active btn-dark');
-
-            if (status === 'all') {
-                $('.commission-row').fadeIn();
-            } else {
-                $('.commission-row').hide();
-                $('.commission-row[data-status="' + status + '"]').fadeIn();
-            }
-        });
-    </script>
 }

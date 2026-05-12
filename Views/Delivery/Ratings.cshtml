@@ -4,98 +4,77 @@
 }
 
 <div class="container-fluid px-4 py-3">
-    <div class="mb-5">
-        <h1 class="h2 fw-bold text-dark-green mb-1">Performance Overview</h1>
-        <p class="text-muted small">Track your professional delivery satisfaction metrics.</p>
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mb-1">Performance Ratings</h2>
+        <p class="text-muted">Track your delivery satisfaction scores</p>
     </div>
 
     <!-- Rating Overview Card -->
-    <div class="card border-0 shadow-premium p-5 mb-5 bg-dark-green text-white position-relative overflow-hidden rounded-5">
-        <i class="fas fa-leaf fa-10x position-absolute opacity-10" style="right: -20px; top: -30px;"></i>
-        <div class="position-relative z-1">
-            <div class="bg-accent-green d-inline-flex p-3 rounded-circle text-dark-green mb-3 shadow-sm">
-                <i class="fas fa-star fa-2x"></i>
-            </div>
-            <h1 class="display-3 fw-bold mb-0">4.9</h1>
-            <div class="text-accent-green mb-3 fs-5">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-            </div>
-            <p class="text-white-50 mb-0 small fw-bold text-uppercase ls-1">Average Service Rating • 142 reviews</p>
+    <div class="card border-0 shadow-sm text-center p-5 mb-4 bg-primary text-white position-relative overflow-hidden" style="border-radius: 16px;">
+        <i class="fas fa-star fa-10x position-absolute opacity-10" style="right: -20px; top: -30px;"></i>
+        <i class="fas fa-star fa-4x text-warning mb-3"></i>
+        <h1 class="display-3 fw-bold mb-0">4.9</h1>
+        <div class="text-warning mb-2 fs-5">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
         </div>
+        <p class="opacity-75 mb-0">Average Delivery Rating (Based on 142 reviews)</p>
     </div>
     
-    <div class="row g-4">
+    <div class="row">
         <!-- Recent Feedback -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
-                <div class="card-header bg-white py-4 px-4 border-0">
-                    <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-comments me-2 text-accent-green"></i>Customer Testimonials</h5>
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+                <div class="card-header bg-white py-3 border-0 pt-4 px-4">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-comments me-2 text-primary"></i>Recent Feedback</h5>
                 </div>
                 <div class="card-body p-0">
-                    <div class="list-group list-group-flush border-top border-light">
-                        <div class="list-group-item p-4 border-bottom bg-white">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item p-4 border-bottom">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="text-accent-green">
+                                <div class="text-warning">
                                     <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                                 </div>
-                                <small class="text-muted x-small fw-bold">2H AGO</small>
+                                <small class="text-muted">2 hours ago</small>
                             </div>
-                            <p class="mb-2 text-dark-green fw-medium">"Extremely professional and fast. Packages arrived beautifully packed!"</p>
-                            <small class="text-muted fw-bold x-small text-uppercase ls-1"><i class="fas fa-store me-1"></i> Addis Premium Groceries</small>
-                        </div>
-                        <div class="list-group-item p-4 border-bottom bg-white">
+                            <p class="mb-2 text-dark">"Extremely professional and fast. Packages arrived beautifully packed!"</p>
+                            <small class="text-muted fw-bold"><i class="fas fa-store me-1"></i> Addis Premium Groceries</small>
+                        </li>
+                        <li class="list-group-item p-4 border-bottom">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="text-accent-green">
+                                <div class="text-warning">
                                     <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                                 </div>
-                                <small class="text-muted x-small fw-bold">YESTERDAY</small>
+                                <small class="text-muted">Yesterday</small>
                             </div>
-                            <p class="mb-2 text-dark-green fw-medium">"Great driver. Very polite and unloaded everything exactly where I asked."</p>
-                            <small class="text-muted fw-bold x-small text-uppercase ls-1"><i class="fas fa-store me-1"></i> Sheger Mega Mart</small>
-                        </div>
-                        <div class="list-group-item p-4 bg-white">
+                            <p class="mb-2 text-dark">"Great driver. Very polite and unloaded everything exactly where I asked."</p>
+                            <small class="text-muted fw-bold"><i class="fas fa-store me-1"></i> Sheger Mega Mart</small>
+                        </li>
+                        <li class="list-group-item p-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="text-accent-green">
-                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star opacity-25"></i>
+                                <div class="text-warning">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
                                 </div>
-                                <small class="text-muted x-small fw-bold">3D AGO</small>
+                                <small class="text-muted">3 days ago</small>
                             </div>
-                            <p class="mb-2 text-dark-green fw-medium">"Delivery was slightly delayed due to traffic, but communication was great."</p>
-                            <small class="text-muted fw-bold x-small text-uppercase ls-1"><i class="fas fa-store me-1"></i> Bole Electronics Sales</small>
-                        </div>
-                    </div>
+                            <p class="mb-2 text-dark">"Delivery was slightly delayed due to traffic, but communication was great."</p>
+                            <small class="text-muted fw-bold"><i class="fas fa-store me-1"></i> Bole Electronics Sales</small>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white">
-                <div class="card-body p-4 text-center d-flex flex-column justify-content-center align-items-center">
-                    <div class="bg-faint-green p-4 rounded-circle mb-4">
-                        <i class="fas fa-medal fa-4x text-dark-green"></i>
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                    <div class="mb-4 text-success">
+                        <i class="fas fa-medal fa-4x mb-3"></i>
+                        <h4 class="fw-bold">Top 5% Agent</h4>
                     </div>
-                    <h4 class="fw-bold text-dark-green mb-3">Top 5% Agent</h4>
-                    <p class="text-muted small mb-4 px-3">You are currently ranked in the top 5% of all delivery professionals in the region this month.</p>
-                    <button class="btn btn-dark-green rounded-pill px-5 fw-bold shadow-premium">View Detailed Metrics</button>
+                    <p class="text-muted">You are currently ranked in the top 5% of all delivery drivers in the region this month based on customer satisfaction.</p>
+                    <button class="btn btn-outline-primary rounded-pill mt-3 w-100">View Detailed Metrics</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    :root {
-        --dark-green: #1a3d31;
-        --accent-green: #d4f06d;
-        --faint-green: #f2f6f6;
-    }
-    .text-dark-green { color: var(--dark-green) !important; }
-    .bg-dark-green { background-color: var(--dark-green) !important; }
-    .bg-accent-green { background-color: var(--accent-green) !important; }
-    .text-accent-green { color: var(--accent-green) !important; }
-    .bg-faint-green { background-color: var(--faint-green) !important; }
-    .shadow-premium { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important; }
-    .rounded-5 { border-radius: 24px !important; }
-    .x-small { font-size: 0.7rem; }
-    .ls-1 { letter-spacing: 1px; }
-</style>
