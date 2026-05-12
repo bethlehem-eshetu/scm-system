@@ -80,5 +80,6 @@ namespace SCM_System.Models.ViewModels
 
         [Display(Name = "Enable Voice Picking")]
         public bool EnableVoicePicking { get; set; }
+        public string? ExistingProfilePhoto { get; set; }
     }
 }
