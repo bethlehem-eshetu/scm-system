@@ -733,6 +733,9 @@ namespace SCM_System.Controllers
             vehicle.Status = SCM_System.Models.Enums.VehicleStatus.InUse;
             vehicle.UpdatedAt = DateTime.Now;
 
+            // Save assignments first so the Service can see them in its own DB lookup
+            await _context.SaveChangesAsync();
+
             await _poService.UpdatePurchaseOrderStatusAsync(id, POStatus.InTransit, userId);
             
             // AUDIT LOG
@@ -890,7 +893,7 @@ namespace SCM_System.Controllers
                 FullName = manager.User?.FullName ?? "",
                 Email = manager.User?.Email ?? "",
                 Phone = manager.User?.PhoneNumber ?? "",
-                ExistingProfileImage = manager.User?.ProfileImage,
+                ExistingProfilePhoto = manager.User?.ProfileImage,
                 DefaultWarehouseLocation = manager.DefaultWarehouseLocation,
                 LowStockThreshold = manager.LowStockThreshold,
                 PicklistFormat = manager.PicklistFormat,
@@ -931,8 +934,8 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(OperationalSettings));
         }
 
-        [Route("AccountSettings")]
-        public async Task<IActionResult> AccountSettings()
+        [Route("Settings")]
+        public async Task<IActionResult> Settings()
         {
             var manager = await GetCurrentManagerAsync();
             if (manager == null || manager.User == null) return Unauthorized();
@@ -943,7 +946,7 @@ namespace SCM_System.Controllers
                 FullName = manager.User.FullName,
                 Email = manager.User.Email,
                 Phone = manager.User.PhoneNumber ?? "",
-                ExistingProfileImage = manager.User.ProfileImage,
+                ExistingProfilePhoto = manager.User.ProfileImage,
                 
                 // Operational
                 DefaultWarehouseLocation = manager.DefaultWarehouseLocation,
@@ -983,9 +986,9 @@ namespace SCM_System.Controllers
             return View(viewModel);
         }
 
-        [HttpPost("AccountSettings")]
+        [HttpPost("Settings")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AccountSettings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
+        public async Task<IActionResult> Settings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
         {
             var manager = await _context.SupplierEmployees
                 .Include(e => e.User)
@@ -1031,6 +1034,9 @@ namespace SCM_System.Controllers
 
                 manager.User.ProfileImage = $"/uploads/profiles/{uniqueFileName}";
                 manager.ProfilePhotoPath = manager.User.ProfileImage;
+
+                // Sync Session for real-time header update
+                HttpContext.Session.SetString("ProfileImg", manager.User.ProfileImage ?? "/img/avatars/default.png");
             }
 
             // 5. Password Security
@@ -1039,21 +1045,26 @@ namespace SCM_System.Controllers
                 if (string.IsNullOrEmpty(model.CurrentPassword))
                 {
                     ModelState.AddModelError("CurrentPassword", "Current password is required.");
-                    return await AccountSettings();
+                    return await Settings();
                 }
 
                 if (manager.User.PasswordHash != HashPassword(model.CurrentPassword))
                 {
                     ModelState.AddModelError("CurrentPassword", "Incorrect current password.");
-                    return await AccountSettings();
+                    return await Settings();
                 }
 
                 manager.User.PasswordHash = HashPassword(model.NewPassword);
             }
 
+            if (!ModelState.IsValid)
+            {
+                return await Settings();
+            }
+
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Settings updated successfully.";
-            return RedirectToAction(nameof(AccountSettings));
+            return RedirectToAction(nameof(Settings));
         }
 
         [HttpPost("Toggle2FA")]

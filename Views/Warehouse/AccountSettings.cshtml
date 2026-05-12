@@ -47,9 +47,9 @@
                 <div class="p-4 text-center border-bottom" style="border-color: var(--border-color) !important; background-color: var(--hover-state);">
                     <div class="position-relative d-inline-block mb-3">
                         <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 110px; height: 110px; border: 4px solid var(--border-color); background-color: var(--card-bg);">
-                            @if (!string.IsNullOrEmpty(Model.ExistingProfileImage))
+                            @if (!string.IsNullOrEmpty(Model.ExistingProfilePhoto))
                             {
-                                <img src="@Model.ExistingProfileImage" id="sidebarProfilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
+                                <img src="@Model.ExistingProfilePhoto" id="sidebarProfilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
                             }
                             else
                             {
@@ -84,7 +84,7 @@
         <div class="col-lg-9">
             <form id="unifiedSettingsForm" asp-action="AccountSettings" method="post" enctype="multipart/form-data">
                 <input type="hidden" asp-for="EmployeeId" />
-                <input type="hidden" asp-for="ExistingProfileImage" />
+                <input type="hidden" asp-for="ExistingProfilePhoto" />
 
                 <div class="tab-content" id="v-pills-tabContent">
                     
@@ -99,9 +99,9 @@
                                     <div class="col-12 text-center mb-4">
                                         <div class="position-relative d-inline-block">
                                             <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 130px; height: 130px; border: 5px solid var(--border-color); background-color: var(--hover-state);">
-                                                @if (!string.IsNullOrEmpty(Model.ExistingProfileImage))
+                                                @if (!string.IsNullOrEmpty(Model.ExistingProfilePhoto))
                                                 {
-                                                    <img src="@Model.ExistingProfileImage" id="mainProfilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
+                                                    <img src="@Model.ExistingProfilePhoto" id="mainProfilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
                                                 }
                                                 else
                                                 {

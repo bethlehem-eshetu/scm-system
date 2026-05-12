@@ -445,8 +445,15 @@ namespace SCM_System.Services
                     await _context.SaveChangesAsync(); // Save to get PO ID
 
                     // NEW: Reserve stock immediately so it reflects in the dashboard
+                    // Fix: Pass OrderId for better traceability and cancellation support
                     var reservationSuccess = await _inventoryService.BulkReserveStockForPOAsync(po.Id, po.SupplierId, po.WarehouseId);
-                    if (!reservationSuccess)
+                    if (reservationSuccess)
+                    {
+                        var reservations = await _context.InventoryReservations.Where(r => r.PurchaseOrderId == po.Id).ToListAsync();
+                        foreach(var r in reservations) r.OrderId = order.Id;
+                        await _context.SaveChangesAsync();
+                    }
+                    else
                     {
                         throw new InvalidOperationException($"Failed to reserve stock for Product(s) in PO {po.PONumber}. Order fulfillment blocked.");
                     }
@@ -538,6 +545,108 @@ namespace SCM_System.Services
             }
 
             return true;
+        }
+
+        public async Task<bool> CancelOrderAsync(int orderId, int userId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Supplier)
+                .Include(o => o.PurchaseOrders)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null) throw new InvalidOperationException("Order not found.");
+
+            // Security Check: Only the retailer who placed the order can cancel it
+            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
+            if (retailer == null || order.RetailerId != retailer.Id) 
+            {
+                throw new InvalidOperationException("Unauthorized: You do not have permission to cancel this order.");
+            }
+
+            if (order.OrderStatus == POStatus.Cancelled) return true;
+
+            // Rules: Cannot cancel if any PO is Picked, Packing, Packed, Ready, InTransit, Delivered, Completed
+            var blockedStatuses = new[] { POStatus.Picked, POStatus.Packing, POStatus.Packed, POStatus.Ready, POStatus.InTransit, POStatus.Delivered, POStatus.Completed };
+            
+            var blockingPO = order.PurchaseOrders.FirstOrDefault(po => blockedStatuses.Contains(po.Status) || po.PickedAt != null);
+            if (blockingPO != null)
+            {
+                throw new InvalidOperationException($"Order cannot be cancelled because it is already being processed (PO Status: {blockingPO.Status}).");
+            }
+
+            // Transactional update
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                order.OrderStatus = POStatus.Cancelled;
+                order.CancelledAt = DateTime.Now;
+                order.UpdatedAt = DateTime.Now;
+
+                foreach (var po in order.PurchaseOrders)
+                {
+                    po.Status = POStatus.Cancelled;
+                    po.UpdatedAt = DateTime.Now;
+                }
+
+                // Restore stock
+                await _inventoryService.ReturnStockOnCancelAsync(order.Id);
+
+                var history = new OrderStatusHistory
+                {
+                    OrderId = order.Id,
+                    Status = POStatus.Cancelled,
+                    Comments = "Order cancelled by retailer.",
+                    ChangedByUserId = userId,
+                    ChangedAt = DateTime.Now
+                };
+                _context.OrderStatusHistories.Add(history);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // Notify Retailer
+                var retailerUserId = await _context.Retailers
+                    .Where(r => r.Id == order.RetailerId)
+                    .Select(r => r.UserId)
+                    .FirstOrDefaultAsync();
+
+                if (retailerUserId != 0)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        retailerUserId,
+                        "Order Cancelled ⚠️",
+                        $"Your order #{order.OrderNumber} has been successfully cancelled.",
+                        "Warning",
+                        $"/Order/Details/{order.Id}"
+                    );
+                }
+
+                // Notify Supplier
+                var supplierUserId = order.Supplier?.UserId ?? 0;
+                if (supplierUserId != 0)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        supplierUserId,
+                        "Order Cancelled ⚠️",
+                        $"Order #{order.OrderNumber} was cancelled by the retailer.",
+                        "Warning",
+                        $"/Order/Details/{order.Id}"
+                    );
+                }
+
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                // Log error for diagnostics
+                Console.WriteLine($"[CancelOrder Error] Order {orderId}: {ex.Message}");
+                throw new InvalidOperationException("Failed to cancel order due to a system error. Please try again later.");
+            }
         }
 
 

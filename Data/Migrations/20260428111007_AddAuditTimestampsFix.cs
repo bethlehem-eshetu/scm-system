@@ -21,6 +21,30 @@ namespace SCM_System.Data.Migrations
                 type: "datetime2",
                 nullable: true);
 
+            migrationBuilder.AddColumn<DateTime>(
+                name: "UpdatedAt",
+                table: "Orders",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "UpdatedAt",
+                table: "Commissions",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "UpdatedAt",
+                table: "PurchaseOrderItems",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "UpdatedAt",
+                table: "Retailers",
+                type: "datetime2",
+                nullable: true);
+
             migrationBuilder.AlterColumn<string>(
                 name: "Region",
                 table: "Suppliers",
@@ -48,8 +72,6 @@ namespace SCM_System.Data.Migrations
                 nullable: true,
                 oldClrType: typeof(int),
                 oldType: "int");
-
-
 
             migrationBuilder.AddForeignKey(
                 name: "FK_PurchaseOrders_Warehouses_WarehouseId",

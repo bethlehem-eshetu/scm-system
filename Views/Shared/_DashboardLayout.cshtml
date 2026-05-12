@@ -709,8 +709,7 @@
         <nav id="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="brand">
-                    <img src="~/images/ethiochain-logo.jpg" alt="Logo" />
-                    <span>🌿 EthioChain SCM</span>
+                    <span>EthioChain SCM</span>
                 </a>
             </div>
 
@@ -905,7 +904,7 @@
                         <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Notifications</a>
                     </li>
                     <li>
-                        <a asp-controller="Retailer" asp-action="AccountSettings"><i class="fas fa-user-cog"></i> Account Settings</a>
+                        <a asp-controller="Retailer" asp-action="Settings"><i class="fas fa-user-cog"></i> Account Settings</a>
                     </li>
                 }
                 else if (role == "WarehouseManager")
@@ -974,7 +973,7 @@
 
             </ul>
 
-            @if (role != null)
+            @if (role != null && role != "Retailer")
             {
                 <div class="sidebar-user">
                     <div class="user-info">
@@ -1119,7 +1118,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; margin-top: 10px;">
                             <li><h6 class="dropdown-header">@Context.Session.GetString("UserName")</h6></li>
-                            <li><a class="dropdown-item py-2" href="#"><i class="fas fa-user-circle me-2 text-muted"></i> View Profile</a></li>
+                            <li><a class="dropdown-item py-2" href="/Retailer/Settings"><i class="fas fa-user-circle me-2 text-muted"></i> View Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-danger fw-bold" asp-controller="Account" asp-action="Logout">
@@ -1211,7 +1210,7 @@
     {
         <!-- Global Cart Offcanvas -->
         <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 400px; box-shadow: -5px 0 15px rgba(0,0,0,0.05);">
-            <div class="offcanvas-header bg-primary text-white">
+            <div class="offcanvas-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
                 <h5 class="offcanvas-title fw-bold" id="cartOffcanvasLabel"><i class="fas fa-shopping-cart me-2"></i> Your Cart</h5>
                 <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
@@ -1226,7 +1225,7 @@
                 <div class="border-top pt-3 bg-white mt-auto rounded-3 shadow-sm p-3 border">
                     <div class="d-flex justify-content-between mb-3 align-items-center">
                         <span class="fw-bold text-muted">Subtotal:</span>
-                        <span class="fw-bold fs-5 text-primary" id="cartSubtotal">$0.00</span>
+                        <span class="fw-bold fs-5" style="color: #10b981;" id="cartSubtotal">$0.00</span>
                     </div>
                     
                     <form asp-controller="Retailer" asp-action="Checkout" method="post" id="checkoutForm">
@@ -1264,7 +1263,7 @@
                                                             <small class="text-muted"><i class="fas fa-store me-1"></i>${item.supplierName}</small>
                                                         </div>
                                                         <div class="text-end">
-                                                            <div class="fw-bold text-primary">$${item.price.toFixed(2)}</div>
+                                                            <div class="fw-bold" style="color: #10b981;">$${item.price.toFixed(2)}</div>
                                                         </div>
                                                     </div>
                                                     <div class="d-flex justify-content-between align-items-center mt-3">

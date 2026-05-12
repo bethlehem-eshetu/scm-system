@@ -1,0 +1,470 @@
+@model SCM_System.Models.Entities.Retailer
+@using SCM_System.Models.Entities
+@{
+    ViewData["Title"] = "SCM Retailer Settings";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4 px-4 min-vh-100">
+    <!-- Header & KPIs -->
+    <div class="row g-5 mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-dark-green text-white">
+                <div class="card-body p-5 position-relative">
+                    <div class="position-relative z-index-1 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div>
+                            <h2 class="text-white mb-1 fw-bold"><i class="fas fa-store-alt text-accent-green me-3"></i>SCM Operational Control Center</h2>
+                            <p class="text-white-50 mb-0 opacity-75">Manage your retail profile, procurement preferences, and security.</p>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-white bg-opacity-10 text-white border-0 rounded-pill px-4 py-2 shadow-sm fw-bold" onclick="location.reload()">
+                                <i class="fas fa-sync-alt me-2"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="position-absolute top-0 end-0 p-5 opacity-10">
+                        <i class="fas fa-tools fa-10x fa-spin-slow"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-dark-green">
+                <div class="d-flex align-items-center">
+                    <div class="bg-faint-green text-dark-green rounded-4 p-3 me-3">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
+                    </div>
+                    <div>
+                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Total Orders</p>
+                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.TotalOrders</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-accent-green">
+                <div class="d-flex align-items-center">
+                    <div class="bg-faint-green text-dark-green rounded-4 p-3 me-3">
+                        <i class="fas fa-money-bill-wave fa-lg"></i>
+                    </div>
+                    <div>
+                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Total Procurement</p>
+                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.TotalSpent.ToString("N0") <small class="extra-small opacity-50">ETB</small></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-info">
+                <div class="d-flex align-items-center">
+                    <div class="bg-soft-info text-info rounded-4 p-3 me-3">
+                        <i class="fas fa-truck-loading fa-lg"></i>
+                    </div>
+                    <div>
+                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">SLA Compliance</p>
+                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.OnTimeDeliveryRate%</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-warning">
+                <div class="d-flex align-items-center">
+                    <div class="bg-soft-warning text-warning rounded-4 p-3 me-3">
+                        <i class="fas fa-star fa-lg"></i>
+                    </div>
+                    <div>
+                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Market Trust</p>
+                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.AverageRatingGiven.ToString("F1") <small class="extra-small opacity-50">/ 5.0</small></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-5">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-premium rounded-5 sticky-top bg-white overflow-hidden" style="top: 20px;">
+                <div class="p-5 text-center border-bottom border-faint bg-faint-green">
+                    <div class="position-relative d-inline-block mb-4">
+                        <img id="profile-preview" src="@(string.IsNullOrEmpty(Model.BusinessLogo) ? "/img/default-store.png" : Model.BusinessLogo)" 
+                             class="rounded-circle border border-4 border-white shadow-premium" 
+                             style="width: 120px; height: 120px; object-fit: cover;" />
+                        <label for="profilePicture" class="btn btn-dark-green btn-sm rounded-circle position-absolute bottom-0 end-0 p-2 shadow-sm border border-2 border-white" style="cursor: pointer;">
+                            <i class="fas fa-camera text-accent-green extra-small"></i>
+                        </label>
+                        <form id="profilePicForm" asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" class="d-none">
+                            <input type="file" id="profilePicture" name="profilePicture" onchange="previewImage(this); document.getElementById('profilePicForm').submit();" />
+                        </form>
+                    </div>
+                    <h5 class="fw-bold text-dark-green mb-1">@Model.BusinessName</h5>
+                    <p class="text-muted extra-small fw-bold uppercase ls-1 opacity-75">Partner since @Model.CreatedAt.ToString("MMM yyyy")</p>
+                </div>
+                <div class="p-4">
+                    <div class="nav flex-column nav-pills scm-pills" id="settings-tabs" role="tablist">
+                        <button class="nav-link active text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="tab-business" data-bs-toggle="pill" data-bs-target="#panel-business">
+                            <i class="fas fa-briefcase me-3 opacity-75"></i>Business Info
+                        </button>
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="tab-contact" data-bs-toggle="pill" data-bs-target="#panel-contact">
+                            <i class="fas fa-id-card me-3 opacity-75"></i>Contact Details
+                        </button>
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="tab-addresses" data-bs-toggle="pill" data-bs-target="#panel-addresses">
+                            <i class="fas fa-map-marked-alt me-3 opacity-75"></i>Address Book
+                        </button>
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="tab-payment" data-bs-toggle="pill" data-bs-target="#panel-payment">
+                            <i class="fas fa-credit-card me-3 opacity-75"></i>Payment Hub
+                        </button>
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="tab-procurement" data-bs-toggle="pill" data-bs-target="#panel-procurement">
+                            <i class="fas fa-cog me-3 opacity-75"></i>Procurement
+                        </button>
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="tab-security" data-bs-toggle="pill" data-bs-target="#panel-security">
+                            <i class="fas fa-shield-alt me-3 opacity-75"></i>Security
+                        </button>
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all text-danger" id="tab-danger" data-bs-toggle="pill" data-bs-target="#panel-danger">
+                            <i class="fas fa-exclamation-triangle me-3 opacity-75"></i>Danger Zone
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Panels -->
+        <div class="col-lg-9">
+            <div class="tab-content" id="settings-tabContent">
+                <!-- Panel: Business Information -->
+                <div class="tab-pane fade show active" id="panel-business">
+                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
+                        <div class="card-header bg-faint-green py-4 px-5 border-0">
+                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-industry text-accent-green me-2"></i>Corporate Metadata</h5>
+                        </div>
+                        <div class="card-body p-5">
+                            <form id="businessInfoForm" class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Commercial Name</label>
+                                    <input type="text" name="BusinessName" class="form-control scm-input" value="@Model.BusinessName" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Entity Type</label>
+                                    <select name="BusinessType" class="form-select scm-input">
+                                        <option value="Retail Shop" selected="@(Model.BusinessType == "Retail Shop")">Retail Shop</option>
+                                        <option value="Supermarket" selected="@(Model.BusinessType == "Supermarket")">Supermarket</option>
+                                        <option value="Distributor" selected="@(Model.BusinessType == "Distributor")">Distributor</option>
+                                        <option value="Wholesaler" selected="@(Model.BusinessType == "Wholesaler")">Wholesaler</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">License Authentication</label>
+                                    <input type="text" name="BusinessLicenseNumber" class="form-control scm-input" value="@Model.BusinessLicenseNumber" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Tax ID (TIN)</label>
+                                    <input type="text" name="TaxIdentificationNumber" class="form-control scm-input" value="@Model.TaxIdentificationNumber" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Market Presence Overview</label>
+                                    <textarea name="Description" class="form-control scm-input rounded-5 p-4" rows="3">@Model.Description</textarea>
+                                </div>
+                                <div class="col-12 text-end mt-4">
+                                    <button type="button" class="btn btn-dark-green rounded-pill px-5 py-3 fw-bold shadow-premium" onclick="saveSettings('UpdateBusinessInfo', 'businessInfoForm')">
+                                        Commit Business Data
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Contact Details -->
+                <div class="tab-pane fade" id="panel-contact">
+                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
+                        <div class="card-header bg-faint-green py-4 px-5 border-0">
+                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-id-card text-accent-green me-2"></i>Primary Contact Point</h5>
+                        </div>
+                        <div class="card-body p-5">
+                            <form id="contactDetailsForm" class="row g-4">
+                                <div class="col-md-12">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Authorized Representative</label>
+                                    <input type="text" name="contactPersonName" class="form-control scm-input" value="@(Model.ContactPersonName ?? Model.User?.FullName)" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Electronic Mail</label>
+                                    <input type="email" name="contactPersonEmail" class="form-control scm-input" value="@(Model.ContactPersonEmail ?? Model.User?.Email)" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Telecommunication</label>
+                                    <input type="tel" name="contactPersonPhone" class="form-control scm-input" value="@(Model.ContactPersonPhone ?? Model.User?.PhoneNumber)" />
+                                </div>
+                                <div class="col-12 text-end mt-4">
+                                    <button type="button" class="btn btn-dark-green rounded-pill px-5 py-3 fw-bold shadow-premium" onclick="saveSettings('UpdateContactDetails', 'contactDetailsForm')">Update Channel Hub</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Address Book -->
+                <div class="tab-pane fade" id="panel-addresses">
+                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden mb-5">
+                        <div class="card-header bg-faint-green py-4 px-5 border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-map-marked-alt text-accent-green me-2"></i>Logistics Nodes</h5>
+                            <button class="btn btn-dark-green btn-sm rounded-pill px-4 py-2 fw-bold extra-small" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                <i class="fas fa-plus me-2 text-accent-green"></i> Add Node
+                            </button>
+                        </div>
+                        <div class="card-body p-5">
+                            <div class="row g-4">
+                                @if (Model.Addresses != null && Model.Addresses.Any())
+                                {
+                                    @foreach (var addr in Model.Addresses)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="card bg-faint-green border-0 rounded-5 p-4 h-100 position-relative shadow-inner">
+                                                @if (addr.IsDefault)
+                                                {
+                                                    <span class="badge bg-dark-green text-accent-green rounded-pill position-absolute top-0 end-0 mt-4 me-4 extra-small">DEFAULT @addr.AddressType.ToUpper()</span>
+                                                }
+                                                <h6 class="fw-bold text-dark-green mb-3">@addr.AddressType Mapping</h6>
+                                                <p class="small text-muted mb-4 fw-bold opacity-75">
+                                                    @addr.AddressLine<br />
+                                                    @addr.City, @addr.Region<br />
+                                                    @addr.Country @addr.PostalCode
+                                                </p>
+                                                <div class="mt-auto d-flex gap-2">
+                                                    <button class="btn btn-white btn-sm rounded-circle shadow-sm" onclick="deleteItem('DeleteAddress', @addr.Id)">
+                                                        <i class="fas fa-trash text-danger"></i>
+                                                    </button>
+                                                    @if (!addr.IsDefault)
+                                                    {
+                                                        <button class="btn btn-dark-green btn-sm rounded-pill px-3 fw-bold extra-small" onclick="setDefault('SetDefaultAddress', @addr.Id)">Activate Default</button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="col-12 text-center py-5">
+                                        <div class="opacity-25 mb-3"><i class="fas fa-map-marker-alt fa-3x"></i></div>
+                                        <p class="text-muted fw-bold">No strategic addresses registered.</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Procurement Defaults -->
+                <div class="tab-pane fade" id="panel-procurement">
+                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
+                        <div class="card-header bg-faint-green py-4 px-5 border-0">
+                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-cog text-accent-green me-2"></i>Procurement Strategy</h5>
+                        </div>
+                        <div class="card-body p-5">
+                            <form id="procurementForm" class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Tender Lifecycle (Days)</label>
+                                    <input type="number" name="defaultTenderClosingDays" class="form-control scm-input" value="@Model.DefaultTenderClosingDays" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Target Fulfillment Window</label>
+                                    <input type="number" name="preferredDeliveryTimeline" class="form-control scm-input" value="@Model.PreferredDeliveryTimeline" />
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Asset Procurement Range (ETB)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="budgetMin" class="form-control scm-input rounded-end-0 border-end" placeholder="Min" value="@Model.BudgetMin" />
+                                        <input type="number" name="budgetMax" class="form-control scm-input rounded-start-0" placeholder="Max" value="@Model.BudgetMax" />
+                                    </div>
+                                </div>
+                                <div class="col-12 text-end mt-4">
+                                    <button type="button" class="btn btn-dark-green rounded-pill px-5 py-3 fw-bold shadow-premium" onclick="saveSettings('UpdateProcurementDefaults', 'procurementForm')">Save Procurement Protocol</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Security Hub -->
+                <div class="tab-pane fade" id="panel-security">
+                    <div class="row g-5">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
+                                <div class="card-header bg-faint-green py-4 px-5 border-0">
+                                    <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-shield-alt text-accent-green me-2"></i>Vault Security</h5>
+                                </div>
+                                <div class="card-body p-5">
+                                    <div class="d-flex align-items-center justify-content-between mb-5">
+                                        <div>
+                                            <h6 class="fw-bold text-dark-green mb-1">MFA Verification</h6>
+                                            <p class="extra-small text-muted mb-0 fw-bold">Multi-Factor Authentication Protocol</p>
+                                        </div>
+                                        <div class="form-check form-switch p-0">
+                                            <input class="form-check-input ms-0" type="checkbox" id="2faSwitch" @(Model.User?.TwoFactorEnabled == true ? "checked" : "") onchange="toggle2FA()" style="width: 3rem; height: 1.5rem;">
+                                        </div>
+                                    </div>
+                                    
+                                    @if (Model.User?.TwoFactorEnabled == true)
+                                    {
+                                        <div class="text-center p-4 bg-faint-green rounded-5 mb-4 shadow-inner">
+                                            <i class="fas fa-shield-check text-dark-green fa-3x mb-3"></i>
+                                            <p class="extra-small fw-bold text-dark-green mb-0">IDENTITY PROTOCOL SECURE</p>
+                                        </div>
+                                    }
+                                    
+                                    <hr class="my-4 border-faint" />
+                                    <button class="btn btn-white w-100 rounded-pill py-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                        <i class="fas fa-key me-2 text-accent-green"></i> Rotation Access Code
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
+                                <div class="card-header bg-faint-green py-4 px-5 border-0">
+                                    <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-history text-accent-green me-2"></i>Login Logs</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <tbody>
+                                                @foreach (var log in (ViewBag.LoginHistory as IEnumerable<AuditLog>) ?? Enumerable.Empty<AuditLog>())
+                                                {
+                                                    <tr class="border-bottom border-faint">
+                                                        <td class="ps-5 py-4">
+                                                            <div class="extra-small fw-bold text-dark-green">@log.PerformedAtUtc.ToLocalTime().ToString("MMM dd, HH:mm")</div>
+                                                            <div class="extra-small text-muted opacity-75">@log.IpAddress</div>
+                                                        </td>
+                                                        <td class="pe-5 text-end">
+                                                            <span class="badge bg-soft-success text-success rounded-pill px-3 py-1 extra-small">VERIFIED</span>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Danger Zone -->
+                <div class="tab-pane fade" id="panel-danger">
+                    <div class="card border-0 shadow-premium rounded-5 border-top border-5 border-danger bg-white overflow-hidden">
+                        <div class="card-header bg-soft-danger py-4 px-5 border-0">
+                            <h5 class="mb-0 fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Critical Termination</h5>
+                        </div>
+                        <div class="card-body p-5">
+                            <div class="mb-0">
+                                <h6 class="fw-bold text-dark-green mb-2">Corporate Deactivation</h6>
+                                <p class="text-muted small mb-4 fw-bold opacity-75">Suspend all retail operations on the SCM Network. This action will hide your profile from all suppliers.</p>
+                                <button class="btn btn-danger rounded-pill px-5 py-3 fw-bold shadow-premium" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                                    <i class="fas fa-user-slash me-2"></i> Deactivate Operations
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        :root {
+            --dark-green: #1a3d31;
+            --accent-green: #d4f06d;
+            --faint-green: #f2f6f6;
+        }
+
+        .text-dark-green { color: var(--dark-green) !important; }
+        .bg-dark-green { background-color: var(--dark-green) !important; }
+        .bg-faint-green { background-color: var(--faint-green) !important; }
+        .bg-accent-green { background-color: var(--accent-green) !important; }
+        .text-accent-green { color: var(--accent-green) !important; }
+
+        .rounded-5 { border-radius: 24px !important; }
+        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
+        .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+        .ls-1 { letter-spacing: 1px; }
+        .extra-small { font-size: 0.7rem; }
+        .uppercase { text-transform: uppercase; }
+        .transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .scm-pills .nav-link { color: var(--dark-green); border: 1px solid transparent; opacity: 0.7; }
+        .scm-pills .nav-link:hover { background-color: var(--faint-green); opacity: 1; }
+        .scm-pills .nav-link.active { background-color: var(--dark-green); color: var(--accent-green); opacity: 1; box-shadow: 0 5px 15px rgba(26, 61, 49, 0.2); }
+
+        .scm-input { 
+            background-color: var(--faint-green); 
+            border: 2px solid transparent; 
+            border-radius: 100px; 
+            padding: 0.8rem 1.5rem; 
+            font-weight: 600; 
+            color: var(--dark-green);
+            transition: all 0.3s ease;
+        }
+        .scm-input:focus { 
+            background-color: white; 
+            border-color: var(--accent-green); 
+            box-shadow: 0 5px 20px rgba(212, 240, 109, 0.15); 
+            outline: none;
+        }
+
+        .border-faint { border-color: rgba(0,0,0,0.03) !important; }
+        .btn-white { background: white; color: var(--dark-green); border: 1px solid #eee; }
+        .btn-dark-green { background-color: var(--dark-green); color: white; border: none; }
+        .btn-dark-green:hover { background-color: #244d3e; transform: translateY(-2px); }
+
+        .fa-spin-slow { animation: fa-spin 10s infinite linear; }
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.05); color: #198754; }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.05); color: #ffc107; }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.05); color: #0dcaf0; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Tab Persistence
+            var activeTab = localStorage.getItem('retailerSettingsTab');
+            if (activeTab) {
+                var tabTrigger = new bootstrap.Tab(document.querySelector('#' + activeTab));
+                tabTrigger.show();
+            }
+
+            $('button[data-bs-toggle="pill"]').on('shown.bs.tab', function(e) {
+                localStorage.setItem('retailerSettingsTab', e.target.id);
+            });
+        });
+
+        function saveSettings(action, formId) {
+            const form = $('#' + formId);
+            const data = form.serialize();
+            
+            $.post('/Retailer/' + action, data, function(res) {
+                if (res.success) {
+                    toastr.success(res.message || 'Strategy updated successfully!');
+                } else {
+                    toastr.error(res.message || 'Update failed.');
+                }
+            });
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profile-preview').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}
