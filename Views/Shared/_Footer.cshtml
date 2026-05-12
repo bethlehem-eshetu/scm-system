@@ -1,0 +1,206 @@
+@{
+    var currentYear = DateTime.Now.Year;
+}
+
+<footer class="site-footer">
+    <div class="footer-container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <i class="fas fa-leaf"></i> EthioChain SCM
+                </div>
+                <p class="footer-description">
+                    Empowering Ethiopian SMEs with digital supply chain solutions. 
+                    Streamline your procurement, inventory, and logistics with our all-in-one platform.
+                </p>
+            </div>
+            
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="/Home/Index">Home</a></li>
+                    <li><a href="/Home/About">About Us</a></li>
+                    <li><a href="/Home/Services">Services</a></li>
+                    <li><a href="/Home/Contact">Contact</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-links">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="/Home/HowItWorks">How It Works</a></li>
+                    <li><a href="/Home/Features">Features</a></li>
+                    <li><a href="/Home/Privacy">Privacy Policy</a></li>
+                    <li><a href="/Home/Terms">Terms of Service</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-contact">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-envelope"></i> support@ethiochain.com</p>
+                <p><i class="fas fa-phone-alt"></i> +251-XXX-XXXX</p>
+                <p><i class="fas fa-map-marker-alt"></i> Addis Ababa, Ethiopia</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; @currentYear EthioChain SCM. All rights reserved.</p>
+            <div class="footer-social">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* Footer Styles */
+    .site-footer {
+        background: #0B3B2F;
+        color: #E5EDE9;
+        padding: 48px 0 24px;
+        margin-top: 60px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Dark Mode Footer */
+    .dark-mode .site-footer {
+        background: #06261E;
+    }
+
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 40px;
+        margin-bottom: 40px;
+    }
+
+    .footer-logo {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #D4F06D;
+    }
+
+    .footer-logo i {
+        margin-right: 8px;
+    }
+
+    .footer-description {
+        font-size: 14px;
+        line-height: 1.6;
+        opacity: 0.85;
+    }
+
+    .footer-links h4,
+    .footer-contact h4 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 18px;
+        color: #D4F06D;
+        letter-spacing: 0.5px;
+    }
+
+    .footer-links ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 10px;
+    }
+
+    .footer-links a {
+        color: #E5EDE9;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        opacity: 0.85;
+    }
+
+    .footer-links a:hover {
+        color: #D4F06D;
+        opacity: 1;
+        padding-left: 4px;
+    }
+
+    .footer-contact p {
+        font-size: 14px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0.85;
+    }
+
+    .footer-contact i {
+        width: 20px;
+        color: #D4F06D;
+    }
+
+    .footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 13px;
+        opacity: 0.7;
+    }
+
+    .footer-social {
+        display: flex;
+        gap: 20px;
+    }
+
+    .footer-social a {
+        color: #E5EDE9;
+        font-size: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .footer-social a:hover {
+        color: #D4F06D;
+        transform: translateY(-2px);
+    }
+
+    /* Mobile Responsive */
+    @@media (max-width: 768px) {
+        .footer-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+            text-align: center;
+        }
+
+        .footer-contact p {
+            justify-content: center;
+        }
+
+        .footer-bottom {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .footer-social {
+            justify-content: center;
+        }
+    }
+
+    /* Tablet Responsive */
+    @@media (min-width: 769px) and (max-width: 1024px) {
+        .footer-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+    }
+</style>

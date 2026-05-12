@@ -1,297 +1,7 @@
-@using Microsoft.AspNetCore.Http
-@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
-    Layout = null;
+    ViewData["Title"] = "Home - EthioChain SCM";
+    Layout = "_Layout";
 }
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EthioChain SCM - Empowering Supply Chains</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <style>
-        @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
-        :root {
-            --brand-green: #4da699;
-            --brand-green-dark: #1a3d31;
-            --brand-green-light: #e0f2ef;
-            --brand-green-hue: #f4fcfb;
-            --text-dark: #1a1a1a;
-            --text-muted: #666666;
-            --font-main: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        body {
-            font-family: var(--font-main);
-            color: var(--text-dark);
-            background-color: var(--brand-green-hue);
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            scroll-behavior: smooth;
-        }
-
-        /* Navbar Customization */
-        .navbar-custom {
-            padding: 20px 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .navbar-custom.scrolled {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            padding: 15px 0;
-            background: white;
-        }
-        .nav-link {
-            font-weight: 600;
-            color: var(--text-dark) !important;
-            margin: 0 12px;
-            font-size: 0.95rem;
-        }
-        .nav-link:hover { color: var(--brand-green) !important; }
-
-        .btn-login {
-            color: var(--brand-green-dark) !important;
-            font-weight: 700;
-            padding: 10px 20px;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        .btn-login:hover { color: var(--brand-green) !important; }
-
-        .btn-demo {
-            background-color: var(--brand-green-dark);
-            color: white !important;
-            border-radius: 30px;
-            padding: 10px 25px;
-            font-weight: 700;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-demo:hover {
-            background-color: var(--brand-green);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(77, 166, 153, 0.2);
-        }
-
-        /* Hero Section */
-        .hero-section {
-            padding: 80px 0 120px;
-            background: radial-gradient(circle at top right, #e6f7f4, var(--brand-green-hue));
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-tagline {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--brand-green-light);
-            color: var(--brand-green-dark);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            margin-bottom: 25px;
-        }
-
-        .hero-title {
-            font-size: 4rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 25px;
-            color: var(--brand-green-dark);
-        }
-        .hero-title span { color: var(--brand-green); }
-
-        .hero-desc {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            max-width: 550px;
-            line-height: 1.6;
-        }
-
-        .hero-btns { display: flex; gap: 20px; }
-        .btn-explore {
-            background: var(--brand-green-dark);
-            color: white !important;
-            padding: 15px 35px;
-            border-radius: 50px;
-            font-weight: 700;
-            box-shadow: 0 20px 40px rgba(26, 61, 49, 0.2);
-            text-decoration: none;
-        }
-        .btn-view-all {
-            background: transparent;
-            color: var(--brand-green-dark) !important;
-            padding: 15px 35px;
-            border-radius: 50px;
-            font-weight: 700;
-            border: 2px solid transparent;
-            text-decoration: none;
-        }
-        .btn-view-all:hover { color: var(--brand-green) !important; }
-
-        /* Bento Grid */
-        .hero-bento {
-            position: relative;
-            height: 550px;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 20px;
-        }
-        .bento-item {
-            position: relative;
-            border-radius: 40px;
-            overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
-            background: #ffffff;
-        }
-        .bento-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-        .bento-item:hover img { transform: scale(1.05); }
-
-        .bento-1 { grid-row: span 2; }
-        .bento-2 { grid-column: span 1; }
-        .bento-3 { grid-column: span 1; }
-
-        .bento-badge {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.75rem;
-            color: var(--brand-green-dark);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            z-index: 2;
-        }
-
-        /* Features Section */
-        .features-section { padding: 100px 0; background: #ffffff; }
-        .section-header { text-align: center; margin-bottom: 60px; }
-        .section-header h2 { font-size: 3rem; font-weight: 800; color: var(--brand-green-dark); }
-        .section-header p { color: var(--text-muted); font-size: 1.1rem; }
-
-        .feature-card {
-            padding: 40px;
-            border-radius: 30px;
-            background: #ffffff;
-            border: 1px solid #e0f2ef;
-            transition: all 0.3s;
-            height: 100%;
-        }
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 30px 60px rgba(77, 166, 153, 0.1);
-            border-color: var(--brand-green);
-        }
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--brand-green-light);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: var(--brand-green);
-            margin-bottom: 25px;
-        }
-
-        /* About Section */
-        .about-section { padding: 100px 0; background: var(--brand-green-hue); }
-        .about-img { border-radius: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); width: 100%; }
-
-        /* Stats Section */
-        .stats-section { padding: 80px 0; background: var(--brand-green-dark); color: white; border-radius: 50px; margin: 0 20px 80px; }
-        .stat-item h3 { font-size: 3rem; font-weight: 800; margin-bottom: 5px; color: var(--brand-green); }
-        .stat-item p { font-size: 1rem; opacity: 0.8; }
-
-        /* Contact Section */
-        .contact-section { padding: 100px 0; background: #ffffff; }
-        .contact-card { background: var(--brand-green-hue); border-radius: 40px; padding: 50px; }
-        .form-control { border-radius: 15px; padding: 15px; border: 2px solid #e0f2ef; }
-        .form-control:focus { border-color: var(--brand-green); box-shadow: none; }
-
-        /* CTA Section */
-        .cta-section { padding: 80px 0; text-align: center; }
-        .cta-container {
-            background: linear-gradient(135deg, var(--brand-green-dark) 0%, #122921 100%);
-            padding: 80px 40px;
-            border-radius: 40px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        footer {
-            padding: 40px 0;
-            text-align: center;
-            border-top: 1px solid #e0f2ef;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            background: white;
-        }
-
-        @@media (max-width: 992px) {
-            .hero-title { font-size: 2.5rem; }
-            .hero-bento { height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
-            .bento-1 { grid-row: auto; height: 300px; }
-            .bento-2, .bento-3 { height: 200px; }
-            .hero-btns { flex-direction: column; }
-        }
-    </style>
-</head>
-<body>
-
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-custom">
-    <div class="container-fluid px-lg-5">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-            <img src="~/images/ethiochain-logo.jpg" alt="Logo" height="35" style="border-radius: 8px;">
-            <span class="fw-bold fs-4" style="color: var(--brand-green-dark); letter-spacing: -0.5px;">ETHIOCHAIN</span>
-        </a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#features">Services</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Home/About">About Us</a></li>
-                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-                @if (Context.Session.GetInt32("UserId") == null)
-                {
-                    <li class="nav-item ms-lg-3"><a href="/Account/Login" class="btn-login">Login</a></li>
-                    <li class="nav-item ms-lg-2"><a href="/Account/Register" class="btn btn-demo">Get Started</a></li>
-                }
-                else
-                {
-                    <li class="nav-item ms-lg-3 mt-3 mt-lg-0"><a href="/@Context.Session.GetString("UserRole")/Dashboard" class="btn btn-demo">Dashboard</a></li>
-                }
-            </ul>
-        </div>
-    </div>
-</nav>
 
 <!-- Hero Section -->
 <section class="hero-section">
@@ -469,26 +179,202 @@
     </div>
 </section>
 
-<footer>
-    <div class="container">
-        <p class="mb-0">&copy; @DateTime.Now.Year EthioChain SCM. All rights reserved.</p>
-    </div>
-</footer>
+@section Styles {
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script>
-    AOS.init({ duration: 1000, once: true });
-    
-    window.addEventListener('scroll', function() {
-        const nav = document.querySelector('.navbar-custom');
-        if (window.scrollY > 50) {
-            nav.classList.add('scrolled');
-        } else {
-            nav.classList.remove('scrolled');
+        :root {
+            --brand-green: #4da699;
+            --brand-green-dark: #1a3d31;
+            --brand-green-light: #e0f2ef;
+            --brand-green-hue: #f4fcfb;
+            --text-dark: #1a1a1a;
+            --text-muted: #666666;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
         }
-    });
-</script>
-</body>
-</html>
+
+        /* Hero Section */
+        .hero-section {
+            padding: 80px 0 120px;
+            background: radial-gradient(circle at top right, #e6f7f4, var(--brand-green-hue));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-tagline {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--brand-green-light);
+            color: var(--brand-green-dark);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 25px;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            color: var(--brand-green-dark);
+        }
+        .hero-title span { color: var(--brand-green); }
+
+        .hero-desc {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 550px;
+            line-height: 1.6;
+        }
+
+        .hero-btns { display: flex; gap: 20px; }
+        .btn-explore {
+            background: var(--brand-green-dark);
+            color: white !important;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 20px 40px rgba(26, 61, 49, 0.2);
+            text-decoration: none;
+        }
+        .btn-view-all {
+            background: transparent;
+            color: var(--brand-green-dark) !important;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            border: 2px solid transparent;
+            text-decoration: none;
+        }
+        .btn-view-all:hover { color: var(--brand-green) !important; }
+
+        /* Bento Grid */
+        .hero-bento {
+            position: relative;
+            height: 550px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .bento-item {
+            position: relative;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+            background: #ffffff;
+        }
+        .bento-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .bento-item:hover img { transform: scale(1.05); }
+
+        .bento-1 { grid-row: span 2; }
+        .bento-2 { grid-column: span 1; }
+        .bento-3 { grid-column: span 1; }
+
+        .bento-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--brand-green-dark);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+
+        /* Features Section */
+        .features-section { padding: 100px 0; background: #ffffff; }
+        .section-header { text-align: center; margin-bottom: 60px; }
+        .section-header h2 { font-size: 3rem; font-weight: 800; color: var(--brand-green-dark); }
+        .section-header p { color: var(--text-muted); font-size: 1.1rem; }
+
+        .feature-card {
+            padding: 40px;
+            border-radius: 30px;
+            background: #ffffff;
+            border: 1px solid #e0f2ef;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(77, 166, 153, 0.1);
+            border-color: var(--brand-green);
+        }
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--brand-green-light);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--brand-green);
+            margin-bottom: 25px;
+        }
+
+        /* About Section */
+        .about-section { padding: 100px 0; background: var(--brand-green-hue); }
+        .about-img { border-radius: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); width: 100%; }
+
+        /* Stats Section */
+        .stats-section { padding: 80px 0; background: var(--brand-green-dark); color: white; border-radius: 50px; margin: 0 20px 80px; }
+        .stat-item h3 { font-size: 3rem; font-weight: 800; margin-bottom: 5px; color: var(--brand-green); }
+        .stat-item p { font-size: 1rem; opacity: 0.8; }
+
+        /* Contact Section */
+        .contact-section { padding: 100px 0; background: #ffffff; }
+        .contact-card { background: var(--brand-green-hue); border-radius: 40px; padding: 50px; }
+        .form-control { border-radius: 15px; padding: 15px; border: 2px solid #e0f2ef; }
+        .form-control:focus { border-color: var(--brand-green); box-shadow: none; }
+
+        /* CTA Section */
+        .cta-section { padding: 80px 0; text-align: center; }
+        .cta-container {
+            background: linear-gradient(135deg, var(--brand-green-dark) 0%, #122921 100%);
+            padding: 80px 40px;
+            border-radius: 40px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @@media (max-width: 992px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-bento { height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
+            .bento-1 { grid-row: auto; height: 300px; }
+            .bento-2, .bento-3 { height: 200px; }
+            .hero-btns { flex-direction: column; }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: true });
+        
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('.navbar');
+            if (nav && window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else if (nav) {
+                nav.classList.remove('scrolled');
+            }
+        });
+    </script>
+}

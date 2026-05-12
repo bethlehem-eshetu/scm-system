@@ -45,6 +45,16 @@ namespace SCM_System.Controllers
             return View();
         }
 
+        public IActionResult Services()
+        {
+            return View();
+        }
+
+        public IActionResult HowItWorks()
+        {
+            return View();
+        }
+
         public IActionResult Contact()
         {
             return View();

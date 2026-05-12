@@ -6,40 +6,13 @@
 
 <div class="container-fluid py-4 pb-5 px-4">
     <!-- Page Header with Shimmer Effect (Themed Green) -->
-    <div class="row mb-5 animate-slide-up">
-        <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-premium border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, #1a3d31 0%, #0a2e24 100%);">
-                <div class="banner-overlay"></div>
-                <div class="banner-glow"></div>
-                
-                <div class="row align-items-center position-relative z-index-2">
-                    <div class="col-lg-8 text-white">
-                        <div class="welcome-shimmer mb-2">
-                            <h1 class="text-white mb-2 shimmer-text h2 h1-md">
-                                <i class="fas fa-user-shield me-2 text-accent-green"></i>Welcome back, <span class="gradient-shimmer text-truncate d-inline-block" style="max-width: 450px; vertical-align: bottom; color: var(--accent-green);">@(Context.Session.GetString("UserName") ?? "System Administrator")</span>!
-                            </h1>
-                        </div>
-                        <p class="text-white text-opacity-75 mb-0 fs-5">
-                            <i class="fas fa-calendar-alt me-2 text-accent-green"></i>@DateTime.Now.ToString("dddd, MMMM dd")
-                            <span class="mx-3 opacity-25">|</span>
-                            <span class="badge bg-accent-green text-dark-green rounded-pill px-3 py-2 fw-bold small">Live Dashboard</span>
-                        </p>
-                    </div>
-                    <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                         <div class="d-flex flex-wrap justify-content-lg-end gap-3">
-                            <button class="btn btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
-                                <div class="btn-icon bg-white bg-opacity-10 rounded-3">
-                                    <i class="fas fa-sync-alt text-white"></i>
-                                </div>
-                                <div class="text-start">
-                                    <div class="extra-small text-white text-opacity-50 text-uppercase">System</div>
-                                    <div class="text-white">Refresh</div>
-                                </div>
-                            </button>
-                         </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Welcome Section (Restored Original Design) -->
+    <div class="welcome-section mb-5 animate-slide-up">
+        <div class="welcome-icon">●</div>
+        <div>
+            <h1 class="text-dark-green fw-bold">Welcome back, @(Context.Session.GetString("UserName") ?? "System Administrator")</h1>
+            <p class="text-muted fs-5 mb-1">Here's what's happening with your marketplace today.</p>
+            <div class="welcome-underline"></div>
         </div>
     </div>
 
@@ -262,6 +235,28 @@
         .bg-accent-green { background-color: var(--accent-green) !important; }
         .text-accent-green { color: var(--accent-green) !important; }
         .bg-faint-green { background-color: var(--faint-green) !important; }
+
+        /* Welcome Section Premium Fixes */
+        .welcome-section {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .welcome-icon {
+            color: #2E9C7A;
+            font-size: 28px;
+            line-height: 1;
+            margin-top: 5px;
+        }
+
+        .welcome-underline {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #2E9C7A 0%, transparent 100%);
+            border-radius: 2px;
+            margin-top: 12px;
+        }
         
         .welcome-banner { position: relative; border-radius: 40px !important; }
         .banner-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.05; z-index: 1; }
@@ -312,8 +307,8 @@
                             {
                                 label: 'Orders',
                                 data: [],
-                                borderColor: '#1a3d31',
-                                backgroundColor: 'rgba(26, 61, 49, 0.1)',
+                                borderColor: '#2E9C7A',
+                                backgroundColor: 'rgba(46, 156, 122, 0.1)',
                                 fill: true,
                                 tension: 0.4,
                                 yAxisID: 'yOrders'

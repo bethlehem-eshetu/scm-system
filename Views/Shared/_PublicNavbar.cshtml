@@ -1,0 +1,127 @@
+@using Microsoft.AspNetCore.Http
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top public-navbar">
+    <div class="container-fluid px-lg-5">
+        <!-- Brand / Logo -->
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+            <img src="~/images/ethiochain-logo.jpg" alt="Logo" style="height: 32px; width: 32px; border-radius: 8px;" />
+            <span class="fw-bold logo-text" style="color: #0B3B2F; letter-spacing: -0.5px;">ETHIOCHAIN</span>
+        </a>
+
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navigation Links -->
+        <div class="collapse navbar-collapse" id="publicNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-lg-2">
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Home" && currentAction == "About" ? "active" : "")" href="/Home/About">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Home" && currentAction == "Services" ? "active" : "")" href="/Home/Services">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Home" && currentAction == "HowItWorks" ? "active" : "")" href="/Home/HowItWorks">How It Works</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Home" && currentAction == "Contact" ? "active" : "")" href="/Home/Contact">Contact</a>
+                </li>
+
+                <!-- Auth Buttons -->
+                @if (Context.Session.GetString("UserRole") != null)
+                {
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="nav-link dropdown-toggle dashboard-btn" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> Dashboard
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
+                            <li><a class="dropdown-item" href="/@Context.Session.GetString("UserRole")/Dashboard">Go to Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/Account/Logout">Logout</a></li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item ms-lg-3">
+                        <a class="nav-link login-link" href="/Account/Login">Login</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn register-btn rounded-pill px-4" href="/Account/Register">Register</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<style>
+    .public-navbar {
+        height: 80px;
+        transition: all 0.3s ease;
+        z-index: 1001;
+    }
+
+    .public-navbar .nav-link {
+        font-weight: 600;
+        color: #4A5568 !important;
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.2s ease;
+    }
+
+    .public-navbar .nav-link:hover, 
+    .public-navbar .nav-link.active {
+        color: #0B3B2F !important;
+    }
+
+    .public-navbar .nav-link.active {
+        position: relative;
+    }
+
+    .public-navbar .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 1rem;
+        right: 1rem;
+        height: 2px;
+        background: #0B3B2F;
+        border-radius: 2px;
+    }
+
+    .register-btn {
+        background: #0B3B2F;
+        color: white !important;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(11, 59, 47, 0.1);
+    }
+
+    .register-btn:hover {
+        background: #155744;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px rgba(11, 59, 47, 0.2);
+    }
+
+    .login-link {
+        font-weight: 700 !important;
+        color: #0B3B2F !important;
+    }
+
+    .dashboard-btn {
+        background: rgba(11, 59, 47, 0.05);
+        border-radius: 50px;
+        color: #0B3B2F !important;
+        font-weight: 700 !important;
+    }
+</style>

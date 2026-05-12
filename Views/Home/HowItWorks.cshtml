@@ -1,0 +1,170 @@
+@{
+    ViewData["Title"] = "How It Works - EthioChain SCM";
+    Layout = "_Layout";
+}
+
+<div class="how-it-works-page">
+    <div class="hiw-hero">
+        <h1>Transform Your Logistics in Three Simple Steps</h1>
+        <p>A straightforward process designed to get your business operational and efficient in no time.</p>
+    </div>
+
+    <div class="hiw-container">
+        <div class="steps-grid">
+            <div class="step-card" data-aos="fade-right">
+                <div class="step-number">01</div>
+                <h3>Register and Verify</h3>
+                <p>Sign up as a Retailer, Supplier, or Warehouse Manager. Complete your profile and get verified by our admin team to ensure a trusted network.</p>
+            </div>
+
+            <div class="step-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="step-number">02</div>
+                <h3>Connect and Trade</h3>
+                <p>Browse products, post procurement requests, and negotiate bids. Suppliers and retailers connect directly in a transparent digital marketplace.</p>
+            </div>
+
+            <div class="step-card" data-aos="fade-left" data-aos-delay="200">
+                <div class="step-number">03</div>
+                <h3>Track and Scale</h3>
+                <p>Monitor your orders, inventory, and deliveries with real-time analytics. Use data-driven insights to optimize your supply chain and grow.</p>
+            </div>
+        </div>
+
+        <div class="benefits-section">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-up">
+                    <img src="~/images/anime-analytics.png" alt="Analytics" class="img-fluid rounded-4 shadow-lg">
+                </div>
+                <div class="col-lg-6 ps-lg-5 mt-5 mt-lg-0" data-aos="fade-up" data-aos-delay="100">
+                    <h2 class="section-title">Why EthioChain?</h2>
+                    <ul class="benefits-list">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Transparency:</strong> Know exactly where your products and money are at every stage.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Efficiency:</strong> Reduce lead times by up to 30% through automated workflows.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Trust:</strong> All participants are verified to maintain a secure ecosystem.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .how-it-works-page {
+        padding-top: 80px;
+        min-height: 100vh;
+        background: white;
+    }
+
+    .hiw-hero {
+        background: #f8fafc;
+        padding: 100px 20px;
+        text-align: center;
+    }
+
+    .hiw-hero h1 {
+        font-size: 2.75rem;
+        font-weight: 800;
+        color: #0B3B2F;
+        margin-bottom: 20px;
+    }
+
+    .hiw-hero p {
+        font-size: 1.15rem;
+        color: #64748b;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .hiw-container {
+        max-width: 1200px;
+        margin: 80px auto;
+        padding: 0 20px;
+    }
+
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 40px;
+        margin-bottom: 120px;
+    }
+
+    .step-card {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .step-number {
+        font-size: 4rem;
+        font-weight: 900;
+        color: rgba(11, 59, 47, 0.1);
+        margin-bottom: -25px;
+        line-height: 1;
+    }
+
+    .step-card h3 {
+        color: #0B3B2F;
+        font-weight: 700;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .step-card p {
+        color: #64748b;
+        line-height: 1.7;
+    }
+
+    .section-title {
+        color: #0B3B2F;
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+    }
+
+    .benefits-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .benefits-list li {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .benefits-list i {
+        color: #0B3B2F;
+        font-size: 1.25rem;
+        margin-top: 5px;
+    }
+
+    .benefits-list strong {
+        display: block;
+        color: #1e293b;
+        margin-bottom: 5px;
+    }
+
+    .benefits-list div {
+        color: #64748b;
+    }
+
+    @@media (max-width: 768px) {
+        .hiw-hero h1 { font-size: 2rem; }
+        .section-title { font-size: 2rem; }
+    }
+</style>

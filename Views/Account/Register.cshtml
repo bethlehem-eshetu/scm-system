@@ -6,7 +6,7 @@
 
 <div class="register-page">
     <div class="register-card">
-        <!-- Left Side: Anime Illustration -->
+        <!-- Left Side: Illustration -->
         <div class="register-left">
             <div class="blobs-container">
                 <div class="blob b-1"></div>
@@ -59,7 +59,7 @@
                         </div>
                     }
 
-                    <!-- Step 1: Fayda Verification -->
+                    <!-- STEP 1: Fayda Verification -->
                     <div id="step-1" class="registration-step">
                         <div class="input-group-inspo">
                             <label asp-for="Email">Email Address</label>
@@ -94,8 +94,12 @@
                         </div>
                     </div>
 
-                    <!-- Step 2: Account Essentials -->
+                    <!-- STEP 2: Account Essentials -->
                     <div id="step-2" class="registration-step" style="display: none;">
+                        <div class="alert alert-success small mb-3" style="border-radius: 12px;">
+                            <i class="fas fa-check-circle me-2"></i> Identity Verified! Your name and date of birth are confirmed via Fayda.
+                        </div>
+
                         <div class="input-group-inspo">
                             <label>Full Name (Verified)</label>
                             <input asp-for="FullName" id="FullNameInput" readonly placeholder="Verified via Fayda" />
@@ -106,8 +110,8 @@
                             <label>Register As</label>
                             <select id="RoleSelect" name="RoleSelectDummy" class="inspo-select" required>
                                 <option value="">Select Role</option>
-                                <option value="Supplier">Supplier</option>
-                                <option value="Retailer">Retailer</option>
+                                <option value="Supplier">Supplier (Sell Products)</option>
+                                <option value="Retailer">Retailer (Buy Products)</option>
                             </select>
                         </div>
 
@@ -137,13 +141,62 @@
                         </div>
                     </div>
 
-                    <!-- Step 3: Business Profile -->
+                    <!-- STEP 3: Business Profile -->
                     <div id="step-3" class="registration-step" style="display: none;">
+                        <!-- Business Name (Dynamic based on role) -->
                         <div class="input-group-inspo">
                             <label id="lblBusinessName">Company Name</label>
-                            <input asp-for="BusinessName" placeholder="Eco Distribution Ltd." />
+                            <input asp-for="BusinessName" id="BusinessNameInput" placeholder="Eco Distribution Ltd." />
+                            <span asp-validation-for="BusinessName" class="text-danger small"></span>
                         </div>
 
+                        <!-- Supplier Categories Section (Visible only for Suppliers) -->
+                        <div id="SupplierCategoriesSection" style="display: none;">
+                            <div class="input-group-inspo">
+                                <label class="fw-bold">Business Categories / What do you supply? <span class="text-danger">*</span></label>
+                                <div class="category-container" style="max-height: 350px; overflow-y: auto; background: var(--brand-gray); border-radius: 16px; padding: 16px;">
+                                    <div class="category-hierarchy">
+                                        @if (ViewBag.Categories != null)
+                                        {
+                                            @foreach (var category in (IEnumerable<SCM_System.Models.Entities.ProductCategory>)ViewBag.Categories)
+                                            {
+                                                <div class="category-group mb-3">
+                                                    <div class="form-check p-3 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
+                                                        <input class="form-check-input parent-category me-3" type="checkbox" name="SelectedCategoryIds" value="@category.Id" id="cat_@category.Id" style="width: 18px; height: 18px;">
+                                                        <label class="form-check-label fw-bold text-dark" for="cat_@category.Id">
+                                                            <i class="fas fa-folder-open me-2 text-primary"></i> @category.CategoryName
+                                                        </label>
+                                                    </div>
+                                                    @if (category.SubCategories != null && category.SubCategories.Any())
+                                                    {
+                                                        <div class="subcategories-container ms-4 ps-3 border-start border-2 border-primary border-opacity-25 row g-2">
+                                                            @foreach (var sub in category.SubCategories)
+                                                            {
+                                                                <div class="col-md-4 col-sm-6">
+                                                                    <div class="form-check p-2 rounded-3 border bg-white h-100 d-flex align-items-center">
+                                                                        <input class="form-check-input sub-category me-2" type="checkbox" name="SelectedCategoryIds" value="@sub.Id" id="cat_@sub.Id" data-parent="cat_@category.Id">
+                                                                        <label class="form-check-label small text-muted" for="cat_@sub.Id">
+                                                                            @sub.CategoryName
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                <div class="alert alert-info py-2 px-3 rounded-3 small mt-2">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Matching Rule:</strong> Selecting a Main Category automatically qualifies you for all its subcategories.
+                                </div>
+                                <span id="categoryError" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Address Fields -->
                         <div class="input-group-inspo">
                             <label>Physical Address</label>
                             <input asp-for="Address" placeholder="Bole, Addis Ababa" />
@@ -153,12 +206,14 @@
                         <div class="input-group-inspo">
                             <label>Contact Number</label>
                             <input asp-for="PhoneNumber" placeholder="+251..." />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
 
+                        <!-- License Upload -->
                         <div class="input-group-inspo">
                             <label id="lblLicense">Business License (PDF/Image)</label>
-                            <input type="file" name="LicenseFile" id="LicenseFile" class="file-input-custom" />
-                            <p class="file-hint">Max size: 5MB</p>
+                            <input type="file" name="LicenseFile" id="LicenseFile" class="file-input-custom" accept=".pdf,.jpg,.jpeg,.png" />
+                            <p class="file-hint">Max size: 5MB. Accepted formats: PDF, JPG, JPEG, PNG</p>
                         </div>
 
                         <div class="btn-nav-group">
@@ -205,25 +260,25 @@
 
         .register-card {
             width: 100%;
-            max-width: 1100px;
-            height: 850px;
+            max-width: 1200px;
+            height: 90vh;
             background: var(--brand-white);
             border-radius: 40px;
             display: flex;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         }
 
         /* Left Side Illustration */
         .register-left {
-            flex: 1.1;
+            flex: 1;
             background-color: var(--brand-green-dark);
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 60px;
+            padding: 40px;
             overflow: hidden;
         }
 
@@ -249,7 +304,7 @@
 
         .anime-img {
             width: 100%;
-            max-width: 450px;
+            max-width: 350px;
             z-index: 2;
             position: relative;
         }
@@ -266,17 +321,17 @@
         .left-content {
             z-index: 2;
             text-align: center;
-            margin-top: 40px;
+            margin-top: 30px;
             color: var(--brand-white);
         }
 
-        .left-content h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 15px; }
-        .left-content p { font-size: 1.1rem; opacity: 0.7; }
+        .left-content h2 { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
+        .left-content p { font-size: 1rem; opacity: 0.8; }
 
         /* Right Side Form */
         .register-right {
-            flex: 1;
-            padding: 40px;
+            flex: 1.2;
+            padding: 30px;
             background: var(--brand-white);
             position: relative;
         }
@@ -294,33 +349,33 @@
         .brand-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .brand-header img { width: 32px; height: 32px; border-radius: 8px; }
-        .brand-header span { font-weight: 800; color: var(--brand-green-dark); font-size: 1.2rem; }
+        .brand-header img { width: 28px; height: 28px; border-radius: 8px; }
+        .brand-header span { font-weight: 800; color: var(--brand-green-dark); font-size: 1.1rem; }
 
-        .step-progress { margin-bottom: 40px; }
-        .progress-bar-inspo { height: 6px; background: #f1f5f9; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        .step-progress { margin-bottom: 30px; }
+        .progress-bar-inspo { height: 6px; background: #f1f5f9; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--brand-green); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .step-labels { display: flex; justify-content: space-between; }
-        .step-labels span { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #cbd5e1; letter-spacing: 0.5px; }
+        .step-labels span { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #cbd5e1; letter-spacing: 0.5px; }
         .step-labels span.active { color: var(--brand-green); }
 
-        .card-title { font-size: 2.2rem; font-weight: 800; color: var(--brand-green-dark); margin-bottom: 8px; }
-        .card-subtitle { color: var(--text-muted); margin-bottom: 35px; }
+        .card-title { font-size: 1.8rem; font-weight: 800; color: var(--brand-green-dark); margin-bottom: 5px; }
+        .card-subtitle { color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem; }
 
-        .input-group-inspo { margin-bottom: 24px; }
-        .input-group-inspo label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--brand-green-dark); margin-bottom: 10px; }
+        .input-group-inspo { margin-bottom: 18px; }
+        .input-group-inspo label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--brand-green-dark); margin-bottom: 8px; }
         .input-group-inspo input, .inspo-select {
             width: 100%;
-            padding: 14px 20px;
+            padding: 12px 16px;
             border: 2px solid var(--brand-gray);
             border-radius: 16px;
             background: var(--brand-gray);
             color: var(--text-main);
-            font-weight: 600;
+            font-weight: 500;
             transition: all 0.2s;
         }
 
@@ -347,21 +402,21 @@
         .btn-otp:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .btn-otp.verify { background: var(--brand-green); }
 
-        .timer-resend { display: flex; justify-content: space-between; margin-top: 10px; }
-        .timer-resend span { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
-        .timer-resend button { background: none; border: none; font-size: 0.75rem; font-weight: 700; color: var(--brand-green); cursor: pointer; }
+        .timer-resend { display: flex; justify-content: space-between; margin-top: 8px; }
+        .timer-resend span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+        .timer-resend button { background: none; border: none; font-size: 0.7rem; font-weight: 700; color: var(--brand-green); cursor: pointer; }
         .timer-resend button:disabled { color: #cbd5e1; cursor: default; }
 
-        .btn-nav-group { display: flex; gap: 15px; margin-top: 40px; }
+        .btn-nav-group { display: flex; gap: 15px; margin-top: 30px; }
         .btn-next {
             flex: 2;
-            padding: 16px;
+            padding: 14px;
             background: var(--brand-green);
             color: white;
             border: none;
             border-radius: 18px;
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1rem;
             box-shadow: 0 10px 20px -5px rgba(77, 166, 153, 0.3);
             transition: all 0.3s;
         }
@@ -370,7 +425,7 @@
 
         .btn-back {
             flex: 1;
-            padding: 16px;
+            padding: 14px;
             background: var(--brand-gray);
             color: var(--brand-green-dark);
             border: none;
@@ -381,8 +436,8 @@
 
         .btn-back:hover { background: #e2e8f0; }
 
-        .auth-footer { margin-top: 40px; text-align: center; }
-        .auth-footer p { font-size: 0.95rem; color: var(--text-muted); font-weight: 600; }
+        .auth-footer { margin-top: 25px; text-align: center; }
+        .auth-footer p { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
         .auth-footer a { color: var(--brand-green); text-decoration: none; font-weight: 800; }
 
         .custom-alert-danger {
@@ -390,18 +445,28 @@
             border: 2px solid #fee2e2;
             color: #b91c1c;
             border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 25px;
+            padding: 12px;
+            margin-bottom: 20px;
             font-weight: 600;
+            font-size: 0.85rem;
         }
 
         .file-input-custom { padding: 10px !important; font-size: 0.8rem; }
-        .file-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; font-weight: 600; }
+        .file-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; }
+
+        .category-container {
+            background: #f8fafc;
+            border-radius: 16px;
+        }
+
+        .category-group {
+            border-radius: 12px;
+        }
 
         @@media (max-width: 992px) {
             .register-left { display: none; }
-            .register-card { max-width: 550px; height: auto; }
-            .register-right { padding: 30px; }
+            .register-card { max-width: 550px; height: auto; max-height: 95vh; }
+            .register-right { padding: 25px; }
         }
     </style>
 }
@@ -411,6 +476,8 @@
         $(document).ready(function () {
             let currentStep = 1;
             let isVerified = false;
+            let expiryTimer = null;
+            let resendTimer = null;
 
             function updateUI() {
                 $('.registration-step').hide();
@@ -422,45 +489,159 @@
                 }
             }
 
-            // OTP Flow
+            // --- OTP Flow ---
+            function startTimers() {
+                let expiryCountdown = 300;
+                let resendCountdown = 60;
+
+                $('#btnResendOtp').prop('disabled', true).text(`Resend in ${resendCountdown}s`);
+                $('#expiryTimerDisplay').removeClass('text-danger').text('Expires in: 05:00');
+
+                if (expiryTimer) clearInterval(expiryTimer);
+                if (resendTimer) clearInterval(resendTimer);
+
+                expiryTimer = setInterval(function() {
+                    expiryCountdown--;
+                    const mins = Math.floor(expiryCountdown / 60);
+                    const secs = expiryCountdown % 60;
+                    const timeStr = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+                    $('#expiryTimerDisplay').text('Expires in: ' + timeStr);
+                    if (expiryCountdown < 60) $('#expiryTimerDisplay').addClass('text-danger');
+                    if (expiryCountdown <= 0) {
+                        clearInterval(expiryTimer);
+                        $('#otpError').text('OTP has expired. Please request a new one.');
+                        $('#btnVerifyOtp').prop('disabled', true);
+                    }
+                }, 1000);
+
+                resendTimer = setInterval(function() {
+                    resendCountdown--;
+                    if (resendCountdown <= 0) {
+                        clearInterval(resendTimer);
+                        $('#btnResendOtp').prop('disabled', false).text('Resend OTP');
+                    } else {
+                        $('#btnResendOtp').text(`Resend in ${resendCountdown}s`);
+                    }
+                }, 1000);
+            }
+
             $('#btnRequestOtp').click(function () {
                 const fan = $('#FANInput').val();
-                if (fan.length < 16) {
+                const email = $('#EmailInput').val();
+                
+                if (fan.length !== 16) {
                     $('#fanError').text('Please enter a valid 16-digit FAN.');
                     return;
                 }
-                $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                if (!email) {
+                    $('#fanError').text('Please enter your email first.');
+                    return;
+                }
+
+                const $btn = $(this);
+                $btn.html('<i class="fas fa-spinner fa-spin"></i> Sending...').prop('disabled', true);
+                $('#fanError').text('');
                 
-                // Simulate API call
-                setTimeout(() => {
-                    $('#fanSection').fadeOut(300, () => {
-                        $('#otpSection').fadeIn(300);
-                        startTimer(300);
-                    });
-                }, 1000);
+                $.ajax({
+                    url: '/Account/RequestFaydaOtp',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ fan: fan, email: email }),
+                    success: function (response) {
+                        if (response.success) {
+                            $('#fanSection').fadeOut(300, () => {
+                                $('#otpSection').fadeIn(300);
+                                startTimers();
+                            });
+                        } else {
+                            $('#fanError').text(response.message || 'Error sending OTP.');
+                            $btn.html('Get OTP').prop('disabled', false);
+                        }
+                    },
+                    error: function () {
+                        $('#fanError').text('Service unavailable. Please try again later.');
+                        $btn.html('Get OTP').prop('disabled', false);
+                    }
+                });
             });
 
             $('#btnVerifyOtp').click(function () {
                 const otp = $('#OTPInput').val();
-                if (otp.length < 6) {
-                    $('#otpError').text('Invalid code.');
+                const fan = $('#FANInput').val();
+
+                if (otp.length !== 6) {
+                    $('#otpError').text('Please enter the 6-digit code.');
                     return;
                 }
                 
-                $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-                
-                // Simulate Fayda Verification
-                setTimeout(() => {
-                    isVerified = true;
-                    $('#FullNameInput').val('BETHLEHEM ESHETU'); // Dummy verified name
-                    $('#fanSection, #otpSection').remove();
-                    
-                    // Auto advance
-                    currentStep = 2;
-                    updateUI();
-                }, 1000);
+                const $btn = $(this);
+                $btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                $('#otpError').text('');
+
+                $.ajax({
+                    url: '/Account/VerifyFaydaOtp',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ fan: fan, otp: otp }),
+                    success: function (response) {
+                        if (response.success) {
+                            isVerified = true;
+                            $('#FullNameInput').val(response.fullName);
+                            if (response.dateOfBirth) {
+                                const dob = new Date(response.dateOfBirth);
+                                const year = dob.getFullYear();
+                                const month = String(dob.getMonth() + 1).padStart(2, '0');
+                                const day = String(dob.getDate()).padStart(2, '0');
+                                $('#DateOfBirth').val(`${year}-${month}-${day}`);
+                            }
+                            if (response.phoneNumber) {
+                                $('#PhoneNumber').val(response.phoneNumber);
+                            }
+                            $('#otpSection, #fanSection').remove();
+                            currentStep = 2;
+                            updateUI();
+                        } else {
+                            $('#otpError').text(response.message || 'Verification failed.');
+                            $btn.html('Verify').prop('disabled', false);
+                        }
+                    },
+                    error: function () {
+                        $('#otpError').text('Service unavailable. Please try again.');
+                        $btn.html('Verify').prop('disabled', false);
+                    }
+                });
             });
 
+            $('#btnResendOtp').click(function() {
+                const fan = $('#FANInput').val();
+                const email = $('#EmailInput').val();
+                const $btn = $(this);
+                $btn.prop('disabled', true).text('Sending...');
+                $('#otpError').text('');
+
+                $.ajax({
+                    url: '/Account/RequestFaydaOtp',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ fan: fan, email: email }),
+                    success: function (response) {
+                        if (response.success) {
+                            startTimers();
+                            $('#otpError').text('New OTP sent!').css('color', 'green');
+                            setTimeout(() => $('#otpError').text(''), 3000);
+                        } else {
+                            $('#otpError').text(response.message || 'Error resending OTP.');
+                            $btn.prop('disabled', false).text('Resend OTP');
+                        }
+                    },
+                    error: function () {
+                        $('#otpError').text('Service unavailable.');
+                        $btn.prop('disabled', false).text('Resend OTP');
+                    }
+                });
+            });
+
+            // --- Step Navigation ---
             $('#btnNextToStep3').click(function () {
                 const role = $('#RoleSelect').val();
                 if (!role) {
@@ -469,13 +650,18 @@
                 }
                 $('#RoleHidden').val(role);
                 
-                // UI updates based on role
-                if(role === 'Supplier') {
+                // Update UI labels based on role
+                if (role === 'Supplier') {
                     $('#lblBusinessName').text('Supplier/Company Name');
                     $('#lblLicense').text('Commercial Registration Certificate');
+                    $('#SupplierCategoriesSection').show();
+                    // Make Business Name required for Supplier
+                    $('#BusinessNameInput').prop('required', true);
                 } else {
                     $('#lblBusinessName').text('Retail Store Name');
                     $('#lblLicense').text('Retail Trade License');
+                    $('#SupplierCategoriesSection').hide();
+                    $('#BusinessNameInput').prop('required', true);
                 }
 
                 currentStep = 3;
@@ -485,17 +671,47 @@
             $('.btnBackToStep1').click(() => { currentStep = 1; updateUI(); });
             $('.btnBackToStep2').click(() => { currentStep = 2; updateUI(); });
 
-            function startTimer(duration) {
-                let timer = duration, minutes, seconds;
-                const interval = setInterval(function () {
-                    minutes = parseInt(timer / 60, 10);
-                    seconds = parseInt(timer % 60, 10);
-                    minutes = minutes < 10 ? "0" + minutes : minutes;
-                    seconds = seconds < 10 ? "0" + seconds : seconds;
-                    $('#expiryTimerDisplay').text("Expires in: " + minutes + ":" + seconds);
-                    if (--timer < 0) clearInterval(interval);
-                }, 1000);
-            }
+            // --- Category Selection Logic ---
+            $(document).on('change', '.parent-category', function() {
+                const isChecked = $(this).is(':checked');
+                const parentId = $(this).attr('id');
+                $(`.sub-category[data-parent="${parentId}"]`).prop('checked', isChecked);
+                
+                if (isChecked) {
+                    $(this).closest('.category-group').addClass('bg-primary bg-opacity-10');
+                } else {
+                    $(this).closest('.category-group').removeClass('bg-primary bg-opacity-10');
+                }
+            });
+
+            $(document).on('change', '.sub-category', function() {
+                const parentId = $(this).data('parent');
+                const $parent = $(`#${parentId}`);
+                const $allSubs = $(`.sub-category[data-parent="${parentId}"]`);
+                const $checkedSubs = $(`.sub-category[data-parent="${parentId}"]:checked`);
+
+                if ($checkedSubs.length === $allSubs.length && $allSubs.length > 0) {
+                    $parent.prop('checked', true);
+                } else {
+                    $parent.prop('checked', false);
+                }
+            });
+
+            // --- Form Validation before Submit ---
+            $('#registerForm').on('submit', function(e) {
+                const role = $('#RoleHidden').val();
+
+                if (role === 'Supplier') {
+                    if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
+                        $('#categoryError').text('Please select at least one business category.');
+                        e.preventDefault();
+                        return false;
+                    } else {
+                        $('#categoryError').text('');
+                    }
+                }
+                return true;
+            });
         });
     </script>
 }

@@ -1,0 +1,146 @@
+@{
+    ViewData["Title"] = "Our Services - EthioChain SCM";
+    Layout = "_Layout";
+}
+
+<div class="services-page">
+    <div class="services-hero">
+        <h1>Digital Tools and SCM Managed Services</h1>
+        <p>Everything you need to streamline and scale your business in the modern Ethiopian economy.</p>
+    </div>
+
+    <div class="services-container">
+        <div class="services-grid">
+            <div class="service-card" data-aos="fade-up">
+                <div class="service-icon"><i class="fas fa-search-dollar"></i></div>
+                <h3>Strategic Sourcing</h3>
+                <p>Connect with a wider network of verified suppliers. Post procurement requests and receive competitive bids instantly.</p>
+            </div>
+
+            <div class="service-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="service-icon"><i class="fas fa-boxes"></i></div>
+                <h3>Inventory Management</h3>
+                <p>Real-time visibility into stock levels, pending orders, and automated alerts for low inventory.</p>
+            </div>
+
+            <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="service-icon"><i class="fas fa-truck-loading"></i></div>
+                <h3>Managed Logistics</h3>
+                <p>End-to-end transport management with live GPS tracking and delivery verification for every shipment.</p>
+            </div>
+
+            <div class="service-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="service-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>Business Analytics</h3>
+                <p>Actionable insights through interactive dashboards. Track your growth, spending, and operations in real-time.</p>
+            </div>
+        </div>
+
+        <div class="cta-section text-center">
+            <h2>Ready to transform your operations?</h2>
+            <p>Join the digital supply chain revolution today.</p>
+            <a href="/Account/Register" class="btn btn-primary btn-lg rounded-pill px-5">Get Started for Free</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .services-page {
+        padding-top: 80px;
+        min-height: 100vh;
+        background: #f8fafc;
+    }
+
+    .services-hero {
+        background: linear-gradient(135deg, #0B3B2F 0%, #155744 100%);
+        color: white;
+        padding: 100px 20px;
+        text-align: center;
+    }
+
+    .services-hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+
+    .services-hero p {
+        font-size: 1.25rem;
+        opacity: 0.9;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .services-container {
+        max-width: 1200px;
+        margin: -50px auto 100px;
+        padding: 0 20px;
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+    }
+
+    .service-card {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+        text-align: center;
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px);
+    }
+
+    .service-icon {
+        width: 70px;
+        height: 70px;
+        background: rgba(11, 59, 47, 0.05);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        font-size: 1.75rem;
+        color: #0B3B2F;
+    }
+
+    .service-card h3 {
+        color: #0B3B2F;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .service-card p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .cta-section {
+        margin-top: 100px;
+        padding: 60px;
+        background: white;
+        border-radius: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03);
+    }
+
+    .cta-section h2 {
+        color: #0B3B2F;
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+
+    .cta-section p {
+        color: #64748b;
+        margin-bottom: 30px;
+    }
+
+    @@media (max-width: 768px) {
+        .services-hero h1 { font-size: 2.25rem; }
+        .services-hero p { font-size: 1.1rem; }
+    }
+</style>
