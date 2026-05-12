@@ -8,55 +8,31 @@
     <link rel="stylesheet" href="~/css/admin-users.css" asp-append-version="true" />
 }
 
-<div class="dashboard-wrapper pb-5">
-    <!-- Header & Page Title (Restructured) -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="page-title-section">
-            <h2 class="fw-bold mb-0" style="color: var(--primary-color);">◆ All Users</h2>
-            <div class="section-underline mt-1" style="width: 120px; height: 3px; background: var(--primary-color);"></div>
-        </div>
-    </div>
-
-    <!-- KPI Cards Section (Premium) -->
-    <div class="kpi-container">
-        <div class="kpi-card shadow-sm border-0">
-            <div class="kpi-icon bg-success bg-opacity-10 text-success">
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="kpi-data">
-                <h3 id="totalUsersKPI">@Model.Count()</h3>
-                <p>Total Users</p>
-                <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 8%</div>
+<div class="all-users-container pb-5">
+    <!-- KPI Cards - First thing after top bar -->
+    <div class="kpi-grid">
+        <div class="kpi-card" id="kpiTotalUsers">
+            <div class="kpi-icon">👥</div>
+            <div class="kpi-content">
+                <div class="kpi-value">@Model.Count()</div>
+                <div class="kpi-label">Total Users</div>
+                <div class="kpi-trend up">↑ 8% vs last month</div>
             </div>
         </div>
-        <div class="kpi-card shadow-sm border-0">
-            <div class="kpi-icon bg-primary bg-opacity-10 text-primary">
-                <i class="fas fa-user-check"></i>
-            </div>
-            <div class="kpi-data">
-                <h3>@Model.Count(u => u.AccountStatus == "Active")</h3>
-                <p>Active</p>
-                <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+        <div class="kpi-card" id="kpiActiveUsers">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-content">
+                <div class="kpi-value">@Model.Count(u => u.AccountStatus == "Active")</div>
+                <div class="kpi-label">Active Users</div>
+                <div class="kpi-trend up">↑ 5% vs last month</div>
             </div>
         </div>
-        <div class="kpi-card shadow-sm border-0">
-            <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
-                <i class="fas fa-user-clock"></i>
-            </div>
-            <div class="kpi-data">
-                <h3>@Model.Count(u => u.AccountStatus == "Pending")</h3>
-                <p>Pending</p>
-                <div class="kpi-trend down"><i class="fas fa-arrow-down"></i> 5%</div>
-            </div>
-        </div>
-        <div class="kpi-card shadow-sm border-0">
-            <div class="kpi-icon bg-danger bg-opacity-10 text-danger">
-                <i class="fas fa-user-slash"></i>
-            </div>
-            <div class="kpi-data">
-                <h3>@Model.Count(u => u.AccountStatus == "Suspended")</h3>
-                <p>Suspended</p>
-                <div class="kpi-trend neutral"><i class="fas fa-minus"></i> 0%</div>
+        <div class="kpi-card" id="kpiPendingVerification">
+            <div class="kpi-icon">⏳</div>
+            <div class="kpi-content">
+                <div class="kpi-value">@Model.Count(u => u.AccountStatus == "Pending")</div>
+                <div class="kpi-label">Pending Verification</div>
+                <div class="kpi-trend down">↓ 2% vs last month</div>
             </div>
         </div>
     </div>
@@ -84,25 +60,10 @@
                         <option value="Pending">Pending</option>
                         <option value="Suspended">Suspended</option>
                     </select>
-                    <select class="form-select border-0 bg-light fw-medium" id="lastActiveFilter" style="width: 140px; border-radius: 10px;">
-                        <option value="All">Last Active</option>
-                        <option value="Today">Today</option>
-                        <option value="ThisWeek">This Week</option>
-                    </select>
-                    <button class="btn btn-primary px-4 fw-bold rounded-3">Apply Filters</button>
+                    <button id="refreshBtn" class="btn btn-light rounded-pill px-3"><i class="fas fa-sync-alt"></i></button>
                 </div>
             </div>
-            
-            <div class="d-flex align-items-center gap-2">
-                <span class="small fw-bold text-muted text-uppercase ls-1">Quick Filters:</span>
-                <div class="d-flex gap-2">
-                    <button class="filter-pill active" data-role="All">All</button>
-                    <button class="filter-pill" data-role="Admin">Admin</button>
-                    <button class="filter-pill" data-role="Supplier">Supplier</button>
-                    <button class="filter-pill" data-role="Retailer">Retailer</button>
-                    <button class="filter-pill" data-role="DeliveryAgent">Delivery</button>
-                </div>
-            </div>
+           
         </div>
     </div>
 

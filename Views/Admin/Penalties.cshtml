@@ -4,313 +4,243 @@
     ViewData["Title"] = "Penalty Management";
     Layout = "_DashboardLayout";
     var pendingAppeals = Model.Where(p => p.HasAppealed && string.IsNullOrEmpty(p.AppealResponse)).ToList();
+    var activeCount = ViewBag.ActivePenaltiesCount ?? Model.Count(p => p.IsActive && (!p.ExpiresAt.HasValue || p.ExpiresAt > DateTime.Now));
+    var suspendedCount = Model.Count(p => p.PenaltyType == "Account Suspension" && p.IsActive && (!p.ExpiresAt.HasValue || p.ExpiresAt > DateTime.Now));
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/penalties.css" asp-append-version="true" />
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-gavel text-danger me-2"></i>Penalty Management
-        </h1>
-        <a asp-action="Dashboard" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
-    </div>
 
-    <!-- Summary Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card bg-danger text-white shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white opacity-75 fw-bold mb-2">Total Penalties</h6>
-                            <h3 class="mb-0">@Model.Count</h3>
-                        </div>
-                        <i class="fas fa-gavel fa-3x opacity-50"></i>
-                    </div>
-                </div>
+    <!-- KPI Grid -->
+    <div class="penalties-kpi-grid">
+        <div class="pen-kpi-card active" id="kpiTotal" onclick="penFilterByType('all', this)">
+            <i class="fas fa-gavel pen-kpi-icon"></i>
+            <div>
+                <div class="pen-kpi-value">@Model.Count</div>
+                <div class="pen-kpi-label">Total Penalties</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white opacity-75 fw-bold mb-2">Active Penalties</h6>
-                            <h3 class="mb-0">@ViewBag.ActivePenaltiesCount</h3>
-                        </div>
-                        <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
-                    </div>
-                </div>
+        <div class="pen-kpi-card" id="kpiActive" onclick="penFilterByType('active', this)">
+            <i class="fas fa-exclamation-triangle pen-kpi-icon" style="color:#E67E22;"></i>
+            <div>
+                <div class="pen-kpi-value">@activeCount</div>
+                <div class="pen-kpi-label">Active Penalties</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white opacity-75 fw-bold mb-2">Suspended Users</h6>
-                            <h3 class="mb-0">@Model.Count(p => p.PenaltyType == "Account Suspension" && p.IsActive && (!p.ExpiresAt.HasValue || p.ExpiresAt > DateTime.Now))</h3>
-                        </div>
-                        <i class="fas fa-ban fa-3x opacity-50"></i>
-                    </div>
-                </div>
+        <div class="pen-kpi-card" id="kpiSuspended" onclick="penFilterByType('suspended', this)">
+            <i class="fas fa-ban pen-kpi-icon" style="color:#E05A5A;"></i>
+            <div>
+                <div class="pen-kpi-value">@suspendedCount</div>
+                <div class="pen-kpi-label">Suspended Users</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white opacity-75 fw-bold mb-2">Pending Appeals</h6>
-                            <h3 class="mb-0">@pendingAppeals.Count</h3>
-                        </div>
-                        <i class="fas fa-file-signature fa-3x opacity-50"></i>
-                    </div>
-                </div>
+        <div class="pen-kpi-card" id="kpiAppeals" onclick="penFilterByType('appeal', this)">
+            <i class="fas fa-file-signature pen-kpi-icon" style="color:#5B8FF9;"></i>
+            <div>
+                <div class="pen-kpi-value">@pendingAppeals.Count</div>
+                <div class="pen-kpi-label">Pending Appeals</div>
             </div>
         </div>
     </div>
 
-    <!-- Filter Section -->
-    <div class="card shadow-sm mb-4 border-0 rounded-4">
-        <div class="card-body p-3">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" id="penaltySearch" class="form-control bg-light border-0" placeholder="Search user or reason...">
-                    </div>
+    <!-- Filter Bar -->
+    <div class="penalty-filter-bar">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-4">
+                <div class="pen-search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="penaltySearch" placeholder="Search user or reason...">
                 </div>
-                <div class="col-md-2">
-                    <select id="penaltyRoleFilter" class="form-select bg-light border-0">
-                        <option value="">All Roles</option>
-                        <option value="Supplier">Supplier</option>
-                        <option value="Retailer">Retailer</option>
-                        <option value="Buyer">Buyer</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select id="penaltyTypeFilter" class="form-select bg-light border-0">
-                        <option value="">All Penalty Types</option>
-                        <option value="Warning">⚠️ Warning</option>
-                        <option value="Message Restriction">📨 Message Restriction</option>
-                        <option value="Account Suspension">🚫 Account Suspension</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="penaltyStatusFilter" class="form-select bg-light border-0">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="expired">Expired</option>
-                    </select>
-                </div>
-                <div class="col-md-2 text-end">
-                    <button class="btn btn-light w-100 rounded-3" onclick="resetPenaltyFilters()">
-                        <i class="fas fa-undo me-1"></i> Reset
-                    </button>
-                </div>
+            </div>
+            <div class="col-lg-2">
+                <select id="penaltyTypeFilter" class="form-select pen-filter-select" onchange="applyPenaltyFilters()">
+                    <option value="">All Types</option>
+                    <option value="Warning">⚠️ Warning</option>
+                    <option value="Message Restriction">📨 Restriction</option>
+                    <option value="Account Suspension">🚫 Suspension</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select id="penaltyStatusFilter" class="form-select pen-filter-select" onchange="applyPenaltyFilters()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="expired">Expired</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select id="penaltyRoleFilter" class="form-select pen-filter-select" onchange="applyPenaltyFilters()">
+                    <option value="">All Roles</option>
+                    <option value="Supplier">Supplier</option>
+                    <option value="Retailer">Retailer</option>
+                </select>
+            </div>
+            <div class="col-lg-2 text-end">
+                <button class="pen-refresh-btn" onclick="resetPenaltyFilters()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- All Penalties Table -->
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-        <div class="card-header bg-white py-3 px-4">
-            <h5 class="mb-0 fw-bold">
-                <i class="fas fa-list me-2 text-primary"></i>All Penalties
-                <span id="filteredCount" class="badge bg-secondary ms-2">@Model.Count</span>
-            </h5>
-        </div>
-        <div class="card-body p-0">
-            @if (!Model.Any())
-            {
-                <div class="text-center py-5">
-                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                    <h5 class="text-muted">No penalties found</h5>
-                    <p class="text-muted">All users are following platform guidelines</p>
-                </div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="penaltiesTable">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4">ID</th>
-                                <th>User</th>
-                                <th>Role</th>
-                                <th>Penalty Type</th>
-                                <th>Reason</th>
-                                <th>Date</th>
-                                <th>Expires</th>
-                                <th>Status</th>
-                                <th>Appeal</th>
-                                <th class="pe-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var penalty in Model)
-                            {
-                                bool isExpired = penalty.ExpiresAt.HasValue && penalty.ExpiresAt.Value < DateTime.Now;
-                                bool isActive = penalty.IsActive && !isExpired;
-                                
-                                <tr data-user-name="@(penalty.User?.FullName?.ToLower() ?? "")"
-                                    data-user-role="@(penalty.User?.Role ?? "")"
-                                    data-penalty-type="@penalty.PenaltyType"
-                                    data-status="@(isActive ? "active" : "expired")"
-                                    data-reason="@(penalty.Reason?.ToLower() ?? "")">
-                                    <td class="ps-4">#@penalty.Id</td>
-                                    <td>
-                                        <strong>@(penalty.User?.FullName ?? "Unknown")</strong>
-                                        <br>
-                                        <small class="text-muted">ID: @penalty.UserId</small>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-@(penalty.User?.Role == "Supplier" ? "primary" : penalty.User?.Role == "Retailer" ? "info" : "secondary")">
-                                            @(penalty.User?.Role ?? "Unknown")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @if (penalty.PenaltyType == "Warning")
-                                        {
-                                            <span class="badge bg-warning text-dark">⚠️ Warning</span>
-                                        }
-                                        else if (penalty.PenaltyType == "Message Restriction")
-                                        {
-                                            <span class="badge bg-info">📨 Restricted</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-danger">🚫 Suspended</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span title="@penalty.Reason">
-                                            @(penalty.Reason != null && penalty.Reason.Length > 50 ? penalty.Reason.Substring(0, 50) + "..." : penalty.Reason)
-                                        </span>
-                                    </td>
-                                    <td>@penalty.CreatedAt.ToString("MMM dd, yyyy")</td>
-                                    <td>
-                                        @if (penalty.ExpiresAt.HasValue)
-                                        {
-                                            @penalty.ExpiresAt.Value.ToString("MMM dd, yyyy")
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">Never</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (isActive)
-                                        {
-                                            <span class="badge bg-danger">Active</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">Expired</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (penalty.HasAppealed)
-                                        {
-                                            if (!string.IsNullOrEmpty(penalty.AppealResponse))
-                                            {
-                                                <span class="badge bg-info">Reviewed</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-warning">Pending Review</span>
-                                            }
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">No appeal</span>
-                                        }
-                                    </td>
-                                    <td class="pe-4">
-                                        <div class="btn-group btn-group-sm">
-                                            @if (penalty.HasAppealed && string.IsNullOrEmpty(penalty.AppealResponse))
-                                            {
-                                                <button class="btn btn-primary me-1"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#appealModal"
-                                                        data-penalty-id="@penalty.Id"
-                                                        data-appeal-reason="@penalty.AppealReason"
-                                                        title="Review Appeal">
-                                                    <i class="fas fa-gavel"></i> Review
-                                                </button>
-                                            }
-                                            <a asp-action="UserPenalties" asp-route-userId="@penalty.UserId"
-                                                   class="btn btn-outline-info" title="View all penalties for this user">
-                                                <i class="fas fa-history"></i>
-                                            </a>
-                                            @if (isActive && !penalty.HasAppealed)
-                                            {
-                                                <button class="btn btn-outline-success"
-                                                        onclick="clearPenalty(@penalty.Id)" title="Clear penalty">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
+    <!-- Table Section Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+        <h6 class="mb-0 fw-bold" style="color: var(--text-color); font-size: 16px;">
+            Penalty List
+            <span id="filteredCount" class="badge-soft badge-soft-info ms-2">@Model.Count results</span>
+        </h6>
     </div>
+
+    <!-- Table -->
+    <div class="table-container rounded-4 overflow-hidden border">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5" style="color: var(--text-muted);">
+                <i class="fas fa-check-circle fa-3x opacity-25 mb-3 d-block" style="color: #2E9C7A;"></i>
+                <p>No penalties recorded. All users are compliant.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table admin-table table-hover mb-0" id="penaltiesTable">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Type</th>
+                        <th>Reason</th>
+                        <th>Date</th>
+                        <th>Expires</th>
+                        <th>Status</th>
+                        <th>Appeal</th>
+                        <th class="pe-4 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var penalty in Model)
+                    {
+                        bool isExpired = penalty.ExpiresAt.HasValue && penalty.ExpiresAt.Value < DateTime.Now;
+                        bool isActive = penalty.IsActive && !isExpired;
+                        <tr data-user-name="@(penalty.User?.FullName?.ToLower() ?? "")"
+                            data-user-role="@(penalty.User?.Role ?? "")"
+                            data-penalty-type="@penalty.PenaltyType"
+                            data-status="@(isActive ? "active" : "expired")"
+                            data-reason="@(penalty.Reason?.ToLower() ?? "")"
+                            data-has-appeal="@(penalty.HasAppealed ? "true" : "false")">
+                            <td class="ps-4 fw-bold" style="color: var(--text-muted);">#@penalty.Id</td>
+                            <td>
+                                <div class="fw-bold" style="color: var(--text-color);">@(penalty.User?.FullName ?? "Unknown")</div>
+                                <div style="color: var(--text-muted); font-size: 12px;">ID: @penalty.UserId</div>
+                            </td>
+                            <td>
+                                <span class="badge-soft @(penalty.User?.Role == "Supplier" ? "badge-soft-success" : "badge-soft-info")">
+                                    @(penalty.User?.Role ?? "Unknown")
+                                </span>
+                            </td>
+                            <td>
+                                @if (penalty.PenaltyType == "Warning") { <span class="ptype-warning">⚠️ Warning</span> }
+                                else if (penalty.PenaltyType == "Message Restriction") { <span class="ptype-restriction">📨 Restriction</span> }
+                                else { <span class="ptype-suspension">🚫 Suspension</span> }
+                            </td>
+                            <td style="color: var(--text-muted); font-size: 13px; max-width: 200px;">
+                                <span title="@penalty.Reason">
+                                    @(penalty.Reason != null && penalty.Reason.Length > 55 ? penalty.Reason.Substring(0, 55) + "..." : penalty.Reason)
+                                </span>
+                            </td>
+                            <td style="color: var(--text-muted); font-size: 13px;">@penalty.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td style="color: var(--text-muted); font-size: 13px;">
+                                @if (penalty.ExpiresAt.HasValue) { @penalty.ExpiresAt.Value.ToString("MMM dd, yyyy") }
+                                else { <span>Never</span> }
+                            </td>
+                            <td>
+                                @if (isActive) { <span class="pstatus-active"><i class="fas fa-circle" style="font-size:8px;"></i> Active</span> }
+                                else { <span class="pstatus-expired"><i class="fas fa-check"></i> Expired</span> }
+                            </td>
+                            <td>
+                                @if (penalty.HasAppealed)
+                                {
+                                    if (!string.IsNullOrEmpty(penalty.AppealResponse)) { <span class="pstatus-appealed">Reviewed</span> }
+                                    else { <span class="badge-soft badge-soft-warning">Pending</span> }
+                                }
+                                else { <span style="color: var(--text-muted); font-size: 12px;">—</span> }
+                            </td>
+                            <td class="pe-4 text-end">
+                                <div class="d-flex gap-1 justify-content-end">
+                                    @if (penalty.HasAppealed && string.IsNullOrEmpty(penalty.AppealResponse))
+                                    {
+                                        <button class="pen-action-btn" data-bs-toggle="modal" data-bs-target="#appealModal"
+                                                data-penalty-id="@penalty.Id" data-appeal-reason="@penalty.AppealReason">
+                                            <i class="fas fa-gavel"></i> Review
+                                        </button>
+                                    }
+                                    <a asp-action="UserPenalties" asp-route-userId="@penalty.UserId" class="pen-action-btn" title="View user's history">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                    @if (isActive && !penalty.HasAppealed)
+                                    {
+                                        <button class="pen-action-btn danger" onclick="clearPenalty(@penalty.Id)" title="Clear penalty">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
 </div>
 
-<!-- Appeal Review Modal -->
+<!-- Appeal Modal -->
 <div class="modal fade" id="appealModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-gavel me-2"></i>Review Appeal
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold" style="color: var(--text-color);">
+                    <i class="fas fa-gavel me-2" style="color:#2E9C7A;"></i>Review Appeal
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="ResolveAppeal" method="post">
-                <div class="modal-body">
+                <div class="modal-body px-4">
                     <input type="hidden" name="penaltyId" id="appealPenaltyId" />
                     <div class="mb-3">
-                        <label class="form-label fw-bold">User's Appeal Reason</label>
-                        <div class="alert alert-info">
-                            <i class="fas fa-quote-left me-2"></i>
-                            <span id="appealReasonText"></span>
+                        <label class="form-label fw-bold small text-uppercase" style="color: var(--text-muted);">User's Appeal Reason</label>
+                        <div class="p-3 rounded-3" style="background: rgba(46,156,122,0.06); border: 1px solid rgba(46,156,122,0.15);">
+                            <i class="fas fa-quote-left me-2" style="color:#2E9C7A;"></i>
+                            <span id="appealReasonText" style="color: var(--text-color); font-style: italic;"></span>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Your Response</label>
-                        <textarea name="response" class="form-control" rows="4" required
-                                  placeholder="Explain your decision to the user..."></textarea>
+                        <label class="form-label fw-bold small text-uppercase" style="color: var(--text-muted);">Your Response</label>
+                        <textarea name="response" class="form-control" rows="4" required placeholder="Explain your decision to the user..."></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Decision</label>
+                        <label class="form-label fw-bold small text-uppercase" style="color: var(--text-muted);">Decision</label>
                         <div class="d-flex gap-4">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="approve" value="true" id="approveYes">
-                                <label class="form-check-label text-success" for="approveYes">
-                                    <i class="fas fa-check-circle me-1"></i> Approve - Remove Penalty
+                                <label class="form-check-label" for="approveYes" style="color: #2E9C7A; font-weight: 600;">
+                                    <i class="fas fa-check-circle me-1"></i> Approve — Remove Penalty
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="approve" value="false" id="approveNo" checked>
-                                <label class="form-check-label text-danger" for="approveNo">
-                                    <i class="fas fa-times-circle me-1"></i> Deny - Keep Penalty
+                                <label class="form-check-label" for="approveNo" style="color: #E05A5A; font-weight: 600;">
+                                    <i class="fas fa-times-circle me-1"></i> Deny — Keep Penalty
                                 </label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Decision</button>
+                <div class="modal-footer border-0 pb-4 px-4 gap-2">
+                    <button type="button" class="pen-action-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="pen-action-btn" style="background:#2E9C7A; color:white; border-color:#2E9C7A;">Submit Decision</button>
                 </div>
             </form>
         </div>
@@ -318,115 +248,82 @@
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
     <script>
-        // Clear penalty function
-        function clearPenalty(penaltyId) {
-        if (confirm('Are you sure you want to clear this penalty? It will be marked as expired.')) {
-        $.post('@Url.Action("ClearPenalty", "Admin")', { penaltyId: penaltyId }, function(result) {
-        if (result.success) {
-        location.reload();
-        } else {
-        alert('Error: ' + result.message);
-        }
-        });
-        }
+        let currentTypeFilter = 'all';
+
+        function penFilterByType(type, el) {
+            currentTypeFilter = type;
+            document.querySelectorAll('.pen-kpi-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            applyPenaltyFilters();
         }
 
-        // Appeal modal handling
-        var appealModal = document.getElementById('appealModal');
-        if (appealModal) {
-        appealModal.addEventListener('show.bs.modal', function(event) {
-        var button = event.relatedTarget;
-        var penaltyId = button.getAttribute('data-penalty-id');
-        var appealReason = button.getAttribute('data-appeal-reason');
-                
-        document.getElementById('appealPenaltyId').value = penaltyId;
-        document.getElementById('appealReasonText').innerText = appealReason || 'No reason provided';
-        });
+        function applyPenaltyFilters() {
+            const search = document.getElementById('penaltySearch').value.toLowerCase();
+            const type = document.getElementById('penaltyTypeFilter').value.toLowerCase();
+            const status = document.getElementById('penaltyStatusFilter').value.toLowerCase();
+            const role = document.getElementById('penaltyRoleFilter').value.toLowerCase();
+            let count = 0;
+
+            document.querySelectorAll('#penaltiesTable tbody tr').forEach(row => {
+                const name = (row.dataset.userName || '');
+                const userRole = (row.dataset.userRole || '').toLowerCase();
+                const penType = (row.dataset.penaltyType || '').toLowerCase();
+                const penStatus = (row.dataset.status || '').toLowerCase();
+                const reason = (row.dataset.reason || '');
+                const hasAppeal = row.dataset.hasAppeal === 'true';
+
+                let show = true;
+                if (search && !name.includes(search) && !reason.includes(search)) show = false;
+                if (type && !penType.includes(type)) show = false;
+                if (status && penStatus !== status) show = false;
+                if (role && userRole !== role) show = false;
+
+                // KPI type filter
+                if (currentTypeFilter === 'active' && penStatus !== 'active') show = false;
+                if (currentTypeFilter === 'suspended' && !penType.includes('suspension')) show = false;
+                if (currentTypeFilter === 'appeal' && !hasAppeal) show = false;
+
+                row.style.display = show ? '' : 'none';
+                if (show) count++;
+            });
+            document.getElementById('filteredCount').textContent = `${count} results`;
         }
 
-        // Filtering functionality
-        $(document).ready(function() {
-        function applyFilters() {
-        var searchText = $("#penaltySearch").val().toLowerCase().trim();
-        var role = $("#penaltyRoleFilter").val().toLowerCase();
-        var type = $("#penaltyTypeFilter").val().toLowerCase();
-        var status = $("#penaltyStatusFilter").val().toLowerCase();
-                
-        var visibleCount = 0;
-                
-        $("#penaltiesTable tbody tr").each(function() {
-        var $row = $(this);
-                    
-        // Get row data
-        var userName = $row.attr("data-user-name") || "";
-        var userRole = ($row.attr("data-user-role") || "").toLowerCase();
-        var penaltyType = ($row.attr("data-penalty-type") || "").toLowerCase();
-        var rowStatus = ($row.attr("data-status") || "").toLowerCase();
-        var reason = $row.attr("data-reason") || "";
-                    
-        // Check search (name or reason)
-        var matchesSearch = searchText === "" ||
-        userName.indexOf(searchText) > -1 ||
-        reason.indexOf(searchText) > -1;
-                    
-        // Check role filter
-        var matchesRole = role === "" || userRole === role;
-                    
-        // Check type filter
-        var matchesType = type === "" || penaltyType.toLowerCase().indexOf(type) > -1;
-                    
-        // Check status filter
-        var matchesStatus = status === "" || rowStatus === status;
-                    
-        var isVisible = matchesSearch && matchesRole && matchesType && matchesStatus;
-                    
-        if (isVisible) {
-        $row.show();
-        visibleCount++;
-        } else {
-        $row.hide();
-        }
-        });
-                
-        // Update filtered count
-        $("#filteredCount").text(visibleCount);
-                
-        // Show/hide "no results" message
-        if (visibleCount === 0) {
-        if ($("#noResultsRow").length === 0) {
-        $("#penaltiesTable tbody").append(
-        '<tr id="noResultsRow"><td colspan="10" class="text-center py-5">' +
-        '<i class="fas fa-search fa-3x text-muted mb-3"></i>' +
-        '<h5 class="text-muted">No matching penalties found</h5>' +
-        '<p class="text-muted">Try adjusting your filters</p></td></tr>'
-        );
-        }
-        } else {
-        $("#noResultsRow").remove();
-        }
-        }
-            
-        // Bind filter events
-        $("#penaltySearch, #penaltyRoleFilter, #penaltyTypeFilter, #penaltyStatusFilter").on("keyup change", function() {
-        applyFilters();
-        });
-            
-        // Initial filter count
-        applyFilters();
-        });
-        
-        // Reset all filters
         function resetPenaltyFilters() {
-        $("#penaltySearch").val("");
-        $("#penaltyRoleFilter").val("");
-        $("#penaltyTypeFilter").val("");
-        $("#penaltyStatusFilter").val("");
-            
-        // Trigger the filter to show all rows
-        $("#penaltySearch").trigger("keyup");
+            document.getElementById('penaltySearch').value = '';
+            document.getElementById('penaltyTypeFilter').value = '';
+            document.getElementById('penaltyStatusFilter').value = '';
+            document.getElementById('penaltyRoleFilter').value = '';
+            currentTypeFilter = 'all';
+            document.querySelectorAll('.pen-kpi-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('kpiTotal').classList.add('active');
+            applyPenaltyFilters();
         }
+
+        function clearPenalty(penaltyId) {
+            if (confirm('Clear this penalty? It will be marked as expired.')) {
+                fetch('@Url.Action("ClearPenalty", "Admin")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `penaltyId=${penaltyId}`
+                }).then(r => r.json()).then(d => {
+                    if (d.success) location.reload(); else alert('Error: ' + d.message);
+                });
+            }
+        }
+
+        // Appeal modal
+        document.getElementById('appealModal')?.addEventListener('show.bs.modal', function(e) {
+            const btn = e.relatedTarget;
+            document.getElementById('appealPenaltyId').value = btn.dataset.penaltyId;
+            document.getElementById('appealReasonText').innerText = btn.dataset.appealReason || 'No reason provided.';
+        });
+
+        // Live search
+        document.getElementById('penaltySearch')?.addEventListener('input', applyPenaltyFilters);
+
+        // Init
+        applyPenaltyFilters();
     </script>
 }

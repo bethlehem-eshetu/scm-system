@@ -22,6 +22,7 @@ namespace SCM_System.Controllers
         IWebHostEnvironment webHostEnvironment,
         SCM_System.Services.IFaydaService faydaService,
         SCM_System.Services.IEmailService emailService,
+        SCM_System.Services.INotificationService notificationService,
         ILogger<AccountController> logger,
         IConfiguration configuration) : Controller
     {
@@ -29,6 +30,7 @@ namespace SCM_System.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment = webHostEnvironment;
         private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
         private readonly SCM_System.Services.IEmailService _emailService = emailService;
+        private readonly SCM_System.Services.INotificationService _notificationService = notificationService;
         private readonly ILogger<AccountController> _logger = logger;
         private readonly IConfiguration _configuration = configuration;
 
@@ -359,28 +361,14 @@ namespace SCM_System.Controllers
                         }
 
                         // Create notification for admin about new supplier
-                        Console.WriteLine("Creating admin notification...");
-                        var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
-                        if (adminUser != null)
+                        await _notificationService.CreateAdminNotificationAsync(new AdminNotification
                         {
-                            Console.WriteLine($"Admin user found: {adminUser.Email}");
-                            var notification = new Notification
-                            {
-                                UserId = adminUser.Id,
-                                Title = "New Supplier Registration",
-                                Message = $"New supplier '{model.CompanyName}' has registered and is waiting for approval.",
-                                Type = "Info",
-                                CreatedAt = DateTime.Now,
-                                IsRead = false,
-                                ActionUrl = "/Admin/PendingSuppliers"
-                            };
-                            _context.Notifications.Add(notification);
-                            Console.WriteLine("Admin notification added");
-                        }
-                        else
-                        {
-                            Console.WriteLine("WARNING: No admin user found!");
-                        }
+                            Title = "New Supplier Registration",
+                            Message = $"New supplier '{model.CompanyName}' has registered and is waiting for approval.",
+                            NotificationType = "Registration",
+                            RelatedUserId = user.Id,
+                            ActionUrl = "/Admin/PendingUsers"
+                        });
                     }
 
                     // If retailer, create retailer record
@@ -411,28 +399,14 @@ namespace SCM_System.Controllers
                         // Add Purchase Categories for Retailer REMOVED as per new design
 
                         // Create notification for admin about new retailer
-                        Console.WriteLine("Creating admin notification...");
-                        var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
-                        if (adminUser != null)
+                        await _notificationService.CreateAdminNotificationAsync(new AdminNotification
                         {
-                            Console.WriteLine($"Admin user found: {adminUser.Email}");
-                            var notification = new Notification
-                            {
-                                UserId = adminUser.Id,
-                                Title = "New Retailer Registration",
-                                Message = $"New retailer '{model.BusinessName}' has registered and is waiting for approval.",
-                                Type = "Info",
-                                CreatedAt = DateTime.Now,
-                                IsRead = false,
-                                ActionUrl = "/Admin/PendingRetailers"
-                            };
-                            _context.Notifications.Add(notification);
-                            Console.WriteLine("Admin notification added");
-                        }
-                        else
-                        {
-                            Console.WriteLine("WARNING: No admin user found!");
-                        }
+                            Title = "New Retailer Registration",
+                            Message = $"New retailer '{model.BusinessName}' has registered and is waiting for approval.",
+                            NotificationType = "Registration",
+                            RelatedUserId = user.Id,
+                            ActionUrl = "/Admin/PendingUsers"
+                        });
                     }
 
                     // Save all changes

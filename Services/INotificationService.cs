@@ -19,5 +19,13 @@ namespace SCM_System.Services
         Task SendRoleNotificationAsync(string role, string title, string message, string type = "Info", string? actionUrl = null, int? warehouseId = null);
         Task SendEscalatedNotificationAsync(int userId, string title, string message, string type = "Critical", string? actionUrl = null);
         Task SendReservationExpiredNotification(InventoryReservation reservation);
+        
+        // Admin Notifications
+        Task CreateAdminNotificationAsync(AdminNotification notification);
+        Task<List<AdminNotification>> GetAdminNotificationsAsync(int limit = 5);
+        Task MarkAdminNotificationAsReadAsync(int notificationId);
+        Task MarkAllAdminNotificationsAsReadAsync();
+        Task<int> GetAdminUnreadCountAsync();
+        Task MarkVerificationNotificationsAsReadAsync();
     }
-}
+}

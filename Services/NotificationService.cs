@@ -224,5 +224,60 @@ namespace SCM_System.Services
                 );
             }
         }
+
+        // Admin Notifications Implementation
+        public async Task CreateAdminNotificationAsync(AdminNotification notification)
+        {
+            notification.CreatedAt = DateTime.UtcNow;
+            notification.IsRead = false;
+            _context.AdminNotifications.Add(notification);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<AdminNotification>> GetAdminNotificationsAsync(int limit = 5)
+        {
+            return await _context.AdminNotifications
+                .OrderByDescending(n => n.CreatedAt)
+                .Take(limit)
+                .ToListAsync();
+        }
+
+        public async Task MarkAdminNotificationAsReadAsync(int notificationId)
+        {
+            var notification = await _context.AdminNotifications.FindAsync(notificationId);
+            if (notification != null && !notification.IsRead)
+            {
+                notification.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task MarkAllAdminNotificationsAsReadAsync()
+        {
+            var unread = await _context.AdminNotifications.Where(n => !n.IsRead).ToListAsync();
+            foreach (var n in unread)
+            {
+                n.IsRead = true;
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> GetAdminUnreadCountAsync()
+        {
+            return await _context.AdminNotifications.CountAsync(n => !n.IsRead);
+        }
+
+        public async Task MarkVerificationNotificationsAsReadAsync()
+        {
+            var notifications = await _context.AdminNotifications
+                .Where(n => !n.IsRead && (n.NotificationType == "Registration" || n.NotificationType == "Verification"))
+                .ToListAsync();
+
+            foreach (var n in notifications)
+            {
+                n.IsRead = true;
+            }
+            await _context.SaveChangesAsync();
+        }
     }
-}
+}

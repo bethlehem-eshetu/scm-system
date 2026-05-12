@@ -1,4 +1,4 @@
-@model SCM_System.Models.Entities.Supplier
+@model SCM_System.Models.ViewModels.SupplierDetailsViewModel
 @{
     var companyName = Model?.CompanyName ?? "Unknown Supplier";
     ViewData["Title"] = "Supplier Profile | " + companyName;
@@ -49,34 +49,28 @@
     .full-width-card {
         margin-bottom: 20px;
     }
-
-    /* Enterprise Standard Cards */
+    
     .detail-card {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: 16px;
         padding: 24px;
-        transition: transform 0.2s ease, box-shadow 0.2s;
+        box-shadow: var(--card-shadow);
         height: 100%;
     }
-    .detail-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-    .dark-mode .detail-card:hover { border-color: #3f4e47; }
 
     .card-heading {
-        font-size: 12px;
-        font-weight: 700;
+        font-weight: 800;
+        font-size: 11px;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 16px;
+        letter-spacing: 1.2px;
+        margin-bottom: 12px;
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
-    /* Profile Completion */
     .profile-completion {
         margin-top: 16px;
     }
@@ -84,19 +78,15 @@
         display: flex;
         justify-content: space-between;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text-muted);
         margin-bottom: 8px;
     }
-    .completion-percent {
-        color: #2E9C7A;
-        font-weight: 700;
-    }
-    .dark-mode .completion-percent { color: #4BC0A0; }
+    .completion-percent { color: #2E9C7A; }
 
     .progress-bar-bg {
         height: 8px;
-        background: var(--border-color);
+        background: var(--hover-state);
         border-radius: 4px;
         overflow: hidden;
     }
@@ -106,9 +96,7 @@
         border-radius: 4px;
         transition: width 0.3s ease;
     }
-    .dark-mode .progress-fill { background: #4BC0A0; }
 
-    /* Typography & Layouts */
     .info-label {
         font-size: 12px;
         color: var(--text-muted);
@@ -123,63 +111,88 @@
         margin-bottom: 16px;
     }
 
-    .doc-link {
-        display: inline-flex;
-        align-items: flex-end;
-        gap: 8px;
-        font-size: 13px;
+    .category-badge {
+        background: var(--hover-state);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
         font-weight: 600;
         color: var(--text-color);
+    }
+
+    .fayda-registry-info {
         background: var(--hover-state);
         border: 1px solid var(--border-color);
-        padding: 10px 16px;
-        border-radius: 8px;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .doc-link:hover {
-        border-color: #5B8FF9;
-        background: rgba(91, 143, 249, 0.05);
+        border-radius: 12px;
+        padding: 20px;
     }
     
+    .confidence-metric {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .tin-validated {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f0fdf4;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #bbf7d0;
+        width: fit-content;
+    }
+    .tin-number {
+        font-family: monospace;
+        font-weight: 700;
+        color: #166534;
+    }
+    .validated-badge {
+        background: #166534;
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .document-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .document-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .document-item:hover { background: var(--hover-state); }
+    .document-info { flex-grow: 1; }
+    .document-name { display: block; font-size: 13px; font-weight: 700; }
+    .document-filename { display: block; font-size: 11px; color: var(--text-muted); }
+    .preview-icon { color: var(--text-muted); }
+
+    .upload-date {
+        margin-top: 15px;
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
     .timeline-item {
         position: relative;
         padding-left: 24px;
         margin-bottom: 16px;
     }
-    .timeline-item::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 6px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #2E9C7A;
-    }
-    .timeline-item::after {
-        content: '';
-        position: absolute;
-        left: 3px;
-        top: 14px;
-        width: 2px;
-        height: calc(100% + 8px);
-        background: var(--border-color);
-    }
-    .timeline-item:last-child::after {
-        display: none;
-    }
     .timeline-time {
         font-size: 11px;
         color: var(--text-muted);
         font-weight: 600;
-        margin-top: 2px;
-    }
-    .timeline-desc {
-        font-size: 13px;
-        color: var(--text-color);
-        font-weight: 500;
     }
 
     .action-buttons {
@@ -193,44 +206,32 @@
         border-radius: 8px;
         font-weight: 600;
         font-size: 14px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
         border: none;
         cursor: pointer;
-        transition: opacity 0.2s;
     }
-    .action-btn:hover { opacity: 0.9; }
-
     .btn-approve { background: #2E9C7A; color: white; }
-    .dark-mode .btn-approve { background: #3BAE86; }
     .btn-reject { background: #E05A5A; color: white; }
-    .dark-mode .btn-reject { background: #E57373; }
 </style>
 
 <div class="supplier-details pb-5">
-    
     @if (Model == null)
     {
         <div class="error-state">
             <i class="fas fa-exclamation-triangle"></i>
             <h3>Supplier Not Found</h3>
             <p>The supplier you're looking for doesn't exist or has been removed.</p>
-            <a href="/Admin/PendingUsers" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm" style="background:#2E9C7A; border-color:#2E9C7A;">Back to Verification Hub</a>
         </div>
     }
     else
     {
-        <!-- Breadcrumb -->
         <a asp-action="PendingUsers" class="text-decoration-none mb-3 d-inline-block" style="color: var(--text-muted); font-size: 13px; font-weight: 600;">
             <i class="fas fa-arrow-left me-2"></i> Back to Verification Hub
         </a>
 
-        <!-- Header Block -->
         <div class="detail-card full-width-card">
             <div class="d-flex align-items-center gap-4 mb-3">
                 <div style="width: 72px; height: 72px; border-radius: 16px; background: var(--hover-state); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 28px;">
-                    👤
+                    🏭
                 </div>
                 <div>
                     <h3 class="fw-bold mb-1" style="color: var(--text-color); letter-spacing: -0.5px;">@Model.CompanyName</h3>
@@ -238,12 +239,11 @@
                         <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Account #@Model.Id</span>
                         <span style="color: var(--border-color);">•</span>
                         @{ 
-                            string statusLabel = Model.VerificationStatus;
-                            string badgeClass = statusLabel == "Verified" ? "badge-soft-success" : (statusLabel == "Rejected" ? "badge-soft-danger" : "badge-soft-warning");
+                            string badgeClass = Model.Status == "Verified" ? "badge-soft-success" : (Model.Status == "Rejected" ? "badge-soft-danger" : "badge-soft-warning");
                         }
-                        <span class="badge-soft @badgeClass" style="font-size: 12px; padding: 4px 10px;">@statusLabel</span>
+                        <span class="badge-soft @badgeClass" style="font-size: 12px; padding: 4px 10px;">@Model.Status</span>
                         <span style="color: var(--border-color);">•</span>
-                        <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Member since: @Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Member since: @Model.MemberSince.ToString("MMM dd, yyyy")</span>
                     </div>
                 </div>
             </div>
@@ -251,168 +251,203 @@
             <div class="profile-completion">
                 <div class="completion-label">
                     <span>Profile Completion</span>
-                    <span class="completion-percent">65%</span>
+                    <span class="completion-percent">@(Model.Status == "Verified" ? "100%" : "75%")</span>
                 </div>
                 <div class="progress-bar-bg">
-                    <div class="progress-fill" style="width: 65%;"></div>
+                    <div class="progress-fill" style="width: @(Model.Status == "Verified" ? "100" : "75")%;"></div>
                 </div>
             </div>
         </div>
 
         <div class="two-column-grid">
             <div class="detail-card">
-                <div class="card-heading">📞 CONTACT INFORMATION</div>
+                <div class="card-heading"><i class="fas fa-phone"></i> CONTACT INFORMATION</div>
                 <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
                 
                 <div class="info-label">Account Owner:</div>
-                <div class="info-value">@Model.User?.FullName</div>
+                <div class="info-value">@Model.AccountOwner</div>
 
-                <div class="info-label">Email:</div>
-                <div class="info-value">@Model.User?.Email</div>
+                <div class="info-label">Email Address:</div>
+                <div class="info-value">@Model.Email</div>
 
-                <div class="info-label">Phone:</div>
-                <div class="info-value">@(!string.IsNullOrEmpty(Model.User?.PhoneNumber) ? Model.User.PhoneNumber : "Not provided")</div>
+                <div class="info-label">Phone Number:</div>
+                <div class="info-value">@(!string.IsNullOrEmpty(Model.Phone) ? Model.Phone : "Not provided")</div>
             </div>
             
             <div class="detail-card">
-                <div class="card-heading">🏢 BUSINESS INFORMATION</div>
+                <div class="card-heading"><i class="fas fa-building"></i> BUSINESS INFORMATION</div>
                 <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
                 
-                <div class="info-label">Business Type:</div>
-                <div class="info-value">@(string.IsNullOrEmpty(Model.BusinessType) ? "Not specified" : Model.BusinessType)</div>
+                <div class="info-label">Business Type / Category:</div>
+                <div class="info-value">
+                    @if (!string.IsNullOrEmpty(Model.BusinessCategory) && Model.BusinessCategory != "Not specified")
+                    {
+                        <span class="category-badge">@Model.BusinessCategory</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted italic">Not specified</span>
+                    }
+                </div>
 
                 <div class="info-label">HQ Location:</div>
-                <div class="info-value">@(string.IsNullOrEmpty(Model.City) ? "Unknown" : Model.City), @(string.IsNullOrEmpty(Model.Country) ? "Unknown" : Model.Country)</div>
+                <div class="info-value">@(string.IsNullOrEmpty(Model.Headquarters) ? "Unknown" : Model.Headquarters)</div>
 
                 <div class="info-label">Detailed Address:</div>
-                <div class="info-value">@(!string.IsNullOrEmpty(Model.CompanyAddress) ? Model.CompanyAddress : "Not provided")</div>
+                <div class="info-value">@(!string.IsNullOrEmpty(Model.DetailedAddress) ? Model.DetailedAddress : "Not provided")</div>
             </div>
         </div>
 
         <div class="detail-card full-width-card">
-            <div class="card-heading">🔗 FAYDA IDENTITY</div>
+            <div class="card-heading"><i class="fas fa-fingerprint"></i> FAYDA IDENTITY</div>
             <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
             
-            @if (Model.User?.FaydaVerification != null) {
-                <div class="mb-3 d-flex align-items-center">
-                    <span class="info-label d-inline-block" style="width: 120px;">Status:</span>
-                    <span class="badge-soft badge-soft-success py-1"><i class="fas fa-check me-1"></i> Verified Configured</span>
-                </div>
-                <div class="mb-3">
-                    <span class="info-label d-inline-block" style="width: 120px;">Fayda ID:</span>
-                    <span class="info-value font-monospace">@Model.User.FAN</span>
-                </div>
-                <div class="mb-3 d-flex align-items-center">
-                    <span class="info-label d-inline-block" style="width: 120px;">Registry Name:</span>
-                    <span class="info-value mb-0">@Model.User.FaydaVerification.VerifiedName</span>
-                </div>
-                <div class="mb-3 d-flex align-items-center">
-                    <span class="info-label d-inline-block" style="width: 120px;">DOB:</span>
-                    <span class="info-value mb-0">@Model.User.FaydaVerification.VerifiedDob?.ToString("MMM dd, yyyy")</span>
+            @if (Model.FaydaVerified) {
+                <div class="fayda-registry-info">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <div class="info-label">Verification Status</div>
+                            <span class="badge-soft badge-soft-success px-3" style="font-size: 13px;"><i class="fas fa-check-circle me-1"></i> VERIFIED MATCH</span>
+                        </div>
+                        <div class="text-end">
+                            <div class="info-label">Registry Match</div>
+                            <div class="fw-bold text-success">@Model.FaydaRegistryName ✅</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="info-label">Fayda ID (FAN)</div>
+                            <div class="info-value mb-0 font-monospace" style="letter-spacing: 1px;">@Model.FaydaId</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-label">Date of Birth</div>
+                            <div class="info-value mb-0">@Model.FaydaDOB?.ToString("MMM dd, yyyy")</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-label">Confidence Score</div>
+                            <div class="confidence-metric">
+                                <div class="progress-bar-bg flex-grow-1" style="height: 10px;">
+                                    <div class="progress-fill" style="width: @Model.FaydaConfidenceScore%; background: #2E9C7A;"></div>
+                                </div>
+                                <span class="fw-bold" style="color: #2E9C7A; width: 40px;">@Model.FaydaConfidenceScore%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             } else {
-                <div class="mb-2">
-                    <span class="info-label d-inline-block" style="width: 100px;">Status:</span>
-                    <span class="badge-soft badge-soft-warning py-1" style="font-weight:600;"><i class="fas fa-exclamation-triangle me-1"></i> Not Configured</span>
-                </div>
-                <div>
-                    <span class="info-label d-inline-block" style="width: 100px;">Message:</span>
-                    <span style="font-size:13px; color:var(--text-muted); font-weight:500;">Biometric integration not available</span>
+                <div class="p-4 text-center rounded-3" style="background: var(--hover-state); border: 1px dashed var(--border-color);">
+                    <i class="fas fa-fingerprint fa-3x mb-3 text-muted opacity-25"></i>
+                    <h5 class="fw-bold text-muted">Fayda Verification Pending</h5>
+                    <p class="small text-muted mb-0">Biometric integration layer waiting for user synchronization.</p>
                 </div>
             }
         </div>
 
         <div class="detail-card full-width-card">
-            <div class="card-heading">📎 COMPLIANCE DOCUMENTS</div>
+            <div class="card-heading"><i class="fas fa-file-contract"></i> COMPLIANCE DOCUMENTS</div>
             <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
             
-            <div class="mb-3">
-                <span class="info-label d-inline-block" style="width: 100px;">Status:</span>
-                @{ 
-                    bool hasDocs = !string.IsNullOrEmpty(Model.LicenseNumber) || !string.IsNullOrEmpty(Model.TaxIdentificationNumber);
-                }
-                @if (hasDocs && Model.VerificationStatus == "Verified") {
-                    <span style="font-size:13px; font-weight:700; color:#2E9C7A;">✅ Validated</span>
-                } else if (hasDocs) {
-                    <span style="font-size:13px; font-weight:700; color:#E67E22;">⏳ In Progress</span>
-                } else {
-                    <span style="font-size:13px; font-weight:700; color:#E05A5A;">⚠️ Incomplete</span>
-                }
-            </div>
-
-            <div class="d-flex flex-wrap gap-3 mb-4">
-                @if(!string.IsNullOrEmpty(Model.LicenseNumber)) {
-                    <div class="doc-link" onclick="openDocumentModal('License.pdf')">
-                        <div>
-                            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">📄 License</div>
-                            <div>.pdf <span style="font-size:10px; color:#5B8FF9; margin-left:12px;">[View]</span></div>
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- Tax ID as NUMBER, not document -->
+                    <div class="tin-section" style="background: rgba(46, 156, 122, 0.05); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #2E9C7A;">
+                        <div class="info-label mb-2">
+                            <i class="fas fa-id-card me-2" style="color: #2E9C7A;"></i>
+                            <span>Tax Identification Number (TIN):</span>
                         </div>
-                    </div>
-                }
-                @if(!string.IsNullOrEmpty(Model.TaxIdentificationNumber)) {
-                    <div class="doc-link" onclick="openDocumentModal('TaxID.pdf')">
-                        <div>
-                            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">📄 TaxID</div>
-                            <div>.pdf <span style="font-size:10px; color:#5B8FF9; margin-left:12px;">[View]</span></div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="tin-number" style="font-family: 'Courier New', monospace; font-size: 24px; font-weight: 800; letter-spacing: 2px; color: var(--text-color);">@Model.TaxId</span>
+                            <span class="badge" style="background: #2E9C7A; color: white; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                                <i class="fas fa-check-circle me-1"></i> VALIDATED
+                            </span>
                         </div>
-                    </div>
-                }
-                <div class="doc-link" onclick="openDocumentModal('BusinessPermit.jpg')">
-                    <div>
-                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">📄 Business Permit</div>
-                        <div>.jpg <span style="font-size:10px; color:#5B8FF9; margin-left:12px;">[View]</span></div>
                     </div>
                 </div>
             </div>
-            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Upload Date: @Model.CreatedAt.ToString("MMM dd, yyyy")</div>
+
+            <div class="info-label mb-3">Submitted Documents</div>
+            <div class="document-list">
+                @if(!string.IsNullOrEmpty(Model.BusinessLicensePath)) {
+                    <div class="document-item" onclick="previewDocument('License.pdf', @Model.Id, 'Supplier')">
+                        <i class="fas fa-file-pdf fa-lg" style="color: #E05A5A;"></i>
+                        <div class="document-info">
+                            <span class="document-name">Business License Certificate</span>
+                            <span class="document-filename">License.pdf</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-eye preview-icon"></i>
+                            <i class="fas fa-download text-muted small"></i>
+                        </div>
+                    </div>
+                }
+                
+                @if(!string.IsNullOrEmpty(Model.PermitPath)) {
+                    <div class="document-item" onclick="previewDocument('BusinessPermit.jpg', @Model.Id, 'Supplier')">
+                        <i class="fas fa-file-image fa-lg" style="color: #3BAE86;"></i>
+                        <div class="document-info">
+                            <span class="document-name">Business Permit / Operation Certificate</span>
+                            <span class="document-filename">BusinessPermit.jpg</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-eye preview-icon"></i>
+                            <i class="fas fa-download text-muted small"></i>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="upload-date">
+                <i class="fas fa-calendar-alt me-1"></i>
+                <span>Documents Verified on @Model.DocumentUploadDate.ToString("MMM dd, yyyy")</span>
+            </div>
         </div>
 
         <div class="detail-card full-width-card">
-            <div class="card-heading">📜 AUDIT HISTORY</div>
+            <div class="card-heading"><i class="fas fa-history"></i> AUDIT HISTORY</div>
             <div style="height: 1px; width: 100%; background: var(--border-color); margin-bottom: 20px;"></div>
             
-            <div class="timeline-item">
-                <div class="timeline-desc">Profile created by @(Model.User?.FullName ?? "Unknown")</div>
-                <div class="timeline-time">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
-            </div>
-            @if(hasDocs) {
-                <div class="timeline-item">
-                    <div class="timeline-desc">Documents uploaded successfully</div>
-                    <div class="timeline-time">@Model.CreatedAt.AddMinutes(3).ToString("MMM dd, yyyy HH:mm")</div>
+            @if (Model.AuditHistory != null && Model.AuditHistory.Any())
+            {
+                <div class="timeline">
+                    @foreach (var audit in Model.AuditHistory)
+                    {
+                        <div class="timeline-item">
+                            <div class="timeline-desc">
+                                <span class="fw-bold">@audit.Action:</span> @audit.Details 
+                                <span class="text-muted ms-1" style="font-size: 11px;">- by @audit.PerformedBy</span>
+                            </div>
+                            <div class="timeline-time">@audit.Timestamp.ToString("MMM dd, yyyy HH:mm")</div>
+                        </div>
+                    }
                 </div>
             }
-            @if (Model.User?.FaydaVerification != null) {
+            else
+            {
                 <div class="timeline-item">
-                    <div class="timeline-desc">Fayda verification integration triggered</div>
-                    <div class="timeline-time">@Model.CreatedAt.AddHours(24).ToString("MMM dd, yyyy HH:mm")</div>
+                    <div class="timeline-desc">Profile created and pending initial review</div>
+                    <div class="timeline-time">@Model.MemberSince.ToString("MMM dd, yyyy HH:mm")</div>
                 </div>
             }
         </div>
 
-        @if (Model.VerificationStatus == "Pending")
+        @if (Model.Status == "Pending")
         {
-            <div class="detail-card full-width-card" style="background: transparent; border: none; box-shadow: none;">
-                <div class="action-buttons mt-0">
-                    <form asp-action="ApproveUser" method="post" class="m-0">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.UserId" />
-                        <button type="submit" class="action-btn btn-approve">
-                            ✅ Approve
-                        </button>
-                    </form>
-                    <button type="button" class="action-btn btn-reject" onclick="openRejectModal(@Model.UserId, '@Html.Raw(Model.User?.FullName?.Replace("'", "\\'"))', '@Model.User?.Email', 'Supplier', '@Html.Raw(Model.CompanyName?.Replace("'", "\\'"))')">
-                        ❌ Reject
+            <div class="action-buttons">
+                <form asp-action="ApproveUser" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="action-btn btn-approve">
+                        ✅ Approve Application
                     </button>
-                </div>
+                </form>
+                <button type="button" class="action-btn btn-reject" onclick="openRejectModal(@Model.Id, '@Html.Raw(Model.CompanyName.Replace("'", "\\'"))')">
+                    ❌ Reject Application
+                </button>
             </div>
         }
     }
 </div>
-        }
-    }
-</div>
 
-<!-- Modal elements from Verification Hub ported to details -->
 <div class="modal fade" id="documentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg" style="border-radius: 16px; background: var(--card-bg); border: 1px solid var(--border-color);">
@@ -423,28 +458,16 @@
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" style="filter: var(--invert-close-btn);"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="w-100 rounded-3 d-flex align-items-center justify-content-center" style="height: 400px; background: var(--hover-state); border: 1px dashed var(--border-color);">
-                    <div class="text-center">
-                        <i class="fas fa-file-pdf fa-4x mb-3 text-muted opacity-50"></i>
-                        <h6 style="color: var(--text-color);">[PREVIEW GENERATED]</h6>
-                        <p class="small text-muted">Securely loaded document viewer layer.</p>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
                 <button type="button" class="btn btn-outline-card px-4" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn px-4 text-white" style="background:#5B8FF9;"><i class="fas fa-download me-2"></i>Download Original</button>
+                <button type="button" class="btn px-4 text-white btn-primary" style="background:#2E9C7A; border:none;"><i class="fas fa-download me-2"></i>Download Original</button>
             </div>
         </div>
     </div>
 </div>
 
+
 @section Scripts {
-    <script>
-        function openDocumentModal(docName) {
-            $('#docTitle').text(docName);
-            var myModal = new bootstrap.Modal(document.getElementById('documentModal'));
-            myModal.show();
-        }
-    </script>
+    <script src="~/js/verification-hub.js"></script>
 }

@@ -730,8 +730,11 @@
                     <li class="sidebar-section">👥 USERS</li>
                     <li>
                         <a asp-controller="Admin" asp-action="PendingUsers" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingUsers" ? "active" : "")">
-                            <i class="fas fa-check-circle"></i> Verifications
-                            <span class="badge rounded-pill ms-auto" style="background:#E05A5A; font-size:10px;">🔴 @(ViewBag.PendingSuppliersCount ?? 0) pending</span>
+                            <i class="fas fa-shield-alt"></i> Verification Hub
+                            @if (ViewBag.PendingSuppliersCount > 0)
+                            {
+                                <span class="badge rounded-pill ms-auto" style="background:#E05A5A; font-size:10px;">@ViewBag.PendingSuppliersCount</span>
+                            }
                         </a>
                     </li>
                     <li>
@@ -1028,11 +1031,62 @@
                         <i class="fas fa-moon fs-5" style="color: var(--text-color);"></i>
                     </a>
 
-                    <!-- Notifications -->
-                    <a asp-controller="Notification" asp-action="Index" class="text-muted position-relative text-decoration-none me-3 d-flex align-items-center justify-content-center rounded-circle" title="Notifications" style="width: 36px; height: 36px; background-color: var(--hover-state); transition: all 0.2s;">
-                        <i class="fas fa-bell fs-5" style="color: var(--text-color);"></i>
-                        <span class="position-absolute rounded-circle text-white d-flex align-items-center justify-content-center shadow-sm" style="top: -4px; right: -4px; background-color: #E05A5A; font-size: 10px; width: 18px; height: 18px; font-weight: bold; border: 2px solid var(--top-nav-bg);">3</span>
-                    </a>
+                    <!-- Admin/User Notifications -->
+                    <div class="dropdown me-2">
+                        <a href="#" class="text-muted position-relative text-decoration-none d-flex align-items-center justify-content-center rounded-circle" data-bs-toggle="dropdown" title="Notifications" style="width: 36px; height: 36px; background-color: var(--hover-state); transition: all 0.2s;">
+                            <i class="fas fa-bell fs-5" style="color: var(--text-color);"></i>
+                            @if (ViewBag.UnreadNotificationCount != null && ViewBag.UnreadNotificationCount > 0)
+                            {
+                                <span class="position-absolute rounded-circle text-white d-flex align-items-center justify-content-center shadow-sm" style="top: -4px; right: -4px; background-color: #E05A5A; font-size: 10px; width: 18px; height: 18px; font-weight: bold; border: 2px solid var(--top-nav-bg);">
+                                    @ViewBag.UnreadNotificationCount
+                                </span>
+                            }
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-0" style="width: 320px; border-radius: 12px; margin-top: 10px; overflow: hidden;">
+                            <li class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold">Notifications</h6>
+                                <a asp-controller="Notification" asp-action="Index" class="text-primary small text-decoration-none fw-semibold">View All</a>
+                            </li>
+                            <li class="notification-list" style="max-height: 350px; overflow-y: auto;">
+                                @if (Context.Session.GetString("UserRole") == "Admin")
+                                {
+                                    var adminNotifications = ViewBag.AdminNotifications as List<SCM_System.Models.Entities.AdminNotification>;
+                                    if (adminNotifications != null && adminNotifications.Any())
+                                    {
+                                        foreach (var adminNotif in adminNotifications)
+                                        {
+                                            <a href="@adminNotif.ActionUrl" class="dropdown-item p-3 border-bottom d-flex align-items-start gap-3 @(adminNotif.IsRead ? "" : "bg-light")">
+                                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2" style="width: 38px; height: 38px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas @(adminNotif.NotificationType == "Registration" ? "fa-user-plus" : "fa-info-circle")"></i>
+                                                </div>
+                                                <div class="overflow-hidden">
+                                                    <div class="fw-bold text-truncate small">@adminNotif.Title</div>
+                                                    <div class="text-muted text-wrap x-small" style="font-size: 11px; line-height: 1.4;">@adminNotif.Message</div>
+                                                    <div class="text-primary mt-1" style="font-size: 10px;">@adminNotif.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                                                </div>
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="p-4 text-center text-muted small">
+                                            <i class="fas fa-bell-slash d-block mb-2 opacity-50 fs-4"></i>
+                                            No admin alerts
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="p-4 text-center text-muted small">
+                                        No new notifications
+                                    </div>
+                                }
+                            </li>
+                            <li class="p-2 border-top bg-light text-center">
+                                <a href="#" class="text-muted small text-decoration-none">Mark all as read</a>
+                            </li>
+                        </ul>
+                    </div>
 
                     @if (Context.Session.GetString("UserRole") == "Retailer")
                     {

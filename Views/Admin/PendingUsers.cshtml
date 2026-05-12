@@ -1,491 +1,304 @@
-@model IEnumerable<SCM_System.Models.Entities.User>
+@model SCM_System.Models.ViewModels.PendingUsersViewModel
 @{
-    ViewData["Title"] = "Administrative Verification Hub";
+    ViewData["Title"] = "Unified Verification Hub";
     Layout = "_DashboardLayout";
 }
 
-<!-- Custom Verification Hub CSS -->
-<style>
-    .page-wrapper {
-        padding: 16px 24px;
-    }
-    
-    /* KPI Cards */
-    .kpi-grid-3 {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-bottom: 20px;
-    }
-    
-    @@media (max-width: 992px) {
-        .kpi-grid-3 { grid-template-columns: 1fr; }
-    }
-    
-    .admin-kpi-card {
-        background: var(--card-bg);
-        border-radius: 16px;
-        padding: 16px 20px;
-        border-top: 3px solid #2E9C7A;
-        border-bottom: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        border-left: 1px solid var(--border-color);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s;
-        position: relative;
-        cursor: pointer;
-    }
-    
-    .admin-kpi-card:hover {
-        transform: translateY(-2px);
-    }
-    
-    .dark-mode .admin-kpi-card { box-shadow: none; border-color: #2A3530; }
-    
-    .kpi-icon {
-        font-size: 28px;
-        position: absolute;
-        top: 20px;
-        left: 20px;
-    }
-    
-    .kpi-title {
-        text-align: right;
-        font-size: 11px;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-        margin-bottom: 8px;
-    }
-    
-    .kpi-number {
-        text-align: right;
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--text-color);
-        line-height: 1;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/verification-hub.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+}
 
-    .kpi-trend {
-        font-size:11px; 
-        position:absolute; 
-        bottom:16px; 
-        left:20px; 
-        font-weight:600;
-    }
-    
-    .trend-up { color: #2E9C7A; }
-    .dark-mode .trend-up { color: #4BC0A0; }
-    .trend-down { color: #E05A5A; }
-    .dark-mode .trend-down { color: #E57373; }
-
-    /* Search Input Theme */
-    .page-search-section {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-    }
-
-    /* Light Mode Applicant Card */
-    .verification-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 16px;
-        transition: box-shadow 0.2s, transform 0.2s;
-        position: relative;
-        overflow: hidden;
-    }
-    .fayda-section {
-        background: #F8FAFC !important;
-        border: 1px solid #E2E8F0 !important;
-    }
-    
-    /* Dark Mode Applicant Card */
-    .dark-mode .verification-card {
-        background: #1A1F1D;
-        border: 1px solid #2A3530;
-    }
-    .dark-mode .fayda-section {
-        background: #252B28 !important;
-        border: 1px solid #2A3530 !important;
-    }
-    
-    .verification-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        transform: translateY(-2px);
-    }
-    .dark-mode .verification-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    
-    .fayda-bar-container {
-        width: 100%;
-        height: 6px;
-        background: var(--border-color);
-        border-radius: 10px;
-        overflow: hidden;
-        margin-top: 8px;
-        margin-bottom: 8px;
-    }
-    
-    .fayda-bar-fill {
-        height: 100%;
-        border-radius: 10px;
-        transition: width 1s ease-in-out;
-    }
-    
-    .doc-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 8px;
-        background: var(--bg-hover);
-        border: 1px solid var(--border-color);
-        color: var(--text-color);
-        font-size: 13px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: background 0.2s;
-        cursor: pointer;
-    }
-    
-    .doc-chip:hover {
-        background: rgba(46, 156, 122, 0.1);
-        color: #2E9C7A;
-        border-color: #2E9C7A;
-    }
-
-    /* Buttons */
-    .btn-approve {
-        background: #2E9C7A;
-        color: white;
-        font-weight: 600;
-    }
-    .btn-approve:hover {
-        background: #238A6A;
-        color: white;
-    }
-    .dark-mode .btn-approve {
-        background: #3BAE86;
-    }
-    
-    .btn-reject {
-        background: #E05A5A;
-        color: white;
-        font-weight: 600;
-    }
-    .btn-reject:hover {
-        background: #C94E4E;
-        color: white;
-    }
-    .dark-mode .btn-reject {
-        background: #E57373;
-    }
-
-    .btn-view {
-        background: #5B8FF9;
-        color: white;
-        font-weight: 600;
-    }
-    .btn-view:hover {
-        background: #4A7BE8;
-        color: white;
-    }
-    .dark-mode .btn-view {
-        background: #7BA3FF;
-        color: #1A2C26;
-    }
-
-    /* Document Modal */
-    #documentModal .modal-content {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-    }
-</style>
-
-<div class="container-fluid page-wrapper pb-5">
-    
-    <!-- KPI Cards -->
-    <div class="kpi-grid-3">
-        <div class="admin-kpi-card" style="border-top-color: #E67E22;" onclick="setChipFilter('pending')">
-            <i class="fas fa-hourglass-half kpi-icon" style="color: #E67E22;"></i>
-            <div class="kpi-title">PENDING</div>
-            <div class="kpi-number">@Model.Count(u => !u.IsApproved && u.AccountStatus != "Suspended")</div>
-            <div class="kpi-trend trend-down"><i class="fas fa-arrow-up"></i> 20%</div>
+<div class="verification-hub">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold">Verification Hub</h1>
+            <p class="text-muted small mb-0">Centralized approval dashboard for all system roles</p>
         </div>
-        <div class="admin-kpi-card" style="border-top-color: #2E9C7A;" onclick="setChipFilter('verified')">
-            <i class="fas fa-check-double kpi-icon" style="color: #2E9C7A;"></i>
-            <div class="kpi-title">VERIFIED THIS WEEK</div>
-            <div class="kpi-number">5</div>
-            <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 20%</div>
-        </div>
-        <div class="admin-kpi-card" style="border-top-color: #E05A5A;" onclick="setChipFilter('rejected')">
-            <i class="fas fa-ban kpi-icon" style="color: #E05A5A;"></i>
-            <div class="kpi-title">REJECTED</div>
-            <div class="kpi-number">@Model.Count(u => u.AccountStatus == "Suspended")</div>
-            <div class="kpi-trend trend-down"><i class="fas fa-arrow-down"></i> 1 from last week</div>
+        <div class="text-end">
+            <span class="badge bg-soft-primary text-primary border border-primary px-3 py-2 rounded-pill">
+                <i class="fas fa-clock me-2"></i>Last Updated: @DateTime.Now.ToString("HH:mm")
+            </span>
         </div>
     </div>
 
-    <!-- Search & Filters -->
-    <div class="page-search-section mb-3">
-        <div class="search-input-wrapper">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search by name, email, or Fayda ID..." class="page-search-input">
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+        <div class="kpi-card" id="kpiPending" onclick="filterByQuickStatus('Pending')">
+            <div class="kpi-icon bg-soft-warning" style="background-color: #fffbeb; color: #d97706;">
+                <i class="fas fa-user-clock"></i>
+            </div>
+            <div class="kpi-info">
+                <h4>Pending Review</h4>
+                <span class="kpi-value">@Model.TotalPendingCount</span>
+            </div>
         </div>
-        <div class="filter-group">
-            <select class="filter-dropdown" id="roleFilter">
-                <option value="All Roles">All Roles</option>
-                <option value="Supplier">Supplier</option>
-                <option value="Retailer">Retailer</option>
-                <option value="DeliveryAgent">Delivery Agent</option>
-            </select>
-            <select class="filter-dropdown" id="dateFilter">
-                <option value="any">Date Applied</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-            </select>
-            <div class="action-buttons">
-                <button class="btn btn-outline-card px-4" style="border-radius: 8px; font-weight: 600;" onclick="applyFilters()">Apply Filters</button>
+        <div class="kpi-card" id="kpiVerified" onclick="filterByQuickStatus('Verified')">
+            <div class="kpi-icon" style="background-color: #ecfdf5; color: #059669;">
+                <i class="fas fa-shield-check"></i>
+            </div>
+            <div class="kpi-info">
+                <h4>Verified Users</h4>
+                <span class="kpi-value">@Model.VerifiedTodayCount</span>
+            </div>
+        </div>
+        <div class="kpi-card" id="kpiRejected" onclick="filterByQuickStatus('Rejected')">
+            <div class="kpi-icon" style="background-color: #fef2f2; color: #dc2626;">
+                <i class="fas fa-user-times"></i>
+            </div>
+            <div class="kpi-info">
+                <h4>Rejected Today</h4>
+                <span class="kpi-value">@Model.RejectedTodayCount</span>
             </div>
         </div>
     </div>
 
-    <!-- Quick Filters -->
-    <div class="d-flex gap-2 mb-4 align-items-center">
-        <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-right: 8px;">Quick Filters:</span>
-        <button class="chip active filter-chip" data-filter="all">All</button>
-        <button class="chip filter-chip" data-filter="pending">Pending</button>
-        <button class="chip filter-chip" data-filter="verified">Verified</button>
-        <button class="chip filter-chip" data-filter="rejected">Rejected</button>
-        
-        <div class="ms-auto" style="font-size: 12px; color: var(--text-muted);">
-            Showing <span id="filteredCountText">@Model.Count()</span> pending applications <!-- This satisfies keeping the textual count compressed to the top bar line -->
+    <!-- Hub Controls -->
+    <div class="hub-controls">
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="hubSearch" placeholder="Search by name, ID or company..." oninput="handleSearchInput()" value="@ViewContext.HttpContext.Request.Query["searchTerm"]">
         </div>
+        
+        <div class="select-wrapper">
+            <select id="roleFilter" class="form-select border-0 bg-light" onchange="applyFilters()">
+                <option value="">All Roles</option>
+                <option value="Supplier">Suppliers</option>
+                <option value="Retailer">Retailers</option>
+                <option value="WarehouseManager">Warehouse Managers</option>
+                <option value="DeliveryAgent">Delivery Agents</option>
+            </select>
+        </div>
+
+        <div class="select-wrapper">
+            <select id="statusFilter" class="form-select border-0 bg-light" onchange="applyFilters()">
+                <option value="">All Risk Levels</option>
+                <option value="Low">Low Risk</option>
+                <option value="Medium">Medium Risk</option>
+                <option value="High">High Risk</option>
+            </select>
+        </div>
+
+        <button class="btn btn-outline-secondary border-0" onclick="window.location.href='/Admin/PendingUsers'">
+            <i class="fas fa-sync-alt"></i>
+        </button>
     </div>
 
-    <div class="applications-container">
-        @if (!Model.Any())
+    <!-- User Cards Grid -->
+    <div class="user-grid">
+        @if (!Model.PendingUsers.Any())
         {
-            <div class="empty-state">
-                <i class="fas fa-clipboard-check text-muted opacity-25"></i>
-                <h4 style="color: var(--text-color);">No matches found</h4>
-                <p>Try adjusting your search filters.</p>
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-check-circle fa-4x text-muted mb-3 opacity-25"></i>
+                <h4 class="text-muted">No pending verification requests</h4>
+                <p>All users have been processed. Great job!</p>
             </div>
         }
         else
         {
-            var r = new Random();
-            @foreach (var user in Model)
+            @foreach (var user in Model.PendingUsers)
             {
-                var matchScore = 70 + r.Next(28); // Simulate 70-98%
-                string confidenceColor = matchScore >= 80 ? "#2E9C7A" : (matchScore >= 50 ? "#E67E22" : "#E05A5A");
+                <div class="user-card" data-role="@user.Role" data-risk="@user.RiskScore">
+                    <div class="user-card-header">
+                        <div class="user-main-info">
+                            <div class="user-avatar">
+                                @(string.IsNullOrEmpty(user.FullName) ? "?" : user.FullName.Substring(0, 1))
+                            </div>
+                            <div class="user-title">
+                                <h3>@user.FullName</h3>
+                                <span class="user-role-badge role-@user.Role.ToLower()">@user.Role</span>
+                            </div>
+                        </div>
+                        <span class="risk-tag risk-@user.RiskScore.ToLower()">@user.RiskScore Risk</span>
+                    </div>
 
-                string applicantStatus = user.AccountStatus == "Suspended" ? "Rejected" : (user.IsApproved ? "Approved" : "Pending");
-                string statusColor = applicantStatus == "Approved" ? "#2E9C7A" : (applicantStatus == "Rejected" ? "#E05A5A" : "#E67E22");
+                    <div class="user-card-body">
+                        <div class="info-row">
+                            <span class="info-label">Applied</span>
+                            <span class="info-value">@user.AppliedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(user.CompanyName))
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Company</span>
+                                <span class="info-value">@user.CompanyName</span>
+                            </div>
+                        }
+                        
+                        <div class="fayda-section mt-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-muted">🔗 FAYDA IDENTITY</span>
+                                @if (user.IsFaydaVerified)
+                                {
+                                    <span class="badge bg-success-soft text-success small" style="background: rgba(46, 156, 122, 0.1); color: #2E9C7A !important;"><i class="fas fa-check-circle me-1"></i> VERIFIED</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-soft text-warning small"><i class="fas fa-clock me-1"></i> PENDING</span>
+                                }
+                            </div>
+                            
+                            <div class="info-row x-small mb-1" style="font-size: 0.75rem;">
+                                <span class="info-label text-muted">ID:</span>
+                                <span class="info-value fw-bold">@(string.IsNullOrEmpty(user.FaydaId) ? "NOT LINKED" : user.FaydaId)</span>
+                            </div>
+                            
+                            <div class="info-row x-small mb-2" style="font-size: 0.75rem;">
+                                <span class="info-label text-muted">Registry:</span>
+                                @if (user.ConfidenceScore >= 80)
+                                {
+                                    <span class="registry-verified"><i class="fas fa-check-circle"></i> @user.FullName ✅</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-bold"><i class="fas fa-times-circle"></i> UNMATCHED</span>
+                                }
+                            </div>
 
-                <div class="verification-card applicant-card" data-role="@user.Role" data-status="@applicantStatus" data-name="@user.FullName.ToLower()" data-fan="@(user.FAN?.ToLower() ?? "4788876558111795")">
-                    
-                    <div class="row align-items-center">
-                        <!-- Col 1: Base Info -->
-                        <div class="col-md-5 mb-3 mb-md-0 d-flex flex-column h-100">
-                            <h5 class="fw-bold mb-1 applicant-name d-flex align-items-center gap-2" style="color: var(--text-color); font-size: 16px;">
-                                👤 @user.FullName
-                                <span class="badge-soft ms-2" style="background: var(--hover-state); color: var(--text-color); border: 1px solid var(--border-color);">@user.Role</span>
-                            </h5>
-                            <div class="ms-4 ps-2" style="border-left: 2px solid var(--border-color); margin-top: 8px;">
-                                <div style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 2px;">@user.Email</div>
-                                <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">📅 Applied: @user.CreatedAt.ToString("MMM dd, yyyy")</div>
-                                <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
-                                    ⏳ Status: <span style="font-weight: 700; color: @statusColor;">@applicantStatus Review</span>
+                            <!-- Confidence Match Indicator -->
+                            <div class="confidence-bar-wrapper">
+                                <div class="confidence-header">
+                                    <span class="text-muted">ID Match Confidence</span>
+                                    <span class="fw-bold @(user.ConfidenceScore >= 80 ? "text-success" : "text-warning")">@user.ConfidenceScore%</span>
+                                </div>
+                                <div class="confidence-bg">
+                                    <div class="confidence-fill fill-@(user.ConfidenceScore >= 80 ? "high" : (user.ConfidenceScore > 40 ? "medium" : "low"))" style="width: @user.ConfidenceScore%;"></div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Col 2: Fayda Box -->
-                        <div class="col-md-7">
-                            <div class="fayda-section p-3" style="border-radius: 12px;">
-                                <h6 class="fw-bold mb-2 d-flex align-items-center gap-2" style="color: var(--text-color); font-size: 12px; text-transform: uppercase;">
-                                    📋 FAYDA VERIFICATION 
-                                </h6>
-                                
-                                <div style="font-family: monospace; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-                                    ID: @(string.IsNullOrEmpty(user.FAN) ? "4788876558111795" : user.FAN)
-                                </div>
 
-                                <div class="d-flex align-items-center gap-3">
-                                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; min-width: 50px;">Match:</span>
-                                    <div class="fayda-bar-container m-0 flex-grow-1" style="max-width: 150px;">
-                                        <div class="fayda-bar-fill" style="width: @matchScore%; background: @confidenceColor;"></div>
+                        <!-- Documents Section -->
+                        <div class="documents-section">
+                            <label>📎 SUBMITTED DOCUMENTS</label>
+                            <div class="document-list">
+                                <!-- License Document -->
+                                <div class="document-item" onclick="previewDocument('License.pdf', @user.UserId, '@user.Role')">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <div class="document-info">
+                                        <span class="document-name">Business License</span>
                                     </div>
-                                    <span style="font-size: 13px; color: @confidenceColor; font-weight: 700;">@matchScore%</span>
+                                    <i class="fas fa-eye preview-icon"></i>
                                 </div>
                                 
-                                <div class="row mt-2">
-                                    <div class="col-6">
-                                        <div style="font-size: 12px; color: var(--text-muted);">Registry: <span style="color: var(--text-color); font-weight: 600;">@user.FullName</span> ✅</div>
+                                <!-- Tax ID Display (Number, not document) -->
+                                @if (!string.IsNullOrEmpty(user.TaxId))
+                                {
+                                    <div class="tin-display">
+                                        <i class="fas fa-id-card"></i>
+                                        <div class="document-info">
+                                            <span class="document-name">Tax ID (TIN): <strong>@user.TaxId</strong></span>
+                                        </div>
+                                        <span class="validated-badge">VALIDATED</span>
                                     </div>
-                                    <div class="col-6">
-                                        <div style="font-size: 12px; color: var(--text-muted);">DOB: <span style="color: var(--text-color); font-weight: 600;">Mar 14, 1989</span> ✅</div>
-                                    </div>
-                                </div>
+                                }
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Documents & Bottom Actions -->
-                    <div class="mt-3 pt-3 border-top d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between" style="border-color: var(--border-color)!important;">
-                        
-                        <div class="d-flex align-items-center gap-2">
-                            <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">📎 Documents:</span>
-                            <div class="doc-chip" onclick="openDocumentModal('License.pdf')">
-                                <i class="fas fa-file-pdf"></i> License.pdf <i class="fas fa-eye ms-1 text-muted" style="font-size: 10px;"></i>
-                            </div>
-                            <div class="doc-chip" onclick="openDocumentModal('TaxID.pdf')">
-                                <i class="fas fa-file-pdf"></i> TaxID.pdf <i class="fas fa-eye ms-1 text-muted" style="font-size: 10px;"></i>
-                            </div>
-                        </div>
 
-                        <div class="d-flex gap-2 ms-auto mt-2 mt-md-0">
-                            <!-- Using standard links inside to emulate actual button flows -->
-                            <form asp-action="ApproveUser" asp-route-id="@user.Id" method="post" class="m-0" id="form-approve-@user.Id">
-                                <button type="button" class="btn btn-approve px-3 py-1 btn-sm" style="border-radius: 6px;" onclick="confirmApprove('@user.Id', '@user.FullName')">
-                                    ✅ Approve
-                                </button>
-                            </form>
-                            <button type="button" class="btn btn-reject px-3 py-1 btn-sm" style="border-radius: 6px;" onclick="openRejectModal('@user.Id', '@Html.Raw(user.FullName?.Replace("'", "\\'"))', '@user.Email', '@user.Role')">
-                                ❌ Reject
-                            </button>
-                            <!-- Updated route from ViewDetails to Details, assuming generic details exists, however will point to SupplierDetails -->
-                            <a asp-action="SupplierDetails" asp-controller="Admin" asp-route-id="@user.Id" class="btn btn-view px-3 py-1 btn-sm fw-bold" style="border-radius: 6px;">
-                                👁️ View Details
-                            </a>
-                        </div>
+                    <div class="user-card-footer">
+                        <button class="btn-approve" onclick="openApproveModal(@user.UserId, '@user.FullName.Replace("'", "\\'")')">
+                            <i class="fas fa-check-circle"></i> Approve
+                        </button>
+                        <button class="btn-reject" onclick="openRejectModal(@user.UserId, '@user.FullName.Replace("'", "\\'")')">
+                            <i class="fas fa-times-circle"></i> Reject
+                        </button>
+                        <button class="btn-details" onclick="window.location.href='/Admin/UserDetails/@user.UserId'">
+                            <i class="fas fa-eye"></i> Details
+                        </button>
                     </div>
-
                 </div>
             }
         }
     </div>
 </div>
 
-<!-- Document Preview Modal -->
-<div class="modal fade" id="documentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow-lg" style="border-radius: 16px;">
-            <div class="modal-header border-bottom-0 pb-0 pt-3 px-4">
-                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" style="color: var(--text-color);">
-                    📄 <span id="docTitle">Document.pdf</span>
-                </h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" style="filter: var(--invert-close-btn);"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="w-100 rounded-3 d-flex align-items-center justify-content-center" style="height: 400px; background: var(--hover-state); border: 1px dashed var(--border-color);">
-                    <div class="text-center">
-                        <i class="fas fa-file-pdf fa-4x mb-3 text-muted opacity-50"></i>
-                        <h6 style="color: var(--text-color);">[PREVIEW GENERATED]</h6>
-                        <p class="small text-muted">Securely loaded document viewer layer.</p>
-                    </div>
+<!-- Approval Modal -->
+<div id="approveModal" class="hub-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 id="approveModalTitle" class="mb-0 fw-bold">Approve Application</h4>
+        </div>
+        <form id="approveForm" method="post">
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+                <p>Are you sure you want to approve this user? This will grant them full access to the platform based on their role.</p>
+                <div class="alert alert-info py-2 small">
+                    <i class="fas fa-info-circle me-2"></i> An automated approval email will be sent to the user.
                 </div>
             </div>
-            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-                <button type="button" class="btn btn-outline-card fw-bold px-4" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn fw-bold px-4 text-white" style="background:#5B8FF9; border-radius:8px;"><i class="fas fa-download me-2"></i>Download Original</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light btn-close-modal">Cancel</button>
+                <button type="submit" class="btn btn-primary fw-bold">Confirm Approval</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div id="rejectModal" class="hub-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 id="rejectModalTitle" class="mb-0 fw-bold text-danger">Reject Application</h4>
+        </div>
+        <form id="rejectForm" method="post">
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Rejection Reason <span class="text-danger">*</span></label>
+                    <select name="reason" class="form-select" required>
+                        <option value="">Select a reason...</option>
+                        <option value="Incomplete Documentation">Incomplete Documentation</option>
+                        <option value="Invalid Business License">Invalid Business License</option>
+                        <option value="Fayda Identity Verification Failed">Fayda Identity Verification Failed</option>
+                        <option value="Duplicate Account Detected">Duplicate Account Detected</option>
+                        <option value="Ineligible Business Category">Ineligible Business Category</option>
+                        <option value="Other">Other (Specify in notes)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Internal Notes (Optional)</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Additional details for audit trail..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light btn-close-modal">Cancel</button>
+                <button type="submit" class="btn btn-danger fw-bold">Submit Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Document Preview Modal -->
+<div id="documentModal" class="hub-modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header d-flex justify-content-between align-items-center">
+            <h4 id="documentModalTitle" class="mb-0 fw-bold">Document Preview</h4>
+            <button type="button" class="btn-close btn-close-modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-5">
+            <div id="documentPreviewContent">
+                <i class="fas fa-file-pdf fa-5x text-danger mb-4"></i>
+                <h5 id="documentFileName" class="mb-3">Document Name</h5>
+                <p class="text-muted mb-4">The document is ready for review. You can download it for full inspection or view it using the browser's PDF viewer.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button id="downloadBtn" class="btn btn-primary px-4">
+                        <i class="fas fa-download me-2"></i> Download
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary px-4 btn-close-modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="~/js/verification-hub.js"></script>
     <script>
-        $(document).ready(function() {
-            // Filter logic
-            $('#searchInput, #roleFilter').on('keyup change', function() {
-                executeFilters();
-            });
-
-            $('.filter-chip').on('click', function() {
-                $('.filter-chip').removeClass('active');
-                $(this).addClass('active');
-                
-                // Keep chip visual sync 
-                executeFilters();
-            });
-            
-            $('select[name="rejectionReason"]').on('change', function() {
-                if($(this).val() === 'Other') {
-                    $('#customReason').slideDown();
-                    $('#customReason').attr('required', true);
-                } else {
-                    $('#customReason').slideUp();
-                    $('#customReason').removeAttr('required');
-                }
-            });
+        // Sync filter dropdowns with query params on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('roleFilter')) document.getElementById('roleFilter').value = params.get('roleFilter');
+            if (params.has('statusFilter')) document.getElementById('statusFilter').value = params.get('statusFilter');
         });
-
-        function executeFilters() {
-            let search = $('#searchInput').val().toLowerCase();
-            let role = $('#roleFilter').val();
-            let activeChip = $('.filter-chip.active').data('filter');
-            
-            let visibleCount = 0;
-
-            $('.applicant-card').each(function() {
-                let text = $(this).attr('data-name') + " " + $(this).attr('data-fan');
-                let cardRole = $(this).attr('data-role');
-                let cardStatus = $(this).attr('data-status').toLowerCase();
-
-                let matchSearch = text.indexOf(search) > -1;
-                let matchRole = (role === 'All Roles' || cardRole === role);
-                
-                let matchStatus = true;
-                if(activeChip !== 'all') {
-                    matchStatus = (cardStatus === activeChip);
-                }
-
-                if (matchSearch && matchRole && matchStatus) {
-                    $(this).show();
-                    visibleCount++;
-                } else {
-                    $(this).hide();
-                }
-            });
-            
-            $('#filteredCountText').text(visibleCount);
-        }
-
-        function setChipFilter(chip) {
-            $(`.filter-chip[data-filter="${chip}"]`).click();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function applyFilters() {
-            executeFilters();
-        }
-
-        function openDocumentModal(docName) {
-            $('#docTitle').text(docName);
-            var myModal = new bootstrap.Modal(document.getElementById('documentModal'));
-            myModal.show();
-        }
-
-        function confirmApprove(userId, name) {
-            // Toast notification simulation
-            $('body').append(`
-                <div class="toast-notification" style="position:fixed; bottom:24px; right:24px; background:#1A1F1D; color:white; padding:16px 24px; border-radius:8px; z-index:9999; border-left:4px solid #2E9C7A; display:none; align-items:center; gap:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-                    <i class="fas fa-check-circle" style="color:#2E9C7A; font-size:18px;"></i>
-                    <div>
-                        <div style="font-weight:700; font-size:14px;">User Approved Successfully!</div>
-                        <div style="font-size:13px; color:#B8C5BE;">${name} has been verified.</div>
-                    </div>
-                </div>
-            `);
-            $('.toast-notification').fadeIn();
-            setTimeout(() => { 
-                $('.toast-notification').fadeOut(300, function(){ $(this).remove(); });
-                $(`#form-approve-${userId}`).submit(); 
-            }, 3000);
-        }
     </script>
 }

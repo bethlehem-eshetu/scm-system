@@ -55,6 +55,8 @@ namespace SCM_System.Data
         public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
+        public DbSet<AdminNotification> AdminNotifications { get; set; }
+
 
         // Product Catalog Tables
         public DbSet<ProductCategory> ProductCategories { get; set; }

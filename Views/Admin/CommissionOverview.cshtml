@@ -2,219 +2,171 @@
 @{
     ViewData["Title"] = "Finance Control Tower";
     Layout = "_DashboardLayout";
-
-    // KPI mapping
     var grossSales = ViewBag.GrossSales ?? 0m;
     var platformRevenue = ViewBag.PlatformRevenue ?? 0m;
     var supplierPayables = ViewBag.SupplierPayables ?? 0m;
     var failedPayments = ViewBag.FailedPayments ?? 0;
 }
 
-<!-- Premium Finance Header -->
-<div class="container-fluid py-4 min-vh-100 bg-light">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+@section Styles {
+    <link rel="stylesheet" href="~/css/finance.css" asp-append-version="true" />
+}
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center fin-page-header">
         <div>
-            <h1 class="fw-bold text-dark mb-1">Finance Control Tower</h1>
-            <p class="text-muted small mb-0">Real-time marketplace revenue, settlements, and commission tracking.</p>
+            <div class="fin-page-title">Finance Control Tower</div>
+            <div class="fin-page-subtitle">Real-time marketplace revenue, settlements, and commission tracking.</div>
         </div>
-        <div class="d-flex gap-3">
-            <div class="dropdown">
-                <button class="btn btn-white shadow-sm border rounded-pill px-4 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-download me-2 text-primary"></i>Export Report
-                </button>
-                <ul class="dropdown-menu border-0 shadow">
-                    <li><a class="dropdown-item" href="#" onclick="handlePdfExport()"><i class="fas fa-file-pdf me-2 text-danger"></i>PDF Report</a></li>
-                    <li><a class="dropdown-item" asp-action="ExportCommissions"><i class="fas fa-file-excel me-2 text-success"></i>Excel Ledger</a></li>
-                </ul>
-            </div>
-            <button class="btn btn-primary shadow-sm rounded-pill px-4">
-                <i class="fas fa-sync me-2"></i>Sync Payouts
-            </button>
+        <div class="d-flex gap-2">
+            <a asp-action="ExportCommissions" class="fin-action-btn">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
+            <a asp-action="Transactions" class="fin-action-btn primary">
+                <i class="fas fa-exchange-alt"></i> All Transactions
+            </a>
         </div>
     </div>
 
-    <!-- Tier 1 KPIs: Global Liquidity -->
-    <div class="row g-4 mb-5">
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-primary h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-shopping-cart fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">+12.5%</span>
-                    </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Gross Sales (inc. VAT)</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.GrossSales.ToString("C")</h2>
-                </div>
+    <!-- KPI Grid -->
+    <div class="finance-kpi-grid">
+        <div class="fin-kpi-card">
+            <i class="fas fa-shopping-cart fin-kpi-icon"></i>
+            <div>
+                <div class="fin-kpi-value">@grossSales.ToString("C0")</div>
+                <div class="fin-kpi-label">Gross Sales (inc. VAT)</div>
+                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> 12.5%</div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-success h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-hand-holding-usd fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">Target Met</span>
-                    </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Platform Revenue</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.PlatformRevenue.ToString("C")</h2>
-                </div>
+        <div class="fin-kpi-card" style="--accent: #5B8FF9;">
+            <i class="fas fa-hand-holding-usd fin-kpi-icon" style="color:#5B8FF9;"></i>
+            <div>
+                <div class="fin-kpi-value">@platformRevenue.ToString("C0")</div>
+                <div class="fin-kpi-label">Platform Revenue</div>
+                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> Target Met</div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-info h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-university fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">Processing</span>
-                    </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Supplier Payables</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.SupplierPayables.ToString("C")</h2>
-                </div>
+        <div class="fin-kpi-card" style="--accent: #E67E22;">
+            <i class="fas fa-university fin-kpi-icon" style="color:#E67E22;"></i>
+            <div>
+                <div class="fin-kpi-value">@supplierPayables.ToString("C0")</div>
+                <div class="fin-kpi-label">Supplier Payables</div>
+                <div class="fin-kpi-trend neutral"><i class="fas fa-arrow-right"></i> Processing</div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-gradient-danger h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white">
-                            <i class="fas fa-exclamation-triangle fa-lg"></i>
-                        </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill small">Review Required</span>
-                    </div>
-                    <div class="text-white opacity-75 small fw-bold text-uppercase mb-1">Failed Settlements</div>
-                    <h2 class="text-white fw-bold mb-0">@ViewBag.FailedPayments</h2>
+        <div class="fin-kpi-card" style="--accent: #E05A5A;">
+            <i class="fas fa-exclamation-triangle fin-kpi-icon" style="color:#E05A5A;"></i>
+            <div>
+                <div class="fin-kpi-value">@failedPayments</div>
+                <div class="fin-kpi-label">Failed Settlements</div>
+                <div class="fin-kpi-trend @(failedPayments > 0 ? "negative" : "positive")">
+                    @(failedPayments > 0 ? "Review Required" : "All Clear")
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts and Intelligence Section -->
-    <div class="row g-4 mb-5">
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Trend Chart -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Marketplace Revenue Dynamics</h5>
-                    <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
-                        <button class="btn btn-light active">Revenue</button>
-                        <button class="btn btn-light">Volume</button>
-                    </div>
-                </div>
-                <div class="card-body p-4">
-                    <canvas id="revenueTrendChart" style="min-height: 300px;"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white py-3 border-0">
-                    <h5 class="fw-bold mb-0">Settlement Health</h5>
-                </div>
-                <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center">
-                    <div style="max-width: 250px; width: 100%;">
-                        <canvas id="statusPieChart"></canvas>
-                    </div>
-                    <div class="mt-4 w-100">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Cleared Payments</span>
-                            <span class="fw-bold">85%</span>
-                        </div>
-                        <div class="progress rounded-pill mb-3" style="height: 6px;">
-                            <div class="progress-bar bg-success" style="width: 85%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Pending Payouts</span>
-                            <span class="fw-bold">12%</span>
-                        </div>
-                        <div class="progress rounded-pill" style="height: 6px;">
-                            <div class="progress-bar bg-warning" style="width: 12%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Lower Intelligence: Top Suppliers & Alerts -->
-    <div class="row g-4 mb-5">
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100" style="min-height: 400px; max-height: 400px; overflow-y: auto;">
-                <div class="card-header bg-white py-3 border-0 border-bottom sticky-top">
-                    <h5 class="fw-bold mb-0">Top Earning Suppliers</h5>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @foreach (var supplier in (dynamic)ViewBag.TopSuppliers)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
-                                        <i class="fas fa-store"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold">@supplier.Name</h6>
-                                        <small class="text-muted">Marketplace Leader</small>
-                                    </div>
-                                </div>
-                                <span class="fw-bold text-success">+@supplier.Revenue.ToString("C0")</span>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-8">
-             <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="min-height: 400px; max-height: 400px; overflow-y: auto;">
-                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom sticky-top">
-                    <h5 class="fw-bold mb-0 text-dark">Global Transaction Stream</h5>
+            <div class="chart-wrapper h-100">
+                <div class="chart-title">
+                    <span><i class="fas fa-chart-line me-2" style="color:#2E9C7A;"></i>Revenue Trends</span>
                     <div class="d-flex gap-2">
-                         <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">Live Status</span>
+                        <span class="type-pill active" style="cursor:pointer;">Weekly</span>
+                        <span class="type-pill" style="cursor:pointer;">Monthly</span>
                     </div>
+                </div>
+                <canvas id="revenueTrendChart" style="height: 260px;"></canvas>
+            </div>
+        </div>
+        <!-- Settlement Health -->
+        <div class="col-lg-4">
+            <div class="chart-wrapper h-100">
+                <div class="chart-title">
+                    <span><i class="fas fa-heartbeat me-2" style="color:#2E9C7A;"></i>Settlement Health</span>
+                </div>
+                <div style="max-width: 200px; margin: 0 auto 20px;">
+                    <canvas id="statusPieChart"></canvas>
+                </div>
+                <div class="health-item">
+                    <div class="health-label">Cleared Payments <span class="health-val">85%</span></div>
+                    <div class="health-bar"><div class="health-fill" style="width:85%; background:#2E9C7A;"></div></div>
+                </div>
+                <div class="health-item">
+                    <div class="health-label">Pending Payouts <span class="health-val">12%</span></div>
+                    <div class="health-bar"><div class="health-fill" style="width:12%; background:#E67E22;"></div></div>
+                </div>
+                <div class="health-item" style="margin-bottom:0;">
+                    <div class="health-label">Failed / Expired <span class="health-val">3%</span></div>
+                    <div class="health-bar"><div class="health-fill" style="width:3%; background:#E05A5A;"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row: Top Suppliers + Recent Transactions -->
+    <div class="row g-4">
+        <!-- Top Earning Suppliers -->
+        <div class="col-lg-4">
+            <div class="fin-panel h-100">
+                <div class="fin-panel-header">
+                    <span class="fin-panel-title"><i class="fas fa-trophy me-2" style="color:#2E9C7A;"></i>Top Earning Suppliers</span>
+                </div>
+                @{
+                    int rank = 1;
+                    foreach (var supplier in (dynamic)ViewBag.TopSuppliers)
+                    {
+                        <div class="supplier-rank-item">
+                            <div class="supplier-rank-num">#@rank</div>
+                            <div>
+                                <div class="supplier-rank-name">@supplier.Name</div>
+                                <div class="supplier-rank-sub">Marketplace Partner</div>
+                            </div>
+                            <div class="supplier-rank-amount">@supplier.Revenue.ToString("C0")</div>
+                        </div>
+                        rank++;
+                    }
+                }
+            </div>
+        </div>
+        <!-- Recent Commissions -->
+        <div class="col-lg-8">
+            <div class="fin-panel h-100">
+                <div class="fin-panel-header">
+                    <span class="fin-panel-title"><i class="fas fa-stream me-2" style="color:#2E9C7A;"></i>Recent Commission Activity</span>
+                    <a asp-action="Transactions" class="fin-action-btn" style="font-size:13px; padding:7px 14px;">View All →</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
+                    <table class="table admin-table table-hover mb-0">
+                        <thead>
                             <tr>
-                                <th class="ps-4 text-muted small fw-bold">TRANSACTION</th>
-                                <th class="text-muted small fw-bold">SUPPLIER</th>
-                                <th class="text-muted small fw-bold">AMOUNT</th>
-                                <th class="text-muted small fw-bold text-center">STATUS</th>
-                                <th class="text-muted small fw-bold text-end pe-4">ACTIVITY</th>
+                                <th class="ps-4">ID</th>
+                                <th>Type</th>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th class="pe-4">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var c in Model.Take(10))
+                            @foreach (var c in Model.Take(8))
                             {
                                 <tr>
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">@c.PaymentType</div>
-                                        <small class="text-muted">ID: #@c.Id | @c.CreatedAt.ToString("MMM dd HH:mm")</small>
-                                    </td>
+                                    <td class="ps-4" style="color:var(--text-muted); font-size:13px; font-weight:700;">#@c.Id</td>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-secondary bg-opacity-10 rounded-circle p-2 me-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                                <i class="fas fa-briefcase small text-secondary"></i>
-                                            </div>
-                                            <span>@(c.Supplier?.CompanyName ?? "Platform")</span>
-                                        </div>
+                                        @if (c.PaymentType?.Contains("Order") == true) { <span class="txn-type txn-type-order">OrderPayment</span> }
+                                        else if (c.PaymentType?.Contains("Commission") == true) { <span class="txn-type txn-type-commission">Commission</span> }
+                                        else { <span class="txn-type txn-type-payout">Payout</span> }
                                     </td>
-                                    <td>
-                                        <span class="fw-bold @(c.PaymentType == "PlatformCommission" ? "text-success" : (c.PaymentType == "SupplierPayout" ? "text-primary" : "text-dark"))">
-                                            @c.CommissionAmount.ToString("C")
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        @if (c.Status == "Paid") { <span class="badge bg-success bg-opacity-20 text-success rounded-pill px-3">Cleared</span> }
-                                        else if (c.Status == "Pending") { <span class="badge bg-warning bg-opacity-20 text-warning rounded-pill px-3">Pending</span> }
-                                        else { <span class="badge bg-danger bg-opacity-20 text-danger rounded-pill px-3">Failed</span> }
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <div class="small">@(c.Status == "Paid" ? "Success" : "In Pipeline")</div>
-                                        <div class="extra-small text-muted">@c.Notes</div>
+                                    <td style="color:var(--text-muted); font-size:13px;">@(c.Supplier?.CompanyName ?? "Platform")</td>
+                                    <td style="font-weight:800; color:#2E9C7A;">@c.CommissionAmount.ToString("C")</td>
+                                    <td class="pe-4">
+                                        @if (c.Status == "Paid") { <span class="txn-status txn-status-paid"><i class="fas fa-check-circle"></i> Cleared</span> }
+                                        else if (c.Status == "Pending") { <span class="txn-status txn-status-pending"><i class="fas fa-clock"></i> Pending</span> }
+                                        else { <span class="txn-status txn-status-failed"><i class="fas fa-times-circle"></i> Failed</span> }
                                     </td>
                                 </tr>
                             }
@@ -224,122 +176,71 @@
             </div>
         </div>
     </div>
+
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        function handlePdfExport() {
-            window.print();
-        }
+        const isDark = document.body.classList.contains('dark-mode');
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        const labelColor = isDark ? '#9EABA5' : '#6F7E78';
 
-        // Set default font family for Chart.js
-        Chart.defaults.font.family = "'Inter', sans-serif";
-
-        // Revenue Trend Chart
-        const trendCtx = document.getElementById('revenueTrendChart').getContext('2d');
-        const gradient = trendCtx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(78, 115, 223, 0.2)');
-        gradient.addColorStop(1, 'rgba(78, 115, 223, 0)');
-
-        new Chart(trendCtx, {
+        // Revenue Trend
+        const tCtx = document.getElementById('revenueTrendChart').getContext('2d');
+        const grad = tCtx.createLinearGradient(0, 0, 0, 300);
+        grad.addColorStop(0, 'rgba(46,156,122,0.25)');
+        grad.addColorStop(1, 'rgba(46,156,122,0)');
+        new Chart(tCtx, {
             type: 'line',
             data: {
                 labels: @Html.Raw(Json.Serialize(ViewBag.TrendLabels)),
                 datasets: [{
-                    label: 'Platform Commission',
+                    label: 'Platform Revenue',
                     data: @Html.Raw(Json.Serialize(ViewBag.TrendAmounts)),
-                    borderColor: '#4e73df',
+                    borderColor: '#2E9C7A',
                     borderWidth: 3,
                     fill: true,
-                    backgroundColor: gradient,
+                    backgroundColor: grad,
                     tension: 0.4,
                     pointRadius: 4,
-                    pointBackgroundColor: '#4e73df',
-                    pointHoverRadius: 6
+                    pointBackgroundColor: '#2E9C7A',
+                    pointHoverRadius: 7
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { borderDash: [5, 5], drawBorder: false }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
+                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: labelColor } },
+                    x: { grid: { display: false }, ticks: { color: labelColor } }
                 }
             }
         });
 
-        // Status Pie Chart
-        const statusCtx = document.getElementById('statusPieChart').getContext('2d');
-        new Chart(statusCtx, {
+        // Settlement Donut
+        const sCtx = document.getElementById('statusPieChart').getContext('2d');
+        new Chart(sCtx, {
             type: 'doughnut',
             data: {
                 labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels)),
                 datasets: [{
                     data: @Html.Raw(Json.Serialize(ViewBag.StatusCounts)),
-                    backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b', '#4e73df'],
+                    backgroundColor: ['#2E9C7A', '#E67E22', '#E05A5A', '#5B8FF9'],
                     borderWidth: 0,
-                    hoverOffset: 10
+                    hoverOffset: 8
                 }]
             },
             options: {
-                cutout: '75%',
+                cutout: '72%',
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { usePointStyle: true, padding: 20 }
+                        labels: { usePointStyle: true, padding: 16, color: labelColor }
                     }
                 }
             }
         });
     </script>
 }
-
-<style>
-    .bg-gradient-primary { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
-    .bg-gradient-success { background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); }
-    .bg-gradient-info { background: linear-gradient(135deg, #36b9cc 0%, #258391 100%); }
-    .bg-gradient-danger { background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%); }
-    
-    .card { transition: transform 0.2s; }
-    .card:hover { transform: translateY(-5px); }
-    
-    .extra-small { font-size: 0.75rem; }
-    
-    .badge { font-weight: 600; }
-
-    @@media print {
-        .btn, .dropdown, .sidebar, .navbar, .btn-group, .sticky-top {
-            display: none !important;
-        }
-        .container-fluid {
-            width: 100% !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            background: white !important;
-        }
-        .card {
-            border: 1px solid #eee !important;
-            box-shadow: none !important;
-            break-inside: avoid;
-            transform: none !important;
-        }
-        .bg-gradient-primary, .bg-gradient-success, .bg-gradient-info, .bg-gradient-danger {
-            background: transparent !important;
-            color: black !important;
-            border: 1px solid #ccc !important;
-        }
-        .text-white { color: black !important; }
-        .opacity-75 { opacity: 1 !important; }
-        canvas { max-width: 100% !important; height: auto !important; }
-        .min-vh-100 { min-height: auto !important; }
-    }
-</style>

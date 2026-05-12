@@ -26,6 +26,16 @@ $(document).ready(function () {
         loadUsers();
     });
 
+    $('#refreshBtn').on('click', function() {
+        currentPage = 1;
+        loadUsers();
+    });
+
+    // KPI Card Click Filters
+    $('#kpiTotalUsers').on('click', () => filterByStatus('All'));
+    $('#kpiActiveUsers').on('click', () => filterByStatus('Active'));
+    $('#kpiPendingVerification').on('click', () => filterByStatus('Pending'));
+
     // Select All Checkbox
     $('#selectAll').on('change', function() {
         const isChecked = $(this).is(':checked');
@@ -125,21 +135,39 @@ async function loadUsers() {
         $('#resultsCount').text(`${totalUsers} results`);
         renderUsers(data.users);
         renderPagination();
-        updateKPIs(data.users);
+        updateKPIs(data);
     } catch (error) {
         $('#userTableBody').html(`<tr><td colspan="7" class="text-center py-5 text-danger">Error loading users. Please refresh.</td></tr>`);
     }
 }
 
-// Quick Filter Handlers
-$(document).on('click', '.filter-pill', function() {
-    $('.filter-pill').removeClass('active');
+// Quick Filter Handlers (Chips)
+$(document).on('click', '.filter-chip', function() {
+    $('.filter-chip').removeClass('active');
     $(this).addClass('active');
     const role = $(this).data('role');
     $('#roleFilter').val(role);
     currentPage = 1;
     loadUsers();
 });
+
+function filterByStatus(status) {
+    // Update active state on KPI cards
+    $('.kpi-card').removeClass('active');
+    $(`#kpi${status === 'All' ? 'TotalUsers' : (status === 'Active' ? 'ActiveUsers' : 'PendingVerification')}`).addClass('active');
+    
+    // Update the dropdown filter
+    $('#statusFilter').val(status);
+    
+    // Refresh table
+    currentPage = 1;
+    loadUsers();
+    
+    // Update URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('status', status.toLowerCase());
+    window.history.pushState({}, '', url);
+}
 
 function renderUsers(users) {
     if (users.length === 0) {
@@ -313,11 +341,11 @@ function updateBulkBar() {
     }
 }
 
-function updateKPIs(users) {
-    // This is just a visual simulation based on current page
-    // In production, these should be real counts from the dashboard
-    $('#totalUsersKPI').text(totalUsers);
-    // Real dashboard counts would be better
+function updateKPIs(data) {
+    // Update KPI card values with global counts from server
+    $('#kpiTotalUsers .kpi-value').text(data.totalGlobal);
+    $('#kpiActiveUsers .kpi-value').text(data.activeGlobal);
+    $('#kpiPendingVerification .kpi-value').text(data.pendingGlobal);
 }
 
 function showBulkModal(action, color, icon, showCount, showReason = false) {

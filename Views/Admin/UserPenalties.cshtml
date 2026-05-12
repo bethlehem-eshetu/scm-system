@@ -1,100 +1,125 @@
-﻿@model List<SCM_System.Models.Entities.Penalty>
+@model List<SCM_System.Models.Entities.Penalty>
 
 @{
-    ViewData["Title"] = $"Penalties for {ViewBag.UserName}";
+    ViewData["Title"] = $"Penalties: {ViewBag.UserName}";
     Layout = "_DashboardLayout";
+    var totalCount = Model.Count;
+    var activeCount = Model.Count(p => p.IsActive && (!p.ExpiresAt.HasValue || p.ExpiresAt > DateTime.Now));
+    var expiredCount = Model.Count(p => !p.IsActive || (p.ExpiresAt.HasValue && p.ExpiresAt < DateTime.Now));
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/penalties.css" asp-append-version="true" />
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-user-circle me-2 text-primary"></i>
-            Penalties: @ViewBag.UserName
-            <small class="text-muted fs-6">(@ViewBag.UserRole)</small>
-        </h1>
-        <a asp-action="Penalties" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to All Penalties
-        </a>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">
-                <i class="fas fa-history me-2 text-primary"></i>Penalty History
-            </h5>
+    <!-- Back Nav -->
+    <a asp-action="Penalties" class="back-nav-btn mb-4 d-inline-flex" style="border: 1px solid var(--border-color); border-radius: 12px; padding: 9px 18px; text-decoration: none; color: var(--text-color); font-weight: 600; gap: 8px; align-items: center; transition: all 0.2s; margin-bottom: 24px!important;">
+        <i class="fas fa-arrow-left"></i> Back to Penalties Management
+    </a>
+
+    <!-- User Summary Card -->
+    <div class="user-summary-card">
+        <div class="user-avatar-circle">
+            <i class="fas fa-user"></i>
         </div>
-        <div class="card-body p-0">
-            @if (!Model.Any())
+        <div>
+            <div class="user-info-name">@ViewBag.UserName</div>
+            <div class="user-info-meta">@ViewBag.UserRole · Penalty History</div>
+        </div>
+        <div class="ms-auto text-end">
+            <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">Account Compliance</div>
+            @if (activeCount > 0)
             {
-                <div class="text-center py-5">
-                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                    <h5 class="text-muted">No penalties for this user</h5>
-                </div>
+                <div style="color: #E67E22; font-weight: 700; font-size: 14px; margin-top: 4px;"><i class="fas fa-exclamation-triangle"></i> @activeCount Active Penalty</div>
             }
             else
             {
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Penalty Type</th>
-                                <th>Reason</th>
-                                <th>Date</th>
-                                <th>Expires</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var penalty in Model)
-                            {
-                                bool isExpired = penalty.ExpiresAt.HasValue && penalty.ExpiresAt.Value < DateTime.Now;
-                                bool isActive = penalty.IsActive && !isExpired;
-                                
-                                <tr>
-                                    <td>#@penalty.Id</td>
-                                    <td>
-                                        @if (penalty.PenaltyType == "Warning")
-                                        {
-                                            <span class="badge bg-warning text-dark">Warning</span>
-                                        }
-                                        else if (penalty.PenaltyType == "Message Restriction")
-                                        {
-                                            <span class="badge bg-info">Restricted</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-danger">Suspended</span>
-                                        }
-                                    </td>
-                                    <td>@penalty.Reason</td>
-                                    <td>@penalty.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
-                                    <td>
-                                        @if (penalty.ExpiresAt.HasValue)
-                                        {
-                                            @penalty.ExpiresAt.Value.ToString("MMM dd, yyyy")
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">Never</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (isActive)
-                                        {
-                                            <span class="badge bg-danger">Active</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">Expired</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                <div style="color: #2E9C7A; font-weight: 700; font-size: 14px; margin-top: 4px;"><i class="fas fa-check-circle"></i> No Active Penalties</div>
             }
         </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="up-kpi-grid">
+        <div class="pen-kpi-card active">
+            <i class="fas fa-gavel pen-kpi-icon"></i>
+            <div>
+                <div class="pen-kpi-value">@totalCount</div>
+                <div class="pen-kpi-label">Total Penalties</div>
+            </div>
+        </div>
+        <div class="pen-kpi-card">
+            <i class="fas fa-exclamation-circle pen-kpi-icon" style="color:#E67E22;"></i>
+            <div>
+                <div class="pen-kpi-value">@activeCount</div>
+                <div class="pen-kpi-label">Active</div>
+            </div>
+        </div>
+        <div class="pen-kpi-card">
+            <i class="fas fa-check-circle pen-kpi-icon" style="color:#2E9C7A;"></i>
+            <div>
+                <div class="pen-kpi-value">@expiredCount</div>
+                <div class="pen-kpi-label">Expired</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+        <h6 class="mb-0 fw-bold" style="color: var(--text-color); font-size: 16px;">Penalty History</h6>
+    </div>
+
+    <div class="table-container rounded-4 overflow-hidden border">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5" style="color: var(--text-muted);">
+                <i class="fas fa-check-circle fa-3x opacity-25 mb-3 d-block" style="color: #2E9C7A;"></i>
+                <p>No penalties for this user.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table admin-table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Type</th>
+                        <th>Reason</th>
+                        <th>Issued</th>
+                        <th>Expires</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var penalty in Model.OrderByDescending(p => p.CreatedAt))
+                    {
+                        bool isExpired = penalty.ExpiresAt.HasValue && penalty.ExpiresAt.Value < DateTime.Now;
+                        bool isActive = penalty.IsActive && !isExpired;
+                        <tr>
+                            <td class="ps-4 fw-bold" style="color: var(--text-muted);">#@penalty.Id</td>
+                            <td>
+                                @if (penalty.PenaltyType == "Warning") { <span class="ptype-warning">⚠️ Warning</span> }
+                                else if (penalty.PenaltyType == "Message Restriction") { <span class="ptype-restriction">📨 Restriction</span> }
+                                else { <span class="ptype-suspension">🚫 Suspension</span> }
+                            </td>
+                            <td style="color: var(--text-muted); font-size: 13px; max-width: 280px;">
+                                @penalty.Reason
+                            </td>
+                            <td style="color: var(--text-muted); font-size: 13px;">@penalty.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td style="color: var(--text-muted); font-size: 13px;">
+                                @if (penalty.ExpiresAt.HasValue) { @penalty.ExpiresAt.Value.ToString("MMM dd, yyyy") }
+                                else { <span>Never</span> }
+                            </td>
+                            <td>
+                                @if (isActive) { <span class="pstatus-active"><i class="fas fa-circle" style="font-size:8px;"></i> Active</span> }
+                                else { <span class="pstatus-expired"><i class="fas fa-check"></i> Expired</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>
