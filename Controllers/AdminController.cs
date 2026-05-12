@@ -23,6 +23,7 @@ namespace SCM_System.Controllers
         INotificationService notificationService,
         SCM_System.Services.IFaydaService faydaService,
         SCM_System.Services.IEmailService emailService,
+        IVerificationService verificationService,
         ILogger<AdminController> logger) : Controller
     {
         private readonly ApplicationDbContext _context = context;
@@ -30,22 +31,28 @@ namespace SCM_System.Controllers
         private readonly INotificationService _notificationService = notificationService;
         private readonly SCM_System.Services.IFaydaService _faydaService = faydaService;
         private readonly SCM_System.Services.IEmailService _emailService = emailService;
+        private readonly IVerificationService _verificationService = verificationService;
         private readonly ILogger<AdminController> _logger = logger;
 
-        // Helper method to check if user is admin
-        private bool IsAdmin()
+        private async Task<bool> IsAdminAndPopulateNotifications()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return false;
 
-            var user = _context.Users.Find(userId);
-            return user != null && user.Role == "Admin";
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || user.Role != "Admin") return false;
+
+            // Populate ViewBag for layout
+            ViewBag.AdminNotifications = await _notificationService.GetAdminNotificationsAsync(5);
+            ViewBag.UnreadNotificationCount = await _notificationService.GetAdminUnreadCountAsync();
+
+            return true;
         }
 
         // GET: /Admin/Dashboard
         public async Task<IActionResult> Dashboard()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -175,7 +182,7 @@ namespace SCM_System.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDashboardStats(int range = 7)
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!await IsAdminAndPopulateNotifications()) return Unauthorized();
 
             var now = DateTime.Today;
             var dates = Enumerable.Range(0, range)
@@ -201,556 +208,28 @@ namespace SCM_System.Controllers
             return Json(data);
         }
 
-        // GET: /Admin/PendingSuppliers
-        public async Task<IActionResult> PendingSuppliers()
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
+        // --- New Unified Verification Hub Endpoints ---
 
-            try
-            {
-                // Get pending suppliers and convert to ViewModel
-                var pendingSuppliers = await _context.Suppliers
-                    .Include(s => s.User)
-                    .Where(s => s.VerificationStatus == "Pending")
-                    .Select(s => new PendingSupplierViewModel
-                    {
-                        Id = s.Id,
-                        CompanyName = s.CompanyName,
-                        BusinessType = s.BusinessType,
-                        LicenseNumber = s.LicenseNumber ?? string.Empty,
-                        LicenseFilePath = s.LicenseFilePath,
-                        TaxIdentificationNumber = s.TaxIdentificationNumber ?? string.Empty,
-                        CompanyAddress = s.CompanyAddress ?? string.Empty,
-                        City = s.City,
-                        Country = s.Country,
-                        Website = s.Website ?? string.Empty,
-                        Description = s.Description ?? string.Empty,
-                        CreatedAt = s.CreatedAt,
-                        FullName = s.User != null ? s.User.FullName : string.Empty,
-                        Email = s.User != null ? s.User.Email : string.Empty,
-                        PhoneNumber = s.User != null ? s.User.PhoneNumber : string.Empty,
-                        IsFaydaVerified = s.User != null && s.User.IsFaydaVerified,
-                        FaydaStatus = s.User != null ? s.User.FaydaStatus : "N/A"
-                    })
-                    .ToListAsync();
-
-                // Get pending retailers and convert to ViewModel - REMOVED VerificationStatus
-                var pendingRetailers = await _context.Retailers
-                    .Include(r => r.User)
-                    .Where(r => r.User != null && !r.User.IsApproved && r.User.AccountStatus != "Rejected")
-                    .Select(r => new PendingRetailerViewModel
-                    {
-                        Id = r.Id,
-                        BusinessName = r.BusinessName,
-                        BusinessType = r.BusinessType,
-                        BusinessLicenseNumber = r.BusinessLicenseNumber ?? string.Empty,
-                        TaxIdentificationNumber = r.TaxIdentificationNumber ?? string.Empty,
-                        BusinessAddress = r.BusinessAddress ?? string.Empty,
-                        City = r.City,
-                        Country = r.Country,
-                        StoreSize = r.StoreSize ?? string.Empty,
-                        Description = r.Description ?? string.Empty,
-                        CreatedAt = r.CreatedAt,
-                        FullName = r.User != null ? r.User.FullName : string.Empty,
-                        Email = r.User != null ? r.User.Email : string.Empty,
-                        PhoneNumber = r.User != null ? r.User.PhoneNumber : string.Empty,
-                        IsFaydaVerified = r.User != null && r.User.IsFaydaVerified,
-                        FaydaStatus = r.User != null ? r.User.FaydaStatus : "N/A"
-                    })
-                    .ToListAsync();
-
-                ViewBag.PendingRetailers = pendingRetailers;
-                ViewBag.PendingSuppliersCount = pendingSuppliers.Count;
-                ViewBag.PendingRetailersCount = pendingRetailers.Count;
-
-                return View(pendingSuppliers);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "PendingSuppliers Error");
-                TempData["ErrorMessage"] = "Error loading pending approvals.";
-                return View(new List<PendingSupplierViewModel>());
-            }
-        }
-
-        // GET: /Admin/ViewLicense/{id}
-        public async Task<IActionResult> ViewLicense(int id)
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            try
-            {
-                var supplier = await _context.Suppliers
-                    .Include(s => s.User)
-                    .FirstOrDefaultAsync(s => s.Id == id);
-
-                if (supplier == null || string.IsNullOrEmpty(supplier.LicenseFilePath))
-                {
-                    TempData["ErrorMessage"] = "No license file is attached for this supplier.";
-                    return RedirectToAction("SupplierDetails", new { id = id });
-                }
-
-                string filePath = Path.Combine(_webHostEnvironment.WebRootPath,
-                    supplier.LicenseFilePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-
-                if (!System.IO.File.Exists(filePath))
-                {
-                    TempData["ErrorMessage"] = "The license document file was not found on the server.";
-                    return RedirectToAction("SupplierDetails", new { id = id });
-                }
-
-                string fileExtension = Path.GetExtension(filePath).ToLower();
-                string contentType = fileExtension switch
-                {
-                    ".pdf" => "application/pdf",
-                    ".jpg" or ".jpeg" => "image/jpeg",
-                    ".png" => "image/png",
-                    _ => "application/octet-stream"
-                };
-
-                byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-                return File(fileBytes, contentType);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "ViewLicense Error");
-                return NotFound("Error loading license file.");
-            }
-        }
-
-        // POST: /Admin/ApproveSupplier
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApproveSupplier(int id)
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            try
-            {
-                // Find the supplier with user
-                var supplier = await _context.Suppliers
-                    .Include(s => s.User)
-                    .FirstOrDefaultAsync(s => s.Id == id);
-
-                if (supplier == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Supplier not found.";
-                    return RedirectToAction("PendingSuppliers");
-                }
-
-                if (supplier.User == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Associated user not found for this supplier.";
-                    return RedirectToAction("PendingSuppliers");
-                }
-
-                // Update supplier
-                supplier.VerificationStatus = "Verified";
-
-                // Update user
-                supplier.User.IsApproved = true;
-                supplier.User.AccountStatus = "Active";
-
-                // Create notification for supplier
-                var supplierNotification = new Notification
-                {
-                    UserId = supplier.UserId,
-                    Title = "✅ Account Approved",
-                    Message = $"Congratulations! Your supplier account for '{supplier.CompanyName}' has been approved! You can now login to the system.",
-                    Type = "Success",
-                    IsRead = false,
-                    CreatedAt = DateTime.Now,
-                    ActionUrl = "/Account/Login"
-                };
-                _context.Notifications.Add(supplierNotification);
-
-                // Create notification for admin
-                var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
-                if (adminUser != null)
-                {
-                    var adminNotification = new Notification
-                    {
-                        UserId = adminUser.Id,
-                        Title = "✅ Supplier Approved",
-                        Message = $"You approved supplier '{supplier.CompanyName}'.",
-                        Type = "Info",
-                        IsRead = false,
-                        CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingUsers"
-                    };
-                    _context.Notifications.Add(adminNotification);
-                }
-
-                await _context.SaveChangesAsync();
-
-                // Send Email Notification (Non-blocking)
-                try
-                {
-                    await _emailService.SendApprovalEmailAsync(supplier.User.Email, supplier.User.FullName, "Supplier");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to send approval email to {Email}", supplier.User.Email);
-                }
-
-                TempData["SuccessMessage"] = $"✅ Supplier '{supplier.CompanyName}' has been approved successfully!";
-                Console.WriteLine($"✅ Supplier {id} approved successfully - User Approved: {supplier.User.IsApproved}, Supplier Verified: {supplier.VerificationStatus}");
-
-                return RedirectToAction("PendingSuppliers");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error approving supplier {SupplierId}", id);
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
-                }
-                TempData["ErrorMessage"] = "❌ An error occurred while approving the supplier. Please try again.";
-                return RedirectToAction("PendingSuppliers");
-            }
-        }
-
-        // POST: /Admin/ApproveRetailer
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApproveRetailer(int id)
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            try
-            {
-                // Find the retailer with user
-                var retailer = await _context.Retailers
-                    .Include(r => r.User)
-                    .FirstOrDefaultAsync(r => r.Id == id);
-
-                if (retailer == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Retailer not found.";
-                    return RedirectToAction("AllRetailers");
-                }
-
-                if (retailer.User == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Associated user not found for this retailer.";
-                    return RedirectToAction("AllRetailers");
-                }
-
-                // Update User
-                retailer.User.IsApproved = true;
-                retailer.User.AccountStatus = "Active";
-
-                // Update Retailer
-                retailer.IsVerified = true;
-
-                // Create notification for retailer
-                var retailerNotification = new Notification
-                {
-                    UserId = retailer.UserId,
-                    Title = "✅ Account Approved",
-                    Message = $"Congratulations! Your retailer account for '{retailer.BusinessName}' has been approved! You can now login to the system.",
-                    Type = "Success",
-                    IsRead = false,
-                    CreatedAt = DateTime.Now,
-                    ActionUrl = "/Account/Login"
-                };
-                _context.Notifications.Add(retailerNotification);
-
-                // Create notification for admin
-                var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
-                if (adminUser != null)
-                {
-                    var adminNotification = new Notification
-                    {
-                        UserId = adminUser.Id,
-                        Title = "✅ Retailer Approved",
-                        Message = $"You approved retailer '{retailer.BusinessName}'.",
-                        Type = "Info",
-                        IsRead = false,
-                        CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingUsers"
-                    };
-                    _context.Notifications.Add(adminNotification);
-                }
-
-                await _context.SaveChangesAsync();
-
-                // Send Email Notification (Non-blocking)
-                try
-                {
-                    await _emailService.SendApprovalEmailAsync(retailer.User.Email, retailer.User.FullName, "Retailer");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to send approval email to {Email}", retailer.User.Email);
-                }
-
-                TempData["SuccessMessage"] = $"✅ Retailer '{retailer.BusinessName}' has been approved successfully!";
-                Console.WriteLine($"✅ Retailer {id} approved successfully - User Approved: {retailer.User.IsApproved}, Retailer Verified: {retailer.IsVerified}");
-
-                return RedirectToAction("RetailerDetails", new { id });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error approving retailer {RetailerId}", id);
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
-                }
-                TempData["ErrorMessage"] = "❌ An error occurred while approving the retailer. Please try again.";
-                return RedirectToAction("RetailerDetails", new { id });
-            }
-        }
-
-        // POST: /Admin/RejectSupplier
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectSupplier(int id, string rejectionReason)
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            try
-            {
-                var supplier = await _context.Suppliers
-                    .Include(s => s.User)
-                    .FirstOrDefaultAsync(s => s.Id == id);
-
-                if (supplier == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Supplier not found.";
-                    return RedirectToAction("PendingSuppliers");
-                }
-
-                if (supplier.User == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Associated user not found for this supplier.";
-                    return RedirectToAction("PendingSuppliers");
-                }
-
-                // Validate rejection reason
-                if (string.IsNullOrWhiteSpace(rejectionReason))
-                {
-                    TempData["ErrorMessage"] = "❌ Rejection reason is required.";
-                    return RedirectToAction("SupplierDetails", new { id });
-                }
-
-                // Update BOTH the User AND the Supplier
-                supplier.VerificationStatus = "Rejected";
-                supplier.User.IsApproved = false;
-                supplier.User.AccountStatus = "Rejected";
-
-                // Create notification for supplier
-                var notification = new Notification
-                {
-                    UserId = supplier.UserId,
-                    Title = "❌ Account Rejected",
-                    Message = $"Your supplier account for '{supplier.CompanyName}' has been rejected. Reason: {rejectionReason}",
-                    Type = "Error",
-                    IsRead = false,
-                    CreatedAt = DateTime.Now,
-                    ActionUrl = null
-                };
-                _context.Notifications.Add(notification);
-
-                // Create notification for admin
-                var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
-                if (adminUser != null)
-                {
-                    var adminNotification = new Notification
-                    {
-                        UserId = adminUser.Id,
-                        Title = "❌ Supplier Rejected",
-                        Message = $"You rejected supplier '{supplier.CompanyName}'. Reason: {rejectionReason}",
-                        Type = "Info",
-                        IsRead = false,
-                        CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingUsers"
-                    };
-                    _context.Notifications.Add(adminNotification);
-                }
-
-                await _context.SaveChangesAsync();
-
-                // Send Email Notification (Non-blocking)
-                try
-                {
-                    await _emailService.SendRejectionEmailAsync(supplier.User.Email, supplier.User.FullName, "Supplier", rejectionReason);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to send rejection email to {Email}", supplier.User.Email);
-                }
-
-                TempData["SuccessMessage"] = $"✅ Supplier '{supplier.CompanyName}' has been rejected.";
-                Console.WriteLine($"✅ Supplier {id} rejected successfully - User Approved: {supplier.User.IsApproved}, Supplier Status: {supplier.VerificationStatus}");
-
-                return RedirectToAction("SupplierDetails", new { id });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error rejecting supplier {SupplierId}", id);
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
-                }
-                TempData["ErrorMessage"] = "❌ An error occurred while rejecting the supplier.";
-                return RedirectToAction("SupplierDetails", new { id });
-            }
-        }
-
-        // POST: /Admin/RejectRetailer
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectRetailer(int id, string rejectionReason)
-        {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            try
-            {
-                // Find the retailer with user - IMPORTANT: Include User
-                var retailer = await _context.Retailers
-                    .Include(r => r.User)
-                    .FirstOrDefaultAsync(r => r.Id == id);
-
-                if (retailer == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Retailer not found.";
-                    return RedirectToAction("AllRetailers");
-                }
-
-                if (retailer.User == null)
-                {
-                    TempData["ErrorMessage"] = "❌ Associated user not found for this retailer.";
-                    return RedirectToAction("AllRetailers");
-                }
-
-                // Validate rejection reason
-                if (string.IsNullOrWhiteSpace(rejectionReason))
-                {
-                    TempData["ErrorMessage"] = "❌ Rejection reason is required.";
-                    return RedirectToAction("RetailerDetails", new { id });
-                }
-
-                // IMPORTANT: Log before changes for debugging
-                Console.WriteLine($"Before Rejection - User ID: {retailer.User.Id}, IsApproved: {retailer.User.IsApproved}, AccountStatus: {retailer.User.AccountStatus}");
-
-                // Update User properties (THIS IS WHAT CONTROLS THE STATUS)
-                retailer.User.IsApproved = false;
-                retailer.User.AccountStatus = "Rejected";
-
-                // Update Retailer properties
-                retailer.IsVerified = false;
-
-                // IMPORTANT: Also update User's Approval status in the database
-                _context.Entry(retailer.User).State = EntityState.Modified;
-                _context.Entry(retailer).State = EntityState.Modified;
-
-                // Create notification for retailer
-                var notification = new Notification
-                {
-                    UserId = retailer.UserId,
-                    Title = "❌ Account Rejected",
-                    Message = $"Your retailer account for '{retailer.BusinessName}' has been rejected. Reason: {rejectionReason}",
-                    Type = "Error",
-                    IsRead = false,
-                    CreatedAt = DateTime.Now,
-                    ActionUrl = null
-                };
-                _context.Notifications.Add(notification);
-
-                // Create notification for admin
-                var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
-                if (adminUser != null)
-                {
-                    var adminNotification = new Notification
-                    {
-                        UserId = adminUser.Id,
-                        Title = "❌ Retailer Rejected",
-                        Message = $"You rejected retailer '{retailer.BusinessName}'. Reason: {rejectionReason}",
-                        Type = "Info",
-                        IsRead = false,
-                        CreatedAt = DateTime.Now,
-                        ActionUrl = "/Admin/PendingUsers"
-                    };
-                    _context.Notifications.Add(adminNotification);
-                }
-
-                // Save changes
-                await _context.SaveChangesAsync();
-
-                // Send Email Notification (Non-blocking)
-                try
-                {
-                    await _emailService.SendRejectionEmailAsync(retailer.User.Email, retailer.User.FullName, "Retailer", rejectionReason);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to send rejection email to {Email}", retailer.User.Email);
-                }
-
-                // IMPORTANT: Log after changes to verify
-                Console.WriteLine($"After Rejection - User ID: {retailer.User.Id}, IsApproved: {retailer.User.IsApproved}, AccountStatus: {retailer.User.AccountStatus}");
-
-                TempData["SuccessMessage"] = $"✅ Retailer '{retailer.BusinessName}' has been rejected successfully.";
-
-                // Redirect to the same details page to see the updated status
-                return RedirectToAction("RetailerDetails", new { id });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error rejecting retailer {RetailerId}", id);
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"   Inner error: {ex.InnerException.Message}");
-                }
-                TempData["ErrorMessage"] = "❌ An error occurred while rejecting the retailer. Please try again.";
-                return RedirectToAction("RetailerDetails", new { id });
-            }
-        }
 
         // GET: /Admin/PendingUsers
-        public async Task<IActionResult> PendingUsers()
+        public async Task<IActionResult> PendingUsers(string? roleFilter, string? statusFilter, string? searchTerm)
         {
-            if (!IsAdmin())
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             try
             {
-                var pendingUsers = await _context.Users
-                    .Include(u => u.FaydaVerification)
-                    .Include(u => u.Supplier)
-                    .Include(u => u.Retailer)
-                    .Where(u => !u.IsApproved && u.Role != "Admin" && u.AccountStatus != "Rejected")
-                    .OrderByDescending(u => u.CreatedAt)
-                    .ToListAsync();
-
-                return View(pendingUsers);
+                var viewModel = await _verificationService.GetPendingUsersAsync(roleFilter, statusFilter, searchTerm);
+                
+                // Clear verification-related admin notifications when viewing the hub
+                await _notificationService.MarkVerificationNotificationsAsReadAsync();
+                
+                return View(viewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading pending users");
-                TempData["ErrorMessage"] = "Error loading pending users.";
-                return View(new List<User>());
+                _logger.LogError(ex, "Error loading Verification Hub");
+                TempData["ErrorMessage"] = "Error loading verification data.";
+                return View(new PendingUsersViewModel());
             }
         }
 
@@ -759,129 +238,65 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveUser(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
-            var user = await _context.Users
-                .Include(u => u.FaydaVerification)
-                .FirstOrDefaultAsync(u => u.Id == id);
-            
-            if (user == null) return NotFound();
-
-            var adminId = HttpContext.Session.GetInt32("UserId") ?? 0;
-
-            user.IsApproved = true;
-            user.IsFaydaVerified = true; // Critical Fix: Ensure user can log in
-            user.FaydaStatus = "Verified";
-            user.AccountStatus = "Active";
-            user.ApprovedAt = DateTime.Now;
-            user.ApprovalStatus = "Approved";
-            user.ApprovalStatusType = "Approved";
-            user.ApprovalStatusMessage = "Your account has been approved! You can now access all platform features.";
-
-            // Sync with FaydaVerification table if record exists
-            if (user.FaydaVerification != null)
-            {
-                user.FaydaVerification.IsVerified = true;
-                user.FaydaVerification.VerifiedName = user.FullName;
-            }
-            else if (!string.IsNullOrEmpty(user.FAN))
-            {
-                // Optionally create missing verification record
-                var newVerification = new FaydaVerification
-                {
-                    FAN = user.FAN,
-                    UserEmail = user.Email,
-                    IsVerified = true,
-                    VerifiedName = user.FullName,
-                    VerifiedPhone = user.PhoneNumber,
-                    TransactionId = "ADMIN_APPROVAL_" + Guid.NewGuid().ToString().Substring(0, 8)
-                };
-                _context.FaydaVerifications.Add(newVerification);
-            }
-
-            // Update associated roles
-            if (user.Role == "Supplier")
-            {
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == user.Id);
-                if (supplier != null) supplier.VerificationStatus = "Verified";
-            }
-            else if (user.Role == "Retailer")
-            {
-                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == user.Id);
-                if (retailer != null) retailer.IsVerified = true;
-            }
-
-            // Create Audit Log
-            await LogAudit(user.Id, "Approved", null);
-
-            await _context.SaveChangesAsync();
-
-            // Send Email Notification (Non-blocking)
             try
             {
-                await _emailService.SendApprovalEmailAsync(user.Email, user.FullName, user.Role);
+                var adminName = HttpContext.Session.GetString("FullName") ?? "Admin";
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var userAgent = Request.Headers["User-Agent"].ToString();
+
+                var success = await _verificationService.ApproveUserAsync(id, adminName, ip, userAgent);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "User approved successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to approve user.";
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send approval email to {Email}", user.Email);
+                _logger.LogError(ex, "Error approving user {UserId}", id);
+                TempData["ErrorMessage"] = "An error occurred during approval.";
             }
 
-            TempData["SuccessMessage"] = $"✅ User {user.FullName} approved successfully!";
-            return RedirectToAction("PendingUsers");
+            return RedirectToAction(nameof(PendingUsers));
         }
 
         // POST: /Admin/RejectUser
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectUser(int id, string reason)
+        public async Task<IActionResult> RejectUser(int id, string reason, string? notes)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
-
-            if (string.IsNullOrWhiteSpace(reason))
-            {
-                TempData["ErrorMessage"] = "❌ Rejection reason is required.";
-                return RedirectToAction("PendingUsers");
-            }
-
-            user.IsApproved = false;
-            user.AccountStatus = "Rejected";
-            user.RejectionReason = reason;
-            user.ApprovalStatus = "Rejected";
-            user.ApprovalStatusType = "Rejected";
-            user.ApprovalStatusMessage = $"Your account was rejected. Reason: {reason}";
-
-            // Update associated roles
-            if (user.Role == "Supplier")
-            {
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == user.Id);
-                if (supplier != null) supplier.VerificationStatus = "Rejected";
-            }
-            else if (user.Role == "Retailer")
-            {
-                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == user.Id);
-                if (retailer != null) retailer.IsVerified = false;
-            }
-
-            // Create Audit Log
-            await LogAudit(user.Id, "Rejected", reason);
-
-            await _context.SaveChangesAsync();
-
-            // Send Email Notification (Non-blocking)
             try
             {
-                await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, user.Role, reason);
+                var adminName = HttpContext.Session.GetString("FullName") ?? "Admin";
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var userAgent = Request.Headers["User-Agent"].ToString();
+
+                var success = await _verificationService.RejectUserAsync(id, reason, notes, adminName, ip, userAgent);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "User rejected successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to reject user.";
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send rejection email to {Email}", user.Email);
+                _logger.LogError(ex, "Error rejecting user {UserId}", id);
+                TempData["ErrorMessage"] = "An error occurred during rejection.";
             }
 
-            TempData["SuccessMessage"] = $"❌ User {user.FullName} rejected.";
-            return RedirectToAction("PendingUsers");
+            return RedirectToAction(nameof(PendingUsers));
         }
 
         // POST: /Admin/RejectApplication (JSON Endpoint for Generic Rejections)
@@ -891,7 +306,7 @@ namespace SCM_System.Controllers
         {
             try
             {
-                if (!IsAdmin()) return Unauthorized(new { message = "Unauthorized access." });
+                if (!await IsAdminAndPopulateNotifications()) return Unauthorized(new { message = "Unauthorized access." });
 
                 if (string.IsNullOrWhiteSpace(request.RejectionReason))
                 {
@@ -979,7 +394,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/CompareFayda/{id}
         public async Task<IActionResult> CompareFayda(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
@@ -997,7 +412,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyAgain(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
@@ -1023,7 +438,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/VerifiedSuppliers
         public async Task<IActionResult> VerifiedSuppliers()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1049,7 +464,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/RejectedSuppliers
         public async Task<IActionResult> RejectedSuppliers()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1075,7 +490,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/AllRetailers
         public async Task<IActionResult> AllRetailers()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1100,7 +515,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/AllUsers
         public async Task<IActionResult> AllUsers()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1125,7 +540,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> SuspendUser([FromBody] SuspendUserRequest request)
         {
-            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+            if (!await IsAdminAndPopulateNotifications()) return Json(new { success = false, message = "Unauthorized" });
 
             try
             {
@@ -1156,7 +571,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> VerifyUser([FromBody] VerifyUserRequest request)
         {
-            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+            if (!await IsAdminAndPopulateNotifications()) return Json(new { success = false, message = "Unauthorized" });
 
             try
             {
@@ -1187,47 +602,12 @@ namespace SCM_System.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> RejectUser([FromBody] RejectUserRequest request)
-        {
-            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
-
-            try
-            {
-                var user = await _context.Users.FindAsync(request.UserId);
-                if (user == null) return Json(new { success = false, message = "User not found" });
-
-                user.AccountStatus = "Rejected";
-                user.RejectionReason = request.Reason;
-
-                _context.Notifications.Add(new Notification
-                {
-                    UserId = user.Id,
-                    Title = "❌ Account Rejected",
-                    Message = $"Your account application was rejected. Reason: {request.Reason}",
-                    Type = "Error",
-                    CreatedAt = DateTime.Now
-                });
-
-                if (request.SendEmail)
-                {
-                    await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, user.Role, request.Reason);
-                }
-
-                await _context.SaveChangesAsync();
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
 
 
         [HttpPost]
         public async Task<IActionResult> BulkVerifyUsers([FromBody] BulkActionRequest request)
         {
-            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+            if (!await IsAdminAndPopulateNotifications()) return Json(new { success = false, message = "Unauthorized" });
 
             try
             {
@@ -1251,7 +631,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> BulkSuspendUsers([FromBody] BulkActionRequest request)
         {
-            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+            if (!await IsAdminAndPopulateNotifications()) return Json(new { success = false, message = "Unauthorized" });
 
             try
             {
@@ -1273,7 +653,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> BulkRejectUsers([FromBody] BulkActionRequest request)
         {
-            if (!IsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+            if (!await IsAdminAndPopulateNotifications()) return Json(new { success = false, message = "Unauthorized" });
 
             try
             {
@@ -1295,7 +675,7 @@ namespace SCM_System.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsersPaginated(int page = 1, int pageSize = 10, string searchTerm = "", string role = "All", string status = "All")
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!await IsAdminAndPopulateNotifications()) return Unauthorized();
 
             var query = _context.Users.AsQueryable();
 
@@ -1315,6 +695,12 @@ namespace SCM_System.Controllers
             }
 
             var totalCount = await query.CountAsync();
+            
+            // Global counts for KPI cards (ignoring filters)
+            var totalGlobal = await _context.Users.CountAsync();
+            var activeGlobal = await _context.Users.CountAsync(u => u.AccountStatus == "Active");
+            var pendingGlobal = await _context.Users.CountAsync(u => u.AccountStatus == "Pending");
+
             var users = await query
                 .OrderByDescending(u => u.CreatedAt)
                 .Skip((page - 1) * pageSize)
@@ -1330,13 +716,13 @@ namespace SCM_System.Controllers
                 })
                 .ToListAsync();
 
-            return Json(new { totalCount, users });
+            return Json(new { totalCount, totalGlobal, activeGlobal, pendingGlobal, users });
         }
 
         [HttpGet]
         public async Task<IActionResult> ExportUsers(string format = "csv")
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!await IsAdminAndPopulateNotifications()) return Unauthorized();
 
             var users = await _context.Users.OrderBy(u => u.CreatedAt).ToListAsync();
             
@@ -1354,7 +740,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/AllSuppliers
         public async Task<IActionResult> AllSuppliers()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1370,31 +756,128 @@ namespace SCM_System.Controllers
         // GET: /Admin/SupplierDetails/{id}
         public async Task<IActionResult> SupplierDetails(int id)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
 
             var supplier = await _context.Suppliers
                 .Include(s => s.User)
-                .Include(s => s.Products)
-                .Include(s => s.PurchaseOrders)
-                    .ThenInclude(po => po.PurchaseOrderItems)
-                .Include(s => s.TenderBids)
+                    .ThenInclude(u => u.FaydaVerification)
+                .Include(s => s.SupplierCategories)
+                    .ThenInclude(sc => sc.Category)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (supplier == null)
             {
-                return View((SCM_System.Models.Entities.Supplier)null);
+                return View((SupplierDetailsViewModel)null);
             }
 
-            return View(supplier);
+            var viewModel = new SupplierDetailsViewModel
+            {
+                Id = supplier.Id,
+                CompanyName = supplier.CompanyName,
+                AccountOwner = supplier.User?.FullName,
+                Email = supplier.User?.Email,
+                Phone = supplier.User?.PhoneNumber,
+                BusinessCategory = supplier.SupplierCategories?.FirstOrDefault()?.Category?.CategoryName ?? "Not specified",
+                Headquarters = supplier.City,
+                DetailedAddress = supplier.CompanyAddress,
+                Status = supplier.VerificationStatus,
+                MemberSince = supplier.CreatedAt,
+                TaxId = supplier.TaxIdentificationNumber,
+                BusinessLicensePath = supplier.LicenseFilePath,
+                PermitPath = supplier.Products.FirstOrDefault()?.ImageUrl, // Placeholder or use actual permit field
+                DocumentUploadDate = supplier.CreatedAt, // Placeholder
+                
+                // Fayda data
+                FaydaVerified = supplier.User?.IsFaydaVerified ?? false,
+                FaydaId = supplier.User?.FAN,
+                FaydaRegistryName = supplier.User?.FaydaVerification?.VerifiedName,
+                FaydaDOB = supplier.User?.FaydaVerification?.VerifiedDob,
+                FaydaConfidenceScore = supplier.User?.Role == "Supplier" ? 88 : 94, // Mock score for UI demo
+                
+                // Audit history
+                AuditHistory = await _context.AuditLogs
+                    .Where(a => a.EntityId == id.ToString() && a.EntityType == "Supplier")
+                    .OrderByDescending(a => a.PerformedAtUtc)
+                    .Select(a => new AuditLogEntry
+                    {
+                        Action = a.ActionType,
+                        PerformedBy = a.PerformedByUser != null ? a.PerformedByUser.FullName : "System",
+                        Details = a.Notes ?? string.Empty,
+                        Timestamp = a.PerformedAtUtc
+                    })
+                    .ToListAsync()
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDocument(int userId, string userType, string docName)
+        {
+            try
+            {
+                // In a real app, this should securely fetch from the uploads folder
+                // For this demo, we'll construct the path based on userType and userId
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", userType.ToLower(), userId.ToString());
+                
+                // Security check to prevent path traversal
+                string safeFileName = Path.GetFileName(docName);
+                string filePath = Path.Combine(uploadsFolder, safeFileName);
+                
+                // If not found with exact name, try common extensions
+                if (!System.IO.File.Exists(filePath))
+                {
+                    string[] extensions = { ".pdf", ".jpg", ".jpeg", ".png" };
+                    foreach (var ext in extensions)
+                    {
+                        string testPath = Path.Combine(uploadsFolder, safeFileName + ext);
+                        if (System.IO.File.Exists(testPath))
+                        {
+                            filePath = testPath;
+                            break;
+                        }
+                    }
+                }
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    // If still not found, return a placeholder or 404
+                    return NotFound(new { message = "Document not found" });
+                }
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                string contentType = GetContentType(filePath);
+                
+                return File(fileBytes, contentType, Path.GetFileName(filePath));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        private string GetContentType(string filePath)
+        {
+            var extension = Path.GetExtension(filePath).ToLower();
+            return extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                _ => "application/octet-stream"
+            };
         }
 
         // GET: /Admin/RetailerDetails/{id}
         public async Task<IActionResult> RetailerDetails(int id)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1417,7 +900,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/Notifications
         public async Task<IActionResult> Notifications()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1449,7 +932,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> MarkNotificationRead(int id)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return Json(new { success = false, message = "Unauthorized" });
             }
@@ -1477,7 +960,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> MarkAllNotificationsRead()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return Json(new { success = false, message = "Unauthorized" });
             }
@@ -1512,7 +995,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/GetUnreadCount
         public async Task<IActionResult> GetUnreadCount()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return Json(new { count = 0 });
             }
@@ -1543,7 +1026,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -1596,9 +1079,9 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Admin/Reports
-        public IActionResult Reports()
+        public async Task<IActionResult> Reports()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
                 return RedirectToAction("Login", "Account");
 
             try
@@ -1641,284 +1124,146 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Admin/MessageLog
-        // GET: /Admin/MessageLog (Enhanced with filtering)
-        public async Task<IActionResult> MessageLog(
-            string senderName = null,
-            string senderRole = null,
-            string dateFilter = "all",
-            DateTime? startDate = null,
-            DateTime? endDate = null,
-            string keyword = null,
-            int? minLength = null,
-            int page = 1,
-            int pageSize = 20)
+        public async Task<IActionResult> MessageLog()
         {
-            if (!IsAdmin())
-                return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
+            
+            ViewBag.TotalMessagesCount = await _context.Messages.CountAsync();
+            ViewBag.BlockedMessagesCount = await _context.Messages.CountAsync(m => m.IsBlocked);
+            ViewBag.ActivePenaltiesCount = await _context.Penalties.CountAsync(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
 
-            try
+            return View(new List<AdminMessageViewModel>());
+        }
+
+        // AJAX GET: /Admin/GetFilteredMessages
+        [HttpGet]
+        public async Task<IActionResult> GetFilteredMessages(string type = "all", string role = "all", string time = "all", string search = "")
+        {
+            var query = _context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Conversation)
+                    .ThenInclude(c => c.Supplier)
+                        .ThenInclude(s => s.User)
+                .Include(m => m.Conversation)
+                    .ThenInclude(c => c.Retailer)
+                        .ThenInclude(r => r.User)
+                .AsQueryable();
+
+            // Type Filter
+            if (type == "blocked") query = query.Where(m => m.IsBlocked);
+            else if (type == "active") query = query.Where(m => !m.IsBlocked && _context.MessageViolations.Any(v => v.MessageId == m.Id && !v.IsResolved));
+            else query = query.Where(m => !m.IsBlocked);
+
+            // Role Filter
+            if (role != "all") query = query.Where(m => m.Sender.Role == role);
+
+            // Time Filter
+            if (time == "today") query = query.Where(m => m.CreatedAt >= DateTime.Today);
+            else if (time == "week") query = query.Where(m => m.CreatedAt >= DateTime.Today.AddDays(-7));
+            else if (time == "month") query = query.Where(m => m.CreatedAt >= DateTime.Today.AddDays(-30));
+
+            // Search
+            if (!string.IsNullOrEmpty(search))
             {
-                // Start with base query - get messages that are NOT blocked
-                var messagesQuery = _context.Messages
-                    .Include(m => m.Sender)
-                    .Include(m => m.Conversation)
-                        .ThenInclude(c => c.Supplier)
-                            .ThenInclude(s => s.User)
-                    .Include(m => m.Conversation)
-                        .ThenInclude(c => c.Retailer)
-                            .ThenInclude(r => r.User)
-                    .Where(m => !m.IsBlocked) // Only show non-blocked messages
-                    .AsQueryable();
-
-                // Apply filters
-                if (!string.IsNullOrEmpty(senderName))
-                {
-                    messagesQuery = messagesQuery.Where(m =>
-                        m.Sender.FullName.Contains(senderName) ||
-                        (m.Sender.Email != null && m.Sender.Email.Contains(senderName)));
-                }
-
-                if (!string.IsNullOrEmpty(senderRole))
-                {
-                    messagesQuery = messagesQuery.Where(m => m.Sender.Role == senderRole);
-                }
-
-                if (!string.IsNullOrEmpty(keyword))
-                {
-                    messagesQuery = messagesQuery.Where(m =>
-                        m.MessageText != null && m.MessageText.Contains(keyword));
-                }
-
-                if (minLength.HasValue && minLength.Value > 0)
-                {
-                    messagesQuery = messagesQuery.Where(m =>
-                        m.MessageText != null && m.MessageText.Length >= minLength.Value);
-                }
-
-                // Date filtering
-                var today = DateTime.Today;
-                switch (dateFilter)
-                {
-                    case "today":
-                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date == today);
-                        break;
-                    case "yesterday":
-                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date == today.AddDays(-1));
-                        break;
-                    case "last7days":
-                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date >= today.AddDays(-7));
-                        break;
-                    case "last30days":
-                        messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date >= today.AddDays(-30));
-                        break;
-                    case "custom":
-                        if (startDate.HasValue)
-                            messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date >= startDate.Value.Date);
-                        if (endDate.HasValue)
-                            messagesQuery = messagesQuery.Where(m => m.CreatedAt.Date <= endDate.Value.Date);
-                        break;
-                }
-
-                // Get counts for stats cards
-                ViewBag.TotalMessagesCount = await _context.Messages.CountAsync();
-                ViewBag.BlockedMessagesCount = await _context.Messages.CountAsync(m => m.IsBlocked);
-                ViewBag.ActivePenaltiesCount = await _context.Penalties.CountAsync(p => p.IsActive && (p.ExpiresAt == null || p.ExpiresAt > DateTime.Now));
-
-                // Execute query and get results
-                var filteredMessages = await messagesQuery
-                    .OrderByDescending(m => m.CreatedAt)
-                    .ToListAsync();
-
-                ViewBag.FilteredCount = filteredMessages.Count;
-
-                // Pagination
-                var totalItems = filteredMessages.Count;
-                var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-                var pagedMessages = filteredMessages
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                // Map to ViewModel
-                var viewModels = pagedMessages.Select(m => new AdminMessageViewModel
-                {
-                    MessageId = m.Id,
-                    SenderName = m.Sender?.FullName ?? "Unknown User",
-                    SenderRole = m.Sender?.Role ?? "Unknown",
-                    Content = m.MessageText ?? string.Empty,
-                    SentAt = m.CreatedAt,
-                    IsRead = m.IsRead,
-                    ConversationId = m.ConversationId,
-                    ConversationBetween = GetConversationBetween(m.Conversation)
-                }).ToList();
-
-                // Store filter values for the view
-                ViewBag.CurrentFilters = new
-                {
-                    SenderName = senderName,
-                    SenderRole = senderRole,
-                    DateFilter = dateFilter,
-                    StartDate = startDate?.ToString("yyyy-MM-dd"),
-                    EndDate = endDate?.ToString("yyyy-MM-dd"),
-                    Keyword = keyword,
-                    MinLength = minLength
-                };
-
-                ViewBag.CurrentPage = page;
-                ViewBag.TotalPages = totalPages;
-                ViewBag.HasFilters = !string.IsNullOrEmpty(senderName) ||
-                                    !string.IsNullOrEmpty(senderRole) ||
-                                    dateFilter != "all" ||
-                                    !string.IsNullOrEmpty(keyword) ||
-                                    (minLength.HasValue && minLength.Value > 0);
-
-                return View(viewModels);
+                search = search.ToLower();
+                query = query.Where(m => (m.Sender.FullName != null && m.Sender.FullName.ToLower().Contains(search)) || 
+                                       (m.MessageText != null && m.MessageText.ToLower().Contains(search)));
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "MessageLog Error");
-                TempData["ErrorMessage"] = "Error loading message logs.";
-                return View(new List<AdminMessageViewModel>());
-            }
+
+            var items = await query.OrderByDescending(m => m.CreatedAt).Take(100).ToListAsync();
+            
+            var result = items.Select(m => new {
+                m.Id,
+                SenderName = m.Sender?.FullName ?? "Unknown",
+                SenderEmail = m.Sender?.Email,
+                SenderRole = m.Sender?.Role,
+                Content = m.MessageText,
+                SentAt = m.CreatedAt,
+                m.ConversationId,
+                ConversationBetween = GetConversationBetween(m.Conversation),
+                ContainsFlaggedWords = m.IsBlocked
+            });
+
+            var counts = new {
+                total = await _context.Messages.CountAsync(),
+                blocked = await _context.Messages.CountAsync(m => m.IsBlocked),
+                penalties = await _context.Penalties.CountAsync(p => p.IsActive)
+            };
+
+            return Json(new { items = result, counts });
         }
 
         // GET: /Admin/BlockedMessages
-        // GET: /Admin/BlockedMessages (Enhanced with filtering)
-        public async Task<IActionResult> BlockedMessages(
-            string senderName = null,
-            string senderRole = null,
-            string violationType = null,
-            string dateFilter = "all",
-            DateTime? startDate = null,
-            DateTime? endDate = null,
-            bool? isResolved = null,
-            int page = 1,
-            int pageSize = 20)
+        public async Task<IActionResult> BlockedMessages()
         {
-            if (!IsAdmin())
-                return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
-            try
+            ViewBag.TotalBlockedCount = await _context.MessageViolations.CountAsync();
+            ViewBag.PendingCount = await _context.MessageViolations.CountAsync(v => !v.IsResolved);
+            ViewBag.ResolvedCount = await _context.MessageViolations.CountAsync(v => v.IsResolved);
+
+            return View(new List<BlockedMessageViewModel>());
+        }
+
+        // AJAX GET: /Admin/GetFilteredBlockedMessages
+        [HttpGet]
+        public async Task<IActionResult> GetFilteredBlockedMessages(string type = "all", string role = "all", string time = "all", string search = "")
+        {
+            var query = _context.MessageViolations
+                .Include(v => v.Message)
+                    .ThenInclude(m => m.Sender)
+                .Include(v => v.Message)
+                    .ThenInclude(m => m.Conversation)
+                        .ThenInclude(c => c.Supplier)
+                            .ThenInclude(s => s.User)
+                .Include(v => v.Message)
+                    .ThenInclude(m => m.Conversation)
+                        .ThenInclude(c => c.Retailer)
+                            .ThenInclude(r => r.User)
+                .AsQueryable();
+
+            // Type Filter
+            if (type == "blocked") query = query.Where(v => !v.IsResolved);
+            else if (type == "active") query = query.Where(v => v.IsResolved);
+
+            // Role Filter
+            if (role != "all") query = query.Where(v => v.Message.Sender.Role == role);
+
+            // Time Filter
+            if (time == "today") query = query.Where(v => v.CreatedAt >= DateTime.Today);
+            else if (time == "week") query = query.Where(v => v.CreatedAt >= DateTime.Today.AddDays(-7));
+            else if (time == "month") query = query.Where(v => v.CreatedAt >= DateTime.Today.AddDays(-30));
+
+            // Search
+            if (!string.IsNullOrEmpty(search))
             {
-                var violationsQuery = _context.MessageViolations
-                    .Include(v => v.Message)
-                        .ThenInclude(m => m.Sender)
-                    .Include(v => v.Message)
-                        .ThenInclude(m => m.Conversation)
-                            .ThenInclude(c => c.Supplier)
-                                .ThenInclude(s => s.User)
-                    .Include(v => v.Message)
-                        .ThenInclude(m => m.Conversation)
-                            .ThenInclude(c => c.Retailer)
-                                .ThenInclude(r => r.User)
-                    .AsQueryable();
-
-                // Apply filters
-                if (!string.IsNullOrEmpty(senderName))
-                {
-                    violationsQuery = violationsQuery.Where(v =>
-                        v.Message.Sender.FullName.Contains(senderName));
-                }
-
-                if (!string.IsNullOrEmpty(senderRole))
-                {
-                    violationsQuery = violationsQuery.Where(v =>
-                        v.Message.Sender.Role == senderRole);
-                }
-
-                if (!string.IsNullOrEmpty(violationType))
-                {
-                    violationsQuery = violationsQuery.Where(v =>
-                        v.ViolationType.Contains(violationType));
-                }
-
-                if (isResolved.HasValue)
-                {
-                    violationsQuery = violationsQuery.Where(v => v.IsResolved == isResolved.Value);
-                }
-
-                // Date filtering
-                var today = DateTime.Today;
-                switch (dateFilter)
-                {
-                    case "today":
-                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date == today);
-                        break;
-                    case "yesterday":
-                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date == today.AddDays(-1));
-                        break;
-                    case "last7days":
-                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date >= today.AddDays(-7));
-                        break;
-                    case "last30days":
-                        violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date >= today.AddDays(-30));
-                        break;
-                    case "custom":
-                        if (startDate.HasValue)
-                            violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date >= startDate.Value.Date);
-                        if (endDate.HasValue)
-                            violationsQuery = violationsQuery.Where(v => v.CreatedAt.Date <= endDate.Value.Date);
-                        break;
-                }
-
-                // Execute query
-                var filteredViolations = await violationsQuery
-                    .OrderByDescending(v => v.CreatedAt)
-                    .ToListAsync();
-
-                ViewBag.FilteredCount = filteredViolations.Count;
-
-                // Pagination
-                var totalItems = filteredViolations.Count;
-                var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-                var pagedViolations = filteredViolations
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                // Map to ViewModel
-                var viewModels = pagedViolations.Select(v => new BlockedMessageViewModel
-                {
-                    ViolationId = v.Id,
-                    MessageId = v.Message.Id,
-                    SenderName = v.Message.Sender?.FullName ?? "Unknown",
-                    SenderRole = v.Message.Sender?.Role ?? "Unknown",
-                    Content = v.Message.MessageText ?? string.Empty,
-                    ViolationType = v.ViolationType,
-                    CreatedAt = v.CreatedAt,
-                    IsResolved = v.IsResolved,
-                    ConversationId = v.Message.ConversationId,
-                    ConversationBetween = GetConversationBetween(v.Message.Conversation)
-                }).ToList();
-
-                // Store filter values for the view
-                ViewBag.CurrentFilters = new
-                {
-                    SenderName = senderName,
-                    SenderRole = senderRole,
-                    ViolationType = violationType,
-                    DateFilter = dateFilter,
-                    StartDate = startDate?.ToString("yyyy-MM-dd"),
-                    EndDate = endDate?.ToString("yyyy-MM-dd"),
-                    IsResolved = isResolved
-                };
-
-                ViewBag.CurrentPage = page;
-                ViewBag.TotalPages = totalPages;
-                ViewBag.HasFilters = !string.IsNullOrEmpty(senderName) ||
-                                    !string.IsNullOrEmpty(senderRole) ||
-                                    !string.IsNullOrEmpty(violationType) ||
-                                    dateFilter != "all" ||
-                                    isResolved.HasValue;
-
-                return View(viewModels);
+                search = search.ToLower();
+                query = query.Where(v => (v.Message.Sender.FullName != null && v.Message.Sender.FullName.ToLower().Contains(search)) || 
+                                       (v.Message.MessageText != null && v.Message.MessageText.ToLower().Contains(search)));
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "BlockedMessages Error");
-                TempData["ErrorMessage"] = "Error loading blocked messages.";
-                return View(new List<BlockedMessageViewModel>());
-            }
+
+            var items = await query.OrderByDescending(v => v.CreatedAt).Take(100).ToListAsync();
+
+            var result = items.Select(v => new {
+                v.Id,
+                ViolationId = v.Id,
+                SenderName = v.Message.Sender?.FullName ?? "Unknown",
+                SenderRole = v.Message.Sender?.Role,
+                Content = v.Message.MessageText,
+                v.ViolationType,
+                v.CreatedAt,
+                v.IsResolved,
+                v.Message.ConversationId,
+                IsSevere = v.ViolationType != null && (v.ViolationType.Contains("Payment") || v.ViolationType.Contains("Phone"))
+            });
+
+            var counts = new {
+                total = await _context.MessageViolations.CountAsync(),
+                pending = await _context.MessageViolations.CountAsync(v => !v.IsResolved),
+                resolved = await _context.MessageViolations.CountAsync(v => v.IsResolved)
+            };
+
+            return Json(new { items = result, counts });
         }
 
         // Helper method to get conversation display string
@@ -1956,7 +1301,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/ViewConversation/{id}
         public async Task<IActionResult> ViewConversation(int id)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
                 return RedirectToAction("Login", "Account");
 
             try
@@ -1987,7 +1332,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> ResolveViolation(int id)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
                 return Json(new { success = false, message = "Unauthorized" });
 
             try
@@ -2010,7 +1355,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/Penalties
         public async Task<IActionResult> Penalties()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
                 return RedirectToAction("Login", "Account");
 
             try
@@ -2036,7 +1381,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/UserPenalties/{userId}
         public async Task<IActionResult> UserPenalties(int userId)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
                 return RedirectToAction("Login", "Account");
 
             try
@@ -2065,7 +1410,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> ClearPenalty(int penaltyId)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
                 return Json(new { success = false, message = "Unauthorized" });
 
             try
@@ -2092,7 +1437,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResolveAppeal(int penaltyId, bool approve, string response)
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
                 return RedirectToAction("Login", "Account");
 
             try
@@ -2158,7 +1503,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/AuditLogs
         public async Task<IActionResult> AuditLogs()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -2184,7 +1529,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/EmailLogs
         public async Task<IActionResult> EmailLogs()
         {
-            if (!IsAdmin())
+            if (!await IsAdminAndPopulateNotifications())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -2211,7 +1556,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/Categories
         public async Task<IActionResult> Categories()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             var categories = await _context.ProductCategories
                 .Include(c => c.ParentCategory)
                 .OrderBy(c => c.CategoryName)
@@ -2224,7 +1569,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleCategoryActive(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             var category = await _context.ProductCategories.FindAsync(id);
             if (category == null) return NotFound();
 
@@ -2236,7 +1581,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/ManageSupplierCategories/{id}
         public async Task<IActionResult> ManageSupplierCategories(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             var supplier = await _context.Suppliers
                 .Include(s => s.SupplierCategories)
                 .FirstOrDefaultAsync(s => s.Id == id);
@@ -2252,7 +1597,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateSupplierCategories(int supplierId, List<int> selectedCategoryIds)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             
             var existingCategories = _context.SupplierCategories.Where(sc => sc.SupplierId == supplierId);
             _context.SupplierCategories.RemoveRange(existingCategories);
@@ -2273,7 +1618,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/ManageRetailerCategories/{id}
         public async Task<IActionResult> ManageRetailerCategories(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             var retailer = await _context.Retailers
                 .Include(r => r.RetailerCategories)
                 .FirstOrDefaultAsync(r => r.Id == id);
@@ -2289,7 +1634,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateRetailerCategories(int retailerId, List<int> selectedCategoryIds)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var existingCategories = _context.RetailerCategories.Where(rc => rc.RetailerId == retailerId);
             _context.RetailerCategories.RemoveRange(existingCategories);
@@ -2312,7 +1657,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BulkAssignCategories(List<int> userIds, List<int> categoryIds, string role)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             if (userIds == null || !userIds.Any() || categoryIds == null || !categoryIds.Any())
             {
                 TempData["ErrorMessage"] = "Please select users and categories.";
@@ -2360,7 +1705,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/CommissionOverview
         public async Task<IActionResult> CommissionOverview()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             
             var commissions = await _context.Commissions
                 .Include(c => c.Supplier)
@@ -2407,7 +1752,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/Transactions
         public async Task<IActionResult> Transactions()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             var transactions = await _context.Commissions
                 .Include(c => c.Retailer)
                 .Include(c => c.Supplier)
@@ -2419,7 +1764,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/Payouts
         public async Task<IActionResult> Payouts()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
             var payouts = await _context.Commissions
                 .Include(c => c.Supplier)
                 .Where(c => c.PaymentType == "SupplierPayout")
@@ -2431,7 +1776,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/FinancialReports
         public async Task<IActionResult> FinancialReports()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             try
             {
@@ -2494,7 +1839,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/ExportCommissions
         public async Task<IActionResult> ExportCommissions()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var commissions = await _context.Commissions
                 .Include(c => c.Supplier)
@@ -2517,7 +1862,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/ExportFinancials
         public async Task<IActionResult> ExportFinancials()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var financials = await _context.Commissions
                 .Include(c => c.Supplier)
@@ -2541,7 +1886,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/ExportAuditLogs
         public async Task<IActionResult> ExportAuditLogs()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var logs = await _context.AuditLogs
                 .Include(a => a.PerformedByUser)
@@ -2715,13 +2060,6 @@ namespace SCM_System.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Update session for immediate UI reflect
-            HttpContext.Session.SetString("UserName", user.FullName);
-            if (!string.IsNullOrEmpty(user.ProfileImage))
-            {
-                HttpContext.Session.SetString("ProfileImg", user.ProfileImage);
-            }
-
             TempData["SuccessMessage"] = "Admin settings updated successfully.";
             return RedirectToAction("Settings");
         }
@@ -2835,7 +2173,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleTestMode(bool isTestMode)
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!await IsAdminAndPopulateNotifications()) return Unauthorized();
             await SaveOrUpdateConfig("ChapaTestMode", isTestMode.ToString(), "bool");
             await _context.SaveChangesAsync();
             return Json(new { success = true });
@@ -2843,9 +2181,9 @@ namespace SCM_System.Controllers
 
         // AJAX: GenerateApiKey
         [HttpPost]
-        public IActionResult GenerateApiKey()
+        public async Task<IActionResult> GenerateApiKey()
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!await IsAdminAndPopulateNotifications()) return Unauthorized();
             var newKey = "SCM_" + Guid.NewGuid().ToString("N").ToUpper();
             return Json(new { success = true, key = newKey });
         }
@@ -2854,7 +2192,7 @@ namespace SCM_System.Controllers
         [HttpPost]
         public async Task<IActionResult> SendTestEmail(string email)
         {
-            if (!IsAdmin()) return Unauthorized();
+            if (!await IsAdminAndPopulateNotifications()) return Unauthorized();
             try
             {
                 await _emailService.SendApprovalEmailAsync(email, "Test User", "Admin");
@@ -2869,7 +2207,7 @@ namespace SCM_System.Controllers
         // GET: /Admin/UserDetails/{id}
         public async Task<IActionResult> UserDetails(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var user = await _context.Users.FindAsync(id);
             if (user == null)
@@ -2898,7 +2236,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SuspendUser(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var user = await _context.Users.FindAsync(id);
             if (user == null)
@@ -2922,7 +2260,7 @@ namespace SCM_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectFayda(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
 
             var user = await _context.Users.FindAsync(id);
             if (user == null)
