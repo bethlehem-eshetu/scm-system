@@ -8,76 +8,76 @@
     <!-- Premium Header -->
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1"><i class="fas fa-gavel me-2 text-accent-green"></i>Marketplace Tenders</h1>
-            <p class="text-muted small mb-0 mt-1">Discover and bid on procurement contracts matched to your business specialization.</p>
+            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text"><i class="fas fa-gavel me-2 text-accent-green"></i>Marketplace Tenders</h1>
+            <p class="text-muted small mb-0 mt-1 dark-mode-text">Discover and bid on procurement contracts matched to your business specialization.</p>
         </div>
         <div class="d-flex gap-3">
-            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center">
+            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-filter-btn">
                 <i class="fas fa-filter me-2 text-dark-green"></i> Smart Filter
             </button>
         </div>
     </div>
 
     <!-- Tenders Intelligence Pipeline -->
-    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white">
-        <div class="card-header bg-white py-4 px-5 border-0">
-            <h5 class="fw-bold text-dark-green mb-0">Live Procurement Streams</h5>
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white dark-mode-card">
+        <div class="card-header bg-white py-4 px-5 border-0 dark-mode-card-header">
+            <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">Live Procurement Streams</h5>
         </div>
-        <div class="table-responsive px-4 pb-4">
-            <table class="table table-hover align-middle mb-0 custom-nexus-table">
-                <thead>
+        <div class="table-responsive px-4 pb-4 dark-mode-table-wrapper">
+            <table class="table table-hover align-middle mb-0 custom-nexus-table dark-mode-table">
+                <thead class="dark-mode-thead">
                     <tr class="extra-small text-muted text-uppercase ls-1">
-                        <th class="ps-4">Reference No.</th>
-                        <th>Strategic Opportunity</th>
-                        <th>Retailer Entity</th>
-                        <th>Submission Deadline</th>
-                        <th>Expected Delivery</th>
-                        <th class="text-end pe-4">Operations</th>
+                        <th class="ps-4 dark-mode-text">Reference No.</th>
+                        <th class="dark-mode-text">Strategic Opportunity</th>
+                        <th class="dark-mode-text">Retailer Entity</th>
+                        <th class="dark-mode-text">Submission Deadline</th>
+                        <th class="dark-mode-text">Expected Delivery</th>
+                        <th class="text-end pe-4 dark-mode-text">Operations</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="dark-mode-tbody">
                     @if (Model != null && Model.Any())
                     {
                         foreach (var item in Model)
                         {
-                            <tr>
+                            <tr class="dark-mode-row">
                                 <td class="ps-4">
-                                    <span class="badge bg-faint-green text-dark-green rounded-pill px-3 py-2 fw-bold extra-small border ls-1">@item.ReferenceNumber</span>
+                                    <span class="badge bg-faint-green text-dark-green rounded-pill px-3 py-2 fw-bold extra-small border ls-1 dark-mode-ref-badge">@item.ReferenceNumber</span>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-dark-green mb-1">@item.Title</div>
-                                    <div class="text-muted extra-small text-truncate fw-bold" style="max-width: 280px;">@item.Description</div>
+                                    <div class="fw-bold text-dark-green mb-1 dark-mode-text">@item.Title</div>
+                                    <div class="text-muted extra-small text-truncate fw-bold dark-mode-text" style="max-width: 280px;">@item.Description</div>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="bg-dark-green text-accent-green rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 800;">
+                                        <div class="bg-dark-green text-accent-green rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm dark-mode-retailer-icon" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 800;">
                                             @(item.Retailer?.BusinessName?.Substring(0, 1) ?? "R")
                                         </div>
                                         <div>
-                                            <div class="fw-bold text-dark-green small">@item.Retailer?.BusinessName</div>
-                                            <div class="extra-small text-muted">Tier 1 Retailer</div>
+                                            <div class="fw-bold text-dark-green small dark-mode-text">@item.Retailer?.BusinessName</div>
+                                            <div class="extra-small text-muted dark-mode-text">Tier 1 Retailer</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="small fw-bold text-dark-green">
+                                    <div class="small fw-bold text-dark-green dark-mode-text">
                                         <i class="far fa-clock me-1 text-warning"></i>
                                         @item.SubmissionDeadline.ToString("MMM dd, yyyy")
                                     </div>
-                                    <div class="extra-small text-muted fw-bold">@item.SubmissionDeadline.ToString("HH:mm") GMT</div>
+                                    <div class="extra-small text-muted fw-bold dark-mode-text">@item.SubmissionDeadline.ToString("HH:mm") GMT</div>
                                 </td>
                                 <td>
-                                    <div class="small fw-bold text-dark-green">
+                                    <div class="small fw-bold text-dark-green dark-mode-text">
                                         <i class="fas fa-truck me-1 text-accent-green"></i>
                                         @item.ExpectedDeliveryDate.ToString("MMM dd, yyyy")
                                     </div>
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-faint-green text-dark-green rounded-pill px-3 py-2 fw-bold extra-small shadow-sm">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-faint-green text-dark-green rounded-pill px-3 py-2 fw-bold extra-small shadow-sm dark-mode-view-btn">
                                             <i class="fas fa-eye me-1 opacity-50"></i> View Brief
                                         </a>
-                                        <a asp-controller="Bid" asp-action="Submit" asp-route-tenderId="@item.Id" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold shadow-premium extra-small">
+                                        <a asp-controller="Bid" asp-action="Submit" asp-route-tenderId="@item.Id" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold shadow-premium extra-small dark-mode-submit-btn">
                                             <i class="fas fa-gavel me-2 text-accent-green"></i> Submit Proposal
                                         </a>
                                     </div>
@@ -89,10 +89,10 @@
                     {
                         <tr>
                             <td colspan="6" class="text-center py-5">
-                                <div class="bg-faint-green rounded-5 p-5 border-dashed-custom mx-4">
+                                <div class="bg-faint-green rounded-5 p-5 border-dashed-custom mx-4 dark-mode-empty-state">
                                     <i class="fas fa-search fa-4x text-dark-green opacity-10 mb-4"></i>
-                                    <h5 class="fw-bold text-dark-green">No Matched Tenders</h5>
-                                    <p class="text-muted small mb-0">Update your business specialization to see more matched opportunities.</p>
+                                    <h5 class="fw-bold text-dark-green dark-mode-text">No Matched Tenders</h5>
+                                    <p class="text-muted small mb-0 dark-mode-text">Update your business specialization to see more matched opportunities.</p>
                                 </div>
                             </td>
                         </tr>
@@ -136,5 +136,127 @@
 
         .hover-lift { transition: all 0.3s ease; }
         .hover-lift:hover { transform: translateY(-5px); }
+
+        /* ============================================ */
+        /* DARK MODE STYLES - DARK BLUE THEME */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-header {
+            background-color: #1e293b !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-table-wrapper {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-table {
+            background-color: #1e293b !important;
+        }
+
+        /* FIXED: Table header background */
+        body.dark-mode .dark-mode-thead {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-thead th {
+            color: #cbd5e1 !important;
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr:hover {
+            background-color: #2d3a4a !important;
+        }
+
+        body.dark-mode .dark-mode-row td {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Reference badge dark mode */
+        body.dark-mode .dark-mode-ref-badge {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Retailer icon dark mode */
+        body.dark-mode .dark-mode-retailer-icon {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Filter button dark mode */
+        body.dark-mode .dark-mode-filter-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-filter-btn i {
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-filter-btn:hover {
+            background-color: #475569 !important;
+        }
+
+        /* View button dark mode */
+        body.dark-mode .dark-mode-view-btn {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-view-btn:hover {
+            background-color: #475569 !important;
+        }
+
+        /* Submit button dark mode */
+        body.dark-mode .dark-mode-submit-btn {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-submit-btn:hover {
+            background-color: #1e293b !important;
+        }
+
+        /* Empty state dark mode */
+        body.dark-mode .dark-mode-empty-state {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Table cell text colors */
+        body.dark-mode .custom-nexus-table tbody td {
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Deadline and delivery text */
+        body.dark-mode .text-muted {
+            color: #9ca3af !important;
+        }
+
+        body.dark-mode .text-warning {
+            color: #fbbf24 !important;
+        }
+
+        body.dark-mode .text-accent-green {
+            color: #a5f3c3 !important;
+        }
     </style>
 }

@@ -1,25 +1,25 @@
 @model SCM_System.Models.ViewModels.ProductViewModel
 
 @{
-    ViewData["Title"] = "Configure New Asset";
+    ViewData["Title"] = "Add New Product";
     Layout = "_DashboardLayout";
 }
 
 <div class="container-fluid py-4 px-4">
-    <!-- Premium Page Header (Nexus Style) -->
+    <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div class="d-flex align-items-center">
             <div class="bg-dark-green text-accent-green p-4 rounded-circle me-4 shadow-premium">
                 <i class="fas fa-box-open fs-3"></i>
             </div>
             <div>
-                <h1 class="h2 fw-bold text-dark-green mb-1">Configure New Asset</h1>
-                <p class="text-muted small mb-0 mt-1">Define your product specifications and global inventory strategy</p>
+                <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text">Add New Product</h1>
+                <p class="text-muted small mb-0 mt-1 dark-mode-text">Fill in the details about your product</p>
             </div>
         </div>
         <div>
-            <a asp-action="MyProducts" class="btn btn-faint-green text-dark-green fw-bold px-4 py-2 rounded-pill shadow-sm">
-                <i class="fas fa-arrow-left me-2"></i>Return to Catalog
+            <a asp-action="MyProducts" class="btn btn-faint-green text-dark-green fw-bold px-4 py-2 rounded-pill shadow-sm dark-mode-btn">
+                <i class="fas fa-arrow-left me-2"></i>Back to My Products
             </a>
         </div>
     </div>
@@ -37,48 +37,48 @@
         <div class="row g-4">
             <!-- Main Form Column -->
             <div class="col-lg-8">
-                <div class="card border-0 rounded-5 shadow-premium bg-white overflow-hidden">
-                    <div class="card-header bg-white p-4 border-0 pb-0">
-                        <ul class="nav nexus-tabs d-flex flex-nowrap overflow-auto gap-2" id="productTabs" role="tablist">
+                <div class="card border-0 rounded-5 shadow-premium bg-white overflow-hidden dark-mode-card">
+                    <div class="card-header bg-white p-4 border-0 pb-0 dark-mode-header">
+                        <ul class="nav nexus-tabs d-flex flex-nowrap overflow-auto gap-2 dark-mode-tabs" id="productTabs" role="tablist">
                             <li class="nav-item flex-grow-1" role="presentation">
-                                <button class="nav-link active w-100 py-3 rounded-4 fw-bold" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
-                                    <i class="fas fa-info-circle me-2"></i>Basic Identity
+                                <button class="nav-link active w-100 py-3 rounded-4 fw-bold dark-mode-tab" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
+                                    <i class="fas fa-info-circle me-2"></i>Basic Info
                                 </button>
                             </li>
                             <li class="nav-item flex-grow-1" role="presentation">
-                                <button class="nav-link w-100 py-3 rounded-4 fw-bold" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing" type="button" role="tab">
-                                    <i class="fas fa-tags me-2"></i>Fiscal & Supply
+                                <button class="nav-link w-100 py-3 rounded-4 fw-bold dark-mode-tab" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing" type="button" role="tab">
+                                    <i class="fas fa-tags me-2"></i>Price & Stock
                                 </button>
                             </li>
                             <li class="nav-item flex-grow-1" role="presentation">
-                                <button class="nav-link w-100 py-3 rounded-4 fw-bold" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs" type="button" role="tab">
-                                    <i class="fas fa-microchip me-2"></i>Technical Specs
+                                <button class="nav-link w-100 py-3 rounded-4 fw-bold dark-mode-tab" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs" type="button" role="tab">
+                                    <i class="fas fa-microchip me-2"></i>Details
                                 </button>
                             </li>
                             <li class="nav-item flex-grow-1" role="presentation">
-                                <button class="nav-link w-100 py-3 rounded-4 fw-bold" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab">
-                                    <i class="fas fa-shipping-fast me-2"></i>Logistics
+                                <button class="nav-link w-100 py-3 rounded-4 fw-bold dark-mode-tab" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab">
+                                    <i class="fas fa-shipping-fast me-2"></i>Shipping
                                 </button>
                             </li>
                         </ul>
                     </div>
                     
-                    <div class="card-body p-5">
+                    <div class="card-body p-5 dark-mode-body">
                         <div class="tab-content">
-                            <!-- TAB 1: BASIC IDENTITY -->
+                            <!-- TAB 1: BASIC INFO -->
                             <div class="tab-pane fade show active" id="basic" role="tabpanel">
                                 <div class="row g-4">
                                     <div class="col-md-8">
-                                        <label asp-for="ProductName" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Product Name <span class="text-danger">*</span></label>
-                                        <input asp-for="ProductName" class="form-control nexus-input" placeholder="e.g., Premium Industrial Grade Steel" />
+                                        <label asp-for="ProductName" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Product Name <span class="text-danger">*</span></label>
+                                        <input asp-for="ProductName" class="form-control nexus-input dark-mode-input" placeholder="e.g., Heavy Duty Steel Pipe" />
                                         <span asp-validation-for="ProductName" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label asp-for="SKU" class="form-label text-dark-green fw-bold small text-uppercase ls-1">SKU Identification</label>
+                                        <label asp-for="SKU" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Product Code (SKU)</label>
                                         <div class="input-group">
-                                            <input asp-for="SKU" class="form-control nexus-input border-end-0" placeholder="Auto-generated" />
-                                            <button type="button" class="btn btn-faint-green border border-start-0 nexus-input text-dark-green" onclick="generateSKU()">
+                                            <input asp-for="SKU" class="form-control nexus-input border-end-0 dark-mode-input" placeholder="Auto-generated" />
+                                            <button type="button" class="btn btn-faint-green border border-start-0 nexus-input text-dark-green dark-mode-btn" onclick="generateSKU()">
                                                 <i class="fas fa-sync-alt"></i>
                                             </button>
                                         </div>
@@ -86,121 +86,123 @@
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label asp-for="CategoryId" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Market Category <span class="text-danger">*</span></label>
-                                        <select asp-for="CategoryId" asp-items="Model.CategoryList" class="form-select nexus-input">
-                                            <option value="">-- Select Category --</option>
+                                        <label asp-for="CategoryId" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Product Group <span class="text-danger">*</span></label>
+                                        <select asp-for="CategoryId" asp-items="Model.CategoryList" class="form-select nexus-input dark-mode-select">
+                                            <option value="">-- Pick a Group --</option>
                                         </select>
                                         <span asp-validation-for="CategoryId" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label asp-for="SubCategoryId" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Market Segment</label>
-                                        <select asp-for="SubCategoryId" class="form-select nexus-input" id="subCategorySelect" data-selected="@Model.SubCategoryId">
-                                            <option value="">-- Select Segment --</option>
+                                        <label asp-for="SubCategoryId" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Product Type</label>
+                                        <select asp-for="SubCategoryId" class="form-select nexus-input dark-mode-select" id="subCategorySelect" data-selected="@Model.SubCategoryId">
+                                            <option value="">-- Pick a Type --</option>
                                         </select>
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label asp-for="Brand" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Manufacturer Brand</label>
-                                        <input asp-for="Brand" class="form-control nexus-input" placeholder="e.g., SCM Industries" />
+                                        <label asp-for="Brand" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Brand Name</label>
+                                        <input asp-for="Brand" class="form-control nexus-input dark-mode-input" placeholder="e.g., SCM Industries" />
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark-green fw-bold small text-uppercase ls-1">Asset Status</label>
+                                        <label class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Product Status</label>
                                         <div class="d-flex gap-4 mt-2">
                                             <div class="form-check form-switch">
-                                                <input asp-for="IsActive" class="form-check-input nexus-switch" type="checkbox" checked>
-                                                <label asp-for="IsActive" class="form-check-label small text-muted fw-bold">Active</label>
+                                                <input asp-for="IsActive" class="form-check-input nexus-switch dark-mode-switch" type="checkbox" checked>
+                                                <label asp-for="IsActive" class="form-check-label small text-muted fw-bold dark-mode-label">Available for Sale</label>
                                             </div>
                                             <div class="form-check form-switch">
-                                                <input asp-for="IsFeatured" class="form-check-input nexus-switch" type="checkbox">
-                                                <label asp-for="IsFeatured" class="form-check-label small text-muted fw-bold">Featured</label>
+                                                <input asp-for="IsFeatured" class="form-check-input nexus-switch dark-mode-switch" type="checkbox">
+                                                <label asp-for="IsFeatured" class="form-check-label small text-muted fw-bold dark-mode-label">Show as Featured</label>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     <div class="col-12">
-                                        <label asp-for="Description" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Market Narrative (Description)</label>
-                                        <textarea asp-for="Description" class="form-control nexus-input" rows="5" placeholder="Detailed product specifications and value proposition..."></textarea>
+                                        <label asp-for="Description" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Full Description</label>
+                                        <textarea asp-for="Description" class="form-control nexus-input dark-mode-input" rows="5" placeholder="Write everything about your product..."></textarea>
                                         <span asp-validation-for="Description" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     
                                     <div class="col-12">
-                                        <label asp-for="ShortDescription" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Snippet Summary</label>
-                                        <input asp-for="ShortDescription" class="form-control nexus-input" placeholder="One-sentence hook for catalog cards" />
-                                        <small class="text-muted extra-small">Max 150 characters for optimal display.</small>
+                                        <label asp-for="ShortDescription" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Short Summary</label>
+                                        <input asp-for="ShortDescription" class="form-control nexus-input dark-mode-input" placeholder="Short one-line description for product cards" />
+                                        <small class="text-muted extra-small dark-mode-text">Keep under 150 characters.</small>
                                     </div>
                                     
                                     <div class="col-md-12">
-                                        <label asp-for="Tags" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Search Keywords (Tags)</label>
-                                        <input asp-for="Tags" class="form-control nexus-input" placeholder="industrial, heavy-duty, fast-shipping" />
-                                        <small class="text-muted extra-small">Separate with commas for advanced indexing.</small>
+                                        <label asp-for="Tags" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Search Words (Tags)</label>
+                                        <input asp-for="Tags" class="form-control nexus-input dark-mode-input" placeholder="steel, heavy-duty, industrial" />
+                                        <small class="text-muted extra-small dark-mode-text">Separate words with commas.</small>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- TAB 2: FISCAL & SUPPLY -->
+                            <!-- TAB 2: PRICE & STOCK -->
                             <div class="tab-pane fade" id="pricing" role="tabpanel">
                                 <div class="row g-4">
                                     <div class="col-md-4">
-                                        <label asp-for="BasePrice" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Base Price (Wholesale) <span class="text-danger">*</span></label>
+                                        <label asp-for="BasePrice" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Your Selling Price <span class="text-danger">*</span></label>
                                         <div class="input-group">
-                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold">ETB</span>
-                                            <input asp-for="BasePrice" class="form-control nexus-input border-start-0" type="number" step="0.01" />
+                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold dark-mode-input-group">ETB</span>
+                                            <input asp-for="BasePrice" class="form-control nexus-input border-start-0 dark-mode-input" type="number" step="0.01" />
                                         </div>
                                         <span asp-validation-for="BasePrice" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label asp-for="CostPrice" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Acquisition Cost</label>
+                                        <label asp-for="CostPrice" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">What You Paid</label>
                                         <div class="input-group">
-                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold">ETB</span>
-                                            <input asp-for="CostPrice" class="form-control nexus-input border-start-0" type="number" step="0.01" />
+                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold dark-mode-input-group">ETB</span>
+                                            <input asp-for="CostPrice" class="form-control nexus-input border-start-0 dark-mode-input" type="number" step="0.01" placeholder="Your cost" />
+                                        </div>
+                                        <small class="text-muted extra-small dark-mode-text">How much it cost you to get this product</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="WholesalePrice" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Bulk Price (for large orders)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold dark-mode-input-group">ETB</span>
+                                            <input asp-for="WholesalePrice" class="form-control nexus-input border-start-0 dark-mode-input" type="number" step="0.01" />
                                         </div>
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label asp-for="WholesalePrice" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Bulk Listing Price</label>
+                                        <label asp-for="DiscountPercentage" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Discount (%)</label>
                                         <div class="input-group">
-                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold">ETB</span>
-                                            <input asp-for="WholesalePrice" class="form-control nexus-input border-start-0" type="number" step="0.01" />
+                                            <input asp-for="DiscountPercentage" class="form-control nexus-input border-end-0 dark-mode-input" type="number" step="0.01" min="0" max="100" />
+                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold dark-mode-input-group">% off</span>
+                                        </div>
+                                        <small class="text-muted extra-small dark-mode-text">Percentage you want to reduce from selling price</small>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label asp-for="TaxRate" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Tax Rate (%)</label>
+                                        <div class="input-group">
+                                            <input asp-for="TaxRate" class="form-control nexus-input border-end-0 dark-mode-input" type="number" step="0.01" value="15" />
+                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold dark-mode-input-group">% tax</span>
                                         </div>
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label asp-for="DiscountPercentage" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Global Discount (%)</label>
-                                        <div class="input-group">
-                                            <input asp-for="DiscountPercentage" class="form-control nexus-input border-end-0" type="number" step="0.01" min="0" max="100" />
-                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold">%</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-4">
-                                        <label asp-for="TaxRate" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Standard Tax Rate (%)</label>
-                                        <div class="input-group">
-                                            <input asp-for="TaxRate" class="form-control nexus-input border-end-0" type="number" step="0.01" value="15" />
-                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold">%</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-4">
-                                        <div class="p-4 bg-dark-green text-white rounded-5 shadow-premium text-center">
-                                            <p class="extra-small text-white-50 text-uppercase fw-bold mb-1">Final Market Price</p>
+                                        <div class="p-4 bg-dark-green text-white rounded-5 shadow-premium text-center dark-mode-summary">
+                                            <p class="extra-small text-white-50 text-uppercase fw-bold mb-1">Customer Pays</p>
                                             <h3 class="fw-bold mb-0 text-accent-green" id="sellingPriceDisplay">0.00</h3>
-                                            <small class="extra-small opacity-75">ETB inclusive of Tax & Discount</small>
+                                            <small class="extra-small opacity-75">ETB (includes tax and discount)</small>
                                         </div>
                                     </div>
                                     
                                     <div class="col-12 py-3">
-                                        <div class="border-top border-light"></div>
+                                        <div class="border-top border-light dark-mode-border"></div>
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label asp-for="Unit" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Measurement Unit <span class="text-danger">*</span></label>
-                                        <select asp-for="Unit" class="form-select nexus-input">
+                                        <label asp-for="Unit" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">How You Sell It <span class="text-danger">*</span></label>
+                                        <select asp-for="Unit" class="form-select nexus-input dark-mode-select">
                                             <option value="">Select Unit</option>
                                             <option value="Kg">Kilogram (Kg)</option>
-                                            <option value="Pcs">Pieces (Pcs)</option>
+                                            <option value="Pcs">Piece (Pcs)</option>
                                             <option value="Box">Box</option>
                                             <option value="Pack">Pack</option>
                                             <option value="L">Liter (L)</option>
@@ -209,31 +211,33 @@
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label asp-for="MinimumOrderQuantity" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Minimum Order Level</label>
-                                        <input asp-for="MinimumOrderQuantity" class="form-control nexus-input" type="number" min="1" value="1" />
+                                        <label asp-for="MinimumOrderQuantity" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Smallest Order Allowed</label>
+                                        <input asp-for="MinimumOrderQuantity" class="form-control nexus-input dark-mode-input" type="number" min="1" value="1" />
+                                        <small class="text-muted extra-small dark-mode-text">Customer must buy at least this many</small>
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <label asp-for="ReorderLevel" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Strategic Reorder Level</label>
-                                        <input asp-for="ReorderLevel" class="form-control nexus-input" type="number" min="0" value="10" />
+                                        <label asp-for="ReorderLevel" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Reorder When Stock Hits</label>
+                                        <input asp-for="ReorderLevel" class="form-control nexus-input dark-mode-input" type="number" min="0" value="10" />
+                                        <small class="text-muted extra-small dark-mode-text">Get alert when stock goes below this number</small>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- TAB 3: TECHNICAL SPECS -->
+                            <!-- TAB 3: DETAILS -->
                             <div class="tab-pane fade" id="specs" role="tabpanel">
                                 <div class="row g-4" id="dynamicAttributesContainer">
                                     <div class="col-12 text-center py-5">
-                                        <div class="bg-faint-green rounded-5 p-5 border-dashed-custom">
+                                        <div class="bg-faint-green rounded-5 p-5 border-dashed-custom dark-mode-placeholder">
                                             <i class="fas fa-microchip fa-3x text-dark-green opacity-25 mb-3"></i>
-                                            <p class="text-dark-green fw-bold mb-0">Select a Category to load relevant technical specifications.</p>
+                                            <p class="text-dark-green fw-bold mb-0 dark-mode-text">Pick a Product Group above to see extra details.</p>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div class="mt-5 pt-4 border-top border-light d-flex justify-content-between align-items-center mb-4">
-                                    <h5 class="fw-bold text-dark-green mb-0">Custom Attributes</h5>
-                                    <button type="button" class="btn btn-accent-green text-dark-green rounded-pill px-4 fw-bold shadow-sm small" onclick="addCustomAttribute()">
+                                <div class="mt-5 pt-4 border-top border-light d-flex justify-content-between align-items-center mb-4 dark-mode-border">
+                                    <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">Extra Custom Details</h5>
+                                    <button type="button" class="btn btn-accent-green text-dark-green rounded-pill px-4 fw-bold shadow-sm small dark-mode-accent-btn" onclick="addCustomAttribute()">
                                         <i class="fas fa-plus me-1"></i> Add Custom Field
                                     </button>
                                 </div>
@@ -243,48 +247,48 @@
                                 </div>
                             </div>
                             
-                            <!-- TAB 4: LOGISTICS -->
+                            <!-- TAB 4: SHIPPING -->
                             <div class="tab-pane fade" id="shipping" role="tabpanel">
                                 <div class="row g-4">
                                     <div class="col-md-4">
-                                        <label asp-for="ShippingWeight" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Net Shipping Weight</label>
+                                        <label asp-for="ShippingWeight" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Shipping Weight</label>
                                         <div class="input-group">
-                                            <input asp-for="ShippingWeight" class="form-control nexus-input border-end-0" type="number" step="0.01" />
-                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold">kg</span>
+                                            <input asp-for="ShippingWeight" class="form-control nexus-input border-end-0 dark-mode-input" type="number" step="0.01" />
+                                            <span class="input-group-text bg-faint-green border-0 text-dark-green fw-bold dark-mode-input-group">kg</span>
                                         </div>
                                     </div>
                                     
                                     <div class="col-md-8">
-                                        <label class="form-label text-dark-green fw-bold small text-uppercase ls-1">Dimensions (L × W × H)</label>
+                                        <label class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">Box Size (L × W × H)</label>
                                         <div class="d-flex gap-3">
                                             <div class="input-group">
-                                                <input asp-for="ShippingLength" class="form-control nexus-input border-end-0" type="number" step="0.1" placeholder="L" />
-                                                <span class="input-group-text bg-faint-green border-0 text-dark-green extra-small">cm</span>
+                                                <input asp-for="ShippingLength" class="form-control nexus-input border-end-0 dark-mode-input" type="number" step="0.1" placeholder="Length" />
+                                                <span class="input-group-text bg-faint-green border-0 text-dark-green extra-small dark-mode-input-group">cm</span>
                                             </div>
                                             <div class="input-group">
-                                                <input asp-for="ShippingWidth" class="form-control nexus-input border-end-0" type="number" step="0.1" placeholder="W" />
-                                                <span class="input-group-text bg-faint-green border-0 text-dark-green extra-small">cm</span>
+                                                <input asp-for="ShippingWidth" class="form-control nexus-input border-end-0 dark-mode-input" type="number" step="0.1" placeholder="Width" />
+                                                <span class="input-group-text bg-faint-green border-0 text-dark-green extra-small dark-mode-input-group">cm</span>
                                             </div>
                                             <div class="input-group">
-                                                <input asp-for="ShippingHeight" class="form-control nexus-input border-end-0" type="number" step="0.1" placeholder="H" />
-                                                <span class="input-group-text bg-faint-green border-0 text-dark-green extra-small">cm</span>
+                                                <input asp-for="ShippingHeight" class="form-control nexus-input border-end-0 dark-mode-input" type="number" step="0.1" placeholder="Height" />
+                                                <span class="input-group-text bg-faint-green border-0 text-dark-green extra-small dark-mode-input-group">cm</span>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label asp-for="HSCode" class="form-label text-dark-green fw-bold small text-uppercase ls-1">Global HS Code</label>
-                                        <input asp-for="HSCode" class="form-control nexus-input" placeholder="e.g., 0901.21.00" />
-                                        <small class="text-muted extra-small">Customs classification for international logistics.</small>
+                                        <label asp-for="HSCode" class="form-label text-dark-green fw-bold small text-uppercase ls-1 dark-mode-label">International Shipping Code (HS Code)</label>
+                                        <input asp-for="HSCode" class="form-control nexus-input dark-mode-input" placeholder="e.g., 0901.21.00" />
+                                        <small class="text-muted extra-small dark-mode-text">Used for customs when shipping abroad</small>
                                     </div>
                                     
-                                    <div class="col-md-6">
-                                        <div class="bg-faint-green rounded-5 p-4 mt-3">
+                                    <div class="col-md-6">   
+                                        <div class="bg-faint-green rounded-5 p-4 mt-3 dark-mode-hazard">
                                             <div class="form-check form-switch">
-                                                <input asp-for="IsHazardous" class="form-check-input nexus-switch" type="checkbox">
-                                                <label asp-for="IsHazardous" class="form-check-label text-dark-green fw-bold small">Classify as Hazardous Material</label>
+                                                <input asp-for="IsHazardous" class="form-check-input nexus-switch dark-mode-switch" type="checkbox">
+                                                <label asp-for="IsHazardous" class="form-check-label text-dark-green fw-bold small dark-mode-label">This is a Dangerous/Hazardous Product</label>
                                             </div>
-                                            <p class="text-muted extra-small mb-0 mt-2">Enables specialized handling and safety protocols during transit.</p>
+                                            <p class="text-muted extra-small mb-0 mt-2 dark-mode-text">Example: flammable, toxic, or explosive materials</p>
                                         </div>
                                     </div>
                                 </div>
@@ -297,67 +301,67 @@
             <!-- Right Sidebar -->
             <div class="col-lg-4">
                 <!-- Image Upload Card -->
-                <div class="card border-0 rounded-5 shadow-premium bg-white mb-4 overflow-hidden">
-                    <div class="card-header bg-white p-4 border-0 pb-0">
-                        <h6 class="fw-bold text-dark-green mb-0">Primary Asset Image</h6>
+                <div class="card border-0 rounded-5 shadow-premium bg-white mb-4 overflow-hidden dark-mode-card">
+                    <div class="card-header bg-white p-4 border-0 pb-0 dark-mode-header">
+                        <h6 class="fw-bold text-dark-green mb-0 dark-mode-text">Product Picture</h6>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="card-body p-4 dark-mode-body">
                         <div id="imagePreview" class="position-relative mb-4">
                             <img id="mainImagePreview" src="#" alt="Preview" style="display: none; width: 100%; height: 280px; object-fit: cover;" class="rounded-5 shadow-premium" />
-                            <div id="noImagePlaceholder" class="bg-faint-green border-dashed-custom d-flex flex-column align-items-center justify-content-center rounded-5 transition-all" style="height: 280px; cursor: pointer;" onclick="document.getElementById('ImageFile').click()">
-                                <div class="bg-white text-dark-green p-3 rounded-circle shadow-sm mb-3">
+                            <div id="noImagePlaceholder" class="bg-faint-green border-dashed-custom d-flex flex-column align-items-center justify-content-center rounded-5 transition-all dark-mode-upload" style="height: 280px; cursor: pointer;" onclick="document.getElementById('ImageFile').click()">
+                                <div class="bg-white text-dark-green p-3 rounded-circle shadow-sm mb-3 dark-mode-upload-icon">
                                     <i class="fas fa-cloud-upload-alt fs-4"></i>
                                 </div>
-                                <span class="fw-bold text-dark-green small">Upload High-Res Media</span>
-                                <span class="extra-small text-muted mt-1">PNG, JPG up to 10MB</span>
+                                <span class="fw-bold text-dark-green small dark-mode-text">Click to Upload Picture</span>
+                                <span class="extra-small text-muted mt-1 dark-mode-text">PNG, JPG up to 10MB</span>
                             </div>
                         </div>
                         
                         <input asp-for="ImageFile" type="file" class="d-none" accept="image/*" onchange="previewImage(this)" />
-                        <button type="button" class="btn btn-dark-green w-100 rounded-pill py-3 fw-bold shadow-premium" onclick="document.getElementById('ImageFile').click()">
-                            <i class="fas fa-camera me-2"></i> Select Media
+                        <button type="button" class="btn btn-dark-green w-100 rounded-pill py-3 fw-bold shadow-premium dark-mode-btn" onclick="document.getElementById('ImageFile').click()">
+                            <i class="fas fa-camera me-2"></i> Choose Picture
                         </button>
                     </div>
                 </div>
                 
                 <!-- Additional Media Gallery -->
-                <div class="card border-0 rounded-5 shadow-premium bg-white mb-4">
-                    <div class="card-header bg-white p-4 border-0 pb-0">
-                        <h6 class="fw-bold text-dark-green mb-0">Product Gallery</h6>
+                <div class="card border-0 rounded-5 shadow-premium bg-white mb-4 overflow-hidden dark-mode-card">
+                    <div class="card-header bg-white p-4 border-0 pb-0 dark-mode-header">
+                        <h6 class="fw-bold text-dark-green mb-0 dark-mode-text">More Pictures (Gallery)</h6>
                     </div>
-                    <div class="card-body p-4">
-                        <div class="bg-faint-green border-dashed-custom p-4 rounded-5 text-center position-relative mb-3" id="galleryDropZone">
+                    <div class="card-body p-4 dark-mode-body">
+                        <div class="bg-faint-green border-dashed-custom p-4 rounded-5 text-center position-relative mb-3 dark-mode-upload" id="galleryDropZone">
                             <input asp-for="GalleryImages" type="file" class="form-control position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;" multiple accept="image/*" id="galleryInput" onchange="previewGallery(this)" />
                             <i class="fas fa-images fs-3 text-dark-green opacity-25 mb-2"></i>
-                            <p class="mb-0 text-dark-green fw-bold small">Drop angles here</p>
+                            <p class="mb-0 text-dark-green fw-bold small dark-mode-text">Click to add multiple pictures</p>
                         </div>
                         <div id="galleryPreviewContainer" class="d-flex flex-wrap gap-2"></div>
                     </div>
                 </div>
 
-                <!-- Strategic Summary -->
-                <div class="card border-0 rounded-5 shadow-premium bg-dark-green text-white">
+                <!-- Help Summary -->
+                <div class="card border-0 rounded-5 shadow-premium bg-dark-green text-white dark-mode-help">
                     <div class="card-body p-4">
-                        <h6 class="fw-bold text-accent-green mb-3">Configuration Summary</h6>
+                        <h6 class="fw-bold text-accent-green mb-3">What Happens Next?</h6>
                         <ul class="list-unstyled space-y-3 small opacity-75">
-                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent-green"></i> Real-time marketplace sync</li>
-                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent-green"></i> Global logistics routing</li>
-                            <li><i class="fas fa-check-circle me-2 text-accent-green"></i> Fiscal compliance audit</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent-green"></i> Product will appear in your store</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent-green"></i> Customers can see and buy it</li>
+                            <li><i class="fas fa-check-circle me-2 text-accent-green"></i> You can edit anytime</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Nexus Actions Footer -->
-        <div class="nexus-action-bar bg-white p-4 rounded-5 shadow-premium mt-5 d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-faint-green text-dark-green fw-bold px-4 rounded-pill" onclick="saveAndAddAnother()">
-                <i class="fas fa-copy me-2"></i> Save & Clone
+        <!-- Action Buttons Footer -->
+        <div class="nexus-action-bar bg-white p-4 rounded-5 shadow-premium mt-5 d-flex justify-content-between align-items-center dark-mode-action-bar">
+            <button type="button" class="btn btn-faint-green text-dark-green fw-bold px-4 rounded-pill dark-mode-btn" onclick="saveAndAddAnother()">
+                <i class="fas fa-copy me-2"></i> Save and Add Another
             </button>
             <div class="d-flex gap-3">
-                <a asp-action="MyProducts" class="btn btn-white text-muted fw-bold px-4 rounded-pill">Discard</a>
-                <button type="submit" class="btn btn-dark-green fw-bold px-5 py-3 rounded-pill shadow-premium">
-                    <i class="fas fa-rocket me-2 text-accent-green"></i> Publish Asset
+                <a asp-action="MyProducts" class="btn btn-white text-muted fw-bold px-4 rounded-pill dark-mode-cancel">Cancel</a>
+                <button type="submit" class="btn btn-dark-green fw-bold px-5 py-3 rounded-pill shadow-premium dark-mode-submit">
+                    <i class="fas fa-save me-2 text-accent-green"></i> Save Product
                 </button>
             </div>
         </div>
@@ -404,6 +408,164 @@
 
         .animate-slide-up { animation: slideUp 0.5s ease-out; }
         @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ============================================ */
+        /* DARK MODE STYLES */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e2a3a !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-header {
+            background-color: #1e2a3a !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-body {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-label {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-input {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-input:focus {
+            background-color: #3b4a5c !important;
+            border-color: var(--accent-green) !important;
+        }
+
+        body.dark-mode .dark-mode-select {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border: none !important;
+        }
+
+        body.dark-mode .dark-mode-select option {
+            background-color: #1e2a3a !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-input-group {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-btn i {
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-btn:hover {
+            background-color: #3b4a5c !important;
+        }
+
+        body.dark-mode .dark-mode-tabs {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tab {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-tab.active {
+            background-color: #1e2a3a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-switch {
+            background-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-switch:checked {
+            background-color: var(--dark-green) !important;
+        }
+
+        body.dark-mode .dark-mode-border {
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-placeholder {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-accent-btn {
+            background-color: var(--accent-green) !important;
+            color: #1a3d31 !important;
+        }
+
+        body.dark-mode .dark-mode-hazard {
+            background-color: #334155 !important;
+        }
+
+        /* Image Upload Card Dark Mode */
+        body.dark-mode .dark-mode-upload {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-upload-icon {
+            background-color: #1e2a3a !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Help Summary Card - stays dark green but readable */
+        body.dark-mode .dark-mode-help {
+            background-color: #0f2c24 !important;
+        }
+
+        /* Action Bar Dark Mode */
+        body.dark-mode .dark-mode-action-bar {
+            background-color: #1e2a3a !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-cancel {
+            background-color: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-submit {
+            background-color: var(--dark-green) !important;
+        }
+
+        /* Custom Attributes Container Dark Mode */
+        body.dark-mode .custom-attribute-item {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .custom-attribute-item .form-label {
+            color: #cbd5e1 !important;
+        }
+
+        /* Gallery Preview Dark Mode */
+        body.dark-mode .gallery-preview {
+            background-color: #334155 !important;
+        }
+
+        /* Summary Card Dark Mode */
+        body.dark-mode .dark-mode-summary {
+            background-color: #0f2c24 !important;
+        }
     </style>
 }
 
@@ -418,7 +580,7 @@
                 fetch(`/Product/GenerateSku?productName=${encodeURIComponent(productName)}&categoryId=${categoryId}`)
                     .then(response => response.json())
                     .then(data => { document.getElementById('SKU').value = data.sku; });
-            } else { alert('Identity required: Please enter product name.'); }
+            } else { alert('Please enter product name first.'); }
         }
         
         function previewImage(input) {
@@ -443,7 +605,8 @@
         }
         
         ['BasePrice', 'DiscountPercentage', 'TaxRate'].forEach(id => {
-            document.getElementById(id).addEventListener('input', calculateSellingPrice);
+            var el = document.getElementById(id);
+            if(el) el.addEventListener('input', calculateSellingPrice);
         });
         
         function saveAndAddAnother() {
@@ -458,7 +621,7 @@
             var subCategorySelect = document.getElementById('subCategorySelect');
             
             if (subCategorySelect) {
-                subCategorySelect.innerHTML = '<option value="">-- Select Segment --</option>';
+                subCategorySelect.innerHTML = '<option value="">-- Pick a Type --</option>';
                 if (categoryId) {
                     fetch(`/Product/GetSubCategories?categoryId=${categoryId}`)
                         .then(response => response.json())
@@ -473,7 +636,7 @@
             }
             
             if (!categoryId) {
-                container.innerHTML = '<div class="col-12 text-center py-5"><div class="bg-faint-green rounded-5 p-5 border-dashed-custom"><i class="fas fa-microchip fa-3x text-dark-green opacity-25 mb-3"></i><p class="text-dark-green fw-bold mb-0">Select a Category to load relevant technical specifications.</p></div></div>';
+                container.innerHTML = '<div class="col-12 text-center py-5"><div class="bg-faint-green rounded-5 p-5 border-dashed-custom"><i class="fas fa-microchip fa-3x text-dark-green opacity-25 mb-3"></i><p class="text-dark-green fw-bold mb-0">Pick a Product Group above to see extra details.</p></div></div>';
                 return;
             }
             
@@ -483,7 +646,7 @@
                 .then(response => response.json())
                 .then(attributes => {
                     if (attributes.length === 0) {
-                        container.innerHTML = '<div class="col-12 text-center py-5"><p class="text-muted">No specific attributes defined.</p></div>';
+                        container.innerHTML = '<div class="col-12 text-center py-5"><p class="text-muted">No extra details for this group.</p></div>';
                         return;
                     }
                     var html = '';
@@ -507,21 +670,21 @@
         function addCustomAttribute() {
             const container = document.getElementById('customAttributesContainer');
             const col = document.createElement('div');
-            col.className = 'col-12';
+            col.className = 'col-12 custom-attribute-item';
             col.id = `customAttrCol_${customAttributeIndex}`;
             col.innerHTML = `
-                <div class="row g-3 align-items-end p-3 bg-faint-green rounded-4 mb-2">
+                <div class="row g-3 align-items-end p-3 bg-faint-green rounded-4 mb-2" style="background-color: var(--faint-green);">
                     <div class="col-md-4">
-                        <label class="form-label text-dark-green fw-bold extra-small text-uppercase">Field Name</label>
-                        <input type="text" name="NewAttributes[${customAttributeIndex}].Name" class="form-control nexus-input" required placeholder="Name" />
+                        <label class="form-label text-dark-green fw-bold extra-small text-uppercase">Detail Name</label>
+                        <input type="text" name="NewAttributes[${customAttributeIndex}].Name" class="form-control nexus-input" required placeholder="e.g., Material" />
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label text-dark-green fw-bold extra-small text-uppercase">Value</label>
-                        <input type="text" name="NewAttributes[${customAttributeIndex}].Value" class="form-control nexus-input" required placeholder="Value" />
+                        <label class="form-label text-dark-green fw-bold extra-small text-uppercase">Detail Value</label>
+                        <input type="text" name="NewAttributes[${customAttributeIndex}].Value" class="form-control nexus-input" required placeholder="e.g., Steel" />
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label text-dark-green fw-bold extra-small text-uppercase">Unit</label>
-                        <input type="text" name="NewAttributes[${customAttributeIndex}].Unit" class="form-control nexus-input" placeholder="Unit" />
+                        <label class="form-label text-dark-green fw-bold extra-small text-uppercase">Unit (if any)</label>
+                        <input type="text" name="NewAttributes[${customAttributeIndex}].Unit" class="form-control nexus-input" placeholder="e.g., mm" />
                     </div>
                     <div class="col-md-1 text-end">
                         <button type="button" class="btn btn-soft-danger text-danger rounded-circle p-0" style="width:40px; height:40px;" onclick="removeCustomAttribute(${customAttributeIndex})">

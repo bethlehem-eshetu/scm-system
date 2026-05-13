@@ -10,21 +10,21 @@
     var winRate = totalBids > 0 ? (wonBids * 100) / totalBids : 0;
 }
 
-<div class="container-fluid py-4 bg-light min-vh-100">
+<div class="container-fluid py-4 min-vh-100">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small mb-1">
-                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Procurement</a></li>
-                    <li class="breadcrumb-item active">Performance Board</li>
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none dark-mode-text">Procurement</a></li>
+                    <li class="breadcrumb-item active dark-mode-text">Performance Board</li>
                 </ol>
             </nav>
-            <h3 class="fw-bold text-dark mb-1"><i class="fas fa-chart-line text-primary me-2"></i>Bid Performance Dashboard</h3>
-            <p class="text-muted mb-0">Automated competitive tracking and proposal management</p>
+            <h3 class="fw-bold mb-1 dark-mode-text"><i class="fas fa-chart-line text-accent-green me-2"></i>Bid Performance Dashboard</h3>
+            <p class="text-muted mb-0 dark-mode-text">Automated competitive tracking and proposal management</p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-controller="Tender" asp-action="AvailableTenders" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
-                <i class="fas fa-search me-2"></i> Seek New Opportunities
+            <a asp-controller="Tender" asp-action="AvailableTenders" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm dark-mode-primary-btn">
+                <i class="fas fa-search me-2"></i> Search New Tender
             </a>
         </div>
     </div>
@@ -32,26 +32,26 @@
     <!-- Executive KPI Row -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
-                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Total Submissions</span>
-                <h3 class="fw-bold text-dark mb-0">@totalBids</h3>
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center dark-mode-card">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1 dark-mode-text">Total Submissions</span>
+                <h3 class="fw-bold mb-0 dark-mode-text">@totalBids</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center border-bottom border-success border-4">
-                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Won Bids</span>
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center border-bottom border-success border-4 dark-mode-card">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1 dark-mode-text">Won Bids</span>
                 <h3 class="fw-bold text-success mb-0">@wonBids</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center border-bottom border-warning border-4">
-                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Pending Award</span>
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center border-bottom border-warning border-4 dark-mode-card">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1 dark-mode-text">Pending Award</span>
                 <h3 class="fw-bold text-warning mb-0">@pendingBids</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center border-bottom border-primary border-4">
-                <span class="text-muted small fw-bold text-uppercase d-block mb-1">Conversion Rate</span>
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center border-bottom border-primary border-4 dark-mode-card">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-1 dark-mode-text">Score Rate</span>
                 <h3 class="fw-bold text-primary mb-0">@winRate%</h3>
             </div>
         </div>
@@ -60,60 +60,65 @@
     <div class="row g-4">
         <!-- Main Board -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                <div class="card-header bg-white py-3 px-4">
-                    <h6 class="fw-bold mb-0">Live Proposal Pipeline</h6>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 dark-mode-card">
+                <div class="card-header bg-white py-3 px-4 dark-mode-card-header">
+                    <h6 class="fw-bold mb-0 dark-mode-text">Live Proposal Pipeline</h6>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
+                <div class="table-responsive dark-mode-table-wrapper">
+                    <table class="table table-hover align-middle mb-0 dark-mode-table">
+                        <thead class="bg-light dark-mode-thead">
                             <tr class="smaller text-muted text-uppercase">
-                                <th class="ps-4">Tender Reference / Context</th>
-                                <th>Submission Details</th>
-                                <th class="text-end">Proposal Value</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-end pe-4">Action</th>
+                                <th class="ps-4 dark-mode-text">Tender Reference / Context</th>
+                                <th class="dark-mode-text">Submission Details</th>
+                                <th class="text-end dark-mode-text">Proposal Value</th>
+                                <th class="text-center dark-mode-text">Status</th>
+                                <th class="text-end pe-4 dark-mode-text">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="dark-mode-tbody">
                             @if(Model.Any())
                             {
                                 foreach (var bid in Model)
                                 {
-                                    <tr>
+                                    <tr class="dark-mode-row">
                                         <td class="ps-4">
-                                            <div class="fw-bold text-dark mb-1">@bid.Tender?.Title</div>
-                                            <div class="badge bg-secondary-subtle text-secondary px-2">@bid.Tender?.ReferenceNumber</div>
+                                            <div class="fw-bold mb-1 dark-mode-text">@bid.Tender?.Title</div>
+                                            <div class="badge bg-secondary-subtle text-secondary px-2 dark-mode-ref-badge">@bid.Tender?.ReferenceNumber</div>
                                         </td>
                                         <td>
-                                            <div class="small fw-bold">@bid.SubmittedAt.ToString("MM/dd/yyyy")</div>
-                                            <div class="extra-small text-muted">Validity: @bid.ValidityPeriodDays Days</div>
-                                        </td>
+                                            <div class="small fw-bold dark-mode-text">@bid.SubmittedAt.ToString("MM/dd/yyyy")</div>
+                                            <div class="extra-small text-muted dark-mode-text">Validity: @bid.ValidityPeriodDays Days</div>
+                                         </td>
                                         <td class="text-end">
-                                            <div class="fw-bold text-dark">@bid.ProposedTotalAmount.ToString("N0") ETB</div>
-                                            <div class="extra-small text-muted">@bid.DeliveryLeadTimeDays Days SLA</div>
-                                        </td>
+                                            <div class="fw-bold dark-mode-text">@bid.ProposedTotalAmount.ToString("N0") ETB</div>
+                                            <div class="extra-small text-muted dark-mode-text">@bid.DeliveryLeadTimeDays Days SLA</div>
+                                         </td>
                                         <td class="text-center">
-                                            <span class="badge @GetBidStatusClass(bid.Status) rounded-pill px-3 shadow-sm border border-light">@bid.Status</span>
+                                            <span class="badge @GetBidStatusClass(bid.Status) rounded-pill px-3 shadow-sm border border-light dark-mode-status">@bid.Status</span>
                                             @if (bid.Status == "RevisionRequested" && !string.IsNullOrEmpty(bid.Notes))
                                             {
                                                 <div class="extra-small text-primary fw-bold mt-1" title="@bid.Notes">
                                                     <i class="fas fa-info-circle"></i> View Feedback
                                                 </div>
                                             }
-                                        </td>
+                                         </td>
                                         <td class="text-end pe-4">
-                                            <a asp-action="ReviewProposal" asp-route-id="@bid.Id" class="btn btn-light btn-sm rounded-circle shadow-sm border" title="View Diagnostics">
+                                            <a asp-action="ReviewProposal" asp-route-id="@bid.Id" class="btn btn-light btn-sm rounded-circle shadow-sm border dark-mode-action-btn" title="View Diagnostics">
                                                 <i class="fas fa-chevron-right text-primary"></i>
                                             </a>
-                                        </td>
+                                         </td>
                                     </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted">No proposals found. Start participating in the marketplace to see data here.</td>
+                                    <td colspan="5" class="text-center py-5 dark-mode-text">
+                                        <div class="dark-mode-empty-state py-4">
+                                            <i class="fas fa-file-alt fa-3x mb-3 opacity-25"></i>
+                                            <p class="mb-0">No proposals found. Start participating in the marketplace to see data here.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -124,20 +129,20 @@
 
         <!-- Smart Insights Panel -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-white bg-dark mb-4 position-relative overflow-hidden">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-white bg-dark mb-4 position-relative overflow-hidden dark-mode-insights-card">
                 <!-- BG detail -->
                 <i class="fas fa-lightbulb fa-5x position-absolute opacity-10" style="bottom: -20px; right: -10px;"></i>
                 
-                <h6 class="fw-bold text-uppercase text-white-50 smaller mb-4">Smart Insights</h6>
+                <h6 class="fw-bold text-uppercase text-white-50 smaller mb-4 dark-mode-text">Smart Insights</h6>
                 
                 @if(lostBids > wonBids)
                 {
                     <div class="mb-4">
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge bg-danger text-white rounded-pill me-2 px-2"><i class="fas fa-exclamation-triangle"></i></span>
-                            <span class="fw-bold">Pricing Alert</span>
+                            <span class="fw-bold dark-mode-text">Pricing Alert</span>
                         </div>
-                        <p class="small text-white-50 mb-0">Your bids are frequently priced above the market average. Consider adjusting your SLA penalties or unit costs to boost conversion.</p>
+                        <p class="small text-white-50 mb-0 dark-mode-text">Your bids are frequently priced above the market average. Consider adjusting your SLA penalties or unit costs to boost conversion.</p>
                     </div>
                 }
                 else
@@ -145,15 +150,15 @@
                     <div class="mb-4">
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge bg-success text-white rounded-pill me-2 px-2"><i class="fas fa-check-circle"></i></span>
-                            <span class="fw-bold">Competitive Edge</span>
+                            <span class="fw-bold dark-mode-text">Competitive Edge</span>
                         </div>
-                        <p class="small text-white-50 mb-0">Your proposal conversion rate is strong. Your current pricing strategy aligns well. Keep it up!</p>
+                        <p class="small text-white-50 mb-0 dark-mode-text">Your proposal conversion rate is strong. Your current pricing strategy aligns well. Keep it up!</p>
                     </div>
                 }
 
                 <div class="bg-white bg-opacity-10 rounded-3 p-3 border border-white border-opacity-25 mt-2">
-                    <span class="small d-block mb-1 text-white-50">Avg Competitor SLA Time</span>
-                    <span class="fw-bold">~14 Days (<span class="text-success"><i class="fas fa-caret-down"></i> Faster than yours</span>)</span>
+                    <span class="small d-block mb-1 text-white-50 dark-mode-text">Avg Competitor SLA Time</span>
+                    <span class="fw-bold dark-mode-text">~14 Days (<span class="text-success"><i class="fas fa-caret-down"></i> Faster than yours</span>)</span>
                 </div>
             </div>
         </div>
@@ -179,5 +184,160 @@
         .smaller { font-size: 0.725rem; font-weight: 700; letter-spacing: 0.5px; }
         .extra-small { font-size: 0.65rem; }
         .bg-secondary-subtle { background-color: #f8f9fa; }
+
+        /* ============================================ */
+        /* DARK MODE STYLES - DARK BLUE THEME */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-header {
+            background-color: #1e293b !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-table-wrapper {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-table {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-thead {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-thead th {
+            color: #cbd5e1 !important;
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr:hover {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-row td {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Reference badge dark mode */
+        body.dark-mode .dark-mode-ref-badge {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Primary button dark mode */
+        body.dark-mode .dark-mode-primary-btn {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+            border: none !important;
+        }
+
+        body.dark-mode .dark-mode-primary-btn:hover {
+            background-color: #1e293b !important;
+        }
+
+        /* Action button dark mode */
+        body.dark-mode .dark-mode-action-btn {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-action-btn i {
+            color: #a5f3c3 !important;
+        }
+
+        /* Status badge dark mode */
+        body.dark-mode .dark-mode-status.bg-warning {
+            background-color: rgba(251, 191, 36, 0.2) !important;
+            color: #fbbf24 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-success {
+            background-color: rgba(74, 222, 128, 0.2) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-danger {
+            background-color: rgba(248, 113, 113, 0.2) !important;
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-primary {
+            background-color: rgba(37, 99, 235, 0.2) !important;
+            color: #93c5fd !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-secondary {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Insights card dark mode */
+        body.dark-mode .dark-mode-insights-card {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+        }
+
+        /* Empty state dark mode */
+        body.dark-mode .dark-mode-empty-state {
+            background-color: #334155 !important;
+            border-radius: 16px;
+        }
+
+        /* KPI card text colors */
+        body.dark-mode .text-success {
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .text-warning {
+            color: #fbbf24 !important;
+        }
+
+        body.dark-mode .text-primary {
+            color: #93c5fd !important;
+        }
+
+        /* Breadcrumb dark mode */
+        body.dark-mode .breadcrumb-item a {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .breadcrumb-item.active {
+            color: #a5f3c3 !important;
+        }
+
+        /* Text muted */
+        body.dark-mode .text-muted {
+            color: #9ca3af !important;
+        }
+
+        /* Border colors */
+        body.dark-mode .border-success {
+            border-bottom-color: #4ade80 !important;
+        }
+
+        body.dark-mode .border-warning {
+            border-bottom-color: #fbbf24 !important;
+        }
+
+        body.dark-mode .border-primary {
+            border-bottom-color: #93c5fd !important;
+        }
     </style>
 }

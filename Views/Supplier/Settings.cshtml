@@ -1,6 +1,6 @@
 @model SCM_System.Models.ViewModels.SupplierSettingsViewModel
 @{
-    ViewData["Title"] = "SCM Strategic Control Center";
+    ViewData["Title"] = "SCM Account Control Center";
     Layout = "_DashboardLayout";
 }
 
@@ -15,7 +15,7 @@
                 <div class="position-relative z-index-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div class="text-white">
                         <h1 class="display-5 fw-bold mb-2">
-                            <i class="fas fa-user-cog me-2 text-accent-green"></i>Strategic <span class="text-accent-green">Control Center</span>
+                            <i class="fas fa-user-cog me-2 text-accent-green"></i>Account <span class="text-accent-green">Control Center</span>
                         </h1>
                         <p class="text-white text-opacity-75 mb-0 fs-5">Manage your business profile, security protocols, and operational preferences.</p>
                     </div>
@@ -60,9 +60,7 @@
                         <button class="nav-link active text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
                             <i class="fas fa-id-card me-3 text-center opacity-75"></i>Business Profile
                         </button>
-                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="v-pills-finance-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finance" type="button" role="tab">
-                            <i class="fas fa-university me-3 text-center opacity-75"></i>Financial Setup
-                        </button>
+                      
                         <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
                             <i class="fas fa-shield-alt me-3 text-center opacity-75"></i>Security Hub
                         </button>
@@ -157,66 +155,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Financial Setup -->
-                <div class="tab-pane fade" id="v-pills-finance" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0 d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-university text-accent-green me-2"></i>Treasury & Banking</h5>
-                            <button type="button" class="btn btn-dark-green btn-sm rounded-pill px-4 py-2 shadow-sm fw-bold extra-small" data-bs-toggle="modal" data-bs-target="#bankAccountModal">
-                                <i class="fas fa-plus me-2 text-accent-green"></i> Register Account
-                            </button>
-                        </div>
-                        <div class="card-body p-5">
-                             <!-- Financial Setup Content -->
-                             <div class="table-responsive">
-                                <table class="table table-hover align-middle border-0">
-                                    <thead>
-                                        <tr class="bg-faint-green">
-                                            <th class="border-0 rounded-start-pill ps-4 py-3 extra-small fw-bold text-muted uppercase">Bank Entity</th>
-                                            <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Account Holder</th>
-                                            <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Ledger Number</th>
-                                            <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Status</th>
-                                            <th class="border-0 rounded-end-pill pe-4 py-3 extra-small fw-bold text-muted uppercase">Control</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="border-0">
-                                        @foreach (var account in Model.BankAccounts)
-                                        {
-                                            <tr class="border-bottom border-faint">
-                                                <td class="ps-4 py-4 fw-bold text-dark-green">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="bg-faint-green p-2 rounded-3 me-3 text-dark-green shadow-sm">
-                                                            <i class="fas fa-landmark small"></i>
-                                                        </div>
-                                                        @account.BankName
-                                                    </div>
-                                                </td>
-                                                <td class="fw-bold opacity-75">@account.AccountHolderName</td>
-                                                <td><code class="bg-faint-green p-2 rounded-3 text-dark-green fw-bold">@account.AccountNumber</code></td>
-                                                <td>
-                                                    @if (account.IsPrimary)
-                                                    {
-                                                        <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small fw-bold">Primary</span>
-                                                    }
-                                                    else {
-                                                        <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-2 extra-small fw-bold">Secondary</span>
-                                                    }
-                                                </td>
-                                                <td class="pe-4 text-end">
-                                                    <button class="btn btn-sm btn-faint-green rounded-circle shadow-sm" onclick="editBankAccount(@Json.Serialize(account))">
-                                                        <i class="fas fa-edit text-dark-green"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Security Hub -->
+                <!-- 2. Security Hub -->
                 <div class="tab-pane fade" id="v-pills-security" role="tabpanel">
                      <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
                         <div class="card-header bg-faint-green py-4 px-5 border-0">
@@ -262,7 +201,7 @@
                      </div>
                 </div>
 
-                <!-- 4. Danger Zone -->
+                <!-- 3. Danger Zone -->
                 <div class="tab-pane fade" id="v-pills-danger" role="tabpanel">
                     <div class="card border-0 shadow-premium rounded-5 border-top border-5 border-danger bg-white overflow-hidden">
                         <div class="card-header bg-soft-danger py-4 px-5 border-0">

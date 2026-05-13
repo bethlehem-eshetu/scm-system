@@ -8,22 +8,22 @@
 <div class="py-2">
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1">
+            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text">
                 <i class="fas fa-clipboard-list me-2"></i>
                 @(isSupplier ? "Received Order Requests" : "My Purchase Requests")
             </h1>
-            <p class="text-muted small mb-0">Manage fulfillment cycles and track transaction statuses in real-time</p>
+            <p class="text-muted small mb-0 dark-mode-text">Manage fulfillment cycles and track transaction statuses in real-time</p>
         </div>
         <div class="d-flex gap-3 align-items-center">
-            <div class="btn-group shadow-premium rounded-pill overflow-hidden bg-white p-1">
-                <button class="btn btn-white nexus-filter-btn active px-4 py-2 small fw-bold" data-filter="all">All</button>
-                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold" data-filter="Pending">Pending</button>
-                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold" data-filter="Active">Active</button>
-                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold" data-filter="Completed">Completed</button>
+            <div class="btn-group shadow-premium rounded-pill overflow-hidden bg-white p-1 dark-mode-filter-group">
+                <button class="btn btn-white nexus-filter-btn active px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="all">All</button>
+                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="Pending">Pending</button>
+                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="Active">Active</button>
+                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="Completed">Completed</button>
             </div>
             @if (!isSupplier)
             {
-                <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold shadow-premium">
+                <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold shadow-premium dark-mode-btn">
                     <i class="fas fa-plus me-2 text-accent-green"></i> New Order
                 </a>
             }
@@ -37,24 +37,24 @@
             foreach (var order in Model)
             {
                 <div class="col-xl-4 col-md-6 order-card-item" data-status="@GetAggregateStatus(order.OrderStatus)">
-                    <div class="card h-100 border-0 shadow-premium rounded-5 overflow-hidden hover-lift bg-white">
-                        <div class="card-header border-0 bg-faint-green p-4 d-flex justify-content-between align-items-center">
-                            <span class="badge bg-dark-green text-white rounded-pill px-3 py-2 fw-bold ls-1">#@order.OrderNumber</span>
-                            <span class="text-muted extra-small fw-bold">@order.CreatedAt.ToString("MMM dd, yyyy")</span>
+                    <div class="card h-100 border-0 shadow-premium rounded-5 overflow-hidden hover-lift bg-white dark-mode-card">
+                        <div class="card-header border-0 bg-faint-green p-4 d-flex justify-content-between align-items-center dark-mode-card-header">
+                            <span class="badge bg-dark-green text-white rounded-pill px-3 py-2 fw-bold ls-1 dark-mode-badge">#@order.OrderNumber</span>
+                            <span class="text-muted extra-small fw-bold dark-mode-text">@order.CreatedAt.ToString("MMM dd, yyyy")</span>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body p-4 dark-mode-card-body">
                             <div class="d-flex align-items-center mb-4">
-                                <div class="bg-dark-green bg-opacity-10 text-dark-green rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 54px; height: 54px;">
+                                <div class="bg-dark-green bg-opacity-10 text-dark-green rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm dark-mode-icon-circle" style="width: 54px; height: 54px;">
                                     <i class="fas @(isSupplier ? "fa-store" : "fa-building") fs-4"></i>
                                 </div>
                                 <div>
-                                    <p class="text-muted extra-small mb-0 text-uppercase fw-bold ls-1">@(isSupplier ? "Retailer" : "Supplier")</p>
-                                    <h6 class="fw-bold mb-0 text-dark-green">@(isSupplier ? order.Retailer?.BusinessName : order.Supplier?.CompanyName)</h6>
+                                    <p class="text-muted extra-small mb-0 text-uppercase fw-bold ls-1 dark-mode-text">@(isSupplier ? "Retailer" : "Supplier")</p>
+                                    <h6 class="fw-bold mb-0 text-dark-green dark-mode-text">@(isSupplier ? order.Retailer?.BusinessName : order.Supplier?.CompanyName)</h6>
                                 </div>
                             </div>
 
-                            <div class="row g-0 mb-4 py-3 bg-faint-green rounded-4">
-                                <div class="col-6 border-end border-light text-center">
+                            <div class="row g-0 mb-4 py-3 bg-faint-green rounded-4 dark-mode-stats-box">
+                                <div class="col-6 border-end border-light text-center dark-mode-border">
                                     @{
                                         var displayTotal = order.TotalAmount;
                                         if (order.Subtotal <= 0 && order.VAT <= 0) {
@@ -62,21 +62,21 @@
                                             if (displayTotal <= calcNet + 1) displayTotal = calcNet * 1.15m;
                                         }
                                     }
-                                    <p class="text-muted extra-small mb-1 fw-bold">Grand Total</p>
-                                    <h5 class="fw-bold mb-0 text-dark-green">@displayTotal.ToString("C0")</h5>
+                                    <p class="text-muted extra-small mb-1 fw-bold dark-mode-text">Grand Total</p>
+                                    <h5 class="fw-bold mb-0 text-dark-green dark-mode-text">@displayTotal.ToString("C0")</h5>
                                 </div>
                                 <div class="col-6 text-center">
-                                    <p class="text-muted extra-small mb-1 fw-bold">Unit Count</p>
-                                    <h5 class="fw-bold mb-0 text-dark-green">@order.OrderItems.Count</h5>
+                                    <p class="text-muted extra-small mb-1 fw-bold dark-mode-text">Unit Count</p>
+                                    <h5 class="fw-bold mb-0 text-dark-green dark-mode-text">@order.OrderItems.Count</h5>
                                 </div>
                             </div>
 
                             <div class="mb-4 px-1">
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span class="extra-small fw-bold text-muted text-uppercase ls-1">Fulfillment Status</span>
-                                    <span class="status-badge @GetStatusClass(order.OrderStatus)">@order.OrderStatus</span>
+                                    <span class="extra-small fw-bold text-muted text-uppercase ls-1 dark-mode-text">Fulfillment Status</span>
+                                    <span class="status-badge @GetStatusClass(order.OrderStatus) dark-mode-status">@order.OrderStatus</span>
                                 </div>
-                                <div class="progress rounded-pill shadow-sm" style="height: 8px; background-color: rgba(0,0,0,0.05);">
+                                <div class="progress rounded-pill shadow-sm dark-mode-progress" style="height: 8px; background-color: rgba(0,0,0,0.05);">
                                     <div class="progress-bar @GetProgressColor(order.OrderStatus) rounded-pill" style="width: @GetProgressWidth(order.OrderStatus)%"></div>
                                 </div>
                             </div>
@@ -84,11 +84,11 @@
                             <div class="d-flex align-items-center gap-2">
                                 @if (!isSupplier && !new[] { "Picked", "Packing", "Packed", "Ready Dispatch", "In Transit", "Delivered", "Completed", "Cancelled" }.Contains(order.OrderStatus))
                                 {
-                                    <button class="btn btn-white text-danger fw-bold extra-small text-uppercase ls-1 cancel-order-btn flex-grow-1" data-id="@order.Id" data-total="@displayTotal.ToString("C0")">
+                                    <button class="btn btn-white text-danger fw-bold extra-small text-uppercase ls-1 cancel-order-btn flex-grow-1 dark-mode-cancel-btn" data-id="@order.Id" data-total="@displayTotal.ToString("C0")">
                                         Cancel
                                     </button>
                                 }
-                                <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-dark-green rounded-pill px-4 fw-bold shadow-sm flex-grow-1">
+                                <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-dark-green rounded-pill px-4 fw-bold shadow-sm flex-grow-1 dark-mode-manage-btn">
                                     Manage <i class="fas fa-arrow-right ms-2 text-accent-green"></i>
                                 </a>
                             </div>
@@ -100,10 +100,10 @@
         else
         {
             <div class="col-12 text-center py-5">
-                <div class="py-5 bg-faint-green rounded-5 border-dashed-custom">
+                <div class="py-5 bg-faint-green rounded-5 border-dashed-custom dark-mode-empty-state">
                     <i class="fas fa-clipboard fa-4x text-dark-green opacity-10 mb-3"></i>
-                    <h5 class="fw-bold text-dark-green">No Orders Found</h5>
-                    <p class="text-muted small">You don't have any active or past orders matching your current filters.</p>
+                    <h5 class="fw-bold text-dark-green dark-mode-text">No Orders Found</h5>
+                    <p class="text-muted small dark-mode-text">You don't have any active or past orders matching your current filters.</p>
                 </div>
             </div>
         }
@@ -113,30 +113,30 @@
 <!-- Cancel Confirmation Modal (Nexus Style) -->
 <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden">
+        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden dark-mode-modal">
             <div class="modal-header bg-danger text-white border-0 py-4 px-4">
                 <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i> Order Cancellation</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-5 text-center">
+            <div class="modal-body p-5 text-center dark-mode-modal-body">
                 <div class="bg-soft-danger text-danger rounded-circle p-4 mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                     <i class="fas fa-ban fs-2"></i>
                 </div>
-                <h4 class="fw-bold text-dark-green mb-2">Confirm Cancellation?</h4>
-                <p class="text-muted mb-4 small">This action will return all reserved stock to inventory. This cannot be undone.</p>
+                <h4 class="fw-bold text-dark-green mb-2 dark-mode-text">Confirm Cancellation?</h4>
+                <p class="text-muted mb-4 small dark-mode-text">This action will return all reserved stock to inventory. This cannot be undone.</p>
                 
-                <div class="bg-faint-green rounded-4 p-3 mb-4">
-                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Reversal Amount</p>
-                    <h4 class="fw-bold text-dark-green mb-0" id="modalOrderTotal">ETB 0.00</h4>
+                <div class="bg-faint-green rounded-4 p-3 mb-4 dark-mode-modal-box">
+                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1 dark-mode-text">Reversal Amount</p>
+                    <h4 class="fw-bold text-dark-green mb-0 dark-mode-text" id="modalOrderTotal">ETB 0.00</h4>
                 </div>
                 
                 <form id="cancelOrderForm" method="post">
                     @Html.AntiForgeryToken()
                     <div class="d-grid gap-3">
-                        <button type="submit" class="btn btn-danger rounded-pill py-3 fw-bold shadow-sm">
+                        <button type="submit" class="btn btn-danger rounded-pill py-3 fw-bold shadow-sm dark-mode-danger-btn">
                             Confirm Cancellation
                         </button>
-                        <button type="button" class="btn btn-faint-green rounded-pill py-3 fw-bold text-dark-green" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-faint-green rounded-pill py-3 fw-bold text-dark-green dark-mode-cancel-modal-btn" data-bs-dismiss="modal">
                             Keep Order
                         </button>
                     </div>
@@ -231,6 +231,147 @@
 
         .animate-slide-up { animation: slideUp 0.5s ease-out; }
         @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ============================================ */
+        /* DARK MODE STYLES */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e2a3a !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-header {
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-card-body {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-badge {
+            background-color: #0f2c24 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-circle {
+            background-color: rgba(165, 243, 195, 0.15) !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-stats-box {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-border {
+            border-right-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-progress {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-status {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Status badge colors in dark mode */
+        body.dark-mode .bg-soft-warning {
+            background-color: rgba(251, 191, 36, 0.2) !important;
+            color: #fbbf24 !important;
+        }
+
+        body.dark-mode .bg-soft-info {
+            background-color: rgba(13, 202, 240, 0.2) !important;
+            color: #67e8f9 !important;
+        }
+
+        body.dark-mode .bg-soft-primary {
+            background-color: rgba(37, 99, 235, 0.2) !important;
+            color: #93c5fd !important;
+        }
+
+        body.dark-mode .bg-soft-success {
+            background-color: rgba(74, 222, 128, 0.2) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .bg-soft-danger {
+            background-color: rgba(248, 113, 113, 0.2) !important;
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .bg-soft-dark {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Filter group dark mode */
+        body.dark-mode .dark-mode-filter-group {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-filter-btn {
+            background-color: transparent !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-filter-btn.active {
+            background-color: var(--dark-green) !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Buttons dark mode */
+        body.dark-mode .dark-mode-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-cancel-btn {
+            background-color: rgba(248, 113, 113, 0.15) !important;
+            color: #f87171 !important;
+            border: 1px solid rgba(248, 113, 113, 0.3) !important;
+        }
+
+        body.dark-mode .dark-mode-manage-btn {
+            background-color: #0f2c24 !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Empty state dark mode */
+        body.dark-mode .dark-mode-empty-state {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Modal dark mode */
+        body.dark-mode .dark-mode-modal {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-modal-body {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-modal-box {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-danger-btn {
+            background-color: #dc2626 !important;
+            border: none !important;
+        }
+
+        body.dark-mode .dark-mode-cancel-modal-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
     </style>
 }
 
