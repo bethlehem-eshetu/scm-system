@@ -814,7 +814,6 @@ namespace SCM_System.Controllers
             return RedirectToAction("OrderTracking");
         }
 
-<<<<<<< HEAD
         // GET: /Retailer/RateDelivery/5
         [HttpGet]
         public async Task<IActionResult> RateDelivery(int id)
@@ -870,9 +869,7 @@ namespace SCM_System.Controllers
 
             TempData["SuccessMessage"] = "Thank you for rating your delivery experience!";
             return RedirectToAction("Dashboard");
-=======
-
-        // Add to RetailerController.cs
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -960,7 +957,7 @@ namespace SCM_System.Controllers
         private string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
->>>>>>> a1be27034ef112e51dc7a51bd12800c01b912210
+
         }
     }
 }
