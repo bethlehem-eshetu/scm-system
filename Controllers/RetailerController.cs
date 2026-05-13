@@ -864,6 +864,9 @@ namespace SCM_System.Controllers
                 VehicleCondition = model.VehicleCondition,
                 Communication = model.Communication,
                 Comment = model.Comment,
+                HasIssue = model.HasIssue,
+                IssueType = model.IssueType,
+                IssueDescription = model.IssueDescription,
                 CreatedAt = DateTime.Now
             };
 
