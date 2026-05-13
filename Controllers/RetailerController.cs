@@ -814,7 +814,6 @@ namespace SCM_System.Controllers
             return RedirectToAction("OrderTracking");
         }
 
-<<<<<<< HEAD
         // GET: /Retailer/RateDelivery/5
         [HttpGet]
         public async Task<IActionResult> RateDelivery(int id)
@@ -870,9 +869,7 @@ namespace SCM_System.Controllers
 
             TempData["SuccessMessage"] = "Thank you for rating your delivery experience!";
             return RedirectToAction("Dashboard");
-=======
-
-        // Add to RetailerController.cs
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -880,8 +877,10 @@ namespace SCM_System.Controllers
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId.ToString() == userId);
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? HttpContext.Session.GetInt32("UserId")?.ToString();
+                if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+
+                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId.ToString() == userIdStr);
                 if (retailer == null) return RedirectToAction("Login", "Account");
 
                 var cart = await _context.Carts
@@ -893,7 +892,7 @@ namespace SCM_System.Controllers
                 if (cart == null || !cart.CartItems.Any())
                 {
                     TempData["ErrorMessage"] = "Your cart is empty.";
-                    return RedirectToAction("ViewCart");
+                    return RedirectToAction("Cart");
                 }
 
                 // Group by supplier
@@ -953,14 +952,13 @@ namespace SCM_System.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error during checkout: {ex.Message}";
-                return RedirectToAction("ViewCart");
+                return RedirectToAction("Cart");
             }
         }
 
         private string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
->>>>>>> a1be27034ef112e51dc7a51bd12800c01b912210
         }
     }
 }
