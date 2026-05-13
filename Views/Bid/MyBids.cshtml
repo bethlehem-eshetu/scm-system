@@ -1,17 +1,17 @@
 @model IEnumerable<SCM_System.Models.Entities.TenderBid>
-<div class="container-fluid py-4 bg-light min-vh-100">
+<div class="container-fluid py-3 px-3 bid-performance-container">
     <!-- Header Logic -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-0"><i class="fas fa-chart-line text-primary me-2"></i>Bid Performance Dashboard</h2>
-            <p class="text-muted mb-0 small">Executive overview of active proposals and commercial exposure.</p>
+            <h4 class="fw-bold text-dark mb-0"><i class="fas fa-chart-line text-primary me-2"></i>Bid Performance Dashboard</h4>
+            <p class="text-muted mb-0 extra-small">Executive overview of active proposals and commercial exposure.</p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-controller="Tender" asp-action="Index" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+            <a asp-controller="Tender" asp-action="Index" class="btn btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm small">
                 <i class="fas fa-plus-circle me-2"></i> New Proposal
             </a>
-            <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm bg-white">
-                <i class="fas fa-download me-2"></i> Export Report
+            <button class="btn btn-outline-secondary rounded-pill px-3 py-2 shadow-sm bg-white small">
+                <i class="fas fa-download me-2"></i> Export
             </button>
         </div>
     </div>
@@ -23,47 +23,47 @@
         var activeValue = Model.Where(b => b.Status == "Pending").Sum(b => b.ProposedTotalAmount);
         var winRate = totalBids > 0 ? (wonBids * 100 / totalBids) : 0;
     }
-    <div class="row g-4 mb-5">
+    <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white border-bottom border-4 border-primary">
-                <label class="smaller text-muted text-uppercase fw-bold d-block mb-2">Total Proposals</label>
-                <h2 class="fw-bold text-dark mb-0">@totalBids</h2>
-                <span class="smaller text-primary fw-bold">Commercial Engagements</span>
+            <div class="card border-0 shadow-premium rounded-5 p-3 text-center bg-white border-bottom border-4 border-primary">
+                <label class="extra-small text-muted text-uppercase fw-bold d-block mb-1">Total Proposals</label>
+                <h5 class="fw-bold text-dark mb-0">@totalBids</h5>
+                <span class="extra-small text-primary fw-bold">Commercial Engagements</span>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white border-bottom border-4 border-success">
-                <label class="smaller text-muted text-uppercase fw-bold d-block mb-2">Win Rate</label>
+            <div class="card border-0 shadow-premium rounded-5 p-3 text-center bg-white border-bottom border-4 border-success">
+                <label class="extra-small text-muted text-uppercase fw-bold d-block mb-1">Win Rate</label>
                 <div class="d-flex align-items-center justify-content-center">
-                    <h2 class="fw-bold text-success mb-0">@winRate%</h2>
-                    <i class="fas fa-arrow-up text-success ms-2 small"></i>
+                    <h5 class="fw-bold text-success mb-0">@winRate%</h5>
+                    <i class="fas fa-arrow-up text-success ms-2 extra-small"></i>
                 </div>
-                <span class="smaller text-muted">@wonBids Awarded Contracts</span>
+                <span class="extra-small text-muted">@wonBids Awarded Contracts</span>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white border-bottom border-4 border-warning">
-                <label class="smaller text-muted text-uppercase fw-bold d-block mb-2">Portfolio Value</label>
-                <h2 class="fw-bold text-dark mb-0">@activeValue.ToString("N0")</h2>
-                <span class="smaller text-muted">ETB in Pending Bids</span>
+            <div class="card border-0 shadow-premium rounded-5 p-3 text-center bg-white border-bottom border-4 border-warning">
+                <label class="extra-small text-muted text-uppercase fw-bold d-block mb-1">Portfolio Value</label>
+                <h5 class="fw-bold text-dark mb-0">@activeValue.ToString("N0")</h5>
+                <span class="extra-small text-muted">ETB in Pending Bids</span>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-primary text-white shadow">
-                <label class="smaller text-white-50 text-uppercase fw-bold d-block mb-2">Avg Tech Score</label>
-                <h2 class="fw-bold mb-0">@(totalBids > 0 ? Model.Average(b => b.Score).ToString("N1") : "0.0")</h2>
-                <span class="smaller opacity-75">Compliance Quality</span>
+            <div class="card border-0 shadow-premium rounded-5 p-3 text-center bg-primary text-white shadow-premium">
+                <label class="extra-small text-white-50 text-uppercase fw-bold d-block mb-1">Avg Tech Score</label>
+                <h5 class="fw-bold mb-0">@(totalBids > 0 ? Model.Average(b => b.Score).ToString("N1") : "0.0")</h5>
+                <span class="extra-small opacity-75">Compliance Quality</span>
             </div>
         </div>
     </div>
 
     <!-- Bid Control Center -->
-    <div class="row g-4">
+    <div class="row g-3">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">Active & Historical Proposals</h6>
-                    <div class="input-group input-group-sm" style="width: 250px;">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
+                <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center border-0">
+                    <h6 class="fw-bold mb-0 text-uppercase ls-1">Active & Historical Proposals</h6>
+                    <div class="input-group input-group-sm" style="width: 220px;">
                         <input type="text" class="form-control rounded-pill-start" placeholder="Search references...">
                         <button class="btn btn-outline-secondary rounded-pill-end"><i class="fas fa-search"></i></button>
                     </div>
@@ -71,7 +71,7 @@
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
-                            <tr class="smaller text-muted text-uppercase">
+                            <tr class="extra-small text-muted text-uppercase ls-1">
                                 <th class="ps-4">Tender Reference</th>
                                 <th>Bid Value</th>
                                 <th class="text-center">Lead Time</th>
@@ -86,33 +86,33 @@
                                 <tr>
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center">
-                                            <div class="p-2 bg-light rounded-3 me-3"><i class="fas fa-file-invoice text-primary"></i></div>
+                                            <div class="p-2 bg-light rounded-3 me-2"><i class="fas fa-file-invoice text-primary"></i></div>
                                             <div>
-                                                <div class="fw-bold text-dark">@bid.Tender?.Title</div>
-                                                <div class="smaller text-muted">Ref: @bid.Tender?.ReferenceNumber &bull; @bid.SubmittedAt.ToString("MMM dd")</div>
+                                                <div class="fw-bold text-dark small">@bid.Tender?.Title</div>
+                                                <div class="extra-small text-muted">Ref: @bid.Tender?.ReferenceNumber &bull; @bid.SubmittedAt.ToString("MMM dd")</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark">@bid.ProposedTotalAmount.ToString("N2")</div>
-                                        <div class="smaller text-muted">ETB (VAT Incl)</div>
+                                        <div class="fw-bold text-dark small">@bid.ProposedTotalAmount.ToString("N2")</div>
+                                        <div class="extra-small text-muted">ETB (VAT Incl)</div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="fw-bold">@bid.DeliveryLeadTimeDays Days</div>
-                                        <div class="smaller text-muted">Fulfillment</div>
+                                        <div class="fw-bold small">@bid.DeliveryLeadTimeDays Days</div>
+                                        <div class="extra-small text-muted">Fulfillment</div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="badge bg-primary-subtle text-primary border rounded-pill">@bid.Score.ToString("N1")</div>
+                                        <div class="badge bg-primary-subtle text-primary border rounded-pill extra-small">@bid.Score.ToString("N1")</div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge @GetBidStatusClass(bid.Status) rounded-pill px-3 py-2 shadow-sm">@bid.Status</span>
+                                        <span class="status-badge @GetBidStatusClass(bid.Status) rounded-pill shadow-sm">@bid.Status</span>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group">
-                                            <a asp-controller="Tender" asp-action="Details" asp-route-id="@bid.TenderId" class="btn btn-sm btn-white border px-3 rounded-pill me-2 shadow-sm">
+                                            <a asp-controller="Tender" asp-action="Details" asp-route-id="@bid.TenderId" class="btn btn-sm btn-white border px-3 rounded-pill me-2 shadow-sm extra-small">
                                                 <i class="fas fa-eye me-1"></i> Original
                                             </a>
-                                            <a href="#" class="btn btn-sm btn-primary px-3 rounded-pill shadow-sm fw-bold">
+                                            <a href="#" class="btn btn-sm btn-primary px-3 rounded-pill shadow-sm fw-bold extra-small">
                                                 Manage <i class="fas fa-chevron-right ms-1"></i>
                                             </a>
                                         </div>
@@ -151,12 +151,45 @@
 }
 
 <style>
-    .smaller { font-size: 0.725rem; font-weight: 700; letter-spacing: 0.5px; }
+    .rounded-5, .rounded-4 { border-radius: 16px !important; }
+    .shadow-premium { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04) !important; }
+    .ls-1 { letter-spacing: 0.5px; }
+    .extra-small { font-size: 0.62rem; }
+
+    .bid-performance-container {
+        zoom: 0.92;
+        max-width: 1450px;
+        margin: auto;
+    }
+
+    .btn {
+        font-size: 0.85rem;
+    }
+
+    body {
+        font-size: 0.92rem;
+    }
+
+    h1, .h1 { font-size: 1.75rem; }
+    h2, .h2 { font-size: 1.5rem; }
+    h3, .h3 { font-size: 1.25rem; }
+    h4, .h4 { font-size: 1.1rem; }
+    h5, .h5 { font-size: 1rem; }
+    h6, .h6 { font-size: 0.85rem; }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
     .bg-success-subtle { background-color: #e9f7ef; border: 1px solid rgba(40, 167, 69, 0.2); }
     .bg-warning-subtle { background-color: #fef9e7; border: 1px solid rgba(255, 193, 7, 0.2); }
     .bg-danger-subtle { background-color: #fceae9; border: 1px solid rgba(220, 53, 69, 0.2); }
     .bg-primary-subtle { background-color: #e7f1ff; border: 1px solid rgba(0, 123, 255, 0.2); }
-    .rounded-4 { border-radius: 1rem !important; }
     .rounded-pill-start { border-top-left-radius: 50rem !important; border-bottom-left-radius: 50rem !important; }
     .rounded-pill-end { border-top-right-radius: 50rem !important; border-bottom-right-radius: 50rem !important; }
     .btn-white { background: white; }

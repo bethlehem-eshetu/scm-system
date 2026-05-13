@@ -3,15 +3,15 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
-    <div class="row g-4">
+<div class="container-fluid py-3 px-3 supplier-profile-container">
+    <div class="row g-3">
         <div class="col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                <div class="card-body p-5 text-center welcome-banner position-relative">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden mb-3">
+                <div class="card-body p-4 text-center welcome-banner position-relative">
                     <div class="banner-overlay"></div>
                     <div class="banner-glow"></div>
                     <div class="position-relative z-index-2">
-                        <div class="avatar-xl bg-white bg-opacity-10 text-white rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center shadow-lg border border-white border-opacity-25" style="width: 120px; height: 120px;">
+                        <div class="avatar-xl bg-white bg-opacity-10 text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center shadow-lg border border-white border-opacity-25" style="width: 100px; height: 100px;">
                             <i class="fas fa-building fa-4x text-gradient-gold"></i>
                         </div>
                         <h4 class="fw-bold mb-1 text-white">Modern Trading SC</h4>
@@ -20,7 +20,7 @@
                         <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-certificate me-1"></i> Verified Supplier</span>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 p-4">
+                <div class="card-footer bg-white border-0 p-3 px-4">
                     <div class="d-flex justify-content-between mb-3">
                         <span class="text-muted small fw-bold text-uppercase">Operational Status</span>
                         <span class="text-success small fw-bold">Active</span>
@@ -36,8 +36,8 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-body p-4">
+            <div class="card border-0 shadow-premium rounded-5 mb-3">
+                <div class="card-body p-3 px-4">
                     <h6 class="fw-bold mb-3">Compliance & Documents</h6>
                     <div class="list-group list-group-flush border-0">
                         <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
@@ -54,8 +54,8 @@
         </div>
 
         <div class="col-xl-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <h5 class="fw-bold mb-4">Enterprise Account Configuration</h5>
+            <div class="card border-0 shadow-premium rounded-5 p-3 px-4">
+                <h6 class="fw-bold mb-3 text-uppercase ls-1 text-dark-green">Enterprise Account Configuration</h6>
                 <form>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
@@ -92,9 +92,9 @@
                         </div>
                     </div>
 
-                    <div class="mt-5 d-flex gap-3 justify-content-end">
-                        <button type="reset" class="btn btn-light rounded-pill px-5 fw-bold shadow-sm">Reset</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Save Global Changes</button>
+                    <div class="mt-4 d-flex gap-2 justify-content-end">
+                        <button type="reset" class="btn btn-light rounded-pill px-4 py-2 fw-bold shadow-sm small">Reset</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm small">Save Global Changes</button>
                     </div>
                 </form>
             </div>
@@ -103,6 +103,32 @@
 </div>
 
 <style>
+    .rounded-5, .rounded-4 { border-radius: 16px !important; }
+    .shadow-premium { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04) !important; }
+    .ls-1 { letter-spacing: 0.5px; }
+    .extra-small { font-size: 0.62rem; }
+
+    .supplier-profile-container {
+        zoom: 0.92;
+        max-width: 1450px;
+        margin: auto;
+    }
+
+    .btn {
+        font-size: 0.85rem;
+    }
+
+    body {
+        font-size: 0.92rem;
+    }
+
+    h1, .h1 { font-size: 1.75rem; }
+    h2, .h2 { font-size: 1.5rem; }
+    h3, .h3 { font-size: 1.25rem; }
+    h4, .h4 { font-size: 1.1rem; }
+    h5, .h5 { font-size: 1rem; }
+    h6, .h6 { font-size: 0.85rem; }
+
     /* Premium Header Styles */
     .welcome-banner {
         background: linear-gradient(135deg, #0B3B2F 0%, #1A4D3A 100%);

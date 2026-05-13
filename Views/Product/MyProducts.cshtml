@@ -5,18 +5,18 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4 px-4">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+<div class="container-fluid py-3 px-3 product-management-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1"><i class="fas fa-boxes me-2"></i>Product Management</h1>
-            <p class="text-muted small mb-0">Manage your high-fidelity product catalog and distributed inventory</p>
+            <h4 class="fw-bold text-dark-green mb-1"><i class="fas fa-boxes me-2"></i>Product Management</h4>
+            <p class="text-muted extra-small mb-0">Manage your high-fidelity product catalog and distributed inventory</p>
         </div>
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-2">
             <div class="search-bar-premium position-relative">
                 <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                <input type="text" id="productSearch" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm" placeholder="Search SKU or Name..." style="width: 300px; height: 45px;">
+                <input type="text" id="productSearch" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm small" placeholder="Search SKU or Name..." style="width: 260px; height: 38px;">
             </div>
-            <a asp-action="Create" class="btn btn-dark-green rounded-pill px-4 shadow-premium fw-bold d-flex align-items-center">
+            <a asp-action="Create" class="btn btn-dark-green rounded-pill px-3 shadow-premium fw-bold d-flex align-items-center small">
                 <i class="fas fa-plus me-2"></i> Add Product
             </a>
         </div>
@@ -24,7 +24,7 @@
 
 
     <!-- Product Grid -->
-    <div class="row g-4" id="productGrid">
+    <div class="row g-3" id="productGrid">
         @if (Model != null && Model.Any())
         {
             foreach (var item in Model)
@@ -53,7 +53,7 @@
                         </div>
 
                         <!-- Product Image Area -->
-                        <div class="product-image-container bg-faint-green position-relative" style="height: 220px;">
+                        <div class="product-image-container bg-faint-green position-relative" style="height: 180px;">
                             @if (!string.IsNullOrEmpty(item.ImageUrl))
                             {
                                 <img src="@item.ImageUrl" alt="@item.ProductName" class="w-100 h-100 object-fit-cover transition-all" />
@@ -80,7 +80,7 @@
                             </div>
                         </div>
 
-                        <div class="card-body p-4">
+                        <div class="card-body p-3">
                             <div class="mb-2">
                                 <span class="badge bg-faint-green text-dark-green fw-bold rounded-pill px-3 py-2 small">@item.Category?.CategoryName</span>
                             </div>
@@ -99,12 +99,12 @@
                             </div>
 
                             <!-- Inventory Health -->
-                            <div class="p-3 bg-faint-green rounded-4">
-                                <div class="d-flex justify-content-between mb-2">
+                            <div class="p-2 bg-faint-green rounded-4">
+                                <div class="d-flex justify-content-between mb-1">
                                     <span class="extra-small text-muted fw-bold">Reserved: <span class="text-warning">@reservedStock</span></span>
                                     <span class="extra-small text-muted fw-bold">System: <span class="text-dark-green">@totalStock</span></span>
                                 </div>
-                                <div class="progress rounded-pill shadow-sm" style="height: 6px; background-color: rgba(0,0,0,0.05);">
+                                <div class="progress rounded-pill shadow-sm" style="height: 4px; background-color: rgba(0,0,0,0.05);">
                                     @{
                                         var percent = totalStock > 0 ? (availableStock * 100 / totalStock) : 0;
                                         var barColor = availableStock <= 0 ? "bg-danger" : (isLowStock ? "bg-warning" : "bg-dark-green");
@@ -114,8 +114,8 @@
                             </div>
                         </div>
 
-                        <div class="card-footer bg-transparent border-0 p-4 pt-0">
-                            <button type="button" class="btn btn-faint-green w-100 rounded-pill fw-bold text-dark-green py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#stockModal-@item.Id">
+                        <div class="card-footer bg-transparent border-0 p-3 pt-0">
+                            <button type="button" class="btn btn-faint-green w-100 rounded-pill fw-bold text-dark-green py-2 shadow-sm extra-small" data-bs-toggle="modal" data-bs-target="#stockModal-@item.Id">
                                 <i class="fas fa-warehouse me-2"></i> Update Stock
                             </button>
                         </div>
@@ -236,36 +236,11 @@
 
 @section Styles {
     <style>
-        :root {
-            --dark-green: #1a3d31;
-            --accent-green: #d4f06d;
-            --faint-green: #f2f6f6;
+        .product-management-container {
+            zoom: 0.92;
+            max-width: 1450px;
+            margin: auto;
         }
-
-        .text-dark-green { color: var(--dark-green) !important; }
-        .bg-dark-green { background-color: var(--dark-green) !important; }
-        .bg-faint-green { background-color: var(--faint-green) !important; }
-        .btn-dark-green { background-color: var(--dark-green); color: white; border: none; }
-        .btn-dark-green:hover { background-color: #244d3e; color: white; }
-        .btn-white { background-color: #ffffff; color: var(--dark-green); border: none; }
-
-        .rounded-5 { border-radius: 24px !important; }
-        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
-        .ls-1 { letter-spacing: 1px; }
-        .extra-small { font-size: 0.75rem; }
-        
-        .status-badge {
-            padding: 6px 14px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
-        .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
 
         .border-dashed-custom { border: 2px dashed rgba(26, 61, 49, 0.1); }
 
@@ -287,9 +262,6 @@
 
         .hover-lift { transition: all 0.3s ease; }
         .hover-lift:hover { transform: translateY(-10px); }
-
-        .animate-slide-up { animation: slideUp 0.5s ease-out; }
-        @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 }
 

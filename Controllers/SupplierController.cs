@@ -66,23 +66,24 @@ namespace SCM_System.Controllers
             // Chart Data: Earnings Trend (Last 6 Months)
             var sixMonthsAgo = DateTime.Now.AddMonths(-6);
             var earningsTrend = allCommissions
-                .Where(c => c.PaymentType == "SupplierPayout" && c.CreatedAt >= sixMonthsAgo)
+                .Where(c => c.PaymentType == "OrderPayment" && c.CreatedAt >= sixMonthsAgo)
                 .GroupBy(c => new { Month = c.CreatedAt.Month, Year = c.CreatedAt.Year })
-                .Select(g => new { 
-                    Label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yy"),
-                    Value = g.Sum(c => c.CommissionAmount)
+                .Select(g => {
+                    var monthGross = g.Sum(c => c.OrderAmount);
+                    // Estimate net as 95% if commissions aren't explicitly linked in this grouping
+                    // Or better, calculate actual net if possible
+                    return new { 
+                        Label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yy"),
+                        Value = g.Sum(c => {
+                            var commission = allCommissions.FirstOrDefault(pc => pc.PurchaseOrderId == c.PurchaseOrderId && pc.PaymentType == "PlatformCommission")?.CommissionAmount ?? (c.OrderAmount * 0.05m);
+                            return c.OrderAmount - commission;
+                        })
+                    };
                 })
                 .OrderBy(x => x.Label)
                 .ToList();
             ViewBag.EarningsTrendLabels = earningsTrend.Select(x => x.Label).ToArray();
             ViewBag.EarningsTrendValues = earningsTrend.Select(x => x.Value).ToArray();
-
-            // Chart Data: Payout Status (Pie)
-            ViewBag.PayoutStatusLabels = new[] { "Paid Out", "Pending Clearance" };
-            ViewBag.PayoutStatusValues = new[] {
-                allCommissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Paid").Sum(c => c.CommissionAmount),
-                allCommissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == "Pending").Sum(c => c.CommissionAmount)
-            };
 
             // Top Retailers by Revenue
             ViewBag.TopRetailers = allCommissions
@@ -98,16 +99,26 @@ namespace SCM_System.Controllers
                 .Where(c => c.PaymentType == "OrderPayment")
                 .OrderByDescending(c => c.CreatedAt)
                 .Take(10)
-                .Select(c => new {
-                    OrderNumber = c.Order?.OrderNumber ?? "N/A",
-                    Retailer = c.Retailer?.BusinessName ?? "Unknown",
-                    Amount = c.OrderAmount,
-                    Commission = allCommissions.FirstOrDefault(pc => pc.PurchaseOrderId == c.PurchaseOrderId && pc.PaymentType == "PlatformCommission")?.CommissionAmount ?? 0,
-                    Net = allCommissions.FirstOrDefault(sp => sp.PurchaseOrderId == c.PurchaseOrderId && sp.PaymentType == "SupplierPayout")?.CommissionAmount ?? 0,
-                    Status = c.Status,
-                    PayoutStatus = allCommissions.FirstOrDefault(sp => sp.PurchaseOrderId == c.PurchaseOrderId && sp.PaymentType == "SupplierPayout")?.Status ?? "N/A"
+                .Select(c => {
+                    var platComm = allCommissions.FirstOrDefault(pc => pc.PurchaseOrderId == c.PurchaseOrderId && pc.PaymentType == "PlatformCommission");
+                    var suppPay = allCommissions.FirstOrDefault(sp => sp.PurchaseOrderId == c.PurchaseOrderId && sp.PaymentType == "SupplierPayout");
+                    
+                    return new {
+                        OrderNumber = c.Order?.OrderNumber ?? "N/A",
+                        Retailer = c.Retailer?.BusinessName ?? "Unknown",
+                        Amount = c.OrderAmount,
+                        Commission = platComm?.CommissionAmount ?? (c.OrderAmount * 0.05m),
+                        Net = suppPay?.CommissionAmount ?? (c.OrderAmount - (platComm?.CommissionAmount ?? (c.OrderAmount * 0.05m))),
+                        Status = c.Status,
+                        PayoutStatus = suppPay?.Status ?? (c.Status == "Paid" ? "Pending Clearance" : "Awaiting Order Payment")
+                    };
                 })
                 .ToList();
+
+            // Calculate Growth %
+            var currentMonthVal = earningsTrend.LastOrDefault()?.Value ?? 0;
+            var prevMonthVal = earningsTrend.Count > 1 ? earningsTrend[earningsTrend.Count - 2].Value : 0;
+            ViewBag.GrowthRate = prevMonthVal > 0 ? ((currentMonthVal - prevMonthVal) / prevMonthVal * 100).ToString("F1") : "0.0";
 
             // ========== END FINANCIAL ZONE ==========
 
