@@ -109,6 +109,9 @@ namespace SCM_System.Data
         public DbSet<SystemConfiguration> SystemConfigurations { get; set; }
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
 
+        // Add this DbSet inside your ApplicationDbContext class
+        public DbSet<DepositRecord> DepositRecords { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

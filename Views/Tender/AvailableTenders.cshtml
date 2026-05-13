@@ -47,7 +47,7 @@
                                 <td>
                                     <div class="fw-bold text-dark-green mb-1 dark-mode-text">@item.Title</div>
                                     <div class="text-muted extra-small text-truncate fw-bold dark-mode-text" style="max-width: 280px;">@item.Description</div>
-                                </td>
+                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="bg-dark-green text-accent-green rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm dark-mode-retailer-icon" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 800;">
@@ -58,20 +58,20 @@
                                             <div class="extra-small text-muted dark-mode-text">Tier 1 Retailer</div>
                                         </div>
                                     </div>
-                                </td>
+                                 </td>
                                 <td>
                                     <div class="small fw-bold text-dark-green dark-mode-text">
                                         <i class="far fa-clock me-1 text-warning"></i>
                                         @item.SubmissionDeadline.ToString("MMM dd, yyyy")
                                     </div>
                                     <div class="extra-small text-muted fw-bold dark-mode-text">@item.SubmissionDeadline.ToString("HH:mm") GMT</div>
-                                </td>
+                                 </td>
                                 <td>
                                     <div class="small fw-bold text-dark-green dark-mode-text">
                                         <i class="fas fa-truck me-1 text-accent-green"></i>
                                         @item.ExpectedDeliveryDate.ToString("MMM dd, yyyy")
                                     </div>
-                                </td>
+                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex gap-2 justify-content-end">
                                         <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-faint-green text-dark-green rounded-pill px-3 py-2 fw-bold extra-small shadow-sm dark-mode-view-btn">
@@ -160,9 +160,10 @@
 
         body.dark-mode .dark-mode-table {
             background-color: #1e293b !important;
+            width: 100%;
         }
 
-        /* FIXED: Table header background */
+        /* Table header background - FIXED */
         body.dark-mode .dark-mode-thead {
             background-color: #334155 !important;
         }
@@ -173,7 +174,13 @@
             border-bottom-color: #475569 !important;
         }
 
+        /* Table body rows - FIXED */
+        body.dark-mode .dark-mode-tbody {
+            background-color: #1e293b !important;
+        }
+
         body.dark-mode .dark-mode-tbody tr {
+            background-color: #1e293b !important;
             border-bottom-color: #334155 !important;
         }
 
@@ -183,7 +190,7 @@
 
         body.dark-mode .dark-mode-row td {
             color: #e2e8f0 !important;
-            background-color: transparent !important;
+            background-color: #1e293b !important;
             border-bottom-color: #334155 !important;
         }
 
@@ -241,7 +248,7 @@
             border-color: #475569 !important;
         }
 
-        /* Table cell text colors */
+        /* Override the custom-nexus-table border styles for dark mode */
         body.dark-mode .custom-nexus-table tbody td {
             border-bottom-color: #334155 !important;
         }

@@ -477,28 +477,7 @@ namespace SCM_System.Controllers
             return Json(new { success = true, cartItemCount = count, subtotal = netSubtotal, taxTotal = Math.Round(netSubtotal * 0.15m, 2) });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Checkout(string deliveryAddress, DateTime expectedDeliveryDate)
-        {
-            if (!IsRetailer()) return RedirectToAction("Login", "Account");
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-
-            try
-            {
-                await _cartService.CheckoutAsync(retailer.Id, deliveryAddress, expectedDeliveryDate);
-                TempData["SuccessMessage"] = "Checkout successful! Orders have been generated and sent to suppliers.";
-                return RedirectToAction("OrderTracking");
-            }
-            catch (Exception ex)
-            {
-                var message = ex.Message;
-                if (ex.InnerException != null) message += " | Inner: " + ex.InnerException.Message;
-                TempData["ErrorMessage"] = "Checkout failed: " + message;
-                return RedirectToAction("Dashboard");
-            }
-        }
+       
 
         [HttpPost]
         public async Task<IActionResult> UpdateBusinessInfo(Retailer model)
@@ -832,6 +811,97 @@ namespace SCM_System.Controllers
 
             TempData["ErrorMessage"] = "Payment verification pending. If you completed the payment, your order will be updated automatically via our secure webhook.";
             return RedirectToAction("OrderTracking");
+        }
+
+
+        // Add to RetailerController.cs
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Checkout(string deliveryAddress, DateTime expectedDeliveryDate)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId.ToString() == userId);
+                if (retailer == null) return RedirectToAction("Login", "Account");
+
+                var cart = await _context.Carts
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.Product)
+                            .ThenInclude(p => p.Supplier)
+                    .FirstOrDefaultAsync(c => c.RetailerId == retailer.Id);
+
+                if (cart == null || !cart.CartItems.Any())
+                {
+                    TempData["ErrorMessage"] = "Your cart is empty.";
+                    return RedirectToAction("ViewCart");
+                }
+
+                // Group by supplier
+                var supplierGroups = cart.CartItems.GroupBy(ci => ci.Product.SupplierId);
+
+                decimal totalAmount = 0;
+                var orderItems = new List<OrderItem>();
+
+                foreach (var group in supplierGroups)
+                {
+                    var supplier = group.First().Product.Supplier;
+                    var supplierTotal = group.Sum(ci => ci.Quantity * ci.Product.BasePrice);
+                    totalAmount += supplierTotal;
+
+                    foreach (var item in group)
+                    {
+                        orderItems.Add(new OrderItem
+                        {
+                            ProductId = item.ProductId,
+                            ProductName = item.Product.ProductName,
+                            Quantity = item.Quantity,
+                            UnitPrice = item.Product.BasePrice
+                        });
+                    }
+                }
+
+                var vat = totalAmount * 0.15m;
+                var grandTotal = totalAmount + vat;
+
+                // Create Order with Pending status
+                var order = new Order
+                {
+                    OrderNumber = GenerateOrderNumber(),
+                    RetailerId = retailer.Id,
+                    SupplierId = supplierGroups.First().First().Product.SupplierId,
+                    DeliveryAddress = deliveryAddress,
+                    ExpectedDeliveryDate = expectedDeliveryDate,
+                    Subtotal = totalAmount,
+                    VAT = vat,
+                    TotalAmount = grandTotal,
+                    OrderStatus = "Pending",
+                    PaymentStatus = "Pending", 
+                    CreatedAt = DateTime.Now,
+                    OrderItems = orderItems
+                };
+
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                // Clear cart
+                _context.CartItems.RemoveRange(cart.CartItems);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Order placed successfully! Please wait for the supplier to accept it before paying the deposit.";
+                return RedirectToAction("OrderTracking");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error during checkout: {ex.Message}";
+                return RedirectToAction("ViewCart");
+            }
+        }
+
+        private string GenerateOrderNumber()
+        {
+            return $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
         }
     }
 }

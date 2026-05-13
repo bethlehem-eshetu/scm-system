@@ -130,7 +130,6 @@
         <!-- Smart Insights Panel -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 p-4 text-white bg-dark mb-4 position-relative overflow-hidden dark-mode-insights-card">
-                <!-- BG detail -->
                 <i class="fas fa-lightbulb fa-5x position-absolute opacity-10" style="bottom: -20px; right: -10px;"></i>
                 
                 <h6 class="fw-bold text-uppercase text-white-50 smaller mb-4 dark-mode-text">Smart Insights</h6>
@@ -208,8 +207,10 @@
 
         body.dark-mode .dark-mode-table {
             background-color: #1e293b !important;
+            width: 100%;
         }
 
+        /* Table header background - FIXED */
         body.dark-mode .dark-mode-thead {
             background-color: #334155 !important;
         }
@@ -220,17 +221,23 @@
             border-bottom-color: #475569 !important;
         }
 
+        /* Table body rows - FIXED */
+        body.dark-mode .dark-mode-tbody {
+            background-color: #1e293b !important;
+        }
+
         body.dark-mode .dark-mode-tbody tr {
+            background-color: #1e293b !important;
             border-bottom-color: #334155 !important;
         }
 
         body.dark-mode .dark-mode-tbody tr:hover {
-            background-color: #334155 !important;
+            background-color: #2d3a4a !important;
         }
 
         body.dark-mode .dark-mode-row td {
             color: #e2e8f0 !important;
-            background-color: transparent !important;
+            background-color: #1e293b !important;
             border-bottom-color: #334155 !important;
         }
 
@@ -338,6 +345,11 @@
 
         body.dark-mode .border-primary {
             border-bottom-color: #93c5fd !important;
+        }
+
+        /* Override table border styles */
+        body.dark-mode .table {
+            --bs-table-hover-bg: transparent;
         }
     </style>
 }

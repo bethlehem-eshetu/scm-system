@@ -28,6 +28,10 @@
     bool isDelivered = currentStatus == "Delivered" || currentStatus == "Completed";
 
     var requiredQty = Model.OrderItems?.Sum(x => x.Quantity) ?? 0;
+    
+    // Calculate deposit and remaining amounts
+    var depositAmount = Model.TotalAmount * 0.5m;
+    var remainingAmount = Model.TotalAmount - depositAmount;
 }
 
 <div class="container-fluid py-4 px-4 min-vh-100">
@@ -64,6 +68,14 @@
                     <span class="text-white-50 extra-small fw-bold text-uppercase ls-1 d-block mb-3">Deployment Status</span>
                     <h2 class="fw-bold text-white mb-3">#@Model.OrderNumber</h2>
                     <div class="status-pill-nexus @GetBadgeClass(currentStatus) rounded-pill py-2 shadow-lg dark-mode-status-pill">@currentStatus</div>
+                    @if (Model.PaymentStatus == "PartialPaid")
+                    {
+                        <div class="mt-3">
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 extra-small fw-bold">
+                                <i class="fas fa-percent me-1"></i> 50% Deposit Paid
+                            </span>
+                        </div>
+                    }
                 </div>
                 <div class="col-xl-9 p-5 dark-mode-summary-section">
                     <div class="row g-4">
@@ -77,9 +89,25 @@
                             <h3 class="fw-bold text-dark-green mb-1 dark-mode-text">@topTotal.ToString("N2") <small class="extra-small opacity-50">ETB</small></h3>
                         </div>
                         <div class="col-md-3 border-end border-faint dark-mode-border">
-                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Issue Timestamp</label>
-                            <h4 class="fw-bold text-dark-green mb-1 dark-mode-text">@Model.CreatedAt.ToString("MMM dd, yyyy")</h4>
-                            <span class="extra-small text-muted fw-bold dark-mode-text">ID: #SYS-@Model.Id</span>
+                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Payment Status</label>
+                            <h4 class="fw-bold mb-1 dark-mode-text">
+                                @if (Model.PaymentStatus == "PartialPaid")
+                                {
+                                    <span class="text-warning">50% Paid</span>
+                                }
+                                else if (Model.PaymentStatus == "Paid")
+                                {
+                                    <span class="text-success">Fully Paid</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">@Model.PaymentStatus</span>
+                                }
+                            </h4>
+                            @if (Model.PaymentStatus == "PartialPaid")
+                            {
+                                <span class="extra-small text-muted fw-bold dark-mode-text">Remaining: @remainingAmount.ToString("N2") ETB</span>
+                            }
                         </div>
                         <div class="col-md-3 border-end border-faint dark-mode-border">
                             <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Execution Hub</label>
@@ -194,6 +222,19 @@
                                 <h3 class="fw-bold mb-0 text-accent-green">@grandTotal.ToString("N2") <small class="extra-small opacity-50">ETB</small></h3>
                             </div>
                         </div>
+                        @if (Model.PaymentStatus == "PartialPaid")
+                        {
+                            <div class="mt-3 pt-3 border-top border-white border-opacity-10">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-white-50 extra-small">Deposit Paid (50%)</span>
+                                    <span class="text-accent-green fw-bold">@depositAmount.ToString("N2") ETB</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span class="text-white-50 extra-small">Remaining Balance (50%)</span>
+                                    <span class="text-warning fw-bold">@remainingAmount.ToString("N2") ETB</span>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -225,6 +266,51 @@
                     <p class="extra-small text-muted mt-3 fw-bold text-center dark-mode-text">Safety Protocol: Only available pre-picking phase.</p>
                 </div>
             }
+            @if (isSupplier && Model.OrderStatus == "Pending")
+            {
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-dark-green dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text">Order Validation</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Review and validate this incoming order contract.</p>
+                    
+                    <form asp-controller="Order" asp-action="StatusAction" method="post" class="mb-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="actionType" value="Accept" />
+                        
+                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-3 dark-mode-text">Assign Initial Hub (Optional)</label>
+                        <select name="warehouseId" class="form-select border-0 bg-faint-green rounded-4 py-3 px-4 fw-bold text-dark-green mb-4 shadow-sm dark-mode-select">
+                            <option value="">-- AUTO-SELECT BEST HUB --</option>
+                            @if (ViewBag.Warehouses != null)
+                            {
+                                foreach (dynamic w in ViewBag.Warehouses)
+                                {
+                                    <option value="@w.Id">@w.Name Hub (@w.City)</option>
+                                }
+                            }
+                        </select>
+                        
+                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium mb-3 dark-mode-primary-btn">
+                            <i class="fas fa-check-circle me-2 text-accent-green"></i> ACCEPT ORDER
+                        </button>
+                    </form>
+
+                    <button type="button" class="btn btn-white w-100 rounded-pill fw-bold py-2 text-danger border border-danger border-opacity-10 small dark-mode-reject-btn" data-bs-toggle="collapse" data-bs-target="#rejectOrderForm">
+                        Reject Order
+                    </button>
+
+                    <div class="collapse mt-3" id="rejectOrderForm">
+                        <form asp-controller="Order" asp-action="StatusAction" method="post" class="p-3 bg-light rounded-4 dark-mode-icon-bg">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="actionType" value="Reject" />
+                            <label class="extra-small fw-bold text-danger mb-2">REJECTION REASON</label>
+                            <textarea name="rejectionReason" class="form-control border-0 rounded-3 mb-3 small" rows="3" placeholder="Explain why this order is being rejected..." required></textarea>
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold small">CONFIRM REJECTION</button>
+                        </form>
+                    </div>
+                </div>
+            }
+
             @if (showAssignPanel)
             {
                 <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-dark-green dark-mode-card">
@@ -262,6 +348,62 @@
                             Reject Contract
                         </button>
                     </form>
+                </div>
+            }
+
+            @if (isRetailer && Model.PaymentStatus == "Pending" && (Model.OrderStatus == "Accepted" || Model.OrderStatus == "Picking"))
+            {
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-accent-green dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text"><i class="fas fa-wallet me-2 text-accent-green"></i>Financial Activation</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Your order has been accepted! Please pay the 50% advanced deposit to initiate fulfillment.</p>
+                    
+                    <div class="text-center mb-4">
+                        <div class="bg-faint-green rounded-4 p-4 dark-mode-icon-bg">
+                            <span class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Initial Deposit Required</span>
+                            <h2 class="fw-bold text-dark-green mb-0 dark-mode-text">@depositAmount.ToString("N2") <small class="fs-6 opacity-50">ETB</small></h2>
+                        </div>
+                    </div>
+
+                    <form asp-controller="Payment" asp-action="InitializeDepositPayment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="orderId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium mb-3 dark-mode-primary-btn">
+                            <i class="fas fa-credit-card me-2 text-accent-green"></i> PAY 50% DEPOSIT NOW
+                        </button>
+                    </form>
+                    
+                    <p class="extra-small text-muted mt-2 fw-bold text-center dark-mode-text">
+                        <i class="fas fa-shield-alt me-1 text-success"></i> Secured by Chapa Gateway
+                    </p>
+                </div>
+            }
+
+            <!-- Remaining Balance Card (NEW for 50% deposit feature) -->
+            @if (isRetailer && Model.PaymentStatus == "PartialPaid" && Model.OrderStatus != "Completed" && Model.OrderStatus != "Cancelled")
+            {
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-warning dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text"><i class="fas fa-credit-card me-2 text-warning"></i>Remaining Balance</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Pay the remaining 50% when you receive your order.</p>
+                    
+                    <div class="text-center mb-4">
+                        <div class="bg-warning bg-opacity-10 rounded-4 p-4">
+                            <span class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Amount Due on Delivery</span>
+                            <h2 class="fw-bold text-warning mb-0">@remainingAmount.ToString("C")</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info border-0 rounded-4 small dark-mode-alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        The remaining balance will be collected when your order is delivered to you.
+                    </div>
+                    
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-success" style="width: 50%">50% Paid</div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Deposit Paid ✅</span>
+                        <span>Due on Delivery ⏳</span>
+                    </div>
                 </div>
             }
 
@@ -420,7 +562,7 @@
         }
 
         body.dark-mode .dark-mode-card {
-            background-color: #1e2a3a !important;
+            background-color: #1e293b !important;
             border-color: #334155 !important;
         }
 
@@ -429,7 +571,7 @@
         }
 
         body.dark-mode .dark-mode-summary-section {
-            background-color: #1e2a3a !important;
+            background-color: #1e293b !important;
         }
 
         body.dark-mode .dark-mode-border {
@@ -495,11 +637,11 @@
         }
 
         body.dark-mode .dark-mode-audit-body {
-            background-color: #1e2a3a !important;
+            background-color: #1e293b !important;
         }
 
         body.dark-mode .dark-mode-badge {
-            background-color: #1e2a3a !important;
+            background-color: #1e293b !important;
             color: #a5f3c3 !important;
             border-color: #475569 !important;
         }
@@ -521,7 +663,7 @@
         }
 
         body.dark-mode .dark-mode-select option {
-            background-color: #1e2a3a !important;
+            background-color: #1e293b !important;
             color: #e2e8f0 !important;
         }
 
@@ -546,13 +688,13 @@
         }
 
         body.dark-mode .dark-mode-icon-circle {
-            background-color: #1e2a3a !important;
+            background-color: #1e293b !important;
             color: #a5f3c3 !important;
         }
 
         /* QR code dark mode */
         body.dark-mode .dark-mode-qr {
-            background-color: #1e2a3a !important;
+            background-color: #1e293b !important;
             border-color: #475569 !important;
         }
 
@@ -566,6 +708,12 @@
         body.dark-mode .dark-mode-verified {
             background-color: rgba(74, 222, 128, 0.15) !important;
             color: #4ade80 !important;
+        }
+        
+        /* Alert dark mode */
+        body.dark-mode .dark-mode-alert {
+            background-color: rgba(13, 202, 240, 0.15) !important;
+            color: #67e8f9 !important;
         }
 
         /* Status badge overrides */
@@ -598,6 +746,14 @@
             background-color: rgba(251, 191, 36, 0.15) !important;
             color: #fbbf24 !important;
         }
+        
+        body.dark-mode .text-warning {
+            color: #fbbf24 !important;
+        }
+        
+        body.dark-mode .text-success {
+            color: #4ade80 !important;
+        }
     </style>
 }
 
@@ -616,6 +772,31 @@
                     correctLevel : QRCode.CorrectLevel.H
                 });
             }
+        });
+        
+        // Cancel order functionality
+        document.querySelectorAll('.cancel-order-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const orderId = this.dataset.id;
+                const total = this.dataset.total;
+                if (confirm(`Are you sure you want to cancel this order? This action cannot be undone.`)) {
+                    fetch(`/Order/CancelOrder/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    });
+                }
+            });
         });
     </script>
 }
