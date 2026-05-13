@@ -22,6 +22,7 @@
   --table-border: #dee2e6;
   --deep-green: #0B3B2F;
   --accent-green: #20C997;
+  --faint-green: #f2f6f6;
 }
 
 body.dark-mode {
@@ -36,41 +37,11 @@ body.dark-mode {
   --table-text: #e0e0e0;
   --table-border: #3a4a4a;
   --table-hover: #2a3b3b;
+  --dark-green: #06261E;
+  --accent-green: #d4f06d;
 }
 
-body.dark-mode table {
-    background-color: var(--table-bg) !important;
-}
-
-body.dark-mode table tbody tr:hover {
-    background-color: var(--table-hover) !important;
-}
-
-.data-table, .table {
-  width: 100%;
-  background-color: var(--table-bg) !important;
-  color: var(--table-text) !important;
-  border-collapse: collapse;
-}
-
-.data-table th, .data-table td, .table th, .table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--table-border) !important;
-  border-color: var(--table-border) !important;
-}
-
-.data-table th, .table thead th {
-  background-color: var(--table-header-bg) !important;
-  color: var(--table-text) !important;
-  text-align: left;
-  font-weight: 600;
-}
-
-.data-table tbody tr:hover, .table tbody tr:hover {
-  background-color: rgba(32, 201, 151, 0.1) !important;
-}
-
-/* Responsive Typography Scaling */
+/* Global Styles */
 html {
   font-size: 14px;
 }
@@ -81,7 +52,6 @@ html {
   html { font-size: 16px; }
 }
 
-/* Global Layout Fixes */
 body {
   font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
   background: var(--bg-main);
@@ -92,36 +62,29 @@ body {
   width: 100%;
 }
 
-/* Responsive Table Wrapper Override */
-.table-responsive {
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
+/* Card & Modal Enhancements */
+.card, .modal-content {
+    border: none !important;
+    border-radius: 20px !important; 
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: var(--card-bg) !important;
+    color: var(--table-text) !important;
+    overflow: hidden;
 }
 
-.table-responsive::-webkit-scrollbar {
-    height: 6px;
+.card:hover {
+    box-shadow: var(--shadow-xl) !important;
+    transform: translateY(-4px);
 }
 
-/* Spacing Utilities */
-@media (max-width: 768px) {
-    .container-fluid { padding-left: 1rem !important; padding-right: 1rem !important; }
-    .section-padding { padding-top: 3rem; padding-bottom: 3rem; }
-}
-
-/* Chart & Image Responsiveness */
-canvas, img {
-    max-width: 100%;
-    height: auto !important;
-}
-
-/* Glassmorphism Utilities */
+/* Glassmorphism */
 .glass-panel {
   background: var(--bg-card);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-glass);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   border-radius: 16px;
 }
 
@@ -135,444 +98,65 @@ canvas, img {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.glass-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+body.dark-mode .glass-card {
+    background: rgba(30, 42, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Form overrides */
-.form-control, .form-select {
-    padding: 0.6rem 1rem;
-    border-radius: 10px;
+/* Tables */
+.table, .data-table {
+  background-color: var(--table-bg) !important;
+  color: var(--table-text) !important;
 }
 
-.form-control:focus, .form-select:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.25rem rgba(26, 61, 49, 0.1);
+.table thead th, .data-table th {
+  background-color: var(--table-header-bg) !important;
+  color: var(--table-text) !important;
+  border-bottom-color: var(--table-border) !important;
 }
 
-/* Global UI Enhancements */
-.card, .modal-content {
-    border: none !important;
-    border-radius: 20px !important; 
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background-color: var(--card-bg) !important;
-    color: var(--table-text) !important;
-    overflow: hidden;
+.table td, .data-table td {
+  border-bottom-color: var(--table-border) !important;
 }
 
-.card-body, .card-header, .card-footer {
-    background-color: transparent !important;
-}
-
-/* Neutralize hardcoded white backgrounds in dark mode */
-body.dark-mode .bg-white, 
-body.dark-mode .bg-light,
-body.dark-mode .card,
-body.dark-mode .modal-content {
-    background-color: var(--card-bg) !important;
-    color: var(--table-text) !important;
-}
-
-.card:hover {
-    box-shadow: var(--shadow-xl) !important;
-    transform: translateY(-4px);
-}
-
-/* Status Badges */
-.badge {
-    padding: 0.6em 1.2em;
-    font-weight: 600;
-    border-radius: 8px;
-}
-
-
-.rounded-4 { border-radius: 1rem !important; }
-.shadow-premium { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important; }
-
-/* Status Colors */
-.status-pending { background-color: #fef3c7; color: #92400e; }
-.status-processing { background-color: #e0e7ff; color: #3730a3; }
-.status-completed { background-color: #d1fae5; color: #065f46; }
-.status-rejected { background-color: #fee2e2; color: #991b1b; }
-
-/* Buttons */
-.btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-}
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Form floating fixes */
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--text-secondary);
-  text-align: end;
-}
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
-}
-/* High-Specificity Dark Mode Overrides */
-body.dark-mode table,
 body.dark-mode .table,
-body.dark-mode .data-table,
-body.dark-mode th,
-body.dark-mode td,
-body.dark-mode thead,
-body.dark-mode tbody,
-body.dark-mode tr {
-    background-color: #1e2a2a !important;
-    color: #e0e0e0 !important;
-    border-color: #3a4a4a !important;
-}
-
-body.dark-mode table tbody tr:hover,
-body.dark-mode .table tbody tr:hover,
-body.dark-mode .data-table tbody tr:hover {
-    background-color: #2a3b3b !important;
-}
-
-body.dark-mode .card,
-body.dark-mode .card-body,
-body.dark-mode .modal-content,
-body.dark-mode .list-group-item {
-    background-color: #1e2a2a !important;
-    color: #e0e0e0 !important;
-}
-
-/* Operational Hub Card persistent deep green */
-.operational-hub-card {
-    background-color: #0B3B2F !important;
-    color: #ffffff !important;
-    border: none;
-    border-radius: 1rem;
-    overflow: hidden;
-}
-
-
-/* Team Palette: Deep Green Operational Hub */
-.operational-hub-deep-green {
-    background-color: #0B3B2F !important;
-    color: #ffffff !important;
-    border-radius: 0.75rem;
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-.operational-hub-deep-green h5, .operational-hub-deep-green .title {
-    color: #ffffff !important;
-}
-.operational-hub-deep-green .text-muted, .operational-hub-deep-green .extra-small {
-    color: #d1d1d1 !important;
-}
-
-
-/* Supplier Catalog Dark Mode Enhancements */
-body.dark-mode .catalog-container,
-body.dark-mode .sidebar-filters,
-body.dark-mode .product-card,
-body.dark-mode .search-bar,
-body.dark-mode .category-list {
-    background-color: #1e2a2a !important;
-    color: #e0e0e0 !important;
-}
-body.dark-mode .product-card {
-    border: 1px solid #3a4a4a !important;
-}
-body.dark-mode .product-card h5,
-body.dark-mode .product-card .card-title,
-body.dark-mode .product-card h6 {
-    color: #ffffff !important;
-}
-body.dark-mode .product-card .text-muted {
-    color: #b0b0b0 !important;
-}
-body.dark-mode .btn-outline-primary,
-body.dark-mode .btn-outline-secondary {
-    border-color: #20C997;
-    color: #20C997;
-}
-body.dark-mode .btn-outline-primary:hover,
-body.dark-mode .btn-outline-secondary:hover {
-    background-color: #20C997;
-    color: #1e2a2a;
-}
-body.dark-mode .form-control, 
-body.dark-mode .form-select {
-    background-color: #2a3b3b !important;
-    color: #ffffff !important;
-    border-color: #3a4a4a !important;
-}
-
-
-/* High-Specificity Payment & History Dark Mode Overrides */
-body.dark-mode .payment-container,
-body.dark-mode .card,
-body.dark-mode .card-body,
-body.dark-mode .table,
-body.dark-mode .table th,
 body.dark-mode .table td,
-body.dark-mode .filter-section,
-body.dark-mode .ledger-header,
-body.dark-mode .no-records-message {
-    background-color: #1e2a2a !important;
-    color: #e0e0e0 !important;
-    border-color: #3a4a4a !important;
+body.dark-mode .table th {
+    background-color: var(--table-bg) !important;
+    color: var(--table-text) !important;
+    border-color: var(--table-border) !important;
 }
-
-body.dark-mode .card-header,
-body.dark-mode .ledger-header {
-    background-color: #2a3b3b !important;
-    border-bottom-color: #3a4a4a !important;
-}
-
-body.dark-mode .table-hover tbody tr:hover {
-    background-color: #2a3b3b !important;
-}
-
-
-/* Absolute Dark Mode Table & Container Stabilization */
-body.dark-mode .table-responsive,
-body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
-    background-color: #1e2a2a !important;
-}
-
-body.dark-mode .table-striped > tbody > tr:nth-of-type(even) {
-    background-color: #233232 !important; /* Slightly lighter for subtle striping */
-}
-
-body.dark-mode .card-header,
-body.dark-mode .modal-header {
-    background-color: #2a3b3b !important;
-    border-bottom: 1px solid #3a4a4a !important;
-}
-
-
-
-
-/* Historical Ledger & Custom Grid Dark Mode Overrides */
-body.dark-mode .ledger-section,
-body.dark-mode .historical-ledger,
-body.dark-mode .ledger-row,
-body.dark-mode .ledger-item,
-body.dark-mode .ledger-card,
-body.dark-mode .ledger-field {
-    background-color: #1e2a2a !important;
-    color: #e0e0e0 !important;
-    border-color: #3a4a4a !important;
-}
-
-body.dark-mode .ledger-section div,
-body.dark-mode .historical-ledger div {
-    background-color: #1e2a2a !important;
-}
-
-
-/* Main Content Dark Mode Typography Synchronization */
-body.dark-mode .main-content .card,
-body.dark-mode .main-content .card-body,
-body.dark-mode .main-content .ledger-section,
-body.dark-mode .main-content .historical-ledger,
-body.dark-mode .main-content .filter-section,
-body.dark-mode .main-content .summary-card {
-    background-color: #1e2a2a !important;
-    color: #ffffff !important;
-}
-
-body.dark-mode .main-content .card-title,
-body.dark-mode .main-content .card-text,
-body.dark-mode .main-content .ledger-row,
-body.dark-mode .main-content .ledger-field,
-body.dark-mode .main-content .table,
-body.dark-mode .main-content th,
-body.dark-mode .main-content td,
-body.dark-mode .main-content label,
-body.dark-mode .main-content span:not(.badge),
-body.dark-mode .main-content h1,
-body.dark-mode .main-content h2,
-body.dark-mode .main-content h3,
-body.dark-mode .main-content h4,
-body.dark-mode .main-content h5,
-body.dark-mode .main-content h6,
-body.dark-mode .main-content p {
-    color: #ffffff !important;
-}
-
-body.dark-mode .main-content a:not(.btn) {
-    color: #80e0c0 !important;
-}
-
-
-/* Specific Transaction Intelligence Ledger Dark Mode Overrides */
-body.dark-mode .transaction-ledger,
-body.dark-mode .ledger-container,
-body.dark-mode .intelligence-ledger,
-body.dark-mode .ledger-section {
-    background-color: #1e2a2a !important;
-    color: #ffffff !important;
-    border-color: #3a4a4a !important;
-}
-
-body.dark-mode .transaction-ledger div,
-body.dark-mode .transaction-ledger p,
-body.dark-mode .transaction-ledger span,
-body.dark-mode .transaction-ledger .ledger-field,
-body.dark-mode .transaction-ledger .field-label,
-body.dark-mode .transaction-ledger .field-value {
-    color: #ffffff !important;
-}
-
-body.dark-mode .no-records-message,
-body.dark-mode .alert-info {
-    background-color: #1e2a2a !important;
-    color: #f0f0f0 !important;
-}
-
-
-/* Additional Ledger Empty State Visibility Fix */
-body.dark-mode .transaction-ledger .no-records {
-    color: #cccccc !important;
-}
-
-
-/* Light Mode Ledger Typography Branding */
-.transaction-ledger .ledger-heading,
-.transaction-ledger th,
-.transaction-ledger .field-label,
-.transaction-ledger .no-records-message,
-.intelligence-ledger .heading,
-.intelligence-ledger .label,
-.intelligence-ledger .no-records,
-.transaction-ledger .no-records,
-.intelligence-ledger .empty-state,
-.ledger-section .ledger-item,
-.ledger-section .field-name,
-.ledger-section .empty-message {
-    color: #0B3B2F !important;
-}
-
-
-/* Light Mode Sectional Branding & Contrast */
-.card.bg-white,
-.card.bg-light,
-div[style*='background: white'],
-div[style*='background:#fff'] {
-    color: #0B3B2F !important;
-}
-
-.card.bg-white p,
-.card.bg-white h1,
-.card.bg-white h2,
-.card.bg-white h3,
-.card.bg-white span:not(.badge),
-.card.bg-white label {
-    color: #0B3B2F !important;
-}
-
-/* Deep green background section branding (Persistent White Text) */
-.bg-dark-green,
-.bg-deep-green,
-[style*='background-color: #0B3B2F'],
-[style*='background: #0B3B2F'] {
-    color: #ffffff !important;
-}
-
-.bg-dark-green p,
-.bg-dark-green h1,
-.bg-dark-green h2,
-.bg-dark-green h3,
-.bg-dark-green span,
-.bg-dark-green label {
-    color: #ffffff !important;
-}
-
-
-/* Absolute Dark Mode Visibility Lock */
-body.dark-mode h1,
-body.dark-mode h2,
-body.dark-mode h3,
-body.dark-mode h4,
-body.dark-mode h5,
-body.dark-mode h6,
-body.dark-mode p,
-body.dark-mode span,
-body.dark-mode label,
-body.dark-mode td,
-body.dark-mode th {
-    color: #ffffff !important;
-}
-
-body.dark-mode .text-muted,
-body.dark-mode .extra-small {
-    color: #b0b0b0 !important;
-}
-/* In dark mode, force white text only on cards that are NOT white */
-body.dark-mode .card:not(.bg-white):not(.bg-light),
-body.dark-mode .bg-dark-green,
-body.dark-mode .bg-dark-green * {
-    background-color: #1e2a2a !important;
-    color: #ffffff !important;
-}
-
-/* Specific logic for card children in dark mode */
-body.dark-mode .card:not(.bg-white):not(.bg-light) * {
-    color: #ffffff !important;
-}
-
-/* But for white‑background cards, force deep green text */
-body.dark-mode .bg-white,
-body.dark-mode .bg-white *,
-body.dark-mode .bg-light,
-body.dark-mode .bg-light *,
-body.dark-mode .bg-faint-green,
-body.dark-mode .bg-faint-green * {
-    color: #0B3B2F !important;
-}
-
-/* In dark mode, ensure faint green backgrounds are still readable or slightly adjusted if needed */
-/* If you want to keep the background white/light, the text must be dark */
-body.dark-mode .bg-faint-green {
-    background-color: #f2f6f6 !important; /* keep it light as an accent */
-}
-
-/* Direct fix for the profile card in the sidebar and other sticky headers */
-body.dark-mode .sticky-top.bg-white,
-body.dark-mode .sticky-top.bg-white *,
-body.dark-mode .card.bg-white,
-body.dark-mode .card.bg-white * {
-    color: #0B3B2F !important;
-}
-
-/* Light mode: force dark text on white cards */
-.card.bg-white, 
-.card.bg-white *,
-.white-section,
-.white-section * {
-    color: #0B3B2F !important;
-}
-
 
 /* UI Utility: Theme-aware card background */
-.bg-card-color {
-    background-color: var(--card-bg) !important;
+.theme-card {
+    background-color: var(--card-bg);
 }
+
+body.dark-mode .theme-card {
+    background-color: #1e2a2a !important;
+}
+
+/* =========================================
+   HIGH-DENSITY DASHBOARD SYSTEM (NEXUS)
+   ========================================= */
+.nexus-input {
+    background-color: var(--faint-green) !important;
+    border: 2px solid transparent !important;
+    transition: all 0.2s;
+}
+
+.nexus-input:focus {
+    border-color: var(--accent-green) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 4px rgba(32, 201, 151, 0.1) !important;
+}
+
+body.dark-mode .nexus-input:focus {
+    background-color: var(--table-header-bg) !important;
+}
+
+.rounded-5 { border-radius: 2rem !important; }
+.shadow-premium { box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important; }
 
 /* Operational Hub card styling */
 .operational-hub-card {
@@ -586,38 +170,30 @@ body.dark-mode .card.bg-white * {
     color: #ffffff !important;
 }
 
-/* In dark mode, ensure it stays deep green (not overridden) */
 body.dark-mode .operational-hub-card,
 body.dark-mode .operational-hub-card * {
     background-color: #0B3B2F !important;
     color: #ffffff !important;
 }
 
-/* Force deep green background on specific Warehouse Dashboard cards in dark mode */
-body.dark-mode .available-fleet-card,
-body.dark-mode .available-fleet-card .bg-faint-green,
-body.dark-mode .inventory-alert-card,
-body.dark-mode .inventory-alert-card .bg-faint-green {
-    background-color: #1e2a2a !important;
-    color: #ffffff !important;
-}
+/* Status Colors */
+.status-pending { background-color: #fef3c7; color: #92400e; }
+.status-processing { background-color: #e0e7ff; color: #3730a3; }
+.status-completed { background-color: #d1fae5; color: #065f46; }
+.status-rejected { background-color: #fee2e2; color: #991b1b; }
 
-body.dark-mode .available-fleet-card *,
-body.dark-mode .inventory-alert-card * {
-    color: #ffffff !important;
-}
+/* NEXUS Color Utilities */
+.text-dark-green { color: var(--dark-green) !important; }
+.text-accent-green { color: var(--accent-green) !important; }
+.bg-dark-green { background-color: var(--dark-green) !important; }
+.bg-accent-green { background-color: var(--accent-green) !important; }
+.bg-faint-green { background-color: var(--faint-green) !important; }
+.border-faint { border-color: var(--table-border) !important; }
 
-/* UI Utility: Theme-aware card background */
-.theme-card {
-    background-color: var(--card-bg);
-}
+body.dark-mode .text-dark-green { color: var(--accent-green) !important; }
+body.dark-mode .bg-faint-green { background-color: var(--table-header-bg) !important; }
 
-body.dark-mode .theme-card {
-    background-color: #1e2a2a !important;
-}
-
-/* Light mode specific background for inner highlight boxes */
-.bg-faint-green.theme-aware {
-    background-color: var(--table-header-bg) !important;
-}
-
+/* Dashboard Typography Overrides */
+.ls-1 { letter-spacing: 0.5px; }
+.uppercase { text-transform: uppercase; }
+.extra-small { font-size: 0.7rem; }

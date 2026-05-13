@@ -7,18 +7,18 @@
     var cities = ViewData["Cities"] as IEnumerable<string>;
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-3 px-3 fulfillment-page">
     <!-- Header Section -->
-    <div class="card mb-4 p-4 border-0 shadow-premium">
-        <h3 class="fw-bold mb-1 text-primary">Supplier Catalog</h3>
-        <p class="text-muted mb-3">Browse and discover products from our verified suppliers.</p>
+    <div class="card border-0 shadow-premium rounded-5 mb-4 p-3 bg-white dark-mode-card">
+        <h4 class="fw-bold mb-1 text-dark-green dark-mode-text">Supplier Catalog</h4>
+        <p class="text-muted small mb-3 dark-mode-text">Browse and discover products from our verified suppliers.</p>
 
         <form asp-action="BrowseCatalog" method="get" class="row g-2 align-items-center">
             <div class="col-md-3">
-                <input type="text" name="searchTerm" class="form-control rounded-pill" placeholder="Search products..." value="@Context.Request.Query["searchTerm"]" />
+                <input type="text" name="searchTerm" class="form-control rounded-pill bg-faint-green border-0 px-3 py-2 small dark-mode-select" placeholder="Search products..." value="@Context.Request.Query["searchTerm"]" />
             </div>
             <div class="col-md-2">
-                <select name="categoryId" class="form-select rounded-pill">
+                <select name="categoryId" class="form-select rounded-pill bg-faint-green border-0 px-3 py-2 small dark-mode-select">
                     <option value="">All Categories</option>
                     @if (categories != null)
                     {
@@ -30,13 +30,13 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <input type="number" step="0.01" name="minPrice" class="form-control rounded-pill" placeholder="Min Price..." value="@Context.Request.Query["minPrice"]" />
+                <input type="number" step="0.01" name="minPrice" class="form-control rounded-pill bg-faint-green border-0 px-3 py-2 small dark-mode-select" placeholder="Min Price..." value="@Context.Request.Query["minPrice"]" />
             </div>
             <div class="col-md-2">
-                <input type="number" step="0.01" name="maxPrice" class="form-control rounded-pill" placeholder="Max Price..." value="@Context.Request.Query["maxPrice"]" />
+                <input type="number" step="0.01" name="maxPrice" class="form-control rounded-pill bg-faint-green border-0 px-3 py-2 small dark-mode-select" placeholder="Max Price..." value="@Context.Request.Query["maxPrice"]" />
             </div>
             <div class="col-md-2">
-                <select name="supplierCity" class="form-select rounded-pill">
+                <select name="supplierCity" class="form-select rounded-pill bg-faint-green border-0 px-3 py-2 small dark-mode-select">
                     <option value="">All Locations</option>
                     @if (cities != null)
                     {
@@ -48,7 +48,7 @@
                 </select>
             </div>
             <div class="col-md-1">
-                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-search"></i></button>
+                <button type="submit" class="btn btn-dark-green rounded-pill w-100 py-2 dark-mode-primary-btn"><i class="fas fa-search"></i></button>
             </div>
         </form>
     </div>
@@ -58,13 +58,13 @@
         @if (!Model.Any())
         {
             <div class="col-12">
-                <div class="card p-5 text-center shadow-premium border-0">
-                    <div class="text-muted opacity-50 mb-3">
-                        <i class="fas fa-box-open fa-4x"></i>
+                <div class="card border-0 shadow-premium rounded-5 p-5 text-center bg-white dark-mode-card">
+                    <div class="text-muted opacity-50 mb-3 dark-mode-text">
+                        <i class="fas fa-box-open fa-3x"></i>
                     </div>
-                    <h5 class="fw-bold">No Products Found</h5>
-                    <p class="text-muted">Try adjusting your filters or search terms.</p>
-                    <a asp-action="BrowseCatalog" class="btn btn-outline-primary rounded-pill px-4">Clear All Filters</a>
+                    <h5 class="fw-bold text-dark-green dark-mode-text">No Products Found</h5>
+                    <p class="text-muted small dark-mode-text">Try adjusting your filters or search terms.</p>
+                    <a asp-action="BrowseCatalog" class="btn btn-white rounded-pill px-4 py-2 border dark-mode-btn">Clear All Filters</a>
                 </div>
             </div>
         }
@@ -73,60 +73,60 @@
             foreach (var product in Model)
             {
                 <div class="col">
-                    <div class="card h-100 border-0 shadow-premium product-card">
-                        <div class="position-relative overflow-hidden" style="height: 200px; border-radius: 12px 12px 0 0;">
+                    <div class="card border-0 shadow-premium rounded-5 h-100 bg-white dark-mode-card product-card overflow-hidden">
+                        <div class="position-relative overflow-hidden" style="height: 180px;">
                             @if (!string.IsNullOrEmpty(product.ImageUrl))
                             {
                                 <img src="@product.ImageUrl" class="w-100 h-100" style="object-fit: cover;" alt="@product.ProductName">
                             }
                             else
                             {
-                                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark-green bg-opacity-10 text-muted">
-                                    <i class="fas fa-image fa-3x opacity-25"></i>
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-faint-green text-muted dark-mode-icon-bg">
+                                    <i class="fas fa-image fa-2x opacity-25"></i>
                                 </div>
                             }
                             <div class="position-absolute top-0 end-0 p-2">
-                                <span class="badge badge-category rounded-pill">@product.Category?.CategoryName</span>
+                                <span class="badge bg-dark-green text-accent-green rounded-pill px-2 py-1 fw-bold extra-small">@product.Category?.CategoryName</span>
                             </div>
                         </div>
                         <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
-                            <h6 class="fw-bold mb-1 text-truncate" title="@product.ProductName">@product.ProductName</h6>
-                            <div class="d-flex flex-column mb-2">
-                                <span class="h5 fw-bold text-primary mb-0">ETB @product.BasePrice.ToString("N2") <small class="text-muted smaller">Net</small></span>
-                                <span class="text-muted extra-small">Final: ETB @((product.BasePrice * 1.15m).ToString("N2")) <small>(inc. VAT)</small></span>
+                            <h6 class="fw-bold mb-2 text-dark-green text-truncate dark-mode-text" title="@product.ProductName">@product.ProductName</h6>
+                            <div class="d-flex flex-column mb-3">
+                                <span class="fw-bold text-dark-green mb-0 dark-mode-text h5">@product.BasePrice.ToString("N2") <small class="extra-small opacity-50">ETB</small></span>
+                                <span class="text-muted extra-small dark-mode-text">inc. VAT: @((product.BasePrice * 1.15m).ToString("N2"))</span>
                             </div>
                             
                             <div class="mb-3">
-                                <div class="small text-muted mb-1">
-                                    <i class="fas fa-store me-1"></i> @product.Supplier?.CompanyName
+                                <div class="extra-small text-muted mb-1 dark-mode-text">
+                                    <i class="fas fa-store me-1 text-accent-green"></i> @product.Supplier?.CompanyName
                                 </div>
-                                <div class="small text-muted mb-1">
-                                    <i class="fas fa-map-marker-alt me-1"></i> @product.Supplier?.City
+                                <div class="extra-small text-muted mb-2 dark-mode-text">
+                                    <i class="fas fa-map-marker-alt me-1 text-accent-green"></i> @product.Supplier?.City
                                 </div>
                                 @{
                                     var availableStock = product.Inventories?.Sum(i => i.QuantityOnHand - i.QuantityReserved) ?? 0;
                                 }
                                 @if (availableStock < 10)
                                 {
-                                    <div class="small text-danger fw-bold">
+                                    <div class="extra-small text-danger fw-bold">
                                         <i class="fas fa-exclamation-triangle me-1"></i> Low Stock: @availableStock
                                     </div>
                                 }
                                 else
                                 {
-                                    <div class="small text-success">
+                                    <div class="extra-small text-success fw-bold">
                                         <i class="fas fa-check-circle me-1"></i> In Stock: @availableStock
                                     </div>
                                 }
                             </div>
                             
-                            <div class="mt-auto pt-2 border-top">
-                                <a asp-action="ProductDetails" asp-route-id="@product.Id" class="btn btn-outline-secondary btn-sm rounded-pill w-100 mb-2">View Details</a>
+                            <div class="mt-auto pt-3 border-top border-faint dark-mode-border">
+                                <a asp-action="ProductDetails" asp-route-id="@product.Id" class="btn btn-white btn-sm rounded-pill w-100 mb-2 py-2 fw-bold dark-mode-btn">View Details</a>
                                 <form action="/Retailer/AddToCart" method="post" class="ajax-add-to-cart">
                                     <input type="hidden" name="productId" value="@product.Id" />
                                     <input type="hidden" name="quantity" value="1" />
-                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100" @(availableStock <= 0 ? "disabled" : "")>
-                                        <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                                    <button type="submit" class="btn btn-dark-green btn-sm rounded-pill w-100 py-2 fw-bold dark-mode-primary-btn" @(availableStock <= 0 ? "disabled" : "")>
+                                        <i class="fas fa-cart-plus me-1 text-accent-green"></i> Add to Cart
                                     </button>
                                 </form>
                             </div>
@@ -139,28 +139,19 @@
 </div>
 
 <style>
-    .badge-category {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        font-weight: 600;
-        font-size: 0.7rem;
-        padding: 0.5em 1em;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-    }
     .product-card {
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
         display: flex;
         flex-direction: column;
     }
     .product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08) !important;
     }
-    .form-control:focus, .form-select:focus {
-        box-shadow: none;
-        border-color: #dee2e6;
+
+    /* Tablet responsiveness */
+    @@media (max-width: 992px) {
+        .fulfillment-page { zoom: 1; }
+        .row-cols-md-3 { width: 50%; }
     }
 </style>

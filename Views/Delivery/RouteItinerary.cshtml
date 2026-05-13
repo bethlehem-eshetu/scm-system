@@ -17,9 +17,15 @@
                     <span class="badge bg-soft-green text-dark-green rounded-pill px-3">@(Model.Count()) Stops</span>
                 </div>
                 <div class="d-grid">
-                    <button class="btn btn-dark-green rounded-pill fw-bold shadow-sm py-2">
+                    @{
+                        var stopsList = Model?.Select(po => po.Retailer?.BusinessAddress).Where(a => !string.IsNullOrEmpty(a)).ToList();
+                        var googleMapsUrl = stopsList != null && stopsList.Any() 
+                            ? $"https://www.google.com/maps/dir/{string.Join("/", stopsList.Select(a => System.Net.WebUtility.UrlEncode(a)))}"
+                            : "https://www.google.com/maps";
+                    }
+                    <a href="@googleMapsUrl" target="_blank" class="btn btn-dark-green rounded-pill fw-bold shadow-sm py-2">
                         <i class="fas fa-play me-2"></i> START NAVIGATION
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -124,29 +130,49 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Simulated Route Markers
-        const stops = [
-            { lat: 9.02, lng: 38.75, name: "Start Hub" },
-            { lat: 9.04, lng: 38.76, name: "Stop 1: Retailer A" },
-            { lat: 9.03, lng: 38.78, name: "Stop 2: Retailer B" }
-        ];
+        // Simulated/Real Route Markers from Model
+        const stops = [];
+        
+        @if (Model != null)
+        {
+            int stopIdx = 1;
+            foreach (var po in Model)
+            {
+                // Note: In a production app, we'd have lat/lng on the Retailer. 
+                // For now we simulate slightly different coordinates around Addis for the visualization.
+                var lat = 9.0192 + (stopIdx * 0.005);
+                var lng = 38.7525 + (stopIdx * 0.008);
+                
+                <text>
+                stops.push({ 
+                    lat: @lat, 
+                    lng: @lng, 
+                    name: "@(po.Retailer?.BusinessName ?? "Retailer")",
+                    po: "#@po.PONumber"
+                });
+                </text>
+                stopIdx++;
+            }
+        }
 
-        stops.forEach((stop, index) => {
-            const icon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color: #2e7d32; color: white; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2)">${index + 1}</div>`,
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
+        if (stops.length > 0) {
+            stops.forEach((stop, index) => {
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color: #2e7d32; color: white; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2)">${index + 1}</div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+
+                L.marker([stop.lat, stop.lng], {icon: icon}).addTo(map)
+                    .bindPopup(`<b>${stop.name}</b><br>Order: ${stop.po}<br>Priority: High`);
             });
 
-            L.marker([stop.lat, stop.lng], {icon: icon}).addTo(map)
-                .bindPopup(`<b>${stop.name}</b><br>Priority: High`);
-        });
-
-        // Draw Simulated Route Core
-        const latlngs = stops.map(s => [s.lat, s.lng]);
-        const polyline = L.polyline(latlngs, {color: '#2e7d32', weight: 5, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
-        map.fitBounds(polyline.getBounds());
+            // Draw Route Core
+            const latlngs = stops.map(s => [s.lat, s.lng]);
+            const polyline = L.polyline(latlngs, {color: '#2e7d32', weight: 5, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+            map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+        }
     });
 </script>
 

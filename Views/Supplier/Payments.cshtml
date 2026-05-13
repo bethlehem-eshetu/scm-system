@@ -5,33 +5,33 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-3 px-3 supplier-payments-container">
     <div class="row mb-4 g-4">
         <div class="col-xl-8">
             <div class="glass-panel p-4 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%);">
                 <div class="row align-items-center h-100">
                     <div class="col-md-7 text-white">
                         <h6 class="text-white-50 small fw-bold text-uppercase mb-2">Total Commission Outstanding</h6>
-                        <h1 class="display-4 fw-bold mb-3">@Model.Where(c => c.Status == "Pending").Sum(c => c.CommissionAmount).ToString("C0")</h1>
+                        <h2 class="fw-bold mb-3">@Model.Where(c => c.Status == "Pending").Sum(c => c.CommissionAmount).ToString("C0")</h2>
                         <p class="mb-4 opacity-75">Settle your outstanding commissions to maintain a high trust score and avoid service interruptions.</p>
                         <button class="btn btn-light rounded-pill px-4 fw-bold shadow-sm py-2">
                             <i class="fas fa-credit-card me-2"></i> Pay Full Balance
                         </button>
                     </div>
                     <div class="col-md-5 d-none d-md-block text-center text-white opacity-25">
-                        <i class="fas fa-wallet fa-8x"></i>
+                        <i class="fas fa-wallet fa-6x"></i>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: var(--card-bg);">
-                <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
-                    <div class="icon-shape rounded-circle p-4 mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: var(--table-header-bg); color: #198754;">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+                    <div class="icon-shape bg-success bg-opacity-10 text-success rounded-circle p-3 mx-auto mb-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-check-double fs-2"></i>
                     </div>
-                    <h5 class="fw-bold mb-1">Paid to Date</h5>
-                    <h3 class="fw-bold text-success mb-3">@Model.Where(c => c.Status == "Paid").Sum(c => c.CommissionAmount).ToString("C0")</h3>
+                    <h6 class="fw-bold mb-1 small text-uppercase ls-1 opacity-75">Paid to Date</h6>
+                    <h3 class="fw-bold text-success mb-2">@Model.Where(c => c.Status == "Paid").Sum(c => c.CommissionAmount).ToString("C0")</h3>
                     <p class="text-muted small mb-0">Across @Model.Count(c => c.Status == "Paid") completed transactions</p>
                 </div>
             </div>
@@ -39,9 +39,9 @@
     </div>
 
     <!-- Commission Ledger -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: var(--card-bg);">
-        <div class="card-header border-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3" style="background-color: var(--card-bg);">
-            <h5 class="fw-bold mb-0">Commission Ledger</h5>
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
+        <div class="card-header bg-white border-0 p-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h6 class="fw-bold mb-0 text-uppercase ls-1 text-dark-green">Commission Ledger</h6>
             <div class="d-flex gap-3 align-items-center">
                 <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
                     <button class="btn btn-light px-3 filter-ledger active" data-status="all">All</button>
@@ -131,6 +131,32 @@
 
 @section Styles {
     <style>
+        .rounded-5, .rounded-4 { border-radius: 16px !important; }
+        .shadow-premium { box-shadow: 0 4px 18px rgba(0,0,0,0.04) !important; }
+        .ls-1 { letter-spacing: 0.5px; }
+        .extra-small { font-size: 0.62rem; }
+
+        .supplier-payments-container {
+            zoom: 0.92;
+            max-width: 1450px;
+            margin: auto;
+        }
+
+        .btn {
+            font-size: 0.85rem;
+        }
+
+        body {
+            font-size: 0.92rem;
+        }
+
+        h1, .h1 { font-size: 1.75rem; }
+        h2, .h2 { font-size: 1.5rem; }
+        h3, .h3 { font-size: 1.25rem; }
+        h4, .h4 { font-size: 1.1rem; }
+        h5, .h5 { font-size: 1rem; }
+        h6, .h6 { font-size: 0.85rem; }
+
         .glass-panel {
             position: relative;
             z-index: 1;

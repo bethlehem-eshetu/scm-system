@@ -4,20 +4,20 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4 px-4 min-vh-100">
+<div class="container-fluid py-3 px-3 min-vh-100 supplier-settings-container">
     <!-- Premium Strategic Header (SCM Style) -->
-    <div class="row mb-5 animate-slide-up">
+    <div class="row mb-4 animate-slide-up">
         <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-premium border-0 position-relative overflow-hidden dark-mode-banner">
+            <div class="welcome-banner p-4 p-lg-4 rounded-5 shadow-premium border-0 position-relative overflow-hidden dark-mode-banner">
                 <div class="banner-overlay"></div>
                 <div class="banner-glow"></div>
                 
                 <div class="position-relative z-index-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div class="text-white">
-                        <h1 class="display-5 fw-bold mb-2">
+                        <h2 class="fw-bold mb-1">
                             <i class="fas fa-user-cog me-2 text-accent-green"></i>Account <span class="text-accent-green">Control Center</span>
-                        </h1>
-                        <p class="text-white text-opacity-75 mb-0 fs-5">Manage your business profile, security protocols, and operational preferences.</p>
+                        </h2>
+                        <p class="text-white text-opacity-75 mb-0 small">Manage your business profile, security protocols, and operational preferences.</p>
                     </div>
                     <div class="d-flex gap-3">
                         <button type="button" class="btn btn-glass rounded-pill px-4 py-2 shadow-sm fw-bold d-flex align-items-center gap-2 dark-mode-glass-btn" onclick="location.reload()">
@@ -48,10 +48,10 @@
     <div class="row g-5">
         <!-- Sidebar Navigation -->
         <div class="col-lg-3">
-            <div class="card border-0 shadow-premium rounded-5 sticky-top overflow-hidden theme-card" style="top: 20px;">
-                <div class="p-5 text-center border-bottom border-faint dark-mode-sidebar-header" style="background-color: var(--table-header-bg);">
-                    <div class="position-relative d-inline-block mb-4">
-                        <div class="bg-white rounded-circle shadow-premium d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white dark-mode-avatar" style="width: 120px; height: 120px; margin: 0 auto;">
+            <div class="card border-0 shadow-premium rounded-5 sticky-top bg-white overflow-hidden dark-mode-sidebar" style="top: 20px;">
+                <div class="p-4 text-center border-bottom border-faint bg-faint-green dark-mode-sidebar-header">
+                    <div class="position-relative d-inline-block mb-3">
+                        <div class="bg-white rounded-circle shadow-premium d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white dark-mode-avatar" style="width: 100px; height: 100px; margin: 0 auto;">
                             <img src="@(string.IsNullOrEmpty(Model.ExistingLogo) ? "/img/default-company.png" : Model.ExistingLogo)" 
                                  id="sidebarLogoPreview" 
                                  class="img-fluid h-100 w-100 object-fit-cover" 
@@ -66,15 +66,15 @@
                         <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small ls-1 uppercase fw-bold dark-mode-badge">Active Supplier</span>
                     </div>
                 </div>
-                <div class="p-4 dark-mode-sidebar-body">
-                    <div class="nav flex-column nav-pills scm-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                        <button class="nav-link active text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all dark-mode-nav-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
+                <div class="p-3 bg-white dark-mode-sidebar-body">
+                    <div class="nav flex-column nav-pills scm-pills small" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                        <button class="nav-link active text-start mb-2 rounded-pill px-4 py-2 fw-bold transition-all dark-mode-nav-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
                             <i class="fas fa-id-card me-3 text-center opacity-75"></i>Business Profile
                         </button>
-                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all dark-mode-nav-link" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-2 fw-bold transition-all dark-mode-nav-link" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
                             <i class="fas fa-shield-alt me-3 text-center opacity-75"></i>Security Hub
                         </button>
-                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all text-danger dark-mode-nav-link-danger" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab">
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-2 fw-bold transition-all text-danger dark-mode-nav-link-danger" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab">
                             <i class="fas fa-exclamation-triangle me-3 text-center opacity-75"></i>Danger Zone
                         </button>
                     </div>
@@ -88,11 +88,11 @@
                 
                 <!-- 1. Business Profile -->
                 <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 overflow-hidden theme-card">
-                        <div class="card-header py-4 px-5 border-0 dark-mode-card-header" style="background-color: var(--table-header-bg);">
-                            <h5 class="mb-0 fw-bold text-dark-green dark-mode-text"><i class="fas fa-briefcase text-accent-green me-2"></i>Business Identity</h5>
+                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden dark-mode-card">
+                        <div class="card-header bg-faint-green py-3 px-4 border-0 dark-mode-card-header">
+                            <h6 class="mb-0 fw-bold text-dark-green dark-mode-text text-uppercase ls-1"><i class="fas fa-briefcase text-accent-green me-2"></i>Business Identity</h6>
                         </div>
-                        <div class="card-body p-5 dark-mode-card-body">
+                        <div class="card-body p-4 dark-mode-card-body">
                             <form id="mainSettingsForm" asp-action="Settings" method="post" enctype="multipart/form-data">
                                 <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3 bg-soft-danger rounded-4 extra-small fw-bold"></div>
                                 <input type="hidden" asp-for="SupplierId" />
@@ -155,8 +155,8 @@
                                     </div>
                                 </div>
 
-                                <div class="text-end mt-5 pt-4 border-top border-faint dark-mode-border">
-                                    <button type="submit" class="btn btn-dark-green px-5 rounded-pill shadow-premium py-3 fw-bold dark-mode-primary-btn">
+                                <div class="text-end mt-4 pt-4 border-top border-faint dark-mode-border">
+                                    <button type="submit" class="btn btn-dark-green px-5 rounded-pill shadow-premium py-2 fw-bold dark-mode-primary-btn small">
                                         <i class="fas fa-save me-2 text-accent-green"></i>Commit Profile Changes
                                     </button>
                                 </div>
@@ -348,12 +348,33 @@
         .btn-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; border-radius: 20px; transition: all 0.3s; }
         .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
 
-        .rounded-5 { border-radius: 24px !important; }
-        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
+        .rounded-5 { border-radius: 16px !important; }
+        .shadow-premium { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04) !important; }
+        .ls-1 { letter-spacing: 0.5px; }
+        .extra-small { font-size: 0.62rem; }
+
+        .supplier-settings-container {
+            zoom: 0.92;
+            max-width: 1450px;
+            margin: auto;
+        }
+
+        .btn {
+            font-size: 0.85rem;
+        }
+
+        body {
+            font-size: 0.92rem;
+        }
+
+        h1, .h1 { font-size: 1.75rem; }
+        h2, .h2 { font-size: 1.5rem; }
+        h3, .h3 { font-size: 1.25rem; }
+        h4, .h4 { font-size: 1.1rem; }
+        h5, .h5 { font-size: 1rem; }
+        h6, .h6 { font-size: 0.85rem; }
+
         .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
-        .ls-1 { letter-spacing: 1px; }
-        .extra-small { font-size: 0.7rem; }
-        .uppercase { text-transform: uppercase; }
         .transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
         .scm-pills .nav-link { color: var(--dark-green); border: 1px solid transparent; opacity: 0.7; }
@@ -378,67 +399,67 @@
         @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ============================================ */
-        /* DARK MODE STYLES - DARK BLUE THEME */
+        /* DARK MODE STYLES - DEEP GREEN THEME */
         /* ============================================ */
         body.dark-mode .dark-mode-text {
-            color: #e2e8f0 !important;
+            color: #e0e0e0 !important;
         }
 
         body.dark-mode .dark-mode-card {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
+            background-color: #1e2a2a !important;
+            border-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-card-header {
-            background-color: #334155 !important;
-            border-bottom-color: #475569 !important;
+            background-color: #2a3b3b !important;
+            border-bottom-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-card-body {
-            background-color: #1e293b !important;
+            background-color: #1e2a2a !important;
         }
 
         /* Banner dark mode */
         body.dark-mode .dark-mode-banner {
-            background: linear-gradient(135deg, #0f172a 0%, #0a0f1c 100%) !important;
+            background: linear-gradient(135deg, #06261E 0%, #0a1a1a 100%) !important;
         }
 
         body.dark-mode .dark-mode-glass-btn {
-            background: rgba(51, 65, 85, 0.5) !important;
-            border-color: #475569 !important;
+            background: rgba(42, 59, 59, 0.5) !important;
+            border-color: #3a4a4a !important;
         }
 
         /* Sidebar dark mode */
         body.dark-mode .dark-mode-sidebar {
-            background-color: #1e293b !important;
+            background-color: #1e2a2a !important;
         }
 
         body.dark-mode .dark-mode-sidebar-header {
-            background-color: #334155 !important;
-            border-bottom-color: #475569 !important;
+            background-color: #2a3b3b !important;
+            border-bottom-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-sidebar-body {
-            background-color: #1e293b !important;
+            background-color: #1e2a2a !important;
         }
 
         body.dark-mode .dark-mode-avatar {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
+            background-color: #1e2a2a !important;
+            border-color: #2a3b3b !important;
         }
 
         body.dark-mode .dark-mode-badge {
-            background-color: #0f172a !important;
-            color: #a5f3c3 !important;
+            background-color: #06261E !important;
+            color: #20C997 !important;
         }
 
         body.dark-mode .dark-mode-nav-link {
-            color: #cbd5e1 !important;
+            color: #a0a0a0 !important;
         }
 
         body.dark-mode .dark-mode-nav-link.active {
-            background-color: #0f172a !important;
-            color: #a5f3c3 !important;
+            background-color: #06261E !important;
+            color: #20C997 !important;
         }
 
         body.dark-mode .dark-mode-nav-link-danger {
@@ -447,48 +468,48 @@
 
         /* Form inputs dark mode */
         body.dark-mode .dark-mode-input {
-            background-color: #334155 !important;
-            color: #e2e8f0 !important;
-            border-color: #475569 !important;
+            background-color: #2a3b3b !important;
+            color: #ffffff !important;
+            border-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-input::placeholder {
-            color: #94a3b8 !important;
+            color: #888888 !important;
         }
 
         body.dark-mode .dark-mode-input:focus {
-            background-color: #3b4a5c !important;
-            border-color: var(--accent-green) !important;
+            background-color: #2d4040 !important;
+            border-color: #20C997 !important;
         }
 
         body.dark-mode .dark-mode-textarea {
-            background-color: #334155 !important;
-            color: #e2e8f0 !important;
-            border-color: #475569 !important;
+            background-color: #2a3b3b !important;
+            color: #ffffff !important;
+            border-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-logo-box {
-            background-color: #334155 !important;
-            border-color: #475569 !important;
+            background-color: #2a3b3b !important;
+            border-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-icon {
-            color: #64748b !important;
+            color: #666666 !important;
         }
 
         body.dark-mode .dark-mode-upload-btn {
-            background-color: #0f172a !important;
-            border-color: #a5f3c3 !important;
+            background-color: #06261E !important;
+            border-color: #20C997 !important;
         }
 
         /* Security box dark mode */
         body.dark-mode .dark-mode-security-box {
-            background-color: #334155 !important;
+            background-color: #2a3b3b !important;
         }
 
         body.dark-mode .dark-mode-icon-box {
-            background-color: #1e293b !important;
-            color: #a5f3c3 !important;
+            background-color: #1e2a2a !important;
+            color: #20C997 !important;
         }
 
         /* Danger zone dark mode */
@@ -497,9 +518,9 @@
         }
 
         body.dark-mode .dark-mode-export-btn {
-            background-color: #334155 !important;
-            color: #e2e8f0 !important;
-            border-color: #475569 !important;
+            background-color: #2a3b3b !important;
+            color: #e0e0e0 !important;
+            border-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-deactivate-btn {
@@ -508,42 +529,42 @@
 
         /* Borders */
         body.dark-mode .dark-mode-border {
-            border-color: #334155 !important;
+            border-color: #3a4a4a !important;
         }
 
         /* Primary button */
         body.dark-mode .dark-mode-primary-btn {
-            background-color: #0f172a !important;
-            color: #a5f3c3 !important;
+            background-color: #06261E !important;
+            color: #20C997 !important;
         }
 
         body.dark-mode .dark-mode-primary-btn:hover {
-            background-color: #1e293b !important;
+            background-color: #0a3a2e !important;
         }
 
         /* Alert dark mode */
         body.dark-mode .dark-mode-alert {
-            background-color: #0f172a !important;
+            background-color: #06261E !important;
         }
 
         /* Modal dark mode */
         body.dark-mode .dark-mode-modal {
-            background-color: #1e293b !important;
+            background-color: #1e2a2a !important;
         }
 
         body.dark-mode .dark-mode-modal-body {
-            background-color: #1e293b !important;
+            background-color: #1e2a2a !important;
         }
 
         body.dark-mode .dark-mode-modal-footer {
-            background-color: #1e293b !important;
-            border-top-color: #334155 !important;
+            background-color: #1e2a2a !important;
+            border-top-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-cancel-btn {
-            background-color: #334155 !important;
-            color: #e2e8f0 !important;
-            border-color: #475569 !important;
+            background-color: #2a3b3b !important;
+            color: #e0e0e0 !important;
+            border-color: #3a4a4a !important;
         }
 
         body.dark-mode .dark-mode-confirm-btn {
@@ -556,7 +577,7 @@
 
         /* Text colors */
         body.dark-mode .text-muted {
-            color: #9ca3af !important;
+            color: #a0a0a0 !important;
         }
 
         body.dark-mode .text-danger {
@@ -564,7 +585,7 @@
         }
 
         body.dark-mode .text-dark-green {
-            color: #a5f3c3 !important;
+            color: #20C997 !important;
         }
     </style>
 }

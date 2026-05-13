@@ -4,24 +4,24 @@
     Layout = "_DashboardLayout";
 }
 
-<div class="container-fluid py-4 px-4">
+<div class="container-fluid py-3 px-3 fulfillment-pipeline-container">
     <!-- Premium Header -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text">
+            <h4 class="fw-bold text-dark-green mb-1 dark-mode-text">
                 <i class="fas fa-clipboard-list me-2"></i>
                 Fulfillment Pipeline
-            </h1>
-            <p class="text-muted small mb-0 dark-mode-text">Track and manage all your purchase orders</p>
+            </h4>
+            <p class="text-muted extra-small mb-0 dark-mode-text">Track and manage all your purchase orders</p>
         </div>
-        <div class="d-flex gap-3 align-items-center">
+        <div class="d-flex gap-2 align-items-center">
             <div class="search-bar-premium position-relative">
                 <form asp-action="SupplierIndex" method="get" class="d-flex w-100">
                     <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted dark-mode-text"></i>
-                    <input type="text" name="searchTerm" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm dark-mode-input" placeholder="Search PO# or Client..." value="@ViewBag.SearchTerm" style="width: 280px; height: 45px;">
+                    <input type="text" name="searchTerm" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm dark-mode-input extra-small" placeholder="Search PO# or Client..." value="@ViewBag.SearchTerm" style="width: 240px; height: 38px;">
                 </form>
             </div>
-            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-btn">
+            <button class="btn btn-white rounded-pill px-3 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-btn small">
                 <i class="fas fa-file-export me-2 text-dark-green"></i> Export
             </button>
         </div>
@@ -34,58 +34,58 @@
         var pendingDispatch = activePOs.Count(p => p.Status == "Issued" || p.Status == "Accepted" || p.Status == "Picked" || p.Status == "Packed" || p.Status == "Ready Dispatch");
         var completionRate = Model.Any() ? (Model.Count(p => p.Status == "Delivered" || p.Status == "Completed") * 100 / Model.Count()) : 0;
     }
-    <div class="row g-4 mb-5">
+    <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift dark-mode-card">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4 dark-mode-icon-bg">
-                        <i class="fas fa-wallet fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 p-3 bg-white hover-lift dark-mode-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="bg-faint-green text-dark-green p-2 rounded-4 dark-mode-icon-bg">
+                        <i class="fas fa-wallet fs-5"></i>
                     </div>
                     <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold dark-mode-badge">+12%</span>
                 </div>
                 <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">Total Receivables</label>
-                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@totalReceivable.ToString("N0") <span class="extra-small opacity-50 fw-normal">ETB</span></h3>
+                <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">@totalReceivable.ToString("N0") <span class="extra-small opacity-50 fw-normal">ETB</span></h5>
                 <div class="progress mt-3 rounded-pill dark-mode-progress" style="height: 6px; background-color: rgba(0,0,0,0.05);">
                     <div class="progress-bar bg-dark-green rounded-pill" style="width: 85%"></div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift dark-mode-card">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4 dark-mode-icon-bg">
-                        <i class="fas fa-truck-loading fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 p-3 bg-white hover-lift dark-mode-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="bg-faint-green text-dark-green p-2 rounded-4 dark-mode-icon-bg">
+                        <i class="fas fa-truck-loading fs-5"></i>
                     </div>
                     <span class="badge bg-soft-info text-info rounded-pill px-2 small fw-bold dark-mode-badge">Live</span>
                 </div>
                 <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">Active Pipeline</label>
-                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@activePOs.Count() <span class="extra-small opacity-50 fw-normal">POs</span></h3>
+                <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">@activePOs.Count() <span class="extra-small opacity-50 fw-normal">POs</span></h5>
                 <span class="extra-small text-dark-green fw-bold opacity-75 dark-mode-text">@pendingDispatch Pending Dispatch</span>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift dark-mode-card">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4 dark-mode-icon-bg">
-                        <i class="fas fa-chart-line fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 p-3 bg-white hover-lift dark-mode-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="bg-faint-green text-dark-green p-2 rounded-4 dark-mode-icon-bg">
+                        <i class="fas fa-chart-line fs-5"></i>
                     </div>
                     <span class="badge bg-soft-warning text-warning rounded-pill px-2 small fw-bold dark-mode-badge">OTIF</span>
                 </div>
                 <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">Fulfillment Health</label>
-                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@completionRate%</h3>
+                <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">@completionRate%</h5>
                 <span class="extra-small text-muted opacity-75 fw-bold dark-mode-text">On-Time Completion</span>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-dark-green text-white shadow-lg hover-lift dark-mode-dark-card">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-white bg-opacity-10 text-accent-green p-3 rounded-4">
-                        <i class="fas fa-shield-alt fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 p-3 bg-dark-green text-white shadow-lg hover-lift dark-mode-dark-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="bg-white bg-opacity-10 text-accent-green p-2 rounded-4">
+                        <i class="fas fa-shield-alt fs-5"></i>
                     </div>
                     <span class="badge bg-accent-green text-dark-green rounded-pill px-2 small fw-bold">SECURE</span>
                 </div>
                 <label class="extra-small text-white-50 text-uppercase fw-bold ls-1 d-block mb-1">Guaranteed Escrow</label>
-                <h3 class="fw-bold mb-0 text-accent-green">@Model.Where(p => p.PaymentStatus == "Escrow").Sum(p => p.TotalAmount).ToString("N0")</h3>
+                <h5 class="fw-bold mb-0 text-accent-green">@Model.Where(p => p.PaymentStatus == "Escrow").Sum(p => p.TotalAmount).ToString("N0")</h5>
                 <span class="extra-small opacity-50 fw-bold">Risk-Free Revenue</span>
             </div>
         </div>
@@ -93,14 +93,14 @@
 
     <!-- PO Workspace Pipeline -->
     <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white dark-mode-card">
-        <div class="card-header bg-white py-4 px-5 border-0 dark-mode-header">
+        <div class="card-header bg-white py-3 px-4 border-0 dark-mode-header">
             <div class="row align-items-center">
                 <div class="col">
-                    <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">Order Workflow</h5>
+                    <h6 class="fw-bold text-dark-green mb-0 dark-mode-text text-uppercase ls-1">Order Workflow Pipeline</h6>
                 </div>
             </div>
         </div>
-        <div class="table-responsive px-4 pb-4 dark-mode-table-wrapper">
+        <div class="table-responsive px-3 pb-3 dark-mode-table-wrapper">
             <table class="table table-hover align-middle mb-0 custom-nexus-table dark-mode-table">
                 <thead>
                     <tr class="extra-small text-muted text-uppercase ls-1 dark-mode-thead">
@@ -118,8 +118,8 @@
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
-                                    <div class="bg-faint-green text-dark-green rounded-4 p-3 me-3 shadow-sm dark-mode-icon-bg">
-                                        <i class="fas fa-file-invoice fs-5"></i>
+                                    <div class="bg-faint-green text-dark-green rounded-4 p-2 me-2 shadow-sm dark-mode-icon-bg">
+                                        <i class="fas fa-file-invoice fs-6"></i>
                                     </div>
                                     <div>
                                         <div class="fw-bold text-dark-green mb-0 dark-mode-text">#@po.PONumber</div>
@@ -220,15 +220,36 @@
         .bg-accent-green { background-color: var(--accent-green) !important; }
         .text-accent-green { color: var(--accent-green) !important; }
 
-        .rounded-5 { border-radius: 24px !important; }
-        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
-        .ls-1 { letter-spacing: 1px; }
-        .extra-small { font-size: 0.7rem; }
+        .rounded-5, .rounded-4 { border-radius: 16px !important; }
+        .shadow-premium { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04) !important; }
+        .ls-1 { letter-spacing: 0.5px; }
+        .extra-small { font-size: 0.62rem; }
+
+        .fulfillment-pipeline-container {
+            zoom: 0.92;
+            max-width: 1450px;
+            margin: auto;
+        }
+
+        .btn {
+            font-size: 0.85rem;
+        }
+
+        body {
+            font-size: 0.92rem;
+        }
+
+        h1, .h1 { font-size: 1.75rem; }
+        h2, .h2 { font-size: 1.5rem; }
+        h3, .h3 { font-size: 1.25rem; }
+        h4, .h4 { font-size: 1.1rem; }
+        h5, .h5 { font-size: 1rem; }
+        h6, .h6 { font-size: 0.85rem; }
         
         .status-badge {
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 0.65rem;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.6rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -246,8 +267,8 @@
         .nexus-filter-btn { border: none; transition: all 0.3s ease; }
         .nexus-filter-btn.active { background-color: var(--dark-green) !important; color: var(--accent-green) !important; }
 
-        .custom-nexus-table thead th { border-bottom: none; padding: 20px 0; }
-        .custom-nexus-table tbody td { padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.02); }
+        .custom-nexus-table thead th { border-bottom: none; padding: 12px 0; }
+        .custom-nexus-table tbody td { padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.02); }
         .custom-nexus-table tbody tr:last-child td { border-bottom: none; }
 
         .hover-lift { transition: all 0.3s ease; }
