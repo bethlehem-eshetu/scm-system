@@ -6,7 +6,7 @@
     var recentNotes = ViewBag.RecentNotifications as IEnumerable<SCM_System.Models.Entities.Notification>;
 }
 
-<div class="py-2">
+<div class="container-fluid py-3 px-3 fulfillment-page">
     @if (ViewBag.ApprovalStatusMessage != null)
     {
         var alertClass = ViewBag.ApprovalStatusType == "Approved" ? "bg-dark-green" : "bg-danger";
@@ -27,9 +27,9 @@
     }
 
     <!-- Premium Enhanced Header (SCM Style) -->
-    <div class="row mb-5 animate-slide-up">
+    <div class="row mb-4 animate-slide-up">
         <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-premium border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, #1a3d31 0%, #0a2e24 100%);">
+            <div class="welcome-banner p-4 rounded-5 shadow-premium border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, #1a3d31 0%, #0a2e24 100%);">
                 <div class="banner-overlay"></div>
                 <div class="banner-glow"></div>
                 
@@ -41,39 +41,39 @@
                                 <li class="breadcrumb-item active small fw-bold text-uppercase tracking-widest text-white" aria-current="page">Overview</li>
                             </ol>
                         </nav>
-                        <h1 class="display-5 fw-bold mb-2">
+                        <h2 class="fw-bold mb-2">
                             Hello, <span class="text-accent-green">@Model.BusinessName</span> 👋
                             @if (Model.User.IsFaydaVerified) { 
                                 <span class="verified-badge ms-2" title="Fayda Verified Business">
                                     <i class="fas fa-check-circle text-accent-green"></i>
                                 </span>
                             }
-                        </h1>
-                        <p class="text-white text-opacity-75 mb-0 fs-5">
+                        </h2>
+                        <p class="text-white text-opacity-75 mb-0 small">
                             <i class="fas fa-map-marker-alt me-2 text-accent-green"></i>@Model.City, @Model.Region 
                             <span class="mx-2 opacity-25">|</span>
                             <i class="fas fa-sync-alt me-2 text-success"></i>System synced at @DateTime.Now.ToString("HH:mm")
                         </p>
                     </div>
                     <div class="col-lg-5 text-lg-end">
-                        <div class="d-flex flex-wrap justify-content-lg-end gap-3">
-                            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-glass px-4 py-3 fw-bold d-flex align-items-center gap-3">
+                        <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                            <a href="@Url.Action("Cart", "Retailer")" class="btn btn-glass px-3 py-2 fw-bold d-flex align-items-center gap-2">
                                 <div class="btn-icon bg-white bg-opacity-10 rounded-3">
-                                    <i class="fas fa-shopping-cart text-white"></i>
+                                    <i class="fas fa-shopping-cart text-white small"></i>
                                 </div>
                                 <div class="text-start">
-                                    <div class="extra-small text-white text-opacity-50 text-uppercase">Your Cart</div>
-                                    <div class="text-white">View Items</div>
+                                    <div class="extra-small text-white text-opacity-50 text-uppercase ls-1">Your Cart</div>
+                                    <div class="text-white small">View Items</div>
                                 </div>
                             </a>
                             <div class="dropdown">
-                                <button class="btn btn-accent-green px-4 py-3 fw-bold d-flex align-items-center gap-3 shadow-lg border-0" type="button" data-bs-toggle="dropdown" style="color: #1a3d31;">
+                                <button class="btn btn-accent-green px-3 py-2 fw-bold d-flex align-items-center gap-2 shadow-lg border-0" type="button" data-bs-toggle="dropdown" style="color: #1a3d31;">
                                     <div class="btn-icon bg-black bg-opacity-10 rounded-3">
-                                        <i class="fas fa-bolt"></i>
+                                        <i class="fas fa-bolt small"></i>
                                     </div>
                                     <div class="text-start">
-                                        <div class="extra-small text-black text-opacity-50 text-uppercase">Actions</div>
-                                        <div class="text-black">Quick Hub</div>
+                                        <div class="extra-small text-black text-opacity-50 text-uppercase ls-1">Actions</div>
+                                        <div class="text-black small">Quick Hub</div>
                                     </div>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow-premium p-2 mt-2" style="border-radius: 20px; min-width: 240px;">
@@ -93,17 +93,17 @@
     </div>
 
     <!-- Stat Cards Section (SCM Style) -->
-    <div class="row g-4 mb-5">
+    <div class="row g-3 mb-4">
         <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="bg-faint-green p-3 rounded-4 text-dark-green">
-                            <i class="fas fa-shopping-basket fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white dark-mode-card overflow-hidden">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="bg-faint-green p-2 rounded-4 text-dark-green dark-mode-icon-bg">
+                            <i class="fas fa-shopping-basket fs-5"></i>
                         </div>
                         <div>
-                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Total Orders</p>
-                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.TotalOrders</h3>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0 dark-mode-text">Total Orders</p>
+                            <h4 class="fw-bold mb-0 text-dark-green dark-mode-text">@ViewBag.TotalOrders</h4>
                         </div>
                     </div>
                     <div class="progress bg-faint-green" style="height: 6px;">
@@ -113,15 +113,15 @@
             </div>
         </div>
         <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="bg-soft-warning p-3 rounded-4 text-warning">
-                            <i class="fas fa-clock fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white dark-mode-card overflow-hidden">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="bg-soft-warning p-2 rounded-4 text-warning">
+                            <i class="fas fa-clock fs-5"></i>
                         </div>
                         <div>
-                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Active</p>
-                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.ActiveOrders</h3>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0 dark-mode-text">Active</p>
+                            <h4 class="fw-bold mb-0 text-dark-green dark-mode-text">@ViewBag.ActiveOrders</h4>
                         </div>
                     </div>
                     <div class="progress bg-faint-green" style="height: 6px;">
@@ -131,15 +131,15 @@
             </div>
         </div>
         <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="bg-soft-info p-3 rounded-4 text-info">
-                            <i class="fas fa-file-invoice-dollar fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white dark-mode-card overflow-hidden">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="bg-soft-info p-2 rounded-4 text-info">
+                            <i class="fas fa-file-invoice-dollar fs-5"></i>
                         </div>
                         <div>
-                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">POs</p>
-                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.TotalPurchaseOrders</h3>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0 dark-mode-text">POs</p>
+                            <h4 class="fw-bold mb-0 text-dark-green dark-mode-text">@ViewBag.TotalPurchaseOrders</h4>
                         </div>
                     </div>
                     <div class="progress bg-faint-green" style="height: 6px;">
@@ -149,15 +149,15 @@
             </div>
         </div>
         <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="bg-soft-success p-3 rounded-4 text-success">
-                            <i class="fas fa-truck fs-4"></i>
+            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white dark-mode-card overflow-hidden">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="bg-soft-success p-2 rounded-4 text-success">
+                            <i class="fas fa-truck fs-5"></i>
                         </div>
                         <div>
-                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0">Deliveries</p>
-                            <h3 class="fw-bold mb-0 text-dark-green">@ViewBag.DeliveriesInProgress</h3>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-0 dark-mode-text">Deliveries</p>
+                            <h4 class="fw-bold mb-0 text-dark-green dark-mode-text">@ViewBag.DeliveriesInProgress</h4>
                         </div>
                     </div>
                     <div class="progress bg-faint-green" style="height: 6px;">
@@ -169,13 +169,13 @@
     </div>
 
     <!-- Analytics & Activity Row -->
-    <div class="row g-4 mb-5">
+    <div class="row g-3 mb-4">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="card border-0 shadow-premium rounded-5 p-3 bg-white dark-mode-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1 text-dark-green">Spend Analytics</h6>
-                        <h4 class="fw-bold mb-0 text-dark-green">Purchasing Trends</h4>
+                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1 text-dark-green dark-mode-text">Spend Analytics</h6>
+                        <h5 class="fw-bold mb-0 text-dark-green dark-mode-text">Purchasing Trends</h5>
                     </div>
                     <select id="spendRangeFilter" class="form-select form-select-sm border-0 bg-faint-green fw-bold rounded-pill px-3" style="width: 140px;">
                         <option value="6" selected>Last 6 Months</option>
@@ -188,8 +188,8 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green">Order Distribution</h6>
+            <div class="card border-0 shadow-premium rounded-5 p-3 bg-white dark-mode-card">
+                <h6 class="fw-bold mb-3 text-uppercase tracking-wider opacity-75 small text-dark-green dark-mode-text">Order Distribution</h6>
                 <div style="height: 250px; width: 100%;">
                     <canvas id="orderStatusChart"></canvas>
                 </div>
@@ -270,25 +270,25 @@
     </div>
 
     <!-- Recent Procurements Table -->
-    <div class="row g-4 mb-5">
+    <div class="row g-3 mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white">
-                <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white dark-mode-card">
+                <div class="card-header bg-white dark-mode-header py-3 px-4 border-0 d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="fw-bold mb-0 text-dark-green">Recent Procurements</h5>
-                        <p class="x-small text-muted mb-0">Track your ongoing orders and historical acquisitions</p>
+                        <h6 class="fw-bold mb-0 text-dark-green dark-mode-text">Recent Procurements</h6>
+                        <p class="extra-small text-muted mb-0 dark-mode-text">Track your ongoing orders and historical acquisitions</p>
                     </div>
-                    <a asp-action="OrderTracking" class="btn btn-faint-green text-dark-green rounded-pill px-4 py-2 fw-bold small">View Full History</a>
+                    <a asp-action="OrderTracking" class="btn btn-faint-green text-dark-green rounded-pill px-3 py-1 fw-bold extra-small dark-mode-icon-bg">View Full History</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle table-hover mb-0">
-                        <thead class="bg-faint-green">
+                        <thead class="bg-faint-green dark-mode-thead">
                             <tr>
-                                <th class="ps-4 py-3 text-muted x-small text-uppercase fw-bold ls-1">Order Details</th>
-                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Supplier</th>
-                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1">Status</th>
-                                <th class="py-3 text-muted x-small text-uppercase fw-bold ls-1 text-end">Total Amount</th>
-                                <th class="pe-4 py-3 text-muted x-small text-uppercase fw-bold ls-1 text-end">Action</th>
+                                <th class="ps-4 py-2 text-muted extra-small text-uppercase fw-bold ls-1 dark-mode-text">Order Details</th>
+                                <th class="py-2 text-muted extra-small text-uppercase fw-bold ls-1 dark-mode-text">Supplier</th>
+                                <th class="py-2 text-muted extra-small text-uppercase fw-bold ls-1 dark-mode-text">Status</th>
+                                <th class="py-2 text-muted extra-small text-uppercase fw-bold ls-1 text-end dark-mode-text">Total Amount</th>
+                                <th class="pe-4 py-2 text-muted extra-small text-uppercase fw-bold ls-1 text-end dark-mode-text">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -308,25 +308,25 @@
                                     };
                                     
                                     <tr onclick="window.location.href='/Order/Details/@o.Id'" style="cursor: pointer;">
-                                        <td class="ps-4 py-4">
-                                            <div class="fw-bold text-dark-green">#@o.OrderNumber</div>
-                                            <div class="x-small text-muted">@o.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                        <td class="ps-4 py-3">
+                                            <div class="fw-bold text-dark-green dark-mode-text small">#@o.OrderNumber</div>
+                                            <div class="extra-small text-muted dark-mode-text">@o.CreatedAt.ToString("MMM dd, yyyy")</div>
                                         </td>
                                         <td>
-                                            <div class="fw-bold text-dark-green">@o.Supplier?.CompanyName</div>
-                                            <div class="x-small text-muted">@o.Supplier?.City</div>
+                                            <div class="fw-bold text-dark-green dark-mode-text small">@o.Supplier?.CompanyName</div>
+                                            <div class="extra-small text-muted dark-mode-text">@o.Supplier?.City</div>
                                         </td>
                                         <td>
-                                            <span class="status-badge @badgeClass @textColor">
-                                                <i class="fas fa-circle me-1" style="font-size: 6px;"></i> @o.OrderStatus
+                                            <span class="status-pill-nexus @badgeClass @textColor" style="font-size: 0.55rem; padding: 0.2rem 0.6rem !important;">
+                                                <i class="fas fa-circle me-1" style="font-size: 4px;"></i> @o.OrderStatus
                                             </span>
                                         </td>
-                                        <td class="text-end fw-bold text-dark-green">
-                                            @o.TotalAmount.ToString("N2") <span class="x-small">ETB</span>
+                                        <td class="text-end fw-bold text-dark-green dark-mode-text small">
+                                            @o.TotalAmount.ToString("N2") <span class="extra-small">ETB</span>
                                         </td>
                                         <td class="pe-4 text-end">
-                                            <button class="btn btn-faint-green text-dark-green rounded-circle" style="width: 32px; height: 32px; padding: 0;">
-                                                <i class="fas fa-arrow-right x-small"></i>
+                                            <button class="btn btn-faint-green text-dark-green rounded-circle dark-mode-icon-bg" style="width: 28px; height: 28px; padding: 0;">
+                                                <i class="fas fa-arrow-right extra-small"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -335,10 +335,10 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="5" class="text-center py-5 opacity-50">
-                                        <i class="fas fa-shopping-basket fa-3x mb-3 text-dark-green"></i>
-                                        <h5 class="fw-bold text-dark-green">No Recent Procurements</h5>
-                                        <a asp-action="BrowseCatalog" class="btn btn-dark-green rounded-pill px-5 py-2 fw-bold mt-3">Browse Catalog</a>
+                                    <td colspan="5" class="text-center py-4 opacity-50">
+                                        <i class="fas fa-shopping-basket fa-2x mb-2 text-dark-green dark-mode-text"></i>
+                                        <h6 class="fw-bold text-dark-green dark-mode-text">No Recent Procurements</h6>
+                                        <a asp-action="BrowseCatalog" class="btn btn-dark-green rounded-pill px-4 py-2 small mt-2 dark-mode-primary-btn">Browse Catalog</a>
                                     </td>
                                 </tr>
                             }
@@ -352,27 +352,22 @@
 
 @section Styles {
     <style>
-        .welcome-banner { position: relative; border-radius: 40px !important; }
+        .welcome-banner { position: relative; border-radius: 16px !important; }
         .banner-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.05; z-index: 1; }
         .banner-glow { position: absolute; top: -50%; right: -20%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212, 240, 109, 0.1) 0%, transparent 70%); filter: blur(50px); z-index: 1; }
-        .btn-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; border-radius: 20px; transition: all 0.3s; }
+        .btn-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; border-radius: 12px; transition: all 0.3s; }
         .btn-glass:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
 
-        .rounded-5 { border-radius: 24px !important; }
-        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
-        .ls-1 { letter-spacing: 1px; }
-        .x-small { font-size: 0.75rem; }
         .tracking-widest { letter-spacing: 2px; }
-
-        .status-badge { padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
-        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
-        .bg-soft-primary { background-color: rgba(26, 61, 49, 0.1); }
-        .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
 
         .animate-slide-up { animation: slideUp 0.6s ease-out; }
         @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Tablet responsiveness */
+        @@media (max-width: 992px) {
+            .fulfillment-page { zoom: 1; }
+            .col-6 { width: 50%; }
+        }
     </style>
 }
 

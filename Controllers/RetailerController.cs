@@ -95,7 +95,7 @@ namespace SCM_System.Controllers
             // Performance KPIs
             ViewBag.TotalSpent = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
             ViewBag.AverageOrderValue = orders.Any() ? orders.Average(o => o.TotalAmount) : 0;
-            
+
             var totalOrders = orders.Count;
             var completedOrdersCount = orders.Count(o => o.OrderStatus == "Completed");
             ViewBag.OnTimeDeliveryRate = totalOrders > 0 ? Math.Round((completedOrdersCount * 100.0 / totalOrders), 1) : 0;
@@ -139,8 +139,8 @@ namespace SCM_System.Controllers
                     OtherUserId = c.Supplier.UserId,
                     OtherUserName = c.Supplier.CompanyName,
                     OtherUserRole = "Supplier",
-                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault() != null 
-                        ? c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault().MessageText 
+                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault() != null
+                        ? c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault().MessageText
                         : "No messages yet",
                     LastMessageAt = c.LastMessageAt ?? c.CreatedAt,
                     UnreadCount = c.Messages.Count(m => !m.IsRead && m.SenderId != userId)
@@ -288,7 +288,7 @@ namespace SCM_System.Controllers
 
             ViewBag.TotalOrders = orders.Count;
             ViewBag.TotalSpent = orders.Where(o => o.OrderStatus == "Completed").Sum(o => o.TotalAmount);
-            
+
             int totalOrders = orders.Count;
             int completedOrdersCount = orders.Count(o => o.OrderStatus == "Completed");
             ViewBag.OnTimeDeliveryRate = totalOrders > 0 ? Math.Round((completedOrdersCount * 100.0 / totalOrders), 1) : 0;
@@ -356,7 +356,7 @@ namespace SCM_System.Controllers
                 var ratings = product.Supplier.ReceivedRatings;
                 ViewBag.AverageRating = ratings.Any() ? Math.Round(ratings.Average(r => r.RatingValue), 1) : 0;
                 ViewBag.RatingCount = ratings.Count();
-                
+
                 ViewBag.DealsCompleted = await _context.Orders
                     .CountAsync(o => o.SupplierId == product.SupplierId && (o.OrderStatus == "Completed" || o.OrderStatus == "Delivered"));
             }
@@ -382,10 +382,11 @@ namespace SCM_System.Controllers
                 await _cartService.AddToCartAsync(retailer.Id, productId, quantity);
                 var count = await _cartService.GetCartItemCountAsync(retailer.Id);
 
-                return Json(new { 
-                    success = true, 
-                    message = "Product added to cart!", 
-                    cartItemCount = count 
+                return Json(new
+                {
+                    success = true,
+                    message = "Product added to cart!",
+                    cartItemCount = count
                 });
             }
             catch (Exception ex)
@@ -401,7 +402,7 @@ namespace SCM_System.Controllers
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            
+
             var cart = await _cartService.GetCartAsync(retailer.Id);
             return View(cart);
         }
@@ -434,7 +435,7 @@ namespace SCM_System.Controllers
                     taxRate = i.Product?.TaxRate ?? 15,
                     quantity = i.Quantity,
                     maxQuantity = i.Product?.Inventories?.Sum(inv => inv.QuantityOnHand - inv.QuantityReserved) ?? 0,
-                    supplierId = i.Product?.SupplierId, 
+                    supplierId = i.Product?.SupplierId,
                     supplierName = i.Product?.Supplier?.CompanyName ?? "Unknown Supplier",
                     total = (i.Quantity * (i.Product?.BasePrice ?? 0)) // This is the Net Total for the item
                 }),
@@ -478,7 +479,7 @@ namespace SCM_System.Controllers
             return Json(new { success = true, cartItemCount = count, subtotal = netSubtotal, taxTotal = Math.Round(netSubtotal * 0.15m, 2) });
         }
 
-       
+
 
         [HttpPost]
         public async Task<IActionResult> UpdateBusinessInfo(Retailer model)
@@ -553,7 +554,7 @@ namespace SCM_System.Controllers
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            
+
             retailer.DefaultShippingMethod = defaultShippingMethod;
             retailer.ProofOfDeliveryRequired = proofOfDeliveryRequired;
             retailer.DeliveryNotifications = deliveryNotifications;
@@ -721,14 +722,14 @@ namespace SCM_System.Controllers
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-            
+
             var csv = new System.Text.StringBuilder();
             csv.AppendLine("Property,Value");
             csv.AppendLine($"Business Name,{retailer.BusinessName}");
             csv.AppendLine($"Business Type,{retailer.BusinessType}");
             csv.AppendLine($"City,{retailer.City}");
             csv.AppendLine($"Created At,{retailer.CreatedAt}");
-            
+
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
             return File(buffer, "text/csv", $"Retailer_Data_{retailer.Id}.csv");
         }
@@ -814,7 +815,8 @@ namespace SCM_System.Controllers
             return RedirectToAction("OrderTracking");
         }
 
-<<<<<<< HEAD
+
+        // GET: /Retailer/RateDelivery/5
         // GET: /Retailer/RateDelivery/5
         [HttpGet]
         public async Task<IActionResult> RateDelivery(int id)
@@ -870,10 +872,9 @@ namespace SCM_System.Controllers
 
             TempData["SuccessMessage"] = "Thank you for rating your delivery experience!";
             return RedirectToAction("Dashboard");
-=======
+        }
 
-        // Add to RetailerController.cs
-
+        // Add to RetailerController.cs - Checkout from Supplier Branch
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(string deliveryAddress, DateTime expectedDeliveryDate)
@@ -935,7 +936,7 @@ namespace SCM_System.Controllers
                     VAT = vat,
                     TotalAmount = grandTotal,
                     OrderStatus = "Pending",
-                    PaymentStatus = "Pending", 
+                    PaymentStatus = "Pending",
                     CreatedAt = DateTime.Now,
                     OrderItems = orderItems
                 };
@@ -960,7 +961,7 @@ namespace SCM_System.Controllers
         private string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
->>>>>>> a1be27034ef112e51dc7a51bd12800c01b912210
         }
+
     }
 }

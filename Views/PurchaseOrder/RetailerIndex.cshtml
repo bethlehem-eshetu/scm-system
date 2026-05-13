@@ -138,6 +138,12 @@
                                             <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-sm btn-white border rounded-pill px-3 shadow-sm fw-bold">
                                                 Workspace <i class="fas fa-chevron-right ms-1"></i>
                                             </a>
+                                            @if (po.Status == "Delivered" || po.Status == "Completed")
+                                            {
+                                                <a asp-controller="Return" asp-action="Create" asp-route-purchaseOrderId="@po.Id" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm fw-bold">
+                                                    <i class="fas fa-undo me-1"></i> Return
+                                                </a>
+                                            }
                                             @if (needsPayment && po.Commission != null)
                                             {
                                                 <form asp-controller="Payment" asp-action="InitializePayment" method="post" class="d-inline">

@@ -37,21 +37,21 @@ namespace SCM_System.Services
             if (exists)
                 return null;
 
-            // Fetch dynamic commission rate from SystemConfiguration
-            // Default to 5% if not configured
-            var configKey = "CommissionBronze"; // Default tier
+            // ✅ New Tiered Commission Logic: Percentage decreases as order amount increases
+            decimal commissionPercentage = Supplier.GetTieredCommissionRate(orderAmount);
+            
+            // Check for potential admin overrides in SystemConfiguration
+            var configKey = "CommissionBronze"; 
             var configValue = await _context.SystemConfigurations
                 .Where(sc => sc.Key == configKey)
                 .Select(sc => sc.Value)
-                .FirstOrDefaultAsync() ?? "5.0";
+                .FirstOrDefaultAsync();
 
-            if (!decimal.TryParse(configValue, out decimal commissionPercentage))
-            {
-                commissionPercentage = 5.0m;
-            }
-
+            // If an admin override exists and it's lower than the tiered rate, we could consider it.
+            // But the user specifically asked for amount-based logic.
+            
             decimal commissionRate = commissionPercentage / 100m;
-            decimal commissionAmount = orderAmount * commissionRate;
+            decimal commissionAmount = Math.Round(orderAmount * commissionRate, 2);
 
             var commission = new Commission
             {
@@ -247,11 +247,20 @@ namespace SCM_System.Services
                         if (po.Supplier != null)
                         {
                             var supplier = po.Supplier;
-                            decimal commissionRate = supplier.CommissionRate > 0 ? supplier.CommissionRate : Supplier.GetRateByTier(supplier.CommissionTier);
-                            if (commissionRate < 5.0m) commissionRate = 5.0m; // Enforce minimum 5% for testing/bronze
-
-                            // poAmount should be the inclusive TotalAmount stored on the PO
                             var poAmount = po.TotalAmount > 0 ? po.TotalAmount : Math.Round(po.PurchaseOrderItems.Sum(i => i.Quantity * i.UnitPrice), 2);
+                            
+                            // ✅ Updated Tiered Logic: Use the sliding scale based on the PO amount
+                            decimal tieredRate = Supplier.GetTieredCommissionRate(poAmount);
+                            
+                            // If the supplier has a custom rate or a higher tier, we respect the better deal for the platform/supplier 
+                            // But usually, the sliding scale is the primary rule.
+                            decimal supplierTierRate = supplier.CommissionRate > 0 ? supplier.CommissionRate : Supplier.GetRateByTier(supplier.CommissionTier);
+                            
+                            // We use the Tiered Rate as the baseline, but respect if the Supplier Tier offers a better deal (lower rate)
+                            decimal commissionRate = Math.Min(tieredRate, supplierTierRate);
+                            
+                            // Enforce minimum 1% just in case
+                            if (commissionRate < 1.0m) commissionRate = 1.0m; 
                             
                             var platformCommAmount = Math.Round(poAmount * (commissionRate / 100), 2);
                             var supplierAmount = Math.Round(poAmount - platformCommAmount, 2);

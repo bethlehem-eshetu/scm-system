@@ -694,8 +694,9 @@ namespace SCM_System.Services
 
                     if (existingPlatform == null)
                     {
-                        var commissionRate = 0.05m;
-                        var platformAmount = po.TotalAmount * commissionRate;
+                        var commissionPercentage = Supplier.GetTieredCommissionRate(po.TotalAmount);
+                        var commissionRate = commissionPercentage / 100m;
+                        var platformAmount = Math.Round(po.TotalAmount * commissionRate, 2);
 
                         var platformCommission = new Commission
                         {
@@ -710,7 +711,7 @@ namespace SCM_System.Services
                             Status = PaymentStatus.Pending.ToString(),
                             CreatedAt = DateTime.Now,
                             DueDate = DateTime.Now.AddDays(7),
-                            Notes = $"Platform service fee (5%) for #{po.PONumber}"
+                            Notes = $"Platform service fee ({commissionPercentage}%) for #{po.PONumber}"
                         };
                         _context.Commissions.Add(platformCommission);
                         createdCount++;
