@@ -1102,19 +1102,19 @@
             // Show toasts from TempData
             @if (TempData["SuccessMessage"] != null)
             {
-                <text>showToast('@TempData["SuccessMessage"]', 'success');</text>
+                <text>showToast('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(TempData["SuccessMessage"].ToString()))', 'success');</text>
             }
             @if (TempData["ErrorMessage"] != null)
             {
-                <text>showToast('@TempData["ErrorMessage"]', 'error');</text>
+                <text>showToast('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(TempData["ErrorMessage"].ToString()))', 'error');</text>
             }
             @if (TempData["LogoutMessage"] != null)
             {
-                <text>showToast('@TempData["LogoutMessage"]', 'info', '👋 Goodbye');</text>
+                <text>showToast('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(TempData["LogoutMessage"].ToString()))', 'info', '👋 Goodbye');</text>
             }
             @if (TempData["WarningMessage"] != null)
             {
-                <text>showToast('@TempData["WarningMessage"]', 'warning');</text>
+                <text>showToast('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(TempData["WarningMessage"].ToString()))', 'warning');</text>
             }
 
             $('#sidebarCollapse').on('click', function () {
