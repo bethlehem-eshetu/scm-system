@@ -1,11 +1,14 @@
 @model IEnumerable<SCM_System.Models.Entities.Commission>
 @{
-    ViewData["Title"] = "Finance Control Tower";
+    ViewData["Title"] = "Financial Dashboard";
     Layout = "_DashboardLayout";
     var grossSales = ViewBag.GrossSales ?? 0m;
     var platformRevenue = ViewBag.PlatformRevenue ?? 0m;
     var supplierPayables = ViewBag.SupplierPayables ?? 0m;
     var failedPayments = ViewBag.FailedPayments ?? 0;
+    var totalOrderValue = ViewBag.TotalOrderValue ?? 0m;
+    var pendingCommissions = ViewBag.PendingCommissionsValue ?? 0m;
+    var totalPayouts = ViewBag.TotalPayouts ?? 0m;
 }
 
 @section Styles {
@@ -17,27 +20,27 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center fin-page-header">
         <div>
-            <div class="fin-page-title">Finance Control Tower</div>
+            <div class="fin-page-title">Financial Dashboard</div>
             <div class="fin-page-subtitle">Real-time marketplace revenue, settlements, and commission tracking.</div>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="ExportCommissions" class="fin-action-btn">
-                <i class="fas fa-file-excel"></i> Export Excel
+            <a asp-action="ExportFinancials" class="fin-action-btn">
+                <i class="fas fa-file-csv"></i> Export CSV
             </a>
             <a asp-action="Transactions" class="fin-action-btn primary">
-                <i class="fas fa-exchange-alt"></i> All Transactions
+                <i class="fas fa-exchange-alt"></i> Transaction Ledger
             </a>
         </div>
     </div>
 
-    <!-- KPI Grid -->
+    <!-- Primary KPI Grid -->
     <div class="finance-kpi-grid">
         <div class="fin-kpi-card">
             <i class="fas fa-shopping-cart fin-kpi-icon"></i>
             <div>
                 <div class="fin-kpi-value">@grossSales.ToString("C0")</div>
                 <div class="fin-kpi-label">Gross Sales (inc. VAT)</div>
-                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> 12.5%</div>
+                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> Revenue</div>
             </div>
         </div>
         <div class="fin-kpi-card" style="--accent: #5B8FF9;">
@@ -45,7 +48,7 @@
             <div>
                 <div class="fin-kpi-value">@platformRevenue.ToString("C0")</div>
                 <div class="fin-kpi-label">Platform Revenue</div>
-                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> Target Met</div>
+                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> Commissions Earned</div>
             </div>
         </div>
         <div class="fin-kpi-card" style="--accent: #E67E22;">
@@ -68,19 +71,52 @@
         </div>
     </div>
 
+    <!-- Secondary KPI Strip (merged from Financial Reports) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="fin-panel p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(46,156,122,0.12);flex-shrink:0;">
+                    <i class="fas fa-receipt" style="color:#2E9C7A; font-size:18px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600;">Total Order Value</div>
+                    <div style="font-size:20px; font-weight:800; color:var(--text-color);">@totalOrderValue.ToString("C0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="fin-panel p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(230,126,34,0.12);flex-shrink:0;">
+                    <i class="fas fa-clock" style="color:#E67E22; font-size:18px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600;">Pending Commissions</div>
+                    <div style="font-size:20px; font-weight:800; color:var(--text-color);">@pendingCommissions.ToString("C0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="fin-panel p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(91,143,249,0.12);flex-shrink:0;">
+                    <i class="fas fa-wallet" style="color:#5B8FF9; font-size:18px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600;">Total Payouts</div>
+                    <div style="font-size:20px; font-weight:800; color:var(--text-color);">@totalPayouts.ToString("C0")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts Row -->
     <div class="row g-4 mb-4">
-        <!-- Revenue Trend Chart -->
+        <!-- Revenue Trend Chart (6-month) -->
         <div class="col-lg-8">
             <div class="chart-wrapper h-100">
                 <div class="chart-title">
-                    <span><i class="fas fa-chart-line me-2" style="color:#2E9C7A;"></i>Revenue Trends</span>
-                    <div class="d-flex gap-2">
-                        <span class="type-pill active" style="cursor:pointer;">Weekly</span>
-                        <span class="type-pill" style="cursor:pointer;">Monthly</span>
-                    </div>
+                    <span><i class="fas fa-chart-line me-2" style="color:#2E9C7A;"></i>Revenue Trend (Last 6 Months)</span>
                 </div>
-                <canvas id="revenueTrendChart" style="height: 260px;"></canvas>
+                <canvas id="revenueTrendChart" style="height: 280px;"></canvas>
             </div>
         </div>
         <!-- Settlement Health -->
@@ -92,17 +128,24 @@
                 <div style="max-width: 200px; margin: 0 auto 20px;">
                     <canvas id="statusPieChart"></canvas>
                 </div>
+                @{
+                    var allItems = Model.ToList();
+                    var totalCount = allItems.Count > 0 ? allItems.Count : 1;
+                    var paidPct = Math.Round(allItems.Count(c => c.Status == "Paid") * 100.0 / totalCount);
+                    var pendingPct = Math.Round(allItems.Count(c => c.Status == "Pending") * 100.0 / totalCount);
+                    var failedPct = Math.Round(allItems.Count(c => c.Status == "Failed") * 100.0 / totalCount);
+                }
                 <div class="health-item">
-                    <div class="health-label">Cleared Payments <span class="health-val">85%</span></div>
-                    <div class="health-bar"><div class="health-fill" style="width:85%; background:#2E9C7A;"></div></div>
+                    <div class="health-label">Cleared Payments <span class="health-val">@paidPct%</span></div>
+                    <div class="health-bar"><div class="health-fill" style="width:@paidPct%; background:#2E9C7A;"></div></div>
                 </div>
                 <div class="health-item">
-                    <div class="health-label">Pending Payouts <span class="health-val">12%</span></div>
-                    <div class="health-bar"><div class="health-fill" style="width:12%; background:#E67E22;"></div></div>
+                    <div class="health-label">Pending Payouts <span class="health-val">@pendingPct%</span></div>
+                    <div class="health-bar"><div class="health-fill" style="width:@pendingPct%; background:#E67E22;"></div></div>
                 </div>
                 <div class="health-item" style="margin-bottom:0;">
-                    <div class="health-label">Failed / Expired <span class="health-val">3%</span></div>
-                    <div class="health-bar"><div class="health-fill" style="width:3%; background:#E05A5A;"></div></div>
+                    <div class="health-label">Failed / Expired <span class="health-val">@failedPct%</span></div>
+                    <div class="health-bar"><div class="health-fill" style="width:@failedPct%; background:#E05A5A;"></div></div>
                 </div>
             </div>
         </div>
@@ -130,6 +173,13 @@
                         </div>
                         rank++;
                     }
+                }
+                @if (rank == 1)
+                {
+                    <div class="text-center py-4" style="color:var(--text-muted);">
+                        <i class="fas fa-trophy opacity-25 d-block mb-2" style="font-size:28px;"></i>
+                        <small>No supplier data yet</small>
+                    </div>
                 }
             </div>
         </div>
@@ -186,7 +236,7 @@
         const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
         const labelColor = isDark ? '#9EABA5' : '#6F7E78';
 
-        // Revenue Trend
+        // Revenue Trend (6-month line chart)
         const tCtx = document.getElementById('revenueTrendChart').getContext('2d');
         const grad = tCtx.createLinearGradient(0, 0, 0, 300);
         grad.addColorStop(0, 'rgba(46,156,122,0.25)');
@@ -203,7 +253,7 @@
                     fill: true,
                     backgroundColor: grad,
                     tension: 0.4,
-                    pointRadius: 4,
+                    pointRadius: 5,
                     pointBackgroundColor: '#2E9C7A',
                     pointHoverRadius: 7
                 }]

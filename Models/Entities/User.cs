@@ -75,7 +75,9 @@ namespace SCM_System.Models.Entities
         public string? VerifiedFullName { get; set; }
         public string? VerifiedPhoneNumber { get; set; }
 
+        [NotMapped]
         public string? ApprovalStatusMessage { get; set; }
+        [NotMapped]
         public string? ApprovalStatusType { get; set; } // "Approved" or "Rejected"
 
         // Admin/User Preferences

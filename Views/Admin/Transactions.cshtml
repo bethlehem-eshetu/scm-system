@@ -1,12 +1,13 @@
 @model IEnumerable<SCM_System.Models.Entities.Commission>
 @{
-    ViewData["Title"] = "All Transactions";
+    ViewData["Title"] = "Transaction Ledger";
     Layout = "_DashboardLayout";
     var allItems = Model.ToList();
     var totalAmt = allItems.Sum(t => t.CommissionAmount);
     var successAmt = allItems.Where(t => t.Status == "Paid").Sum(t => t.CommissionAmount);
     var pendingAmt = allItems.Where(t => t.Status == "Pending").Sum(t => t.CommissionAmount);
     var failedAmt  = allItems.Where(t => t.Status == "Failed").Sum(t => t.CommissionAmount);
+    var initialType = ViewBag.InitialTypeFilter as string ?? "";
 }
 
 @section Styles {
@@ -18,7 +19,7 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center fin-page-header">
         <div>
-            <div class="fin-page-title">All Transactions</div>
+            <div class="fin-page-title">Transaction Ledger</div>
             <div class="fin-page-subtitle">Track and manage all financial transactions across the platform.</div>
         </div>
         <div class="d-flex gap-2 flex-wrap">
@@ -26,7 +27,7 @@
                 <i class="fas fa-file-csv"></i> Export CSV
             </a>
             <a asp-action="CommissionOverview" class="fin-action-btn primary">
-                <i class="fas fa-chart-bar"></i> Overview
+                <i class="fas fa-chart-bar"></i> Financial Dashboard
             </a>
         </div>
     </div>
@@ -102,10 +103,10 @@
 
     <!-- Quick Filters -->
     <div class="type-filter-tabs">
-        <button class="type-pill active" onclick="quickFilter('', this)">All</button>
-        <button class="type-pill" onclick="quickFilter('OrderPayment', this)">💳 OrderPayment</button>
-        <button class="type-pill" onclick="quickFilter('SupplierPayout', this)">💸 SupplierPayout</button>
-        <button class="type-pill" onclick="quickFilter('PlatformCommission', this)">📊 Commission</button>
+        <button class="type-pill @(string.IsNullOrEmpty(initialType) ? "active" : "")" onclick="quickFilter('', this)">All</button>
+        <button class="type-pill @(initialType == "OrderPayment" ? "active" : "")" onclick="quickFilter('OrderPayment', this)">💳 OrderPayment</button>
+        <button class="type-pill @(initialType == "SupplierPayout" ? "active" : "")" onclick="quickFilter('SupplierPayout', this)">💸 SupplierPayout</button>
+        <button class="type-pill @(initialType == "PlatformCommission" ? "active" : "")" onclick="quickFilter('PlatformCommission', this)">📊 Commission</button>
     </div>
 
     <!-- Table -->
@@ -214,5 +215,14 @@
         }
 
         document.getElementById('transactionSearch').addEventListener('input', applyTxnFilters);
+
+        // Auto-apply initial filter from URL parameter (e.g. redirected from /Admin/Payouts)
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialType = '@Html.Raw(initialType)';
+            if (initialType) {
+                document.getElementById('typeFilter').value = initialType;
+                applyTxnFilters();
+            }
+        });
     </script>
 }

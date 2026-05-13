@@ -788,26 +788,23 @@
 
                     <li class="sidebar-section">💰 FINANCE</li>
                     <li>
-                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-line"></i> Commission Overview</a>
+                        <a asp-controller="Admin" asp-action="CommissionOverview"><i class="fas fa-chart-line"></i> Financial Dashboard</a>
                     </li>
                     <li>
-                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-money-bill-alt"></i> Transactions</a>
-                    </li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="Payouts"><i class="fas fa-wallet"></i> Payouts</a>
+                        <a asp-controller="Admin" asp-action="Transactions"><i class="fas fa-money-bill-alt"></i> Transaction Ledger</a>
                     </li>
 
                     <li class="sidebar-section">📄 REPORTS</li>
-                    <li>
-                        <a asp-controller="Admin" asp-action="FinancialReports"><i class="fas fa-chart-pie"></i> Financial Reports</a>
-                    </li>
-
-                    <li class="sidebar-section">⚙️ SYSTEM</li>
                     <li>
                         <a asp-controller="Admin" asp-action="AuditLogs"><i class="fas fa-scroll"></i> Audit Logs</a>
                     </li>
                     <li>
                         <a asp-controller="Admin" asp-action="EmailLogs"><i class="fas fa-inbox"></i> Email Logs</a>
+                    </li>
+
+                    <li class="sidebar-section">⚙️ SYSTEM</li>
+                    <li>
+                        <a asp-controller="Admin" asp-action="Settings"><i class="fas fa-cogs"></i> System Settings</a>
                     </li>
                 }
                 else if (role == "Supplier")

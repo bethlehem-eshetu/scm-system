@@ -25,75 +25,106 @@
         </div>
     }
 
-    <!-- KPI Section (SCM Style) -->
-    <div class="row g-4 mb-5">
+    <!-- KPI Section (SCM Style) - Clickable Cards -->
+    <div class="row g-4 mb-4">
         <div class="col-6 col-xl-3">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Total Orders</p>
-                        <h2 class="fw-bold mb-0 text-dark-green">@Model.TotalOrders</h2>
+            <a href="/Order/Index" class="text-decoration-none">
+                <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4 kpi-card-hover">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Total Orders</p>
+                            <h2 class="fw-bold mb-0 text-dark-green">@Model.TotalOrders</h2>
+                        </div>
+                        <div class="bg-faint-green p-3 rounded-4 text-dark-green">
+                            <i class="fas fa-box"></i>
+                        </div>
                     </div>
-                    <div class="bg-faint-green p-3 rounded-4 text-dark-green">
-                        <i class="fas fa-box"></i>
+                    <div class="kpi-trend up text-success small fw-bold">
+                        <i class="fas fa-arrow-up me-1"></i> 12% <span class="text-muted fw-normal">vs last week</span>
                     </div>
                 </div>
-                <div class="kpi-trend up text-success small fw-bold">
-                    <i class="fas fa-arrow-up me-1"></i> 12% <span class="text-muted fw-normal">vs last week</span>
-                </div>
-            </div>
+            </a>
         </div>
         
         <div class="col-6 col-xl-3">
-            <div class="card border-0 rounded-5 bg-dark-green text-white shadow-premium h-100 p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <p class="text-white-50 small text-uppercase fw-bold ls-1 mb-1">Revenue</p>
-                        <h2 class="fw-bold mb-0 text-accent-green">@((Model.TotalRevenue / 1000m).ToString("N1"))K</h2>
+            <a href="/Admin/CommissionOverview" class="text-decoration-none">
+                <div class="card border-0 rounded-5 bg-dark-green text-white shadow-premium h-100 p-4 kpi-card-hover">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-white-50 small text-uppercase fw-bold ls-1 mb-1">Revenue</p>
+                            <h2 class="fw-bold mb-0 text-accent-green">@((Model.TotalRevenue / 1000m).ToString("N1"))K</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-10 p-3 rounded-4 text-accent-green">
+                            <i class="fas fa-coins"></i>
+                        </div>
                     </div>
-                    <div class="bg-white bg-opacity-10 p-3 rounded-4 text-accent-green">
-                        <i class="fas fa-coins"></i>
+                    <div class="kpi-trend up text-accent-green small fw-bold">
+                        <i class="fas fa-arrow-up me-1"></i> 8.4% <span class="text-white-50 fw-normal">Growth</span>
                     </div>
                 </div>
-                <div class="kpi-trend up text-accent-green small fw-bold">
-                    <i class="fas fa-arrow-up me-1"></i> 8.4% <span class="text-white-50 fw-normal">Growth</span>
-                </div>
-            </div>
+            </a>
         </div>
 
         <div class="col-6 col-xl-3">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Suppliers</p>
-                        <h2 class="fw-bold mb-0 text-dark-green">@Model.TotalSuppliers</h2>
+            <a href="/Admin/AllUsers" class="text-decoration-none">
+                <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4 kpi-card-hover">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Suppliers</p>
+                            <h2 class="fw-bold mb-0 text-dark-green">@Model.TotalSuppliers</h2>
+                        </div>
+                        <div class="bg-faint-green p-3 rounded-4 text-dark-green">
+                            <i class="fas fa-industry"></i>
+                        </div>
                     </div>
-                    <div class="bg-faint-green p-3 rounded-4 text-dark-green">
-                        <i class="fas fa-industry"></i>
+                    <div class="text-warning small fw-bold">
+                        <i class="fas fa-clock me-1"></i> @Model.PendingSuppliersCount <span class="text-muted fw-normal">pending</span>
                     </div>
                 </div>
-                <div class="text-warning small fw-bold">
-                    <i class="fas fa-clock me-1"></i> @Model.PendingSuppliersCount <span class="text-muted fw-normal">pending</span>
-                </div>
-            </div>
+            </a>
         </div>
 
         <div class="col-6 col-xl-3">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Retailers</p>
-                        <h2 class="fw-bold mb-0 text-dark-green">@Model.TotalRetailers</h2>
+            <a href="/Admin/AllUsers" class="text-decoration-none">
+                <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4 kpi-card-hover">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Retailers</p>
+                            <h2 class="fw-bold mb-0 text-dark-green">@Model.TotalRetailers</h2>
+                        </div>
+                        <div class="bg-faint-green p-3 rounded-4 text-dark-green">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
                     </div>
-                    <div class="bg-faint-green p-3 rounded-4 text-dark-green">
-                        <i class="fas fa-shopping-bag"></i>
+                    <div class="text-warning small fw-bold">
+                        <i class="fas fa-clock me-1"></i> @Model.PendingRetailersCount <span class="text-muted fw-normal">pending</span>
                     </div>
                 </div>
-                <div class="text-warning small fw-bold">
-                    <i class="fas fa-clock me-1"></i> @Model.PendingRetailersCount <span class="text-muted fw-normal">pending</span>
-                </div>
-            </div>
+            </a>
         </div>
+    </div>
+
+    <!-- Quick Actions Bar -->
+    <div class="quick-actions-bar mb-5 animate-slide-up">
+        <a href="/Admin/PendingUsers" class="quick-action-btn">
+            <i class="fas fa-user-check"></i> Review Approvals
+            @if (Model.PendingSuppliersCount + Model.PendingRetailersCount > 0)
+            {
+                <span class="qa-badge">@(Model.PendingSuppliersCount + Model.PendingRetailersCount)</span>
+            }
+        </a>
+        <a href="/Admin/CommissionOverview" class="quick-action-btn">
+            <i class="fas fa-chart-line"></i> Financial Dashboard
+        </a>
+        <a href="/Admin/Transactions" class="quick-action-btn">
+            <i class="fas fa-exchange-alt"></i> Transaction Ledger
+        </a>
+        <a href="/Admin/AuditLogs" class="quick-action-btn">
+            <i class="fas fa-scroll"></i> Audit Logs
+        </a>
+        <a href="/Admin/Settings" class="quick-action-btn">
+            <i class="fas fa-cogs"></i> Settings
+        </a>
     </div>
 
     <!-- Charts Section -->
@@ -275,6 +306,56 @@
         .extra-small { font-size: 0.7rem; }
         .tracking-wider { letter-spacing: 1px; }
 
+        /* KPI Card Hover */
+        .kpi-card-hover {
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .kpi-card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Quick Actions Bar */
+        .quick-actions-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .quick-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--card-bg, #fff);
+            border: 1px solid var(--border-color, rgba(0,0,0,0.08));
+            border-radius: 14px;
+            color: var(--dark-green);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .quick-action-btn:hover {
+            background: var(--dark-green);
+            color: #fff;
+            border-color: var(--dark-green);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,61,49,0.2);
+        }
+        .quick-action-btn i { font-size: 14px; }
+        .qa-badge {
+            background: #E05A5A;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            min-width: 20px;
+            text-align: center;
+        }
+
         .status-badge { padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
@@ -285,6 +366,19 @@
         @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .border-faint { border-color: rgba(0,0,0,0.03) !important; }
+
+        /* Dark Mode Overrides */
+        .dark-mode .card.bg-white,
+        .dark-mode .card-header.bg-white { background-color: var(--card-bg, #1e2a25) !important; }
+        .dark-mode .text-dark-green { color: #4BC0A0 !important; }
+        .dark-mode .bg-faint-green { background-color: rgba(46,156,122,0.12) !important; }
+        .dark-mode .shadow-premium { box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important; }
+        .dark-mode .kpi-card-hover:not(.bg-dark-green) { border: 1px solid var(--border-color, #2A3530); }
+        .dark-mode .quick-action-btn { color: var(--text-color, #c9d4cf); }
+        .dark-mode .quick-action-btn:hover { background: #2E9C7A; border-color: #2E9C7A; color: #fff; }
+        .dark-mode .border-faint { border-color: rgba(255,255,255,0.06) !important; }
+        .dark-mode .welcome-section h1 { color: #e0ede8 !important; }
+        .dark-mode .form-select.bg-faint-green { background-color: rgba(46,156,122,0.12) !important; color: var(--text-color); }
     </style>
 }
 
