@@ -459,9 +459,8 @@ namespace SCM_System.Services
                     }
                 }
 
-                // Status Logic: Split? -> Partially Processing, Else -> Processing
-                bool isSplit = poAllocations.Count > 1;
-                order.OrderStatus = isSplit ? "Partially Picking" : POStatus.Picking;
+                // Status Logic: Accepted and awaiting deposit
+                order.OrderStatus = POStatus.Accepted;
                 order.Subtotal = poAllocations.Values.Sum(v => v.Sum(i => i.Quantity * i.UnitPrice));
                 order.VAT = order.Subtotal * 0.15m;
                 order.TotalAmount = order.Subtotal + order.VAT;
@@ -470,7 +469,7 @@ namespace SCM_System.Services
                 { 
                     OrderId = order.Id, 
                     Status = order.OrderStatus,
-                    Comments = isSplit ? "Order split across multiple warehouses due to stock allocation." : "Order assigned to single warehouse for fulfillment.", 
+                    Comments = "Order accepted. Awaiting 50% advanced payment from retailer.", 
                     ChangedByUserId = order.Supplier.UserId, 
                     ChangedAt = DateTime.Now 
                 };
@@ -489,8 +488,8 @@ namespace SCM_System.Services
                 {
                     await _notificationService.SendNotificationAsync(
                         retailerUserId,
-                        "Order Accepted ✅",
-                        $"Your order #{order.OrderNumber} has been accepted by {order.Supplier?.CompanyName}.",
+                        "Order Accepted ✅ - Payment Required",
+                        $"Your order #{order.OrderNumber} has been accepted. Please pay the 50% advanced deposit to proceed with fulfillment.",
                         "Success",
                         $"/Order/Details/{order.Id}"
                     );

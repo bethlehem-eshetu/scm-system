@@ -8,24 +8,24 @@
 <div class="container-fluid py-4 px-4">
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1"><i class="fas fa-truck-loading me-2 text-accent-green"></i>Monitoring Intelligence</h1>
-            <p class="text-muted small mb-0 mt-1">Track real-time asset movement across warehouses and global delivery networks.</p>
+            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text"><i class="fas fa-truck-loading me-2 text-accent-green"></i>Order Monitoring</h1>
+            <p class="text-muted small mb-0 mt-1 dark-mode-text">Track real-time asset movement across warehouses and global delivery networks.</p>
         </div>
         <div class="d-flex gap-3 align-items-center">
             <div class="search-bar-premium position-relative">
-                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                <input type="text" id="orderSearch" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm" placeholder="Search Order ID or Retailer..." style="width: 300px; height: 45px;">
+                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted dark-mode-text"></i>
+                <input type="text" id="orderSearch" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm dark-mode-input" placeholder="Search Order ID or Retailer..." style="width: 300px; height: 45px;">
             </div>
         </div>
     </div>
 
     <!-- Quick Status Filters (SCM Style) -->
     <div class="d-flex gap-2 mb-5 overflow-auto pb-2 scrollbar-hidden">
-        <button class="btn btn-dark-green rounded-pill px-4 py-2 nexus-filter-btn active small fw-bold" data-filter="all">All Monitoring</button>
-        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="Processing">Processing</button>
-        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="Packed">Packed</button>
-        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="In Transit">In Transit</button>
-        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm" data-filter="Delivered">Delivered</button>
+        <button class="btn btn-dark-green rounded-pill px-4 py-2 nexus-filter-btn active small fw-bold dark-mode-filter-btn" data-filter="all">All Monitoring</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm dark-mode-filter-btn" data-filter="Processing">Processing</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm dark-mode-filter-btn" data-filter="Packed">Packed</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm dark-mode-filter-btn" data-filter="In Transit">In Transit</button>
+        <button class="btn btn-white rounded-pill px-4 py-2 nexus-filter-btn small fw-bold shadow-sm dark-mode-filter-btn" data-filter="Delivered">Delivered</button>
     </div>
 
     <div class="row g-4" id="ordersGrid">
@@ -34,43 +34,43 @@
             foreach (var order in Model)
             {
                 <div class="col-xl-6 order-card" data-status="@order.OrderStatus">
-                    <div class="card border-0 shadow-premium rounded-5 h-100 overflow-hidden hover-lift bg-white">
-                        <div class="card-header border-0 bg-faint-green p-4 d-flex justify-content-between align-items-center">
+                    <div class="card border-0 shadow-premium rounded-5 h-100 overflow-hidden hover-lift bg-white dark-mode-card">
+                        <div class="card-header border-0 bg-faint-green p-4 d-flex justify-content-between align-items-center dark-mode-card-header">
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-dark-green text-white rounded-pill px-3 py-2 fw-bold ls-1 me-3">#ORD-@order.Id</span>
-                                <span class="text-muted extra-small fw-bold">Initiated: @order.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                <span class="badge bg-dark-green text-white rounded-pill px-3 py-2 fw-bold ls-1 me-3 dark-mode-badge">#ORD-@order.Id</span>
+                                <span class="text-muted extra-small fw-bold dark-mode-text">Initiated: @order.CreatedAt.ToString("MMM dd, yyyy")</span>
                             </div>
-                            <span class="status-badge @GetStatusBadgeClass(order.OrderStatus)">@order.OrderStatus</span>
+                            <span class="status-badge @GetStatusBadgeClass(order.OrderStatus) dark-mode-status">@order.OrderStatus</span>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="row g-0 mb-4 bg-faint-green rounded-4 p-4">
-                                <div class="col-6 border-end border-light">
-                                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-2">Retailer Client</p>
-                                    <h6 class="fw-bold text-dark-green mb-1">@order.Retailer?.BusinessName</h6>
-                                    <p class="text-muted extra-small mb-0"><i class="fas fa-map-marker-alt me-1"></i> @order.Retailer?.City</p>
+                        <div class="card-body p-4 dark-mode-card-body">
+                            <div class="row g-0 mb-4 bg-faint-green rounded-4 p-4 dark-mode-info-box">
+                                <div class="col-6 border-end border-light dark-mode-border">
+                                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-2 dark-mode-text">Retailer Client</p>
+                                    <h6 class="fw-bold text-dark-green mb-1 dark-mode-text">@order.Retailer?.BusinessName</h6>
+                                    <p class="text-muted extra-small mb-0 dark-mode-text"><i class="fas fa-map-marker-alt me-1"></i> @order.Retailer?.City</p>
                                 </div>
                                 <div class="col-6 ps-4">
-                                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-2">Fulfillment Density</p>
-                                    <h6 class="fw-bold text-dark-green mb-1">@order.PurchaseOrders.Count Warehouses</h6>
-                                    <p class="text-dark-green fw-bold extra-small mb-0">Value: @order.TotalAmount.ToString("C0")</p>
+                                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-2 dark-mode-text">Fulfillment Density</p>
+                                    <h6 class="fw-bold text-dark-green mb-1 dark-mode-text">@order.PurchaseOrders.Count Warehouses</h6>
+                                    <p class="text-dark-green fw-bold extra-small mb-0 dark-mode-text">Value: @order.TotalAmount.ToString("C0")</p>
                                 </div>
                             </div>
 
                             <!-- Progress Intelligence -->
                             <div class="mb-4 px-2 order-status-container" data-order-id="@order.Id">
                                 <div class="d-flex justify-content-between mb-3 align-items-center">
-                                    <span class="extra-small fw-bold text-muted text-uppercase ls-1">Logistics Pipeline</span>
-                                    <span class="badge bg-accent-green text-dark-green rounded-pill px-3 py-1 extra-small fw-bold status-text">@order.OrderStatus</span>
+                                    <span class="extra-small fw-bold text-muted text-uppercase ls-1 dark-mode-text">Logistics Pipeline</span>
+                                    <span class="badge bg-accent-green text-dark-green rounded-pill px-3 py-1 extra-small fw-bold status-text dark-mode-pipeline-badge">@order.OrderStatus</span>
                                 </div>
                                 
                                 <partial name="_OrderTrackingTimeline" model="order.OrderStatus" />
                             </div>
                         </div>
-                        <div class="card-footer border-0 bg-transparent p-4 pt-0 d-flex gap-3">
-                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" class="btn btn-dark-green flex-grow-1 rounded-pill fw-bold py-2 shadow-premium">
+                        <div class="card-footer border-0 bg-transparent p-4 pt-0 d-flex gap-3 dark-mode-card-footer">
+                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" class="btn btn-dark-green flex-grow-1 rounded-pill fw-bold py-2 shadow-premium dark-mode-primary-btn">
                                 Audit Tracking Details <i class="fas fa-chevron-right ms-2 text-accent-green"></i>
                             </a>
-                            <a asp-controller="Message" asp-action="StartOrderChat" asp-route-orderId="@order.Id" class="btn btn-faint-green rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;" title="Communicate">
+                            <a asp-controller="Message" asp-action="StartOrderChat" asp-route-orderId="@order.Id" class="btn btn-faint-green rounded-circle d-flex align-items-center justify-content-center shadow-sm dark-mode-chat-btn" style="width: 45px; height: 45px;" title="Communicate">
                                 <i class="fas fa-comment-dots text-dark-green"></i>
                             </a>
                         </div>
@@ -81,10 +81,10 @@
         else
         {
             <div class="col-12 text-center py-5">
-                <div class="py-5 bg-faint-green rounded-5 border-dashed-custom">
+                <div class="py-5 bg-faint-green rounded-5 border-dashed-custom dark-mode-empty-state">
                     <i class="fas fa-search-location fa-4x text-dark-green opacity-10 mb-4"></i>
-                    <h5 class="fw-bold text-dark-green">No Monitoring Active</h5>
-                    <p class="text-muted small">There are currently no orders in the active monitoring pipeline.</p>
+                    <h5 class="fw-bold text-dark-green dark-mode-text">No Monitoring Active</h5>
+                    <p class="text-muted small dark-mode-text">There are currently no orders in the active monitoring pipeline.</p>
                 </div>
             </div>
         }
@@ -160,6 +160,160 @@
 
         .animate-slide-up { animation: slideUp 0.5s ease-out; }
         @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ============================================ */
+        /* DARK MODE STYLES - DARK BLUE THEME */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-header {
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-card-body {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-card-footer {
+            background-color: #1e293b !important;
+            border-top-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-badge {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-input {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-filter-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-filter-btn.active {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Info box dark mode */
+        body.dark-mode .dark-mode-info-box {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-border {
+            border-right-color: #475569 !important;
+        }
+
+        /* Status badge dark mode overrides */
+        body.dark-mode .dark-mode-status.bg-soft-warning {
+            background-color: rgba(251, 191, 36, 0.15) !important;
+            color: #fbbf24 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-info {
+            background-color: rgba(13, 202, 240, 0.15) !important;
+            color: #67e8f9 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-primary {
+            background-color: rgba(37, 99, 235, 0.15) !important;
+            color: #93c5fd !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-indigo {
+            background-color: rgba(129, 140, 248, 0.15) !important;
+            color: #a5b4fc !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-success {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-dark {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-secondary {
+            background-color: rgba(100, 116, 139, 0.2) !important;
+            color: #94a3b8 !important;
+        }
+
+        /* Pipeline badge dark mode */
+        body.dark-mode .dark-mode-pipeline-badge {
+            background-color: var(--accent-green) !important;
+            color: #1a3d31 !important;
+        }
+
+        /* Buttons dark mode */
+        body.dark-mode .dark-mode-primary-btn {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-primary-btn:hover {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-chat-btn {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-chat-btn i {
+            color: #a5f3c3 !important;
+        }
+
+        /* Empty state dark mode */
+        body.dark-mode .dark-mode-empty-state {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Timeline component dark mode */
+        body.dark-mode .timeline-track {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .timeline-progress {
+            background-color: var(--accent-green) !important;
+        }
+
+        body.dark-mode .timeline-node {
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .timeline-node.active {
+            background-color: var(--accent-green) !important;
+            border-color: var(--accent-green) !important;
+        }
+
+        body.dark-mode .timeline-label {
+            color: #9ca3af !important;
+        }
+
+        body.dark-mode .timeline-label.active {
+            color: #a5f3c3 !important;
+        }
     </style>
 }
 
@@ -208,12 +362,12 @@
                         .then(response => response.json())
                         .then(data => {
                             const statusText = container.querySelector('.status-text');
-                            if (statusText.innerText !== data.status) {
+                            if (statusText && statusText.innerText !== data.status) {
                                 location.reload();
                             }
                         });
                 });
-            }, 10000); // Increased to 10s for performance
+            }, 10000);
         });
     </script>
 }

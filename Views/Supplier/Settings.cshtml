@@ -1,6 +1,6 @@
 @model SCM_System.Models.ViewModels.SupplierSettingsViewModel
 @{
-    ViewData["Title"] = "SCM Strategic Control Center";
+    ViewData["Title"] = "SCM Account Control Center";
     Layout = "_DashboardLayout";
 }
 
@@ -8,24 +8,23 @@
     <!-- Premium Strategic Header (SCM Style) -->
     <div class="row mb-5 animate-slide-up">
         <div class="col-12">
-            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-premium border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, #1a3d31 0%, #0a2e24 100%);">
+            <div class="welcome-banner p-4 p-lg-5 rounded-5 shadow-premium border-0 position-relative overflow-hidden dark-mode-banner">
                 <div class="banner-overlay"></div>
                 <div class="banner-glow"></div>
                 
                 <div class="position-relative z-index-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div class="text-white">
                         <h1 class="display-5 fw-bold mb-2">
-                            <i class="fas fa-user-cog me-2 text-accent-green"></i>Strategic <span class="text-accent-green">Control Center</span>
+                            <i class="fas fa-user-cog me-2 text-accent-green"></i>Account <span class="text-accent-green">Control Center</span>
                         </h1>
                         <p class="text-white text-opacity-75 mb-0 fs-5">Manage your business profile, security protocols, and operational preferences.</p>
                     </div>
                     <div class="d-flex gap-3">
-                        <button type="button" class="btn btn-glass rounded-pill px-4 py-2 shadow-sm fw-bold d-flex align-items-center gap-2" onclick="location.reload()">
+                        <button type="button" class="btn btn-glass rounded-pill px-4 py-2 shadow-sm fw-bold d-flex align-items-center gap-2 dark-mode-glass-btn" onclick="location.reload()">
                             <i class="fas fa-sync-alt"></i> Refresh Data
                         </button>
                     </div>
                 </div>
-                <!-- Subtle background decoration -->
                 <div class="position-absolute top-0 end-0 p-5 opacity-10 text-white">
                     <i class="fas fa-cog fa-10x fa-spin-slow"></i>
                 </div>
@@ -33,40 +32,49 @@
         </div>
     </div>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert bg-dark-green text-white alert-dismissible fade show shadow-premium border-0 rounded-4 mb-5 p-4 dark-mode-alert" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="bg-white bg-opacity-10 text-accent-green rounded-circle p-3 me-3">
+                    <i class="fas fa-check-circle fa-lg"></i>
+                </div>
+                <div class="fw-bold">@TempData["SuccessMessage"]</div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
     <div class="row g-5">
         <!-- Sidebar Navigation -->
         <div class="col-lg-3">
-            <div class="card border-0 shadow-premium rounded-5 sticky-top bg-white overflow-hidden" style="top: 20px;">
-                <div class="p-5 text-center border-bottom border-faint bg-faint-green">
+            <div class="card border-0 shadow-premium rounded-5 sticky-top bg-white overflow-hidden dark-mode-sidebar" style="top: 20px;">
+                <div class="p-5 text-center border-bottom border-faint bg-faint-green dark-mode-sidebar-header">
                     <div class="position-relative d-inline-block mb-4">
-                        <div class="bg-white rounded-circle shadow-premium d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white" style="width: 120px; height: 120px; margin: 0 auto;">
-                                <img src="@(string.IsNullOrEmpty(Model.ExistingLogo) ? "/img/default-company.png" : Model.ExistingLogo)" 
-                                     id="sidebarLogoPreview" 
-                                     class="img-fluid h-100 w-100 object-fit-cover" 
-                                     alt="Logo" />
+                        <div class="bg-white rounded-circle shadow-premium d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white dark-mode-avatar" style="width: 120px; height: 120px; margin: 0 auto;">
+                            <img src="@(string.IsNullOrEmpty(Model.ExistingLogo) ? "/img/default-company.png" : Model.ExistingLogo)" 
+                                 id="sidebarLogoPreview" 
+                                 class="img-fluid h-100 w-100 object-fit-cover" 
+                                 alt="Logo" />
                         </div>
                         <div class="position-absolute bottom-0 end-0 bg-accent-green text-dark-green rounded-circle p-2 shadow-sm border border-white">
                             <i class="fas fa-check-circle extra-small"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold text-dark-green mb-1">@Model.FullName</h5>
+                    <h5 class="fw-bold text-dark-green mb-1 dark-mode-text">@Model.FullName</h5>
                     <div class="d-flex justify-content-center gap-2 mb-0">
-                        <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small ls-1 uppercase fw-bold">Active Supplier</span>
+                        <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small ls-1 uppercase fw-bold dark-mode-badge">Active Supplier</span>
                     </div>
                 </div>
-                <div class="p-4 bg-white">
+                <div class="p-4 bg-white dark-mode-sidebar-body">
                     <div class="nav flex-column nav-pills scm-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                        <button class="nav-link active text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
+                        <button class="nav-link active text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all dark-mode-nav-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
                             <i class="fas fa-id-card me-3 text-center opacity-75"></i>Business Profile
                         </button>
-                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="v-pills-finance-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finance" type="button" role="tab">
-                            <i class="fas fa-university me-3 text-center opacity-75"></i>Financial Setup
-                        </button>
-                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all dark-mode-nav-link" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab">
                             <i class="fas fa-shield-alt me-3 text-center opacity-75"></i>Security Hub
                         </button>
-                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all text-danger" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab">
+                        <button class="nav-link text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all text-danger dark-mode-nav-link-danger" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab">
                             <i class="fas fa-exclamation-triangle me-3 text-center opacity-75"></i>Danger Zone
                         </button>
                     </div>
@@ -80,11 +88,11 @@
                 
                 <!-- 1. Business Profile -->
                 <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0">
-                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-briefcase text-accent-green me-2"></i>Business Identity</h5>
+                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden dark-mode-card">
+                        <div class="card-header bg-faint-green py-4 px-5 border-0 dark-mode-card-header">
+                            <h5 class="mb-0 fw-bold text-dark-green dark-mode-text"><i class="fas fa-briefcase text-accent-green me-2"></i>Business Identity</h5>
                         </div>
-                        <div class="card-body p-5">
+                        <div class="card-body p-5 dark-mode-card-body">
                             <form id="mainSettingsForm" asp-action="Settings" method="post" enctype="multipart/form-data">
                                 <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3 bg-soft-danger rounded-4 extra-small fw-bold"></div>
                                 <input type="hidden" asp-for="SupplierId" />
@@ -94,61 +102,61 @@
                                     <!-- Logo Upload -->
                                     <div class="col-12 text-center mb-5">
                                         <div class="position-relative d-inline-block">
-                                            <div class="bg-faint-green rounded-circle shadow-inner d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white" style="width: 140px; height: 140px;">
+                                            <div class="bg-faint-green rounded-circle shadow-inner d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white dark-mode-logo-box" style="width: 140px; height: 140px;">
                                                 @if (!string.IsNullOrEmpty(Model.ExistingLogo))
                                                 {
                                                     <img src="@Model.ExistingLogo" id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Logo" />
                                                 }
                                                 else
                                                 {
-                                                    <i class="fas fa-building fa-3x text-muted opacity-25" id="logoPlaceholder"></i>
+                                                    <i class="fas fa-building fa-3x text-muted opacity-25 dark-mode-icon" id="logoPlaceholder"></i>
                                                     <img id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover d-none" alt="Logo" />
                                                 }
                                             </div>
-                                            <label for="profilePictureInput" class="btn btn-dark-green btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-premium p-3 border border-3 border-white" style="cursor: pointer;">
+                                            <label for="profilePictureInput" class="btn btn-dark-green btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-premium p-3 border border-3 border-white dark-mode-upload-btn" style="cursor: pointer;">
                                                 <i class="fas fa-camera text-accent-green"></i>
                                             </label>
                                             <form id="profilePicForm" asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" class="d-none">
                                                 <input type="file" id="profilePictureInput" name="profilePicture" accept="image/*" onchange="previewImage(this); document.getElementById('profilePicForm').submit();" />
                                             </form>
                                         </div>
-                                        <p class="text-muted small mt-3 fw-bold opacity-75 text-dark-green">Corporate Identity Asset</p>
+                                        <p class="text-muted small mt-3 fw-bold opacity-75 text-dark-green dark-mode-text">Corporate Identity Asset</p>
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label asp-for="FullName" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Legal Representative</label>
-                                        <input asp-for="FullName" class="form-control scm-input" placeholder="Representative Name" />
+                                        <label asp-for="FullName" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Legal Representative</label>
+                                        <input asp-for="FullName" class="form-control scm-input dark-mode-input" placeholder="Representative Name" />
                                         <span asp-validation-for="FullName" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="Email" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Business Email</label>
-                                        <input asp-for="Email" class="form-control scm-input" placeholder="corporate@domain.com" />
+                                        <label asp-for="Email" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Business Email</label>
+                                        <input asp-for="Email" class="form-control scm-input dark-mode-input" placeholder="corporate@domain.com" />
                                         <span asp-validation-for="Email" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="Phone" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Primary Contact</label>
-                                        <input asp-for="Phone" class="form-control scm-input" placeholder="+251 ..." />
+                                        <label asp-for="Phone" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Primary Contact</label>
+                                        <input asp-for="Phone" class="form-control scm-input dark-mode-input" placeholder="+251 ..." />
                                         <span asp-validation-for="Phone" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="WebsiteUrl" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Web Portal</label>
-                                        <input asp-for="WebsiteUrl" class="form-control scm-input" placeholder="https://www.yourbusiness.com" />
+                                        <label asp-for="WebsiteUrl" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Web Portal</label>
+                                        <input asp-for="WebsiteUrl" class="form-control scm-input dark-mode-input" placeholder="https://www.yourbusiness.com" />
                                         <span asp-validation-for="WebsiteUrl" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="PickupAddress" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Primary Logistics Hub</label>
-                                        <input asp-for="PickupAddress" class="form-control scm-input" placeholder="Detailed Warehouse Address" />
+                                        <label asp-for="PickupAddress" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Primary Logistics Hub</label>
+                                        <input asp-for="PickupAddress" class="form-control scm-input dark-mode-input" placeholder="Detailed Warehouse Address" />
                                         <span asp-validation-for="PickupAddress" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                     <div class="col-12">
-                                        <label asp-for="CompanyDescription" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Strategic Overview</label>
-                                        <textarea asp-for="CompanyDescription" class="form-control scm-input rounded-5 p-4" rows="4" placeholder="Briefly describe your market position and supply capabilities..."></textarea>
+                                        <label asp-for="CompanyDescription" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Strategic Overview</label>
+                                        <textarea asp-for="CompanyDescription" class="form-control scm-input rounded-5 p-4 dark-mode-textarea" rows="4" placeholder="Briefly describe your market position and supply capabilities..."></textarea>
                                         <span asp-validation-for="CompanyDescription" class="text-danger extra-small fw-bold"></span>
                                     </div>
                                 </div>
 
-                                <div class="text-end mt-5 pt-4 border-top border-faint">
-                                    <button type="submit" class="btn btn-dark-green px-5 rounded-pill shadow-premium py-3 fw-bold">
+                                <div class="text-end mt-5 pt-4 border-top border-faint dark-mode-border">
+                                    <button type="submit" class="btn btn-dark-green px-5 rounded-pill shadow-premium py-3 fw-bold dark-mode-primary-btn">
                                         <i class="fas fa-save me-2 text-accent-green"></i>Commit Profile Changes
                                     </button>
                                 </div>
@@ -157,81 +165,21 @@
                     </div>
                 </div>
 
-                <!-- 2. Financial Setup -->
-                <div class="tab-pane fade" id="v-pills-finance" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0 d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-university text-accent-green me-2"></i>Treasury & Banking</h5>
-                            <button type="button" class="btn btn-dark-green btn-sm rounded-pill px-4 py-2 shadow-sm fw-bold extra-small" data-bs-toggle="modal" data-bs-target="#bankAccountModal">
-                                <i class="fas fa-plus me-2 text-accent-green"></i> Register Account
-                            </button>
-                        </div>
-                        <div class="card-body p-5">
-                             <!-- Financial Setup Content -->
-                             <div class="table-responsive">
-                                <table class="table table-hover align-middle border-0">
-                                    <thead>
-                                        <tr class="bg-faint-green">
-                                            <th class="border-0 rounded-start-pill ps-4 py-3 extra-small fw-bold text-muted uppercase">Bank Entity</th>
-                                            <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Account Holder</th>
-                                            <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Ledger Number</th>
-                                            <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Status</th>
-                                            <th class="border-0 rounded-end-pill pe-4 py-3 extra-small fw-bold text-muted uppercase">Control</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="border-0">
-                                        @foreach (var account in Model.BankAccounts)
-                                        {
-                                            <tr class="border-bottom border-faint">
-                                                <td class="ps-4 py-4 fw-bold text-dark-green">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="bg-faint-green p-2 rounded-3 me-3 text-dark-green shadow-sm">
-                                                            <i class="fas fa-landmark small"></i>
-                                                        </div>
-                                                        @account.BankName
-                                                    </div>
-                                                </td>
-                                                <td class="fw-bold opacity-75">@account.AccountHolderName</td>
-                                                <td><code class="bg-faint-green p-2 rounded-3 text-dark-green fw-bold">@account.AccountNumber</code></td>
-                                                <td>
-                                                    @if (account.IsPrimary)
-                                                    {
-                                                        <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small fw-bold">Primary</span>
-                                                    }
-                                                    else {
-                                                        <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-2 extra-small fw-bold">Secondary</span>
-                                                    }
-                                                </td>
-                                                <td class="pe-4 text-end">
-                                                    <button class="btn btn-sm btn-faint-green rounded-circle shadow-sm" onclick="editBankAccount(@Json.Serialize(account))">
-                                                        <i class="fas fa-edit text-dark-green"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Security Hub -->
+                <!-- 2. Security Hub -->
                 <div class="tab-pane fade" id="v-pills-security" role="tabpanel">
-                     <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0">
-                            <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-key text-accent-green me-2"></i>Access & Appearance</h5>
+                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden dark-mode-card">
+                        <div class="card-header bg-faint-green py-4 px-5 border-0 dark-mode-card-header">
+                            <h5 class="mb-0 fw-bold text-dark-green dark-mode-text"><i class="fas fa-key text-accent-green me-2"></i>Access & Appearance</h5>
                         </div>
-                        <div class="card-body p-5">
-                            <!-- Security Hub Content -->
-                             <div class="mb-5 p-4 bg-faint-green rounded-5 d-flex align-items-center justify-content-between shadow-inner">
+                        <div class="card-body p-5 dark-mode-card-body">
+                            <div class="mb-5 p-4 bg-faint-green rounded-5 d-flex align-items-center justify-content-between shadow-inner dark-mode-security-box">
                                 <div class="d-flex align-items-center">
-                                    <div class="bg-white p-3 rounded-circle shadow-sm me-4 text-dark-green">
+                                    <div class="bg-white p-3 rounded-circle shadow-sm me-4 text-dark-green dark-mode-icon-box">
                                         <i class="fas fa-moon"></i>
                                     </div>
                                     <div>
-                                        <h6 class="fw-bold text-dark-green mb-1">Visual Mode</h6>
-                                        <p class="text-muted extra-small mb-0 fw-bold">Toggle between Light and Deep Space themes</p>
+                                        <h6 class="fw-bold text-dark-green mb-1 dark-mode-text">Visual Mode</h6>
+                                        <p class="text-muted extra-small mb-0 fw-bold dark-mode-text">Toggle between Light and Deep Space themes</p>
                                     </div>
                                 </div>
                                 <partial name="_ThemeToggle" />
@@ -240,43 +188,42 @@
                             <form asp-action="Settings" method="post">
                                 <div class="row g-4">
                                     <div class="col-md-12">
-                                        <label asp-for="CurrentPassword" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Current Identity Verification</label>
-                                        <input asp-for="CurrentPassword" type="password" class="form-control scm-input" placeholder="Verify current password" />
+                                        <label asp-for="CurrentPassword" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Current Identity Verification</label>
+                                        <input asp-for="CurrentPassword" type="password" class="form-control scm-input dark-mode-input" placeholder="Verify current password" />
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="NewPassword" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">New Access Code</label>
-                                        <input asp-for="NewPassword" type="password" class="form-control scm-input" />
+                                        <label asp-for="NewPassword" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">New Access Code</label>
+                                        <input asp-for="NewPassword" type="password" class="form-control scm-input dark-mode-input" />
                                     </div>
                                     <div class="col-md-6">
-                                        <label asp-for="ConfirmPassword" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Confirm New Access Code</label>
-                                        <input asp-for="ConfirmPassword" type="password" class="form-control scm-input" />
+                                        <label asp-for="ConfirmPassword" class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Confirm New Access Code</label>
+                                        <input asp-for="ConfirmPassword" type="password" class="form-control scm-input dark-mode-input" />
                                     </div>
                                     <div class="col-12 text-end mt-4">
-                                        <button type="submit" class="btn btn-dark-green rounded-pill px-5 py-3 fw-bold shadow-premium">
+                                        <button type="submit" class="btn btn-dark-green rounded-pill px-5 py-3 fw-bold shadow-premium dark-mode-primary-btn">
                                             Update Security Protocol
                                         </button>
                                     </div>
                                 </div>
                             </form>
                         </div>
-                     </div>
+                    </div>
                 </div>
 
-                <!-- 4. Danger Zone -->
+                <!-- 3. Danger Zone -->
                 <div class="tab-pane fade" id="v-pills-danger" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 border-top border-5 border-danger bg-white overflow-hidden">
-                        <div class="card-header bg-soft-danger py-4 px-5 border-0">
+                    <div class="card border-0 shadow-premium rounded-5 border-top border-5 border-danger bg-white overflow-hidden dark-mode-card">
+                        <div class="card-header bg-soft-danger py-4 px-5 border-0 dark-mode-danger-header">
                             <h5 class="mb-0 fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Strategic Termination</h5>
                         </div>
-                        <div class="card-body p-5">
-                            <!-- Danger Zone Content -->
-                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 pb-5 border-bottom border-faint gap-4">
+                        <div class="card-body p-5 dark-mode-card-body">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 pb-5 border-bottom border-faint gap-4 dark-mode-border">
                                 <div class="max-w-500">
-                                    <h6 class="fw-bold text-dark-green mb-2">Corporate Data Export</h6>
-                                    <p class="text-muted small mb-0 fw-bold opacity-75">Generate a complete encrypted archive of your transaction history, staff logs, and financial ledgers.</p>
+                                    <h6 class="fw-bold text-dark-green mb-2 dark-mode-text">Corporate Data Export</h6>
+                                    <p class="text-muted small mb-0 fw-bold opacity-75 dark-mode-text">Generate a complete encrypted archive of your transaction history, staff logs, and financial ledgers.</p>
                                 </div>
                                 <form asp-action="ExportData" method="post">
-                                    <button type="submit" class="btn btn-white border border-faint rounded-pill px-5 py-3 shadow-sm fw-bold text-dark-green">
+                                    <button type="submit" class="btn btn-white border border-faint rounded-pill px-5 py-3 shadow-sm fw-bold text-dark-green dark-mode-export-btn">
                                         <i class="fas fa-download me-2 text-accent-green"></i>Secure Export
                                     </button>
                                 </form>
@@ -285,9 +232,9 @@
                             <div class="d-flex flex-wrap justify-content-between align-items-center gap-4">
                                 <div class="max-w-500">
                                     <h6 class="text-danger fw-bold mb-2">Account Deactivation</h6>
-                                    <p class="text-muted small mb-0 fw-bold opacity-75">Suspend your platform presence. Your catalog and profile will be hidden from retail entities until reactivation.</p>
+                                    <p class="text-muted small mb-0 fw-bold opacity-75 dark-mode-text">Suspend your platform presence. Your catalog and profile will be hidden from retail entities until reactivation.</p>
                                 </div>
-                                <button class="btn btn-danger rounded-pill px-5 py-3 fw-bold shadow-premium" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                                <button class="btn btn-danger rounded-pill px-5 py-3 fw-bold shadow-premium dark-mode-deactivate-btn" data-bs-toggle="modal" data-bs-target="#deactivateModal">
                                     Deactivate Access
                                 </button>
                             </div>
@@ -302,21 +249,21 @@
 <!-- Modal for Deactivation -->
 <div class="modal fade" id="deactivateModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden">
+        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden dark-mode-modal">
             <div class="modal-header border-0 p-5 pb-0">
-                <h5 class="modal-title fw-bold text-danger">Identity Verification Required</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-bold text-danger dark-mode-text">Identity Verification Required</h5>
+                <button type="button" class="btn-close dark-mode-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-5 text-center">
+            <div class="modal-body p-5 text-center dark-mode-modal-body">
                 <div class="bg-soft-danger text-danger rounded-circle p-4 mb-4 d-inline-flex shadow-inner">
                     <i class="fas fa-user-shield fa-3x"></i>
                 </div>
-                <p class="fw-bold text-dark-green mb-4">Please enter your master password to authorize account deactivation.</p>
-                <input type="password" id="deactivatePassword" class="form-control scm-input text-center" placeholder="Master Password" />
+                <p class="fw-bold text-dark-green mb-4 dark-mode-text">Please enter your master password to authorize account deactivation.</p>
+                <input type="password" id="deactivatePassword" class="form-control scm-input text-center dark-mode-input" placeholder="Master Password" />
             </div>
-            <div class="modal-footer border-0 p-5 pt-0">
-                <button type="button" class="btn btn-white rounded-pill px-4 py-2 border fw-bold text-muted" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="confirmDeactivation()">Authorize Deactivation</button>
+            <div class="modal-footer border-0 p-5 pt-0 dark-mode-modal-footer">
+                <button type="button" class="btn btn-white rounded-pill px-4 py-2 border fw-bold text-muted dark-mode-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm dark-mode-confirm-btn" onclick="confirmDeactivation()">Authorize Deactivation</button>
             </div>
         </div>
     </div>
@@ -370,6 +317,196 @@
         .object-fit-cover { object-fit: cover; }
         .animate-slide-up { animation: slideUp 0.6s ease-out; }
         @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ============================================ */
+        /* DARK MODE STYLES - DARK BLUE THEME */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-header {
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-card-body {
+            background-color: #1e293b !important;
+        }
+
+        /* Banner dark mode */
+        body.dark-mode .dark-mode-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #0a0f1c 100%) !important;
+        }
+
+        body.dark-mode .dark-mode-glass-btn {
+            background: rgba(51, 65, 85, 0.5) !important;
+            border-color: #475569 !important;
+        }
+
+        /* Sidebar dark mode */
+        body.dark-mode .dark-mode-sidebar {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-sidebar-header {
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-sidebar-body {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-avatar {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-badge {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-nav-link {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-nav-link.active {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-nav-link-danger {
+            color: #f87171 !important;
+        }
+
+        /* Form inputs dark mode */
+        body.dark-mode .dark-mode-input {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-input:focus {
+            background-color: #3b4a5c !important;
+            border-color: var(--accent-green) !important;
+        }
+
+        body.dark-mode .dark-mode-textarea {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-logo-box {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-icon {
+            color: #64748b !important;
+        }
+
+        body.dark-mode .dark-mode-upload-btn {
+            background-color: #0f172a !important;
+            border-color: #a5f3c3 !important;
+        }
+
+        /* Security box dark mode */
+        body.dark-mode .dark-mode-security-box {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-box {
+            background-color: #1e293b !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Danger zone dark mode */
+        body.dark-mode .dark-mode-danger-header {
+            background-color: rgba(220, 38, 38, 0.1) !important;
+        }
+
+        body.dark-mode .dark-mode-export-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-deactivate-btn {
+            background-color: #dc2626 !important;
+        }
+
+        /* Borders */
+        body.dark-mode .dark-mode-border {
+            border-color: #334155 !important;
+        }
+
+        /* Primary button */
+        body.dark-mode .dark-mode-primary-btn {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-primary-btn:hover {
+            background-color: #1e293b !important;
+        }
+
+        /* Alert dark mode */
+        body.dark-mode .dark-mode-alert {
+            background-color: #0f172a !important;
+        }
+
+        /* Modal dark mode */
+        body.dark-mode .dark-mode-modal {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-modal-body {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-modal-footer {
+            background-color: #1e293b !important;
+            border-top-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-cancel-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-confirm-btn {
+            background-color: #dc2626 !important;
+        }
+
+        body.dark-mode .dark-mode-close {
+            filter: invert(1);
+        }
+
+        /* Text colors */
+        body.dark-mode .text-muted {
+            color: #9ca3af !important;
+        }
+
+        body.dark-mode .text-danger {
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .text-dark-green {
+            color: #a5f3c3 !important;
+        }
     </style>
 }
 
@@ -386,6 +523,18 @@
                     toastr.info("Logo preview updated. Syncing with server...");
                 }
                 reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function confirmDeactivation() {
+            var password = document.getElementById('deactivatePassword').value;
+            if (!password) {
+                alert('Please enter your password to deactivate your account.');
+                return;
+            }
+            // Add your deactivation logic here
+            if (confirm('Are you sure you want to deactivate your account? This action can be reversed.')) {
+                window.location.href = '/Account/Deactivate?password=' + encodeURIComponent(password);
             }
         }
     </script>

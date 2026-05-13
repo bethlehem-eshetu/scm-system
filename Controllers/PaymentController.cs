@@ -22,9 +22,9 @@ namespace SCM_System.Controllers
         private readonly ICommissionService _commissionService;
 
         public PaymentController(
-            ApplicationDbContext context, 
-            IConfiguration config, 
-            IHttpClientFactory httpClientFactory, 
+            ApplicationDbContext context,
+            IConfiguration config,
+            IHttpClientFactory httpClientFactory,
             ILogger<PaymentController> logger,
             IEmailService emailService,
             ICommissionService commissionService)
@@ -59,7 +59,7 @@ namespace SCM_System.Controllers
             // ✅ FIND SHARED TRUTH: The master payment record for this order
             var payment = await _context.Payments
                 .FirstOrDefaultAsync(p => p.OrderId == commission.OrderId);
-            
+
             ViewBag.MasterPayment = payment;
 
             return View(commission);
@@ -313,7 +313,7 @@ namespace SCM_System.Controllers
 
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(c => (c.Order != null && c.Order.OrderNumber.Contains(search)) || 
+                query = query.Where(c => (c.Order != null && c.Order.OrderNumber.Contains(search)) ||
                                        (c.PurchaseOrder != null && c.PurchaseOrder.PONumber.Contains(search)));
             }
 
@@ -381,7 +381,7 @@ namespace SCM_System.Controllers
 
                 using var doc = JsonDocument.Parse(jsonString);
                 var root = doc.RootElement;
-                
+
                 var txRef = root.TryGetProperty("tx_ref", out var txRefProp) ? txRefProp.GetString() : null;
                 var status = root.TryGetProperty("status", out var statusProp) ? statusProp.GetString() : null;
 
@@ -448,5 +448,169 @@ namespace SCM_System.Controllers
             _context.DeadLetterWebhooks.Add(deadLetter);
             await _context.SaveChangesAsync();
         }
+   
+
+    // Add to PaymentController.cs
+
+[HttpPost]
+        public async Task<IActionResult> InitializeDepositPayment(int orderId)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.Retailer)
+                        .ThenInclude(r => r.User)
+                    .Include(o => o.Supplier)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                    return NotFound();
+
+                var depositAmount = order.TotalAmount * 0.5m;
+                var tx_ref = $"DEPOSIT-{order.Id}-{DateTime.Now.Ticks}";
+
+                var secretKey = _config["Chapa:SecretKey"];
+                var baseUrl = _config["Chapa:BaseUrl"] ?? "https://api.chapa.co/v1";
+
+                var payload = new
+                {
+                    amount = depositAmount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                    currency = "ETB",
+                    email = order.Retailer?.User?.Email ?? "retailer@example.com",
+                    first_name = order.Retailer?.BusinessName ?? "Retailer",
+                    last_name = "Retailer",
+                    tx_ref = tx_ref,
+                    callback_url = $"{Request.Scheme}://{Request.Host}/Payment/VerifyDeposit?tx_ref={tx_ref}",
+                    return_url = $"{Request.Scheme}://{Request.Host}/Order/Details/{order.Id}",
+                    customization = new
+                    {
+                        title = "Order Deposit",
+                        description = $"Deposit for Order {order.OrderNumber}"
+                    }
+                };
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await client.PostAsync($"{baseUrl}/transaction/initialize", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                using var doc = JsonDocument.Parse(responseContent);
+                var root = doc.RootElement;
+
+                string status = "error";
+                if (root.TryGetProperty("status", out var statusElement))
+                {
+                    status = statusElement.ValueKind == JsonValueKind.String ? statusElement.GetString() : statusElement.GetRawText();
+                }
+
+                if (status == "success")
+                {
+                    var checkoutUrl = root.GetProperty("data").GetProperty("checkout_url").GetString();
+
+                    // Store deposit info
+                    var depositRecord = new DepositRecord
+                    {
+                        OrderId = order.Id,
+                        Amount = depositAmount,
+                        TransactionRef = tx_ref,
+                        Status = "Pending",
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.DepositRecords.Add(depositRecord);
+                    await _context.SaveChangesAsync();
+
+                    return Redirect(checkoutUrl);
+                }
+
+                string msg = "Unknown error";
+                if (root.TryGetProperty("message", out var msgElement))
+                {
+                    msg = msgElement.ValueKind == JsonValueKind.String ? msgElement.GetString() : msgElement.GetRawText();
+                }
+                
+                TempData["ErrorMessage"] = $"Failed to initialize deposit payment: {msg} (Raw: {responseContent})";
+                return RedirectToAction("Details", "Order", new { id = orderId });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Initialization Error: {ex.Message}";
+                return RedirectToAction("Details", "Order", new { id = orderId });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VerifyDeposit(string tx_ref)
+        {
+            int orderId = 0;
+            try
+            {
+                var parts = tx_ref.Split('-');
+                if (parts.Length >= 2)
+                {
+                    int.TryParse(parts[1], out orderId);
+                }
+                var depositRecord = await _context.DepositRecords
+                    .FirstOrDefaultAsync(d => d.TransactionRef == tx_ref);
+
+                if (depositRecord == null)
+                {
+                    TempData["ErrorMessage"] = "Deposit record not found";
+                    return RedirectToAction("OrderDetails", "Order", new { id = orderId });
+                }
+
+                var secretKey = _config["Chapa:SecretKey"];
+                var baseUrl = _config["Chapa:BaseUrl"];
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+                var response = await client.GetAsync($"{baseUrl}/transaction/verify/{tx_ref}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                using var doc = JsonDocument.Parse(responseContent);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("data", out var dataElement))
+                {
+                    if (dataElement.TryGetProperty("status", out var statusElement))
+                    {
+                        var paymentStatus = statusElement.GetString();
+                        if (paymentStatus == "success")
+                        {
+                            depositRecord.Status = "Paid";
+                            depositRecord.PaidAt = DateTime.Now;
+
+                            // Update order payment status
+                            var order = await _context.Orders.FindAsync(orderId);
+                            if (order != null)
+                            {
+                                order.PaymentStatus = "PartialPaid";
+                                order.OrderStatus = "Picking"; // Move to picking after deposit
+                                await _context.SaveChangesAsync();
+                            }
+
+                            TempData["SuccessMessage"] = $"Deposit of {depositRecord.Amount:C} paid successfully! Your order is now confirmed.";
+                        }
+                        else
+                        {
+                            depositRecord.Status = "Failed";
+                            await _context.SaveChangesAsync();
+                            TempData["ErrorMessage"] = "Deposit payment verification failed.";
+                        }
+                    }
+                }
+
+                return RedirectToAction("Details", "Order", new { id = orderId });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Verification error: {ex.Message}";
+                return RedirectToAction("Details", "Order", new { id = orderId });
+            }
+        }
     }
-}
+    }

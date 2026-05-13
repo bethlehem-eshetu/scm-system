@@ -181,3 +181,4 @@ Stack:    at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b
    at SCM_System.Controllers.AccountController.Register(RegisterViewModel model) in C:\SCM_System\Controllers\AccountController.cs:line 228
 [FILE VALIDATION] FileName: 'Screenshot 2024-11-04 100536.png' -> Extension: '.png'
 [FILE VALIDATION] FileName: 'download.png' -> Extension: '.png'
+[FILE VALIDATION] FileName: 'Screenshot 2025-12-20 104722.png' -> Extension: '.png'

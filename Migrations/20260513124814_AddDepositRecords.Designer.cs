@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SCM_System.Data;
 
@@ -11,9 +12,11 @@ using SCM_System.Data;
 namespace SCM_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513124814_AddDepositRecords")]
+    partial class AddDepositRecords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -471,53 +474,6 @@ namespace SCM_System.Migrations
                         .IsUnique();
 
                     b.ToTable("Deliveries");
-                });
-
-            modelBuilder.Entity("SCM_System.Models.Entities.DeliveryRating", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Communication")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DriverEmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Professionalism")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PurchaseOrderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RetailerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Timeliness")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VehicleCondition")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DriverEmployeeId");
-
-                    b.HasIndex("PurchaseOrderId");
-
-                    b.HasIndex("RetailerId");
-
-                    b.ToTable("DeliveryRatings");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryTracking", b =>
@@ -4946,33 +4902,6 @@ namespace SCM_System.Migrations
                     b.Navigation("DeliveryEmployee");
 
                     b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("SCM_System.Models.Entities.DeliveryRating", b =>
-                {
-                    b.HasOne("SCM_System.Models.Entities.SupplierEmployee", "DriverEmployee")
-                        .WithMany()
-                        .HasForeignKey("DriverEmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
-                        .WithMany()
-                        .HasForeignKey("RetailerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DriverEmployee");
-
-                    b.Navigation("PurchaseOrder");
-
-                    b.Navigation("Retailer");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryTracking", b =>

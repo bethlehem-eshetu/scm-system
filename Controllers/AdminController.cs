@@ -1743,7 +1743,7 @@ namespace SCM_System.Controllers
         }
 
         // NEW ROUTES for Admin Modernization
-        // GET: /Admin/CommissionOverview
+        // GET: /Admin/CommissionOverview  (Financial Dashboard)
         public async Task<IActionResult> CommissionOverview()
         {
             if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
@@ -1754,31 +1754,43 @@ namespace SCM_System.Controllers
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            // High-Level KPIs
+            // ── Primary KPIs ──
             ViewBag.GrossSales = commissions.Where(c => c.PaymentType == "OrderPayment" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.OrderAmount);
             ViewBag.PlatformRevenue = commissions.Where(c => c.PaymentType == "PlatformCommission" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.CommissionAmount);
             ViewBag.SupplierPayables = commissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == PaymentStatus.Pending.ToString()).Sum(c => c.CommissionAmount);
             ViewBag.FailedPayments = commissions.Where(c => c.Status == PaymentStatus.Failed.ToString()).Count();
 
-            // Chart Data: Status Breakdown
+            // ── Merged KPIs from FinancialReports ──
+            ViewBag.TotalOrderValue = await _context.Orders.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            ViewBag.PendingCommissionsValue = commissions.Where(c => c.Status == PaymentStatus.Pending.ToString()).Sum(c => c.CommissionAmount);
+            ViewBag.TotalPayouts = commissions.Where(c => c.PaymentType == "SupplierPayout" && c.Status == PaymentStatus.Paid.ToString()).Sum(c => c.CommissionAmount);
+
+            // ── Chart: Status Breakdown (doughnut) ──
             var statusGroups = commissions.GroupBy(c => c.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToList();
             ViewBag.StatusLabels = statusGroups.Select(g => g.Status).ToArray();
             ViewBag.StatusCounts = statusGroups.Select(g => g.Count).ToArray();
 
-            // Chart Data: Revenue Trend (Last 30 Days)
-            var thirtyDaysAgo = DateTime.Now.AddDays(-30);
-            var trendData = commissions
-                .Where(c => c.PaymentType == "PlatformCommission" && c.PaidAt >= thirtyDaysAgo)
-                .GroupBy(c => c.PaidAt.Value.Date)
-                .Select(g => new { Date = g.Key.ToString("MMM dd"), Amount = g.Sum(c => c.CommissionAmount) })
-                .OrderBy(g => g.Date)
+            // ── Chart: Monthly Revenue Trend (last 6 months) ──
+            var last6Months = Enumerable.Range(0, 6)
+                .Select(i => DateTime.Now.AddMonths(-i))
+                .OrderBy(d => d)
                 .ToList();
-            ViewBag.TrendLabels = trendData.Select(g => g.Date).ToArray();
-            ViewBag.TrendAmounts = trendData.Select(g => g.Amount).ToArray();
+            var monthlyLabels = new List<string>();
+            var monthlyAmounts = new List<decimal>();
+            foreach (var month in last6Months)
+            {
+                var revenue = commissions
+                    .Where(c => c.Status == PaymentStatus.Paid.ToString() && c.PaidAt.HasValue && c.PaidAt.Value.Month == month.Month && c.PaidAt.Value.Year == month.Year)
+                    .Sum(c => c.CommissionAmount);
+                monthlyLabels.Add(month.ToString("MMM yyyy"));
+                monthlyAmounts.Add(revenue);
+            }
+            ViewBag.TrendLabels = monthlyLabels.ToArray();
+            ViewBag.TrendAmounts = monthlyAmounts.ToArray();
 
-            // Top Suppliers
+            // ── Top Suppliers ──
             ViewBag.TopSuppliers = commissions
                 .Where(c => c.PaymentType == "PlatformCommission")
                 .GroupBy(c => c.Supplier?.CompanyName ?? "Unknown")
@@ -1790,10 +1802,11 @@ namespace SCM_System.Controllers
             return View(commissions);
         }
 
-        // GET: /Admin/Transactions
-        public async Task<IActionResult> Transactions()
+        // GET: /Admin/Transactions  (Transaction Ledger)
+        public async Task<IActionResult> Transactions(string type = "")
         {
             if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
+            ViewBag.InitialTypeFilter = type ?? "";
             var transactions = await _context.Commissions
                 .Include(c => c.Retailer)
                 .Include(c => c.Supplier)
@@ -1802,79 +1815,16 @@ namespace SCM_System.Controllers
             return View(transactions);
         }
 
-        // GET: /Admin/Payouts
-        public async Task<IActionResult> Payouts()
+        // GET: /Admin/Payouts  (DEPRECATED → redirects to Transaction Ledger)
+        public IActionResult Payouts()
         {
-            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
-            var payouts = await _context.Commissions
-                .Include(c => c.Supplier)
-                .Where(c => c.PaymentType == "SupplierPayout")
-                .OrderByDescending(c => c.CreatedAt)
-                .ToListAsync();
-            return View(payouts);
+            return RedirectToAction("Transactions", new { type = "SupplierPayout" });
         }
 
-        // GET: /Admin/FinancialReports
-        public async Task<IActionResult> FinancialReports()
+        // GET: /Admin/FinancialReports  (DEPRECATED → redirects to Financial Dashboard)
+        public IActionResult FinancialReports()
         {
-            if (!await IsAdminAndPopulateNotifications()) return RedirectToAction("Login", "Account");
-
-            try
-            {
-                // Summary Metrics
-                ViewBag.TotalRevenue = await _context.Commissions
-                    .Where(c => c.Status == "Paid")
-                    .SumAsync(c => (decimal?)c.CommissionAmount) ?? 0;
-
-                ViewBag.TotalOrderValue = await _context.Orders
-                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-
-                ViewBag.PendingCommissionsValue = await _context.Commissions
-                    .Where(c => c.Status == "Pending")
-                    .SumAsync(c => (decimal?)c.CommissionAmount) ?? 0;
-
-                ViewBag.TotalPayouts = await _context.Commissions
-                    .Where(c => c.SupplierPayoutStatus == "Processed")
-                    .SumAsync(c => (decimal?)c.SupplierPayoutAmount) ?? 0;
-
-                // Monthly Data for Chart (Last 6 Months)
-                var last6Months = Enumerable.Range(0, 6)
-                    .Select(i => DateTime.Now.AddMonths(-i))
-                    .OrderBy(d => d)
-                    .ToList();
-
-                var monthlyData = new List<decimal>();
-                var labels = new List<string>();
-
-                foreach (var month in last6Months)
-                {
-                    var revenue = await _context.Commissions
-                        .Where(c => c.Status == "Paid" && c.PaidAt.HasValue && c.PaidAt.Value.Month == month.Month && c.PaidAt.Value.Year == month.Year)
-                        .SumAsync(c => (decimal?)c.CommissionAmount) ?? 0;
-                    
-                    monthlyData.Add(revenue);
-                    labels.Add(month.ToString("MMM yyyy"));
-                }
-
-                ViewBag.ChartLabels = labels;
-                ViewBag.ChartData = monthlyData;
-
-                // Recent Financial Movements
-                var recentFinancials = await _context.Commissions
-                    .Include(c => c.Supplier)
-                    .Include(c => c.Order)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Take(10)
-                    .ToListAsync();
-
-                return View(recentFinancials);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "FinancialReports Error");
-                TempData["ErrorMessage"] = "Error loading financial data.";
-                return View(new List<Commission>());
-            }
+            return RedirectToAction("CommissionOverview");
         }
 
         // GET: /Admin/ExportCommissions

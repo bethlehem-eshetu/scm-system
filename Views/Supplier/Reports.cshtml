@@ -7,29 +7,29 @@
 
 <div class="container-fluid py-4">
     <div class="mb-4">
-        <h3 class="fw-bold text-primary mb-1"><i class="fas fa-chart-pie me-2"></i>Business Intelligence</h3>
-        <p class="text-muted">Aggregate operational data and financial performance analytics</p>
+        <h3 class="fw-bold text-primary mb-1 dark-mode-text"><i class="fas fa-chart-pie me-2"></i>Business Intelligence</h3>
+        <p class="text-muted dark-mode-text">Your business performance at a glance</p>
     </div>
 
     <!-- Tabbed Navigation -->
-    <ul class="nav nav-pills nav-fill gap-2 p-1 bg-light rounded-pill mb-4 border shadow-sm" id="reportTabs" role="tablist">
+    <ul class="nav nav-pills nav-fill gap-2 p-1 bg-light rounded-pill mb-4 border shadow-sm dark-mode-tabs" id="reportTabs" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#warehouse">
+            <button class="nav-link active rounded-pill px-4 dark-mode-tab" data-bs-toggle="pill" data-bs-target="#warehouse">
                 <i class="fas fa-warehouse me-2"></i>Warehouse
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#inventory">
+            <button class="nav-link rounded-pill px-4 dark-mode-tab" data-bs-toggle="pill" data-bs-target="#inventory">
                 <i class="fas fa-boxes me-2"></i>Inventory
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#delivery">
+            <button class="nav-link rounded-pill px-4 dark-mode-tab" data-bs-toggle="pill" data-bs-target="#delivery">
                 <i class="fas fa-shipping-fast me-2"></i>Delivery
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#finance">
+            <button class="nav-link rounded-pill px-4 dark-mode-tab" data-bs-toggle="pill" data-bs-target="#finance">
                 <i class="fas fa-hand-holding-usd me-2"></i>Finance
             </button>
         </li>
@@ -40,60 +40,60 @@
         <div class="tab-pane fade show active" id="warehouse">
             <div class="row g-4">
                 <div class="col-xl-4 col-md-6 text-center">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Orders Processed</p>
-                        <h2 class="fw-bold text-primary mb-0">@Model.WarehousePerformance.TotalOrdersProcessed</h2>
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 dark-mode-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1 dark-mode-text">Orders Processed</p>
+                        <h2 class="fw-bold text-primary mb-0 dark-mode-text">@Model.WarehousePerformance.TotalOrdersProcessed</h2>
                         <div class="mt-3">
-                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">+15% from last month</span>
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 dark-mode-badge">+15% from last month</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-4 col-md-6 text-center">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Items Categorized</p>
-                        <h2 class="fw-bold text-success mb-0">@Model.WarehousePerformance.TotalItemsPacked</h2>
-                        <p class="text-muted small mt-2 mb-0">Across all warehouses</p>
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 dark-mode-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1 dark-mode-text">Items Packed</p>
+                        <h2 class="fw-bold text-success mb-0 dark-mode-text">@Model.WarehousePerformance.TotalItemsPacked</h2>
+                        <p class="text-muted small mt-2 mb-0 dark-mode-text">Across all warehouses</p>
                     </div>
                 </div>
                 <div class="col-xl-4 col-md-12 text-center">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Avg. Processing Time</p>
-                        <h2 class="fw-bold text-warning mb-0">@Model.WarehousePerformance.AvgProcessingTimeHours h</h2>
-                        <p class="text-muted small mt-2 mb-0 text-decoration-underline cursor-pointer">View Bottlenecks</p>
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 dark-mode-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1 dark-mode-text">Avg. Processing Time</p>
+                        <h2 class="fw-bold text-warning mb-0 dark-mode-text">@Model.WarehousePerformance.AvgProcessingTimeHours h</h2>
+                        <a href="#" class="text-muted small mt-2 d-block text-decoration-none dark-mode-link" data-bs-toggle="modal" data-bs-target="#bottleneckModal">View Bottlenecks</a>
                     </div>
                 </div>
 
                 <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                        <div class="card-header bg-transparent border-0 p-4">
-                            <h5 class="fw-bold mb-0">Warehouse Efficiency Breakdown</h5>
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden dark-mode-card">
+                        <div class="card-header bg-transparent border-0 p-4 dark-mode-card-header">
+                            <h5 class="fw-bold mb-0 dark-mode-text">Warehouse Performance</h5>
                         </div>
-                        <div class="table-responsive px-4 pb-4">
-                            <table class="table align-middle">
-                                <thead class="table-light">
+                        <div class="table-responsive px-4 pb-4 dark-mode-table-wrapper">
+                            <table class="table align-middle dark-mode-table">
+                                <thead class="table-light dark-mode-thead">
                                     <tr>
-                                        <th>Warehouse</th>
-                                        <th>Total Volume</th>
-                                        <th>Efficiency Rating</th>
-                                        <th class="text-end">Status</th>
+                                        <th class="dark-mode-text">Warehouse</th>
+                                        <th class="dark-mode-text">Total Orders</th>
+                                        <th class="dark-mode-text">Efficiency Rating</th>
+                                        <th class="text-end dark-mode-text">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="dark-mode-tbody">
                                     @foreach (var w in Model.WarehousePerformance.WarehouseStats)
                                     {
-                                        <tr>
-                                            <td class="fw-bold">@w.WarehouseName</td>
-                                            <td>@w.Orders Orders</td>
+                                        <tr class="dark-mode-row">
+                                            <td class="fw-bold dark-mode-text">@w.WarehouseName</td>
+                                            <td class="dark-mode-text">@w.Orders Orders</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <span class="me-2 fw-bold">@w.Efficiency%</span>
-                                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                                    <span class="me-2 fw-bold dark-mode-text">@w.Efficiency%</span>
+                                                    <div class="progress flex-grow-1 dark-mode-progress" style="height: 6px;">
                                                         <div class="progress-bar bg-primary" style="width: @w.Efficiency%"></div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="text-end">
-                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border">Optimal</span>
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 dark-mode-status-badge">Active</span>
                                             </td>
                                         </tr>
                                     }
@@ -109,53 +109,69 @@
         <div class="tab-pane fade" id="inventory">
             <div class="row g-4">
                 <div class="col-xl-4 col-md-6">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white h-100">
-                        <h6 class="text-white-50 small fw-bold text-uppercase">Total Catalog Size</h6>
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white h-100 dark-mode-primary-card">
+                        <h6 class="text-white-50 small fw-bold text-uppercase">Total Products</h6>
                         <h1 class="fw-bold">@Model.Inventory.TotalProducts</h1>
-                        <p class="mb-0 mt-3 opacity-75">Active unique items in system</p>
+                        <p class="mb-0 mt-3 opacity-75">Active items in your catalog</p>
                     </div>
                 </div>
                 <div class="col-xl-4 col-md-6">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-warning text-dark h-100">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-warning text-dark h-100 dark-mode-warning-card">
                         <h6 class="text-dark-50 small fw-bold text-uppercase">Low Stock Alerts</h6>
                         <h1 class="fw-bold">@Model.Inventory.LowStockAlerts</h1>
-                        <a href="#" class="btn btn-dark btn-sm rounded-pill mt-2">Restock Now</a>
+                        <a asp-action="LowStock" asp-controller="Inventory" class="btn btn-dark btn-sm rounded-pill mt-2 dark-mode-action-btn">
+                            <i class="fas fa-boxes me-1"></i> View Low Stock
+                        </a>
                     </div>
                 </div>
                 <div class="col-xl-4 col-md-12 text-center">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-danger text-white h-100">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-danger text-white h-100 dark-mode-danger-card">
                         <h6 class="text-white-50 small fw-bold text-uppercase">Out of Stock</h6>
                         <h1 class="fw-bold">@Model.Inventory.OutOfStockItems</h1>
-                        <p class="mb-0 mt-3 opacity-75">Immediate action required</p>
+                        <p class="mb-0 mt-3 opacity-75">Needs immediate attention</p>
                     </div>
                 </div>
 
                 <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                        <div class="card-header bg-transparent border-0 p-4">
-                            <h5 class="fw-bold mb-0">Replenishment Priority (Top 5)</h5>
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden dark-mode-card">
+                        <div class="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center dark-mode-card-header">
+                            <h5 class="fw-bold mb-0 dark-mode-text">Restock Priority (Top 5)</h5>
+                            <a asp-action="InventoryList" asp-controller="Supplier" class="btn btn-outline-primary btn-sm rounded-pill dark-mode-outline-btn">
+                                View All Products
+                            </a>
                         </div>
-                        <div class="table-responsive px-4 pb-4">
-                            <table class="table align-middle">
-                                <thead class="table-light">
+                        <div class="table-responsive px-4 pb-4 dark-mode-table-wrapper">
+                            <table class="table align-middle dark-mode-table">
+                                <thead class="table-light dark-mode-thead">
                                     <tr>
-                                        <th>Product Name</th>
-                                        <th>Current Stock</th>
-                                        <th>Reserved</th>
-                                        <th>Warehouse</th>
-                                        <th class="text-end">Action</th>
+                                        <th class="dark-mode-text">Product Name</th>
+                                        <th class="dark-mode-text">Current Stock</th>
+                                        <th class="dark-mode-text">Reserved</th>
+                                        <th class="dark-mode-text">Available</th>
+                                        <th class="dark-mode-text">Warehouse</th>
+                                        <th class="text-end dark-mode-text">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @foreach (var item in Model.Inventory.TopLowStockItems)
+                                <tbody class="dark-mode-tbody">
+                                    @for (int i = 0; i < Model.Inventory.TopLowStockItems.Count; i++)
                                     {
-                                        <tr>
-                                            <td class="fw-bold text-danger">@item.ProductName</td>
-                                            <td>@item.Stock Units</td>
-                                            <td>@item.Reserved Units</td>
-                                            <td>@item.Warehouse</td>
+                                        var item = Model.Inventory.TopLowStockItems[i];
+                                        var productIndex = i;
+                                        <tr class="dark-mode-row">
+                                            <td class="fw-bold text-danger dark-mode-danger-text">@item.ProductName</td>
+                                            <td><span class="badge bg-danger rounded-pill px-3 dark-mode-danger-badge">@item.Stock left</span></td>
+                                            <td class="dark-mode-text">@item.Reserved Units</td>
+                                            <td class="dark-mode-text">@(item.Stock - item.Reserved) available</td>
+                                            <td class="dark-mode-text">@item.Warehouse</td>
                                             <td class="text-end">
-                                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3">Create PO</button>
+                                                <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 dark-mode-action-btn" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#restockModal" 
+                                                        data-product-name="@item.ProductName"
+                                                        data-product-index="@productIndex"
+                                                        data-current-stock="@item.Stock">
+                                                    <i class="fas fa-truck me-1"></i> Order More
+                                                </button>
                                             </td>
                                         </tr>
                                     }
@@ -171,24 +187,24 @@
         <div class="tab-pane fade" id="delivery">
             <div class="row g-4">
                 <div class="col-md-4 text-center">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 dark-mode-card">
                         <i class="fas fa-clock fa-2x text-primary mb-3"></i>
-                        <h4 class="fw-bold mb-1">@Model.Delivery.OnTimeRate%</h4>
-                        <p class="text-muted small mb-0">On-Time Delivery Rate</p>
+                        <h4 class="fw-bold mb-1 dark-mode-text">@Model.Delivery.OnTimeRate%</h4>
+                        <p class="text-muted small mb-0 dark-mode-text">On-Time Delivery</p>
                     </div>
                 </div>
                 <div class="col-md-4 text-center">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 dark-mode-card">
                         <i class="fas fa-history fa-2x text-danger mb-3"></i>
-                        <h4 class="fw-bold mb-1">@Model.Delivery.DelayedDeliveries</h4>
-                        <p class="text-muted small mb-0">Detected Delays</p>
+                        <h4 class="fw-bold mb-1 dark-mode-text">@Model.Delivery.DelayedDeliveries</h4>
+                        <p class="text-muted small mb-0 dark-mode-text">Delayed Deliveries</p>
                     </div>
                 </div>
                 <div class="col-md-4 text-center">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 dark-mode-card">
                         <i class="fas fa-check-double fa-2x text-success mb-3"></i>
-                        <h4 class="fw-bold mb-1">@Model.Delivery.CompletedDeliveries</h4>
-                        <p class="text-muted small mb-0">Total Success Feed</p>
+                        <h4 class="fw-bold mb-1 dark-mode-text">@Model.Delivery.CompletedDeliveries</h4>
+                        <p class="text-muted small mb-0 dark-mode-text">Completed Deliveries</p>
                     </div>
                 </div>
             </div>
@@ -198,27 +214,143 @@
         <div class="tab-pane fade" id="finance">
             <div class="row g-4">
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-primary border-5">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Gross Sales</p>
-                        <h3 class="fw-bold mb-0">@Model.Finance.TotalRevenue.ToString("C0")</h3>
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-primary border-5 dark-mode-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1 dark-mode-text">Total Sales</p>
+                        <h3 class="fw-bold mb-0 dark-mode-text">@Model.Finance.TotalRevenue.ToString("C0")</h3>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-warning border-5">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Pending Release</p>
-                        <h3 class="fw-bold mb-0">@Model.Finance.PendingPayments.ToString("C0")</h3>
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-warning border-5 dark-mode-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1 dark-mode-text">Pending Payments</p>
+                        <h3 class="fw-bold mb-0 dark-mode-text">@Model.Finance.PendingPayments.ToString("C0")</h3>
+                        <a asp-action="FinancialSettlements" asp-controller="Payment" class="small mt-2 d-block dark-mode-link">View details</a>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-danger border-5">
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Commission Due</p>
-                        <h3 class="fw-bold mb-0">@Model.Finance.CommissionDue.ToString("C0")</h3>
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-start border-danger border-5 dark-mode-card">
+                        <p class="text-muted small fw-bold text-uppercase mb-1 dark-mode-text">Commission Due</p>
+                        <h3 class="fw-bold mb-0 dark-mode-text">@Model.Finance.CommissionDue.ToString("C0")</h3>
                     </div>
                 </div>
-                
-                <div class="col-12 mt-4 text-center">
-                    <img src="~/images/placeholder-chart-revenue.png" class="img-fluid rounded-4 shadow-sm border" style="max-height: 400px; width: 100%; object-fit: cover;" alt="Financial Trends" />
-                    <p class="text-muted mt-2 small">Monthly Revenue Distribution Visualization</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RESTOCK MODAL -->
+<div class="modal fade" id="restockModal" tabindex="-1" aria-labelledby="restockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg dark-mode-modal">
+            <div class="modal-header border-0 bg-danger text-white rounded-top-4">
+                <h5 class="modal-title fw-bold" id="restockModalLabel">
+                    <i class="fas fa-truck me-2"></i>Order More Stock
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="CreatePurchaseOrder" asp-controller="Order" method="post" id="restockForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4 dark-mode-modal-body">
+                    <input type="hidden" name="productName" id="modalProductNameField" />
+                    
+                    <div class="alert alert-warning bg-warning bg-opacity-10 border-0 rounded-4 mb-4 dark-mode-alert">
+                        <div class="d-flex">
+                            <i class="fas fa-exclamation-triangle text-warning fs-5 me-3"></i>
+                            <div>
+                                <strong class="d-block dark-mode-text">Product Running Low!</strong>
+                                <span id="modalStockWarning" class="small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark mb-2 dark-mode-text">Product</label>
+                        <div class="bg-light rounded-4 p-3 dark-mode-product-box">
+                            <i class="fas fa-box text-primary me-2"></i>
+                            <span id="modalProductDisplay" class="fw-bold dark-mode-text"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark mb-2 dark-mode-text">How many to order?</label>
+                        <div class="input-group">
+                            <button type="button" class="btn btn-outline-secondary dark-mode-qty-btn" onclick="decrementQty()">-</button>
+                            <input type="number" name="quantity" id="orderQuantity" class="form-control text-center fw-bold dark-mode-qty-input" style="max-width: 120px;" min="1" value="100" required />
+                            <button type="button" class="btn btn-outline-secondary dark-mode-qty-btn" onclick="incrementQty()">+</button>
+                            <span class="input-group-text bg-light dark-mode-input-group">units</span>
+                        </div>
+                        <small class="text-muted mt-2 d-block dark-mode-text">Suggested: Order at least 50 units</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark mb-2 dark-mode-text">How urgent?</label>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <div class="form-check">
+                                <input class="form-check-input dark-mode-radio" type="radio" name="priority" id="priorityHigh" value="High">
+                                <label class="form-check-label dark-mode-text" for="priorityHigh">
+                                    <span class="badge bg-danger rounded-pill px-3">🔴 High - Need now</span>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input dark-mode-radio" type="radio" name="priority" id="priorityMedium" value="Medium" checked>
+                                <label class="form-check-label dark-mode-text" for="priorityMedium">
+                                    <span class="badge bg-warning rounded-pill px-3">🟡 Medium - This week</span>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input dark-mode-radio" type="radio" name="priority" id="priorityLow" value="Low">
+                                <label class="form-check-label dark-mode-text" for="priorityLow">
+                                    <span class="badge bg-success rounded-pill px-3">🟢 Low - Next month</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark mb-2 dark-mode-text">Notes (optional)</label>
+                        <textarea name="notes" class="form-control rounded-4 dark-mode-textarea" rows="2" placeholder="Any special instructions for this order..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light rounded-bottom-4 p-3 dark-mode-modal-footer">
+                    <button type="button" class="btn btn-light rounded-pill px-4 dark-mode-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 dark-mode-submit-btn">
+                        <i class="fas fa-check-circle me-2"></i>Create Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTLENECK MODAL -->
+<div class="modal fade" id="bottleneckModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg dark-mode-modal">
+            <div class="modal-header border-0 bg-primary text-white rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-chart-line me-2"></i>Processing Bottlenecks</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 dark-mode-modal-body">
+                <div class="d-flex align-items-center mb-3 p-3 bg-light rounded-4 dark-mode-bottleneck-item">
+                    <i class="fas fa-warehouse text-primary fs-4 me-3"></i>
+                    <div class="flex-grow-1">
+                        <strong class="dark-mode-text">Addis Hub</strong>
+                        <div class="progress mt-2 dark-mode-progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger" style="width: 65%">65% load</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3 p-3 bg-light rounded-4 dark-mode-bottleneck-item">
+                    <i class="fas fa-warehouse text-primary fs-4 me-3"></i>
+                    <div class="flex-grow-1">
+                        <strong class="dark-mode-text">Bole Warehouse</strong>
+                        <div class="progress mt-2 dark-mode-progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" style="width: 40%">40% load</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 bg-danger bg-opacity-10 rounded-4 mt-3 dark-mode-recommendation">
+                    <i class="fas fa-lightbulb text-danger me-2"></i>
+                    <small class="text-danger dark-mode-text">Recommendation: Add second shift at Addis Hub</small>
                 </div>
             </div>
         </div>
@@ -233,11 +365,315 @@
             transition: all 0.3s;
         }
         .nav-pills .nav-link.active {
-            background-color: var(--primary-color) !important;
+            background-color: #0d6efd !important;
             box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
         }
-        .card { transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .cursor-pointer { cursor: pointer; }
+        .card { 
+            transition: transform 0.2s; 
+        }
+        .card:hover { 
+            transform: translateY(-5px); 
+        }
+        
+        /* Modal animations */
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @@keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Number input spinner removal */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* ============================================ */
+        /* DARK MODE STYLES - DARK BLUE THEME ONLY */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-header {
+            background-color: #1e293b !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Keep original card colors for KPI cards */
+        body.dark-mode .dark-mode-primary-card {
+            background-color: #1e3a5f !important;
+        }
+
+        body.dark-mode .dark-mode-warning-card {
+            background-color: #854d0e !important;
+        }
+
+        body.dark-mode .dark-mode-danger-card {
+            background-color: #7f1d1d !important;
+        }
+
+        /* Tabs dark mode */
+        body.dark-mode .dark-mode-tabs {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-tab {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-tab.active {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Table dark mode styles - FIXED FOR BOTH TABLES */
+        body.dark-mode .dark-mode-table-wrapper {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-table {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-thead {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-thead th {
+            color: #cbd5e1 !important;
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr:hover {
+            background-color: #2d3a4a !important;
+        }
+
+        body.dark-mode .dark-mode-row td {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Progress bar dark mode */
+        body.dark-mode .dark-mode-progress {
+            background-color: #334155 !important;
+        }
+
+        /* Badges dark mode */
+        body.dark-mode .dark-mode-badge {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-status-badge {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-danger-badge {
+            background-color: #7f1d1d !important;
+            color: #fca5a5 !important;
+        }
+
+        body.dark-mode .dark-mode-danger-text {
+            color: #fca5a5 !important;
+        }
+
+        /* Buttons dark mode */
+        body.dark-mode .dark-mode-action-btn {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+            border: none !important;
+        }
+
+        body.dark-mode .dark-mode-outline-btn {
+            background-color: transparent !important;
+            color: #93c5fd !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-link {
+            color: #93c5fd !important;
+        }
+
+        /* Modal dark mode */
+        body.dark-mode .dark-mode-modal {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-modal-body {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-modal-footer {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-alert {
+            background-color: rgba(251, 191, 36, 0.15) !important;
+        }
+
+        body.dark-mode .dark-mode-product-box {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-qty-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-qty-input {
+            background-color: #1e293b !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-input-group {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-radio {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-textarea {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-cancel-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-submit-btn {
+            background-color: #dc2626 !important;
+        }
+
+        /* Bottleneck modal dark mode */
+        body.dark-mode .dark-mode-bottleneck-item {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-recommendation {
+            background-color: rgba(220, 38, 38, 0.15) !important;
+        }
+
+        /* Text colors */
+        body.dark-mode .text-muted {
+            color: #9ca3af !important;
+        }
+
+        body.dark-mode .text-primary {
+            color: #93c5fd !important;
+        }
+
+        body.dark-mode .text-success {
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .text-warning {
+            color: #fbbf24 !important;
+        }
+
+        body.dark-mode .text-danger {
+            color: #f87171 !important;
+        }
     </style>
+}
+
+@section Scripts {
+    <script>
+        // ============================================
+        // RESTOCK MODAL SCRIPT - Pass product data to modal
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const restockModal = document.getElementById('restockModal');
+            
+            if (restockModal) {
+                restockModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const productName = button.getAttribute('data-product-name');
+                    const currentStock = button.getAttribute('data-current-stock');
+                    
+                    document.getElementById('modalProductDisplay').textContent = productName;
+                    document.getElementById('modalProductNameField').value = productName;
+                    
+                    const stockWarning = document.getElementById('modalStockWarning');
+                    if (currentStock <= 5) {
+                        stockWarning.innerHTML = `⚠️ Only ${currentStock} units left! Order urgently.`;
+                        stockWarning.style.color = '#fca5a5';
+                    } else if (currentStock <= 20) {
+                        stockWarning.innerHTML = `⚠️ Only ${currentStock} units remaining. Order soon.`;
+                        stockWarning.style.color = '#fbbf24';
+                    } else {
+                        stockWarning.innerHTML = `Current stock: ${currentStock} units. Reorder to avoid running out.`;
+                        stockWarning.style.color = '#9ca3af';
+                    }
+                    
+                    const qtyInput = document.getElementById('orderQuantity');
+                    if (currentStock <= 10) {
+                        qtyInput.value = 200;
+                    } else if (currentStock <= 30) {
+                        qtyInput.value = 100;
+                    } else {
+                        qtyInput.value = 50;
+                    }
+                });
+            }
+        });
+        
+        function incrementQty() {
+            const qtyInput = document.getElementById('orderQuantity');
+            let currentVal = parseInt(qtyInput.value);
+            if (isNaN(currentVal)) currentVal = 0;
+            qtyInput.value = currentVal + 10;
+        }
+        
+        function decrementQty() {
+            const qtyInput = document.getElementById('orderQuantity');
+            let currentVal = parseInt(qtyInput.value);
+            if (isNaN(currentVal)) currentVal = 0;
+            if (currentVal > 1) {
+                qtyInput.value = currentVal - 10;
+            }
+        }
+        
+        const restockForm = document.getElementById('restockForm');
+        if (restockForm) {
+            restockForm.addEventListener('submit', function(e) {
+                const quantity = document.getElementById('orderQuantity').value;
+                if (!quantity || parseInt(quantity) < 1) {
+                    e.preventDefault();
+                    alert('Please enter a valid quantity (at least 1)');
+                }
+            });
+        }
+    </script>
 }
