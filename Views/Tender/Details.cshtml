@@ -50,13 +50,16 @@
                             <p class="text-dark mb-0 lead" style="white-space: pre-line;">@Model.Description</p>
                         </div>
                         
-                        <div class="col-md-4">
-                            <label class="text-muted small text-uppercase fw-bold mb-1">Budget Range</label>
-                            <p class="text-dark mb-0 fw-bold">
-                                <i class="fas fa-money-bill-wave me-1 text-success"></i> 
-                                @(Model.BudgetMin?.ToString("N0") ?? "0") - @(Model.BudgetMax?.ToString("N0") ?? "Unspecified") ETB
-                            </p>
-                        </div>
+                        @if (User.IsInRole("Retailer") || User.IsInRole("Admin"))
+                        {
+                            <div class="col-md-4">
+                                <label class="text-muted small text-uppercase fw-bold mb-1">Budget Range</label>
+                                <p class="text-dark mb-0 fw-bold">
+                                    <i class="fas fa-money-bill-wave me-1 text-success"></i> 
+                                    @(Model.BudgetMin?.ToString("N0") ?? "0") - @(Model.BudgetMax?.ToString("N0") ?? "Unspecified") ETB
+                                </p>
+                            </div>
+                        }
 
                         <div class="col-md-4">
                             <label class="text-muted small text-uppercase fw-bold mb-1">Partial Bidding</label>
@@ -119,7 +122,10 @@
                                     <th class="ps-4 py-3">Product Name</th>
                                     <th>Quantity</th>
                                     <th>Unit</th>
-                                    <th>Ref. Price</th>
+                                    @if (User.IsInRole("Retailer") || User.IsInRole("Admin"))
+                                    {
+                                        <th>Ref. Price</th>
+                                    }
                                     <th class="pe-4">Specifications</th>
                                 </tr>
                             </thead>
@@ -138,7 +144,10 @@
                                             </td>
                                             <td class="fw-bold">@item.Quantity</td>
                                             <td><span class="badge bg-light text-dark border">@item.Unit</span></td>
-                                            <td class="text-primary fw-bold">@(item.EstimatedUnitPrice?.ToString("N2") ?? "---") ETB</td>
+                                            @if (User.IsInRole("Retailer") || User.IsInRole("Admin"))
+                                            {
+                                                <td class="text-primary fw-bold">@(item.EstimatedUnitPrice?.ToString("N2") ?? "---") ETB</td>
+                                            }
                                             <td class="pe-4">
                                                 <p class="small text-muted mb-0" style="max-width: 250px;">@(string.IsNullOrEmpty(item.Specifications) ? item.Description : item.Specifications)</p>
                                             </td>

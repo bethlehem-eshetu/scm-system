@@ -10,5 +10,6 @@ namespace SCM_System.Services
         Task<TenderBid> SubmitBidAsync(TenderBid bid);
         Task<TenderBid> UpdateBidStatusAsync(int id, string status);
         Task<PurchaseOrder> AcceptBidAsync(int id, string deliveryAddress);
+        Task<SCM_System.Models.ViewModels.BidFeedbackViewModel> GetBidFeedbackAsync(int bidId);
     }
 }

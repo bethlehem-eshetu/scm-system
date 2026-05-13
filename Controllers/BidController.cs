@@ -174,6 +174,14 @@ namespace SCM_System.Controllers
             }
         }
 
+        [Authorize(Roles = "Supplier")]
+        public async Task<IActionResult> GetFeedback(int bidId)
+        {
+            var feedback = await _bidService.GetBidFeedbackAsync(bidId);
+            if (feedback == null) return NotFound();
+            return PartialView("_BidFeedbackPartial", feedback);
+        }
+
         private async Task<int> GetSupplierIdAsync()
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);

@@ -989,17 +989,33 @@
                 else if (role == "DeliveryAgent")
                 {
                     <li>
-                        <a asp-controller="Delivery" asp-action="Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                        <a asp-controller="Delivery" asp-action="Dashboard" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
                     </li>
                     <li>
-                        <a asp-controller="Delivery" asp-action="MyDeliveries"><i class="fas fa-route"></i> My Deliveries</a>
-                    </li>
-                    <li class="menu-label">Account</li>
-                    <li>
-                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+                        <a asp-controller="Delivery" asp-action="MyDeliveries" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "MyDeliveries" ? "active" : "")">
+                            <i class="fas fa-truck"></i> My Deliveries
+                        </a>
                     </li>
                     <li>
-                        <a asp-controller="Delivery" asp-action="Settings"><i class="fas fa-user-cog"></i> Settings</a>
+                        <a asp-controller="Delivery" asp-action="MyPerformance" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "MyPerformance" ? "active" : "")">
+                            <i class="fas fa-star text-warning"></i> My Performance
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-controller="Delivery" asp-action="RouteItinerary" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "RouteItinerary" ? "active" : "")">
+                            <i class="fas fa-map-marked-alt text-accent-green"></i> Smart Route
+                        </a>
+                    </li>
+                    <li class="menu-label">Settings</li>
+                    <li>
+                        <a asp-controller="Delivery" asp-action="Settings" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Settings" ? "active" : "")">
+                            <i class="fas fa-user-cog"></i> Profile & Vehicle
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Hub</a>
                     </li>
                 }
                 

@@ -51,7 +51,7 @@
                                         <label class="smaller text-muted d-block mb-1">DELIVERY DESTINATION</label>
                                         <div class="d-flex align-items-start">
                                             <i class="fas fa-map-marker-alt text-danger me-2 mt-1"></i>
-                                            <span class="small fw-medium text-theme">@(po.Order?.DeliveryAddress ?? po.DeliveryAddress ?? "No address provided")</span>
+                                            <span class="small fw-medium text-theme">@(po.Order?.DeliveryAddress ?? "No address provided")</span>
                                         </div>
                                     </div>
                                     <label class="smaller text-muted d-block mb-2">SHIPMENT PREVIEW</label>
@@ -63,6 +63,10 @@
                                                     <span>@item.Product?.ProductName</span>
                                                     <span class="fw-bold text-muted">x@item.Quantity</span>
                                                 </li>
+                                            }
+                                            @if (po.PurchaseOrderItems.Count() > 3)
+                                            {
+                                                <li class="small text-muted">... and @(po.PurchaseOrderItems.Count() - 3) more items</li>
                                             }
                                         </ul>
                                         <div class="mt-3 p-2 rounded-3 border border-theme bg-card-theme small">
@@ -88,20 +92,46 @@
                                                     foreach (var item in sortedAgents)
                                                     {
                                                         var agent = item.Agent;
-                                                        bool isRecommended = firstRecommended && !item.IsPhysicsViolation && item.ProjectedScore <= 100;
-                                                        string labelPrefix = isRecommended ? "⭐ [RECOMMENDED] " : "";
-                                                        string optionClass = item.IsPhysicsViolation ? "text-danger" : (item.ProjectedScore > 100 ? "text-warning" : "text-success");
+                                                        string agentName = agent.User?.FullName ?? agent.FullName ?? "Staff";
+                                                        string phone = agent.Phone ?? "";
                                                         
-                                                        <option value="@agent.Id" 
+                                                        bool isVehicleAvailable = item.IsVehicleAvailable;
+                                                        bool isVehicleUnderMaintenance = item.IsVehicleUnderMaintenance;
+                                                        string vehicleStatusText = "";
+                                                        string optionClass = "";
+                                                        bool isDisabled = false;
+                                                        
+                                                        if (isVehicleUnderMaintenance)
+                                                        {
+                                                            vehicleStatusText = " 🔧 [VEHICLE IN MAINTENANCE]";
+                                                            optionClass = "text-danger";
+                                                            isDisabled = true;
+                                                        }
+                                                        else if (!isVehicleAvailable && item.VehicleId > 0)
+                                                        {
+                                                            vehicleStatusText = " 🚫 [VEHICLE UNAVAILABLE]";
+                                                            optionClass = "text-warning";
+                                                            isDisabled = true;
+                                                        }
+                                                        
+                                                        bool isRecommended = firstRecommended && !item.IsPhysicsViolation && item.ProjectedScore <= 100 && isVehicleAvailable && !isVehicleUnderMaintenance;
+                                                        string labelPrefix = isRecommended ? "⭐ [RECOMMENDED] " : "";
+                                                        
+                                                        // Conditionally apply disabled attribute using Razor's null-handling
+                                                        
+                                                        <option value="@agent.Id"
                                                                 data-vehicle-id="@item.VehicleId"
-                                                                data-vehicle-plate="@agent.Vehicle?.LicensePlate ?? "N/A""
-                                                                data-vehicle-type="@agent.Vehicle?.VehicleType ?? "N/A""
+                                                                data-vehicle-plate="@item.VehiclePlate"
+                                                                data-vehicle-type="@item.VehicleType"
                                                                 data-max-load="@item.Capacity"
                                                                 data-current-load="@item.CurrentLoad"
                                                                 data-projected-score="@item.ProjectedScore"
                                                                 data-is-recommended="@(isRecommended ? "true" : "false")"
-                                                                class="@optionClass">
-                                                            @labelPrefix @(agent.User?.FullName ?? agent.FullName ?? "Staff") - Load: @(item.ProjectedScore > 100 ? "OVERLOAD" : $"{Math.Round(item.ProjectedScore)}%")
+                                                                data-is-available="@(isVehicleAvailable ? "true" : "false")"
+                                                                data-is-maintenance="@(isVehicleUnderMaintenance ? "true" : "false")"
+                                                                class="@optionClass"
+                                                                disabled="@(isDisabled ? "disabled" : null)">
+                                                            @labelPrefix @agentName (@phone) - @item.VehiclePlate @vehicleStatusText
                                                         </option>
                                                         
                                                         if (isRecommended) firstRecommended = false;
@@ -114,12 +144,18 @@
                                             <label class="smaller text-muted d-block fw-bold mb-2">SELECT VEHICLE</label>
                                             <select name="vehicleId" class="form-select vehicle-select border-theme rounded-3 shadow-none py-2 bg-soft-secondary text-theme" required>
                                                 <option value="">-- Choose Vehicle --</option>
+                                                @if (ViewBag.Vehicles != null)
+                                                {
+                                                    foreach (var v in (IEnumerable<SCM_System.Models.Entities.Vehicle>)ViewBag.Vehicles)
+                                                    {
+                                                        <option value="@v.Id" data-max-load="@v.MaxLoadCapacity">@v.LicensePlate (@v.VehicleType) - Max @v.MaxLoadCapacity KG</option>
+                                                    }
+                                                }
                                             </select>
                                         </div>
 
                                         <div class="vehicle-info-container" style="display: none;"></div>
                                         
-                                        <!-- Override Controls (hidden initially) -->
                                         <div class="override-container" style="display: none;">
                                             <div class="form-check mt-2">
                                                 <input type="checkbox" class="form-check-input" id="overrideCheckbox" name="isOverride" value="true">
@@ -199,12 +235,16 @@
         border-radius: 4px;
         overflow: hidden;
     }
+    
+    select option:disabled {
+        color: #999;
+        font-style: italic;
+    }
 </style>
 
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // When agent is selected, auto-fill vehicle and show info
             $('.agent-select').on('change', function() {
                 const selectedOption = $(this).find('option:selected');
                 const form = $(this).closest('form');
@@ -219,21 +259,53 @@
                 const vehicleType = selectedOption.data('vehicle-type');
                 const maxLoad = parseFloat(selectedOption.data('max-load')) || 0;
                 const currentLoad = parseFloat(selectedOption.data('current-load')) || 0;
-                const projectedScore = parseFloat(selectedOption.data('projected-score')) || 0;
-                const isRecommended = selectedOption.data('is-recommended');
+                const isVehicleAvailable = selectedOption.data('is-available') === 'true';
+                const isVehicleUnderMaintenance = selectedOption.data('is-maintenance') === 'true';
                 
-                if (!vehicleId || vehicleId === 0) {
-                    vehicleSelect.html('<option value="">-- Choose Vehicle --</option>');
-                    infoContainer.hide();
-                    overrideContainer.hide();
+                if (isVehicleUnderMaintenance) {
+                    infoContainer.html(`
+                        <div class="alert alert-danger border-0 shadow-sm rounded-4 mt-3 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-tools me-2 fa-lg"></i>
+                                <div>
+                                    <div class="small fw-bold">VEHICLE UNDER MAINTENANCE</div>
+                                    <div class="smaller">This agent's vehicle (${vehiclePlate}) is currently in maintenance. Please select another agent or assign a different vehicle.</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).fadeIn();
+                    vehicleSelect.val("");
                     confirmBtn.prop('disabled', true);
+                    confirmBtn.html('<i class="fas fa-ban me-2"></i> Vehicle Unavailable');
+                    overrideContainer.hide();
                     return;
                 }
                 
-                // Auto-select the vehicle
-                vehicleSelect.html(`<option value="${vehicleId}" selected data-max-load="${maxLoad}">${vehiclePlate} (${vehicleType}) - Max ${maxLoad} KG</option>`);
+                if (vehicleId && vehicleId !== 0) {
+                    // Try to finding the vehicle in the list, if not there, add it
+                    if (vehicleSelect.find(`option[value="${vehicleId}"]`).length === 0) {
+                        vehicleSelect.append(`<option value="${vehicleId}" data-max-load="${maxLoad}">${vehiclePlate} (${vehicleType}) - Max ${maxLoad} KG</option>`);
+                    }
+                    vehicleSelect.val(vehicleId);
+                } else {
+                    vehicleSelect.val("");
+                    infoContainer.html(`
+                        <div class="alert alert-warning border-0 shadow-sm rounded-4 mt-3 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <div>
+                                    <div class="small fw-bold">No Vehicle Assigned</div>
+                                    <div class="smaller">This agent does not have a primary vehicle. Please select an available vehicle from the list.</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).fadeIn();
+                    confirmBtn.prop('disabled', true);
+                    confirmBtn.html('<i class="fas fa-truck-loading me-2"></i> Select a Vehicle');
+                    overrideContainer.hide();
+                    return;
+                }
                 
-                // Calculate load percentage
                 const totalProjectedLoad = currentLoad + orderWeight;
                 const loadPercent = (totalProjectedLoad / maxLoad) * 100;
                 let statusColor = 'success';
@@ -249,7 +321,6 @@
                     statusText = 'High Load';
                 }
                 
-                // Show vehicle info
                 infoContainer.html(`
                     <div class="alert alert-${statusColor} border-0 shadow-sm rounded-4 mt-3 mb-0 bg-opacity-10">
                         <div class="d-flex align-items-center mb-2">
@@ -261,11 +332,11 @@
                         </div>
                         <div class="p-2 rounded-3 bg-soft-secondary border border-theme">
                             <div class="d-flex justify-content-between smaller mb-1 text-theme">
-                                <span>Current Load:</span>
+                                <span>Agent's Current Load:</span>
                                 <strong>${Math.round(currentLoad)} KG</strong>
                             </div>
                             <div class="d-flex justify-content-between smaller mb-1 text-theme">
-                                <span>New Order:</span>
+                                <span>New Order Weight:</span>
                                 <strong>${Math.round(orderWeight)} KG</strong>
                             </div>
                             <div class="d-flex justify-content-between smaller mb-1 text-theme border-top pt-1 mt-1">
@@ -280,7 +351,6 @@
                     </div>
                 `).fadeIn();
                 
-                // Handle overload override
                 if (isOverloaded) {
                     overrideContainer.show();
                     confirmBtn.prop('disabled', true);
@@ -291,8 +361,21 @@
                     confirmBtn.html('<i class="fas fa-truck-loading me-2"></i> Confirm Dispatch');
                 }
             });
+
+            // Handle manual vehicle selection changes
+            $('.vehicle-select').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                if (!selectedOption.val()) return;
+                
+                const form = $(this).closest('form');
+                const confirmBtn = form.find('.confirm-dispatch-btn');
+                const maxLoad = parseFloat(selectedOption.data('max-load')) || 0;
+                
+                // If weight check passed, enable button
+                confirmBtn.prop('disabled', false);
+                confirmBtn.html('<i class="fas fa-truck-loading me-2"></i> Confirm Dispatch');
+            });
             
-            // Handle override checkbox
             $(document).on('change', '#overrideCheckbox', function() {
                 const form = $(this).closest('form');
                 const reasonContainer = form.find('.override-reason-container');
@@ -311,7 +394,6 @@
                 }
             });
             
-            // Prevent form submission if override reason is missing
             $(document).on('submit', '.assign-delivery-form', function(e) {
                 const isOverrideChecked = $(this).find('#overrideCheckbox').is(':checked');
                 const overrideReason = $(this).find('input[name="overrideReason"]').val();
@@ -324,7 +406,6 @@
                 return true;
             });
             
-            // Trigger change on load if an agent is pre-selected
             $('.agent-select').each(function() {
                 if ($(this).val()) {
                     $(this).trigger('change');

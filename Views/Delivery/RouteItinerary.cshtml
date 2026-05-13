@@ -2,599 +2,197 @@
 @{
     ViewData["Title"] = "Smart Route Itinerary";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
-    
-    // Prepare destinations for the optimizer
-    var destinationsList = new List<object>();
-    var random = new Random();
-    var index = 0;
-    foreach (var po in Model)
-    {
-        destinationsList.Add(new {
-            id = po.Id,
-            poNumber = po.PONumber,
-            businessName = po.Order?.Retailer?.BusinessName ?? "Retailer",
-            address = po.DeliveryAddress ?? "Address not set",
-            lat = 9.02 + (index * 0.12) + (random.NextDouble() * 0.05),
-            lng = 38.75 + (index * 0.09) + (random.NextDouble() * 0.03),
-            priority = po.Status == "In Transit" ? "High" : "Normal"
-        });
-        index++;
-    }
 }
 
-<div class="container-fluid px-4 py-3">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1">
-                <i class="fas fa-route text-accent-green me-2"></i>Smart Route
-            </h1>
-            <p class="text-muted small mb-0">AI-powered route optimization for efficient deliveries</p>
-        </div>
-        <div class="d-flex gap-2">
-            <span class="badge bg-faint-green text-dark-green rounded-pill px-3 py-2 small fw-bold" id="stopCount">@Model.Count() Stops Remaining</span>
-            <button class="btn btn-dark-green btn-sm rounded-pill px-3 fw-bold" onclick="optimizeRoute()" id="optimizeBtn">
-                <i class="fas fa-magic me-1"></i> Optimize
-            </button>
-            <button class="btn btn-white btn-sm rounded-pill px-3 border shadow-sm text-muted fw-bold" onclick="centerUserLocation()">
-                <i class="fas fa-location-dot me-1"></i> My Location
-            </button>
-        </div>
-    </div>
-
-    <!-- AI Recommendation Banner -->
-    <div id="aiRecommendationBanner" class="alert bg-dark-green border-0 rounded-5 shadow-premium mb-4 animate-slide-down" style="display: none;">
-        <div class="d-flex align-items-center gap-3 p-2">
-            <div class="ai-icon bg-accent-green text-dark-green rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                <i class="fas fa-robot fa-lg"></i>
+<div class="container-fluid py-4 pb-5 px-4 h-100">
+    <div class="row h-100 g-0 rounded-25 overflow-hidden shadow-premium bg-white">
+        <!-- Sidebar: Stop List -->
+        <div class="col-xl-4 col-lg-5 d-flex flex-column border-end bg-white" style="max-height: 85vh;">
+            <div class="p-4 border-bottom">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="fw-bold text-dark-green mb-1">Route Planner</h4>
+                        <p class="text-muted extra-small mb-0"><i class="fas fa-magic me-1"></i> AI-Optimized for fuel efficiency</p>
+                    </div>
+                    <span class="badge bg-soft-green text-dark-green rounded-pill px-3">@(Model.Count()) Stops</span>
+                </div>
+                <div class="d-grid">
+                    <button class="btn btn-dark-green rounded-pill fw-bold shadow-sm py-2">
+                        <i class="fas fa-play me-2"></i> START NAVIGATION
+                    </button>
+                </div>
             </div>
-            <div class="flex-grow-1">
-                <h6 class="text-white mb-1 fw-bold">
-                    AI Optimization Recommendation
-                </h6>
-                <p id="aiRecommendationText" class="text-white-50 mb-0 small">Optimizing route based on distance and priority...</p>
-            </div>
-            <button class="btn btn-accent-green text-dark-green rounded-pill fw-bold px-4" onclick="applyOptimizedRoute()">
-                Apply Route
-            </button>
-            <button class="btn-close btn-close-white ms-3" onclick="closeRecommendation()"></button>
-        </div>
-    </div>
 
-    <!-- Status Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-faint-green p-3 rounded-circle">
-                            <i class="fas fa-satellite text-dark-green fs-5"></i>
+            <div class="flex-grow-1 overflow-auto p-4 custom-scrollbar">
+                @if (Model != null && Model.Any())
+                {
+                    int i = 1;
+                    foreach (var po in Model)
+                    {
+                        <div class="route-stop mb-4 position-relative">
+                            <div class="d-flex gap-3">
+                                <div class="stop-number bg-dark-green text-white rounded-circle">@i</div>
+                                <div class="stop-content flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="fw-bold text-dark mb-0">@po.Retailer?.BusinessName</h6>
+                                        <span class="text-muted extra-small">#@po.PONumber</span>
+                                    </div>
+                                    <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt me-1"></i> @po.Retailer?.BusinessAddress</p>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-light text-dark extra-small py-1"><i class="fas fa-clock me-1 text-muted"></i> By 4:00 PM</span>
+                                        <span class="badge bg-light text-dark extra-small py-1"><i class="fas fa-weight-hanging me-1 text-muted"></i> @(po.PurchaseOrderItems?.Sum(x => x.Quantity) ?? 0) Items</span>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (i < Model.Count())
+                            {
+                                <div class="stop-line"></div>
+                            }
                         </div>
-                        <div>
-                            <div class="x-small text-muted fw-bold text-uppercase ls-1">GPS Status</div>
-                            <div class="fw-bold text-dark-green small" id="gpsStatus">Acquiring...</div>
-                        </div>
+                        i++;
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-route fa-3x text-light mb-3"></i>
+                        <p class="text-muted">No active items to route.</p>
+                    </div>
+                }
+            </div>
+
+            <div class="p-4 bg-light-green-subtle border-top mt-auto">
+                <div class="row g-2 text-center">
+                    <div class="col-6">
+                        <p class="text-muted extra-small mb-0">EST. DISTANCE</p>
+                        <h6 class="fw-bold mb-0">12.4 KM</h6>
+                    </div>
+                    <div class="col-6 border-start">
+                        <p class="text-muted extra-small mb-0">EST. TIME</p>
+                        <h6 class="fw-bold mb-0">45 MINS</h6>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-soft-success p-3 rounded-circle">
-                            <i class="fas fa-route text-success fs-5"></i>
-                        </div>
-                        <div>
-                            <div class="x-small text-muted fw-bold text-uppercase ls-1">Optimal Route</div>
-                            <div class="fw-bold text-dark-green small" id="optimalDistance">Calculating...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-white">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-soft-info p-3 rounded-circle">
-                            <i class="fas fa-clock text-info fs-5"></i>
-                        </div>
-                        <div>
-                            <div class="x-small text-muted fw-bold text-uppercase ls-1">Estimated Time</div>
-                            <div class="fw-bold text-dark-green small" id="etaDisplay">-- min</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 h-100 bg-dark-green text-white">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-accent-green p-3 rounded-circle">
-                            <i class="fas fa-leaf text-dark-green fs-5"></i>
-                        </div>
-                        <div>
-                            <div class="x-small text-white-50 fw-bold text-uppercase ls-1">Fuel Saved</div>
-                            <div class="fw-bold text-white small" id="savedTimeDisplay">--</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Map Container -->
-    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white mb-4">
-        <div id="fullRouteMap" style="height: 55vh; width: 100%;"></div>
-    </div>
+        <!-- Main Map Area -->
+        <div class="col-xl-8 col-lg-7 position-relative">
+            <div id="routeMap" style="height: 85vh; width: 100%; z-index: 1;"></div>
+            
+            <!-- Map Overlay UI -->
+            <div class="position-absolute bottom-0 start-0 p-4 w-100" style="z-index: 2;">
+                <div class="card border-0 rounded-20 shadow-premium bg-white bg-opacity-90 backdrop-blur p-3">
+                    <div class="row align-items-center g-3">
+                        <div class="col-auto">
+                            <div class="icon-shape bg-dark-green text-white rounded-circle">
+                                <i class="fas fa-location-arrow"></i>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h6 class="fw-bold mb-0">Bole Road Traffic Warning</h6>
+                            <p class="text-muted extra-small mb-0">Rerouting via Old Airport suggested to avoid 15m delay.</p>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-soft-green btn-sm rounded-pill fw-bold">REROUTE</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Route Summary Card -->
-    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-        <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-dark-green">
-                Optimized Sequence
-            </h5>
-            <span class="badge bg-faint-green text-dark-green rounded-pill px-3 py-2 small fw-bold" id="sequenceCount">0 stops</span>
-        </div>
-        <div class="card-body p-0">
-            <div class="list-group list-group-flush border-top border-light" id="optimizedSequenceList">
-                <div class="list-group-item text-center py-5 text-muted bg-white">
-                    <i class="fas fa-spinner fa-spin me-2"></i> Calculating optimal route...
+            <!-- Float Navigation Tool -->
+            <div class="position-absolute top-0 end-0 p-4" style="z-index: 2;">
+                <div class="d-flex flex-column gap-2 text-center">
+                    <button class="btn btn-white shadow-sm rounded-circle p-0" style="width: 45px; height: 45px;"><i class="fas fa-plus"></i></button>
+                    <button class="btn btn-white shadow-sm rounded-circle p-0" style="width: 45px; height: 45px;"><i class="fas fa-minus"></i></button>
+                    <button class="btn btn-white shadow-sm rounded-circle p-0" style="width: 45px; height: 45px;"><i class="fas fa-layer-group"></i></button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- LEAFLET INTEGRATION (CDN) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Map (Centered on Addis Ababa as default for SCM)
+        const map = L.map('routeMap').setView([9.0192, 38.7525], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Simulated Route Markers
+        const stops = [
+            { lat: 9.02, lng: 38.75, name: "Start Hub" },
+            { lat: 9.04, lng: 38.76, name: "Stop 1: Retailer A" },
+            { lat: 9.03, lng: 38.78, name: "Stop 2: Retailer B" }
+        ];
+
+        stops.forEach((stop, index) => {
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: #2e7d32; color: white; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2)">${index + 1}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            L.marker([stop.lat, stop.lng], {icon: icon}).addTo(map)
+                .bindPopup(`<b>${stop.name}</b><br>Priority: High`);
+        });
+
+        // Draw Simulated Route Core
+        const latlngs = stops.map(s => [s.lat, s.lng]);
+        const polyline = L.polyline(latlngs, {color: '#2e7d32', weight: 5, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+        map.fitBounds(polyline.getBounds());
+    });
+</script>
+
 <style>
-    :root {
-        --dark-green: #1a3d31;
-        --accent-green: #d4f06d;
-        --faint-green: #f2f6f6;
-    }
-
-    .text-dark-green { color: var(--dark-green) !important; }
-    .bg-dark-green { background-color: var(--dark-green) !important; }
-    .bg-accent-green { background-color: var(--accent-green) !important; }
-    .text-accent-green { color: var(--accent-green) !important; }
-    .bg-faint-green { background-color: var(--faint-green) !important; }
-    .shadow-premium { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important; }
-    .rounded-5 { border-radius: 24px !important; }
-    .x-small { font-size: 0.7rem; }
-    .ls-1 { letter-spacing: 1px; }
-
-    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-    .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
-
-    .driver-marker {
-        width: 20px;
-        height: 20px;
-        background-color: var(--dark-green);
-        border-radius: 50%;
-        box-shadow: 0 0 0 rgba(26, 61, 49, 0.4);
-        animation: pulse-green 1.5s infinite;
-        border: 3px solid white;
-    }
-
-    @@keyframes pulse-green {
-        0% { box-shadow: 0 0 0 0 rgba(26, 61, 49, 0.4); }
-        70% { box-shadow: 0 0 0 15px rgba(26, 61, 49, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(26, 61, 49, 0); }
-    }
+    .rounded-25 { border-radius: 25px !important; }
+    .rounded-20 { border-radius: 20px !important; }
+    .shadow-premium { box-shadow: 0 15px 50px rgba(0,0,0,0.08) !important; }
+    .bg-light-green-subtle { background-color: #f8faf9 !important; }
+    .text-dark-green { color: #2e7d32 !important; }
+    .btn-dark-green { background: #2e7d32 !important; border: none; color: white; }
+    .btn-soft-green { background: rgba(46, 125, 50, 0.1) !important; color: #2e7d32 !important; border: none; }
+    .extra-small { font-size: 0.7rem !important; }
+    .icon-shape { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+    .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .btn-white { background: white; border: none; }
     
-    .route-highlight {
-        stroke: var(--dark-green);
-        stroke-width: 4;
-        stroke-dasharray: 8, 8;
-    }
-    
-    .sequence-item {
-        transition: all 0.3s ease;
-        padding: 20px 24px !important;
-        border-bottom: 1px solid var(--faint-green) !important;
-    }
-    
-    .sequence-item:hover {
-        background-color: var(--faint-green);
-        transform: translateX(8px);
-    }
-    
-    .priority-high {
-        border-left: 4px solid #dc3545 !important;
-    }
-    
-    .priority-normal {
-        border-left: 4px solid var(--accent-green) !important;
-    }
-
-    .sequence-number {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: var(--dark-green);
-        color: white;
+    /* Stop Component */
+    .stop-number {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
         font-size: 0.8rem;
+        font-weight: bold;
+        z-index: 2;
     }
+    .stop-line {
+        position: absolute;
+        left: 13px;
+        top: 28px;
+        bottom: -24px;
+        width: 2px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+    
+    .animate-slide-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideUp 0.6s forwards;
+    }
+    @@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 </style>
-
-@section Scripts {
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Destination data from server
-        var destinationsData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(destinationsList));
-        
-        let map;
-        let currentMarker;
-        let watchId;
-        let currentLat = 9.03;
-        let currentLng = 38.74;
-        let routeLine;
-        let destMarkers = [];
-        let optimizedOrder = [];
-        let basicDistance = 0;
-        let optimizedDistance = 0;
-        
-        // ============ AI ROUTE OPTIMIZATION ALGORITHM ============
-        
-        // Calculate distance between two points (Haversine formula)
-        function calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371; // Earth's radius in km
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-        
-        // Calculate total route distance
-        function calculateTotalDistance(order, startLat, startLng) {
-            let total = 0;
-            let currentLat = startLat;
-            let currentLng = startLng;
-            
-            for (let i = 0; i < order.length; i++) {
-                const dest = order[i];
-                total += calculateDistance(currentLat, currentLng, dest.lat, dest.lng);
-                currentLat = dest.lat;
-                currentLng = dest.lng;
-            }
-            return total;
-        }
-        
-        // Nearest Neighbor algorithm for route optimization
-        function optimizeRouteNearestNeighbor(destinations, startLat, startLng) {
-            if (!destinations.length) return [];
-            
-            const unvisited = [...destinations];
-            const optimized = [];
-            let currentLat = startLat;
-            let currentLng = startLng;
-            
-            // Sort by priority (High priority first)
-            unvisited.sort((a, b) => {
-                if (a.priority === 'High' && b.priority !== 'High') return -1;
-                if (a.priority !== 'High' && b.priority === 'High') return 1;
-                return 0;
-            });
-            
-            while (unvisited.length > 0) {
-                let nearestIndex = 0;
-                let nearestDistance = calculateDistance(currentLat, currentLng, unvisited[0].lat, unvisited[0].lng);
-                
-                for (let i = 1; i < unvisited.length; i++) {
-                    const dist = calculateDistance(currentLat, currentLng, unvisited[i].lat, unvisited[i].lng);
-                    if (dist < nearestDistance) {
-                        nearestDistance = dist;
-                        nearestIndex = i;
-                    }
-                }
-                
-                const nearest = unvisited[nearestIndex];
-                optimized.push(nearest);
-                currentLat = nearest.lat;
-                currentLng = nearest.lng;
-                unvisited.splice(nearestIndex, 1);
-            }
-            
-            return optimized;
-        }
-        
-        // Calculate estimated time based on distance (assuming 50 km/h average speed)
-        function calculateETAFromDistance(distanceKm) {
-            const avgSpeedKmh = 50;
-            const minutes = Math.round((distanceKm / avgSpeedKmh) * 60);
-            return minutes;
-        }
-        
-        // Show AI recommendation
-        function showAIRecommendation(optimized, original) {
-            const optimizedDist = calculateTotalDistance(optimized, currentLat, currentLng);
-            const originalDist = calculateTotalDistance(original, currentLat, currentLng);
-            const savedKm = Math.round((originalDist - optimizedDist) * 10) / 10;
-            const savedMinutes = calculateETAFromDistance(originalDist - optimizedDist);
-            
-            optimizedDistance = optimizedDist;
-            basicDistance = originalDist;
-            
-            const banner = document.getElementById('aiRecommendationBanner');
-            const text = document.getElementById('aiRecommendationText');
-            const savedTimeDisplay = document.getElementById('savedTimeDisplay');
-            
-            if (savedKm > 0.5) {
-                text.innerHTML = `AI suggests a better route! Save ${savedKm} km (approximately ${savedMinutes} minutes) by following the optimized sequence.`;
-                banner.style.display = 'block';
-                savedTimeDisplay.innerHTML = `-${savedMinutes} min`;
-                savedTimeDisplay.className = 'fw-bold text-success';
-            } else {
-                text.innerHTML = `Current route is already optimal. No significant savings detected.`;
-                savedTimeDisplay.innerHTML = '0 min';
-                savedTimeDisplay.className = 'fw-bold text-muted';
-            }
-            
-            document.getElementById('optimalDistance').innerHTML = `${Math.round(optimizedDist)} km`;
-        }
-        
-        // Apply optimized route to map
-        function applyOptimizedRoute() {
-            if (optimizedOrder.length > 0) {
-                updateRouteWithOrder(optimizedOrder);
-                updateSequenceList(optimizedOrder);
-                
-                // Update ETA
-                const totalDist = calculateTotalDistance(optimizedOrder, currentLat, currentLng);
-                const etaMinutes = calculateETAFromDistance(totalDist);
-                document.getElementById('etaDisplay').innerHTML = `${etaMinutes} min`;
-                
-                // Close banner
-                closeRecommendation();
-                
-                // Show success toast
-                showToast('Route optimized! Follow the highlighted sequence.', 'success');
-            }
-        }
-        
-        function closeRecommendation() {
-            document.getElementById('aiRecommendationBanner').style.display = 'none';
-        }
-        
-        function showToast(message, type) {
-            // Simple toast notification
-            const toast = document.createElement('div');
-            toast.className = `alert alert-${type} position-fixed bottom-0 end-0 m-3 animate-slide-down`;
-            toast.style.zIndex = '10000';
-            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info'} me-2"></i>${message}`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-        
-        // Optimize route on demand
-        function optimizeRoute() {
-            if (destinationsData.length === 0) {
-                showToast('No destinations to optimize', 'warning');
-                return;
-            }
-            
-            const originalOrder = [...destinationsData];
-            const optimized = optimizeRouteNearestNeighbor(destinationsData, currentLat, currentLng);
-            optimizedOrder = optimized;
-            
-            // Calculate savings
-            const originalDist = calculateTotalDistance(originalOrder, currentLat, currentLng);
-            const optimizedDist = calculateTotalDistance(optimized, currentLat, currentLng);
-            
-            showAIRecommendation(optimized, originalOrder);
-            
-            // Highlight optimize button
-            const btn = document.getElementById('optimizeBtn');
-            btn.innerHTML = '<i class="fas fa-check me-1"></i> Optimized!';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-magic me-1"></i> Optimize Route';
-            }, 3000);
-        }
-        
-        // Update route with specific order
-        function updateRouteWithOrder(order) {
-            const points = [[currentLat, currentLng]];
-            for (let i = 0; i < order.length; i++) {
-                points.push([order[i].lat, order[i].lng]);
-            }
-            
-            if (routeLine) {
-                routeLine.setLatLngs(points);
-            } else {
-                routeLine = L.polyline(points, {
-                    color: '#0d6efd',
-                    weight: 4,
-                    opacity: 0.8,
-                    className: 'route-highlight'
-                }).addTo(map);
-            }
-            
-            // Fit bounds to show all points
-            if (points.length > 1) {
-                const bounds = L.latLngBounds(points);
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
-        }
-        
-        // Update sequence list in UI
-        function updateSequenceList(order) {
-            const container = document.getElementById('optimizedSequenceList');
-            if (!order.length) {
-                container.innerHTML = '<div class="list-group-item text-center py-4 text-muted">No destinations found</div>';
-                document.getElementById('sequenceCount').innerHTML = '0 stops';
-                return;
-            }
-            
-            let html = '';
-            for (let i = 0; i < order.length; i++) {
-                const dest = order[i];
-                const isHighPriority = dest.priority === 'High';
-                html += `
-                    <div class="list-group-item sequence-item ${isHighPriority ? 'priority-high' : 'priority-normal'}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="sequence-number rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                    ${i + 1}
-                                </div>
-                                <div>
-                                    <div class="fw-bold">${dest.businessName}</div>
-                                    <div class="small text-muted">PO: ${dest.poNumber}</div>
-                                    <div class="small text-muted">${dest.address.substring(0, 40)}${dest.address.length > 40 ? '...' : ''}</div>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                ${isHighPriority ? '<span class="badge bg-danger mb-1">Priority</span><br>' : ''}
-                                <button class="btn btn-sm btn-outline-primary rounded-pill mt-1" onclick="focusOnDestination(${dest.id})">
-                                    <i class="fas fa-map-pin me-1"></i> Locate
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-            document.getElementById('sequenceCount').innerHTML = `${order.length} stop${order.length !== 1 ? 's' : ''}`;
-        }
-        
-        // Update basic route (original order)
-        function updateBasicRoute() {
-            updateRouteWithOrder(destinationsData);
-            updateSequenceList(destinationsData);
-            
-            const totalDist = calculateTotalDistance(destinationsData, currentLat, currentLng);
-            const etaMinutes = calculateETAFromDistance(totalDist);
-            document.getElementById('etaDisplay').innerHTML = `${etaMinutes} min`;
-            document.getElementById('optimalDistance').innerHTML = `${Math.round(totalDist)} km`;
-        }
-        
-        // ============ MAP AND GPS FUNCTIONS ============
-        
-        function getUserLocation() {
-            if (!navigator.geolocation) {
-                document.getElementById('gpsStatus').innerHTML = '<span class="text-danger">GPS not supported</span>';
-                return;
-            }
-            
-            document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Acquiring GPS...';
-            
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    currentLat = position.coords.latitude;
-                    currentLng = position.coords.longitude;
-                    
-                    if (map) {
-                        map.setView([currentLat, currentLng], 13);
-                        updateDriverMarker(currentLat, currentLng);
-                        updateBasicRoute();
-                    }
-                    
-                    startWatchingPosition();
-                    document.getElementById('gpsStatus').innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>GPS Active</span>';
-                },
-                function(error) {
-                    document.getElementById('gpsStatus').innerHTML = '<span class="text-danger">GPS unavailable</span>';
-                    currentLat = 9.03;
-                    currentLng = 38.74;
-                    if (map) {
-                        map.setView([currentLat, currentLng], 12);
-                        updateDriverMarker(currentLat, currentLng);
-                        updateBasicRoute();
-                    }
-                },
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
-        }
-        
-        function startWatchingPosition() {
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            watchId = navigator.geolocation.watchPosition(
-                function(position) {
-                    currentLat = position.coords.latitude;
-                    currentLng = position.coords.longitude;
-                    updateDriverMarker(currentLat, currentLng);
-                    if (optimizedOrder.length > 0) {
-                        updateRouteWithOrder(optimizedOrder);
-                    } else {
-                        updateBasicRoute();
-                    }
-                },
-                function(error) {},
-                { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-            );
-        }
-        
-        function updateDriverMarker(lat, lng) {
-            const driverIcon = L.divIcon({ className: 'driver-marker', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] });
-            if (currentMarker) {
-                currentMarker.setLatLng([lat, lng]);
-            } else {
-                currentMarker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
-                currentMarker.bindPopup('<b>Your Location</b><br>Current position').openPopup();
-            }
-        }
-        
-        function createDestinationMarkers() {
-            const destIcon = L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            });
-            
-            destMarkers.forEach(m => map.removeLayer(m));
-            destMarkers = [];
-            
-            destinationsData.forEach(dest => {
-                const marker = L.marker([dest.lat, dest.lng], { icon: destIcon }).addTo(map);
-                marker.bindPopup(`<b>${dest.businessName}</b><br>PO: ${dest.poNumber}<br>${dest.address}`);
-                destMarkers.push(marker);
-            });
-        }
-        
-        function initMap() {
-            map = L.map('fullRouteMap').setView([currentLat, currentLng], 12);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                maxZoom: 20
-            }).addTo(map);
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-            L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map);
-            createDestinationMarkers();
-        }
-        
-        window.centerUserLocation = function() {
-            if (currentMarker) {
-                map.setView(currentMarker.getLatLng(), 15);
-            } else if (currentLat) {
-                map.setView([currentLat, currentLng], 15);
-            }
-        };
-        
-        window.focusOnDestination = function(id) {
-            const dest = destinationsData.find(d => d.id === id);
-            if (dest) {
-                map.setView([dest.lat, dest.lng], 15);
-                const marker = destMarkers[destinationsData.findIndex(d => d.id === id)];
-                if (marker) marker.openPopup();
-            }
-        };
-        
-        window.optimizeRoute = optimizeRoute;
-        window.applyOptimizedRoute = applyOptimizedRoute;
-        window.closeRecommendation = closeRecommendation;
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            initMap();
-            getUserLocation();
-        });
-    </script>
-}

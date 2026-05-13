@@ -81,7 +81,7 @@
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
                                             <span class="badge bg-white text-dark-green border border-light rounded-pill px-3 mb-2 small fw-bold">#@po.PONumber</span>
-                                            <h4 class="fw-bold text-dark-green mb-0">@po.Order?.Retailer?.BusinessName</h4>
+                                            <h4 class="fw-bold text-dark-green mb-0">@po.Retailer?.BusinessName</h4>
                                         </div>
                                         @if (isFailed)
                                         {
@@ -110,8 +110,8 @@
                                             </div>
                                             <div>
                                                 <div class="x-small text-uppercase fw-bold text-muted ls-1">Recipient</div>
-                                                <div class="text-dark-green fw-bold small">@po.Order?.Retailer?.User?.FullName</div>
-                                                <div class="x-small text-muted">@po.Order?.Retailer?.User?.PhoneNumber</div>
+                                                <div class="text-dark-green fw-bold small">@po.Retailer?.User?.FullName</div>
+                                                <div class="x-small text-muted">@po.Retailer?.User?.PhoneNumber</div>
                                             </div>
                                         </div>
                                     </div>

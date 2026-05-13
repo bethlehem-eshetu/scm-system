@@ -1,333 +1,143 @@
-@model SCM_System.Models.ViewModels.DeliverySettingsViewModel
+@model SCM_System.Models.Entities.SupplierEmployee
 @{
-    ViewData["Title"] = "Delivery Agent Settings";
-    Layout = "_DashboardLayout";
+    ViewData["Title"] = "Vehicle Settings";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid py-4 px-4">
-    <div class="mb-5">
-        <h1 class="h2 fw-bold text-dark-green mb-1">Agent Settings</h1>
-        <p class="text-muted small">Manage your profile, vehicle status, and preferences.</p>
-    </div>
-
-    <div class="row g-4">
-        <!-- Left Column: Profile & Performance -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-premium rounded-5 mb-4 overflow-hidden bg-white">
-                <div class="card-body text-center pt-5 pb-4">
-                    <div class="position-relative d-inline-block mb-4">
-                        <div class="rounded-circle overflow-hidden shadow-premium" style="width: 150px; height: 150px; border: 6px solid var(--faint-green);">
-                            @if (!string.IsNullOrEmpty(Model.ExistingProfilePicture))
-                            {
-                                <img src="@Model.ExistingProfilePicture" id="profilePreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Profile" />
-                            }
-                            else
-                            {
-                                <div class="bg-faint-green h-100 w-100 d-flex align-items-center justify-content-center">
-                                    <i class="fas fa-user-tie fa-4x text-dark-green opacity-25"></i>
-                                </div>
-                                <img id="profilePreview" class="img-fluid h-100 w-100 object-fit-cover d-none" alt="Profile" />
-                            }
+<div class="container-fluid py-4 pb-5 px-4 h-100">
+    <div class="row g-4 h-100">
+        <!-- Asset Overview Card -->
+        <div class="col-xl-4 animate-slide-up">
+            <div class="card border-0 rounded-25 shadow-premium bg-white h-100 overflow-hidden">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="asset-avatar-wrapper mb-4">
+                            <div class="asset-avatar bg-soft-green text-dark-green rounded-circle mx-auto d-flex align-items-center justify-content-center">
+                                <i class="fas fa-truck fa-3x"></i>
+                            </div>
+                            <div class="status-badge bg-success border-4 border-white"></div>
                         </div>
-                        <label for="ProfilePicture" class="btn btn-sm btn-dark-green position-absolute bottom-0 end-0 rounded-circle shadow-premium" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 3px solid white;">
-                            <i class="fas fa-camera"></i>
-                        </label>
+                        <h4 class="fw-bold text-dark mb-1">@(Model.Vehicle?.LicensePlate ?? "Unassigned")</h4>
+                        <p class="text-muted small">Asset ID: V-@(Model.Vehicle?.Id.ToString("D4") ?? "0000")</p>
                     </div>
-                    <h4 class="fw-bold text-dark-green mb-1">@Model.FullName</h4>
-                    <p class="text-muted small mb-4">Professional Delivery Agent</p>
-                    
-                    <div class="d-flex justify-content-center mb-2">
-                        <div class="form-check form-switch px-4 py-2 bg-faint-green rounded-pill border shadow-sm">
-                            <input class="form-check-input" type="checkbox" id="isOnDutySwitch" @(Model.IsOnDuty ? "checked" : "") onchange="updateDutyStatus(this)">
-                            <label class="form-check-label fw-bold ms-2 text-dark-green small" for="isOnDutySwitch" id="dutyLabel">
-                                @(Model.IsOnDuty ? "ACTIVE ON DUTY" : "OFF DUTY")
-                            </label>
+
+                    <div class="asset-stats mb-5">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Model</span>
+                            <span class="fw-bold small">@Model.Vehicle?.VehicleType</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Fuel Range</span>
+                            <span class="text-dark small fw-bold">120 KM Remaining</span>
+                        </div>
+                        <div class="progress rounded-pill bg-light" style="height: 6px;">
+                            <div class="progress-bar bg-success rounded-pill" style="width: 75%"></div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Performance Cards -->
-            <div class="row g-3">
-                <div class="col-6">
-                    <div class="card border-0 shadow-premium rounded-5 bg-dark-green text-white p-4 text-center h-100">
-                        <h2 class="fw-bold mb-0">@Model.TotalDeliveriesMonth</h2>
-                        <span class="x-small text-white-50 fw-bold text-uppercase ls-1">Monthly Jobs</span>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="card border-0 shadow-premium rounded-5 bg-accent-green text-dark-green p-4 text-center h-100">
-                        <h2 class="fw-bold mb-0">@Model.OnTimePercentage%</h2>
-                        <span class="x-small text-dark-green opacity-50 fw-bold text-uppercase ls-1">On-Time</span>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white p-4 text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-1">
-                            <h2 class="fw-bold mb-0 me-3 text-dark-green">@Model.AverageRating</h2>
-                            <div class="text-accent-green fs-4">
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    <i class="fas fa-star @(i <= Math.Round(Model.AverageRating) ? "" : "opacity-25 text-muted")"></i>
-                                }
+                    <div class="p-4 bg-light rounded-20">
+                        <h6 class="fw-bold small mb-3">Live Telemetry</h6>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="icon-sm bg-white rounded-circle shadow-sm text-success"><i class="fas fa-thermometer-half"></i></div>
+                            <div>
+                                <p class="extra-small text-muted mb-0">Engine Temp</p>
+                                <p class="small fw-bold mb-0">88°C (Normal)</p>
                             </div>
                         </div>
-                        <span class="x-small text-muted fw-bold text-uppercase ls-1">Customer Satisfaction</span>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-sm bg-white rounded-circle shadow-sm text-info"><i class="fas fa-tachometer-alt"></i></div>
+                            <div>
+                                <p class="extra-small text-muted mb-0">Odometer</p>
+                                <p class="small fw-bold mb-0">12,450 KM</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Settings Sections -->
-        <div class="col-lg-8">
-
-            <form asp-action="Settings" method="post" enctype="multipart/form-data" id="settingsForm">
-                <input type="file" asp-for="ProfilePicture" class="d-none" onchange="previewProfile(this)" />
-                
-                <div class="accordion accordion-custom" id="settingsAccordion">
-                    <!-- Profile Info -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#profileCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-id-card text-dark-green"></i>
-                                </div>
-                                Profile Information
-                            </button>
-                        </h2>
-                        <div id="profileCollapse" class="accordion-collapse collapse show" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="FullName" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Full Name</label>
-                                        <input asp-for="FullName" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
-                                        <span asp-validation-for="FullName" class="text-danger small"></span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="Email" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Email Address</label>
-                                        <input asp-for="Email" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
-                                        <span asp-validation-for="Email" class="text-danger small"></span>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label asp-for="Phone" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Phone Number</label>
-                                        <input asp-for="Phone" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
-                                        <span asp-validation-for="Phone" class="text-danger small"></span>
-                                    </div>
-                                </div>
+        <!-- Settings Form -->
+        <div class="col-xl-8 animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="card border-0 rounded-25 shadow-premium bg-white h-100">
+                <div class="card-header bg-white border-0 p-5 pb-0">
+                    <h4 class="fw-bold text-dark mb-1">Hardware & Sync Settings</h4>
+                    <p class="text-muted small">Configure how your vehicle interacts with the SCM dispatch system.</p>
+                </div>
+                <div class="card-body p-5">
+                    <form asp-action="UpdateVehicleSettings" method="post">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">TRANSMISSION MODE</label>
+                                <select class="form-select rounded-pill border-0 shadow-sm px-4 bg-light" name="gpsMode">
+                                    <option value="high">High Frequency GPS (Every 5s)</option>
+                                    <option value="eco">Battery Saver (Every 60s)</option>
+                                    <option value="smart">Smart Sync (Adaptive)</option>
+                                </select>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Vehicle & Availability -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#vehicleCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-truck text-dark-green"></i>
-                                </div>
-                                Vehicle & Availability
-                            </button>
-                        </h2>
-                        <div id="vehicleCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
-                                <div class="mb-4">
-                                    <label class="form-label x-small fw-bold text-muted text-uppercase ls-1">Assigned Vehicle</label>
-                                    <select asp-for="VehicleId" class="form-select rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold">
-                                        <option value="">No Vehicle Assigned</option>
-                                        @foreach (var v in (IEnumerable<SCM_System.Models.Entities.Vehicle>)ViewBag.Vehicles)
-                                        {
-                                            <option value="@v.Id">@v.Make @v.Model (@v.LicensePlate)</option>
-                                        }
-                                    </select>
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1">Start Time</label>
-                                        <input asp-for="WorkingHoursStart" type="time" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-muted text-uppercase ls-1">End Time</label>
-                                        <input asp-for="WorkingHoursEnd" type="time" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" />
-                                    </div>
-                                    <div class="col-md-12 mt-4">
-                                        <label asp-for="MaxDailyDeliveries" class="form-label x-small fw-bold text-muted text-uppercase ls-1">Daily Cap: <span id="maxLabel">@Model.MaxDailyDeliveries</span> Jobs</label>
-                                        <input asp-for="MaxDailyDeliveries" type="range" class="form-range" min="1" max="50" oninput="document.getElementById('maxLabel').innerText = this.value">
-                                    </div>
-                                </div>
-                                <input type="hidden" asp-for="IsOnDuty" id="isOnDutyHidden" />
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">DIAGNOSTIC STATUS</label>
+                                <select class="form-select rounded-pill border-0 shadow-sm px-4 bg-light" name="status">
+                                    <option value="nominal">System Nominal</option>
+                                    <option value="warning">Maintenance Required</option>
+                                    <option value="critical">Critical (Disable Dispatch)</option>
+                                </select>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Delivery Preferences -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#preferencesCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-clipboard-check text-dark-green"></i>
-                                </div>
-                                Delivery Preferences
-                            </button>
-                        </h2>
-                        <div id="preferencesCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" asp-for="AutoAcceptAssignments">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="AutoAcceptAssignments">Auto-Accept New Assignments</label>
-                                </div>
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" asp-for="RequireProofPhoto">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="RequireProofPhoto">Always Require Proof Photo</label>
-                                </div>
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" asp-for="RequireSignature">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="RequireSignature">Always Require Signature</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Notifications -->
-                    <div class="accordion-item border-0 mb-4 rounded-5 shadow-premium overflow-hidden bg-white">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-dark-green bg-white py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#notifyCollapse">
-                                <div class="bg-faint-green p-2 rounded-circle me-3">
-                                    <i class="fas fa-bell text-dark-green"></i>
-                                </div>
-                                Notifications
-                            </button>
-                        </h2>
-                        <div id="notifyCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" asp-for="NotifyNewAssignment">
-                                    <label class="form-check-label text-dark-green small fw-bold" asp-for="NotifyNewAssignment">In-App Job Notifications</label>
-                                </div>
-                                <div class="mb-2">
-                                    <label asp-for="SmsNotificationNumber" class="form-label x-small fw-bold text-muted text-uppercase ls-1">SMS Alert Number</label>
-                                    <input asp-for="SmsNotificationNumber" class="form-control rounded-pill bg-faint-green border-0 p-3 text-dark-green fw-bold" placeholder="+123..." />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Danger Zone -->
-                    <div class="accordion-item border-0 rounded-5 shadow-premium overflow-hidden bg-white">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed fw-bold text-danger bg-soft-danger py-4 px-4 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#dangerCollapse">
-                                <div class="bg-white p-2 rounded-circle me-3">
-                                    <i class="fas fa-exclamation-triangle text-danger"></i>
-                                </div>
-                                Danger Zone
-                            </button>
-                        </h2>
-                        <div id="dangerCollapse" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                            <div class="accordion-body px-4 pb-4 pt-0">
-                                <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="col-12 mt-5">
+                                <hr class="my-4 opacity-5">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
                                     <div>
-                                        <h6 class="fw-bold mb-0 text-dark-green">Deactivate Account</h6>
-                                        <p class="text-muted x-small mb-0">Temporarily suspend your account.</p>
+                                        <h5 class="fw-bold mb-1">Push Notifications</h5>
+                                        <p class="text-muted extra-small mb-0">Get alerted for new deliveries via hardware screen.</p>
                                     </div>
-                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">Deactivate</button>
+                                    <div class="form-check form-switch custom-switch">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Auto-Accept Rerouting</h5>
+                                        <p class="text-muted extra-small mb-0">Allow AI Assistant to push new routes directly to GPS.</p>
+                                    </div>
+                                    <div class="form-check form-switch custom-switch">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="col-12 text-end mt-5">
+                                <button type="submit" class="btn btn-dark-green rounded-pill px-5 py-3 fw-bold shadow-premium text-white">SAVE HARDWARE PROFILE</button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
-
-                <div class="text-end mt-5">
-                    <button type="submit" class="btn btn-dark-green btn-lg rounded-pill px-5 shadow-premium fw-bold">
-                        <i class="fas fa-save me-2"></i>SAVE CHANGES
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    :root {
-        --dark-green: #1a3d31;
-        --accent-green: #d4f06d;
-        --faint-green: #f2f6f6;
-    }
-
-    .text-dark-green { color: var(--dark-green) !important; }
-    .bg-dark-green { background-color: var(--dark-green) !important; }
-    .bg-accent-green { background-color: var(--accent-green) !important; }
-    .text-accent-green { color: var(--accent-green) !important; }
-    .bg-faint-green { background-color: var(--faint-green) !important; }
-    .shadow-premium { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important; }
-    .rounded-5 { border-radius: 24px !important; }
-    .x-small { font-size: 0.7rem; }
-    .ls-1 { letter-spacing: 1px; }
-
-    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
-    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
-
-    .accordion-button:not(.collapsed) {
-        background-color: white !important;
-        color: var(--dark-green) !important;
-    }
+    .rounded-25 { border-radius: 25px !important; }
+    .rounded-20 { border-radius: 20px !important; }
+    .shadow-premium { box-shadow: 0 15px 50px rgba(0,0,0,0.06) !important; }
+    .bg-soft-green { background-color: rgba(46, 125, 50, 0.1) !important; }
+    .text-dark-green { color: #2e7d32 !important; }
+    .btn-dark-green { background: #2e7d32 !important; border: none; color: white; transition: all 0.3s ease; }
+    .btn-dark-green:hover { background: #1b5e20 !important; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(46,125,50,0.2); }
     
-    .form-range::-webkit-slider-thumb {
-        background: var(--dark-green);
-    }
+    .asset-avatar-wrapper { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+    .asset-avatar { width: 120px; height: 120px; }
+    .status-badge { position: absolute; bottom: 5px; right: 5px; width: 25px; height: 25px; border-radius: 50%; }
     
-    .object-fit-cover {
-        object-fit: cover;
-    }
+    .icon-sm { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .extra-small { font-size: 0.7rem !important; }
 
-    .animate-slide-down {
-        animation: slideDown 0.4s ease-out;
+    /* Custom Switch */
+    .custom-switch .form-check-input { width: 45px; height: 24px; cursor: pointer; }
+    .custom-switch .form-check-input:checked { background-color: #2e7d32; border-color: #2e7d32; }
+    
+    .animate-slide-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideUp 0.6s forwards;
     }
-
-    @@keyframes slideDown {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    @@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 </style>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
-
-    <script>
-        function previewProfile(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#profilePreview').attr('src', e.target.result).removeClass('d-none');
-                    $('#profilePreview').parent().find('.bg-light').addClass('d-none');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function updateDutyStatus(checkbox) {
-            const isChecked = $(checkbox).is(':checked');
-            $('#dutyLabel').text(isChecked ? "ON DUTY" : "OFF DUTY");
-            $('#isOnDutyHidden').val(isChecked);
-            
-            // Highlight color change
-            if(isChecked) {
-                $(checkbox).parent().removeClass('bg-light').addClass('bg-success text-white');
-            } else {
-                $(checkbox).parent().removeClass('bg-success text-white').addClass('bg-light');
-            }
-
-            toastr.info(isChecked ? "You are now active for new deliveries." : "You will not receive new delivery assignments.");
-        }
-
-        $(document).ready(function() {
-            // Initialize hidden field
-            $('#isOnDutyHidden').val($('#isOnDutySwitch').is(':checked'));
-            
-            // Set initial color
-            if($('#isOnDutySwitch').is(':checked')) {
-                $('#isOnDutySwitch').parent().addClass('bg-success text-white');
-            }
-        });
-    </script>
-}
