@@ -30,22 +30,13 @@ namespace SCM_System.Services
 
             var verification = await _context.FaydaVerifications.FirstOrDefaultAsync(x => x.FAN == fan);
 
-            if (verification == null)
+            // Multi-session handling: Invalidate old state if it wasn't verified
+            // Rate Limiting: Max 5 requests per hour per FAN or Email
+            var oneHourAgo = DateTime.Now.AddHours(-1);
+            var previousRequestTime = verification?.LastOtpRequestTime ?? DateTime.MinValue;
+
+            if (verification != null)
             {
-                verification = new FaydaVerification 
-                { 
-                    FAN = fan,
-                    UserEmail = userEmail,
-                    TransactionId = Guid.NewGuid().ToString("N").ToUpper()
-                };
-                _context.FaydaVerifications.Add(verification);
-            }
-            else
-            {
-                // Multi-session handling: Invalidate old state if it wasn't verified
-                // Rate Limiting: Max 5 requests per hour per FAN or Email
-                var oneHourAgo = DateTime.Now.AddHours(-1);
-                
                 // Check per FAN (existing verification)
                 if (verification.LastOtpRequestTime > oneHourAgo && verification.ResendCount >= 5)
                 {
@@ -55,7 +46,7 @@ namespace SCM_System.Services
                 // Check per Email (across all FANs)
                 var emailRequestCount = await _context.FaydaVerifications
                     .CountAsync(v => v.UserEmail == userEmail && v.LastOtpRequestTime > oneHourAgo);
-                
+
                 if (emailRequestCount >= 5)
                 {
                     return (false, "Rate limit exceeded for this email. Maximum 5 OTP requests per hour.", null);
@@ -78,6 +69,16 @@ namespace SCM_System.Services
                     verification.UserEmail = userEmail; // Update the email if changed
                 }
             }
+            else
+            {
+                verification = new FaydaVerification
+                {
+                    FAN = fan,
+                    UserEmail = userEmail,
+                    TransactionId = Guid.NewGuid().ToString("N").ToUpper()
+                };
+                _context.FaydaVerifications.Add(verification);
+            }
 
             verification.OTP = new Random().Next(100000, 999999).ToString();
             verification.ExpiryTime = DateTime.Now.AddMinutes(5);
@@ -85,12 +86,15 @@ namespace SCM_System.Services
             verification.LastOtpRequestTime = DateTime.Now;
             verification.Attempts = 0;
             verification.IsVerified = false;
-            verification.ResendCount++;
 
-            // Clean up old ResendCount if it's been a while (simplistic reset)
-            if (verification.LastOtpRequestTime < DateTime.Now.AddHours(-1))
+            // Reset or increment ResendCount
+            if (previousRequestTime < oneHourAgo)
             {
-                 verification.ResendCount = 1;
+                verification.ResendCount = 1;
+            }
+            else
+            {
+                verification.ResendCount++;
             }
 
             await _context.SaveChangesAsync();

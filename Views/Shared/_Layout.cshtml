@@ -185,35 +185,39 @@
     <partial name="_PublicNavbar" />
 
     <main>
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="container" style="padding-top: 100px;">
-                <div class="alert alert-success alert-dismissible fade show">
-                    <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="container" style="padding-top: 100px;">
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            </div>
-        }
-
         @RenderBody()
     </main>
 
     <!-- Footer -->
     <partial name="_Footer" />
 
+    <!-- Toast Notifications -->
+    <partial name="_Toast" />
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        $(document).ready(function() {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>showToast('@TempData["SuccessMessage"]', 'success');</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>showToast('@TempData["ErrorMessage"]', 'error');</text>
+            }
+            @if (TempData["LogoutMessage"] != null)
+            {
+                <text>showToast('@TempData["LogoutMessage"]', 'info', '👋 Goodbye');</text>
+            }
+            @if (TempData["WarningMessage"] != null)
+            {
+                <text>showToast('@TempData["WarningMessage"]', 'warning');</text>
+            }
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

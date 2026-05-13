@@ -1,10 +1,7 @@
 @model IEnumerable<SCM_System.Models.Entities.PurchaseOrder>
 @{
-    ViewData["Title"] = "Dispatch Center";
+    ViewData["Title"] = "Dispatch Control Center";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
-    var agents = ViewBag.Agents as IEnumerable<SCM_System.Models.Entities.SupplierEmployee>;
-    var vehicles = ViewBag.Vehicles as IEnumerable<SCM_System.Models.Entities.Vehicle>;
-    var suggestedVehicles = ViewBag.SuggestedVehicles as IEnumerable<SCM_System.Models.ViewModels.VehicleSuggestion>;
 }
 
 <div class="content-wrapper">
@@ -35,7 +32,9 @@
         <div class="row g-4">
             @foreach (var po in Model)
             {
-                var orderWeight = po.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0));
+                var orderWeight = po.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product?.ShippingWeight ?? 0));
+                var sortedAgents = ViewBag.SortedAgents as List<dynamic>;
+                
                 <div class="col-xl-6">
                     <div class="dashboard-card h-100 overflow-hidden d-flex flex-column">
                         <div class="card-header border-0 bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-theme">
@@ -52,7 +51,7 @@
                                         <label class="smaller text-muted d-block mb-1">DELIVERY DESTINATION</label>
                                         <div class="d-flex align-items-start">
                                             <i class="fas fa-map-marker-alt text-danger me-2 mt-1"></i>
-                                            <span class="small fw-medium text-theme">@(po.Order?.DeliveryAddress ?? "No address provided")</span>
+                                            <span class="small fw-medium text-theme">@(po.Order?.DeliveryAddress ?? po.DeliveryAddress ?? "No address provided")</span>
                                         </div>
                                     </div>
                                     <label class="smaller text-muted d-block mb-2">SHIPMENT PREVIEW</label>
@@ -75,37 +74,37 @@
                                     </div>
                                 </div>
                                 <div class="col-md-5">
-                                    <form asp-action="AssignDelivery" method="post" class="h-100 d-flex flex-column" data-order-weight="@orderWeight">
+                                    <form asp-action="AssignDelivery" method="post" class="assign-delivery-form" data-order-id="@po.Id" data-order-weight="@orderWeight">
+                                        @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@po.Id" />
                                         
                                         <div class="mb-3">
                                             <label class="smaller text-muted d-block fw-bold mb-2">SELECT AGENT</label>
-                                            <select name="agentId" class="form-select border-theme rounded-3 shadow-none py-2 bg-soft-secondary text-theme" required>
+                                            <select name="agentId" class="form-select agent-select border-theme rounded-3 shadow-none py-2 bg-soft-secondary text-theme" required>
                                                 <option value="">-- Choose Agent --</option>
-                                                @if (ViewBag.SortedAgents != null)
+                                                @if (sortedAgents != null)
                                                 {
-                                                    var sortedAgents = (IEnumerable<dynamic>)ViewBag.SortedAgents;
                                                     bool firstRecommended = true;
                                                     foreach (var item in sortedAgents)
                                                     {
                                                         var agent = item.Agent;
-                                                        string labelPrefix = "";
-                                                        if (item.IsPhysicsViolation) { labelPrefix = "🚫 [NOT SUITABLE] "; }
-                                                        else if (item.ProjectedScore > 100) { labelPrefix = "⚠️ [OVERLOADED] "; }
-                                                        else if (firstRecommended && !item.IsPhysicsViolation) { labelPrefix = "⭐ [RECOMMENDED] "; firstRecommended = false; }
-
+                                                        bool isRecommended = firstRecommended && !item.IsPhysicsViolation && item.ProjectedScore <= 100;
+                                                        string labelPrefix = isRecommended ? "⭐ [RECOMMENDED] " : "";
+                                                        string optionClass = item.IsPhysicsViolation ? "text-danger" : (item.ProjectedScore > 100 ? "text-warning" : "text-success");
+                                                        
                                                         <option value="@agent.Id" 
                                                                 data-vehicle-id="@item.VehicleId"
-                                                                class="@(item.IsPhysicsViolation ? "text-muted" : "") @(item.ProjectedScore > 100 ? "text-danger" : "text-success")">
-                                                            @labelPrefix @(agent.User?.FullName ?? "Staff") (@agent.Phone) - @(item.ProjectedScore)% Load
+                                                                data-vehicle-plate="@agent.Vehicle?.LicensePlate ?? "N/A""
+                                                                data-vehicle-type="@agent.Vehicle?.VehicleType ?? "N/A""
+                                                                data-max-load="@item.Capacity"
+                                                                data-current-load="@item.CurrentLoad"
+                                                                data-projected-score="@item.ProjectedScore"
+                                                                data-is-recommended="@(isRecommended ? "true" : "false")"
+                                                                class="@optionClass">
+                                                            @labelPrefix @(agent.User?.FullName ?? agent.FullName ?? "Staff") - Load: @(item.ProjectedScore > 100 ? "OVERLOAD" : $"{Math.Round(item.ProjectedScore)}%")
                                                         </option>
-                                                    }
-                                                }
-                                                else if (agents != null)
-                                                {
-                                                    foreach (var agent in agents)
-                                                    {
-                                                        <option value="@agent.Id" data-vehicle-id="@agent.VehicleId">@(agent.User?.FullName ?? "Staff") (@agent.Phone)</option>
+                                                        
+                                                        if (isRecommended) firstRecommended = false;
                                                     }
                                                 }
                                             </select>
@@ -113,32 +112,32 @@
 
                                         <div class="mb-4">
                                             <label class="smaller text-muted d-block fw-bold mb-2">SELECT VEHICLE</label>
-                                            <select name="vehicleId" class="form-select border-theme rounded-3 shadow-none py-2 bg-soft-secondary text-theme" required>
+                                            <select name="vehicleId" class="form-select vehicle-select border-theme rounded-3 shadow-none py-2 bg-soft-secondary text-theme" required>
                                                 <option value="">-- Choose Vehicle --</option>
-                                                @if (vehicles != null)
-                                                {
-                                                    foreach (var vehicle in vehicles)
-                                                    {
-                                                        var suggestion = suggestedVehicles?.FirstOrDefault(s => s.VehicleId == vehicle.Id);
-                                                        <option value="@vehicle.Id">
-                                                            @vehicle.LicensePlate (@vehicle.VehicleType)
-                                                            @if (suggestion != null && suggestion.Rank <= 3)
-                                                            {
-                                                                @: (AI Rank #@suggestion.Rank)
-                                                            }
-                                                        </option>
-                                                    }
-                                                }
                                             </select>
                                         </div>
 
-                                        <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold py-2 shadow-sm mt-auto">
+                                        <div class="vehicle-info-container" style="display: none;"></div>
+                                        
+                                        <!-- Override Controls (hidden initially) -->
+                                        <div class="override-container" style="display: none;">
+                                            <div class="form-check mt-2">
+                                                <input type="checkbox" class="form-check-input" id="overrideCheckbox" name="isOverride" value="true">
+                                                <label class="form-check-label small text-warning" for="overrideCheckbox">
+                                                    <i class="fas fa-exclamation-triangle"></i> Override overload restriction
+                                                </label>
+                                            </div>
+                                            <div class="override-reason-container mt-2" style="display: none;">
+                                                <input type="text" name="overrideReason" class="form-control form-control-sm border-theme" placeholder="Reason for override (required)">
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold py-2 shadow-sm mt-3 confirm-dispatch-btn" disabled>
                                             <i class="fas fa-truck-loading me-2"></i> Confirm Dispatch
                                         </button>
                                     </form>
                                 </div>
                             </div>
-                            <div class="vehicle-info-container" style="display:none;"></div>
                         </div>
                     </div>
                 </div>
@@ -191,100 +190,146 @@
     .form-select:focus {
         background-color: var(--bg-card) !important;
         color: var(--text-primary) !important;
-        border-color: var(--primary-color) !important;
+        border-color: #2E9C7A !important;
         box-shadow: 0 0 0 3px rgba(46, 156, 122, 0.1) !important;
+    }
+    
+    .progress {
+        background-color: var(--border);
+        border-radius: 4px;
+        overflow: hidden;
     }
 </style>
 
 @section Scripts {
     <script>
         $(document).ready(function() {
-            $('select[name="agentId"]').on('change', function() {
-                const employeeId = $(this).val();
+            // When agent is selected, auto-fill vehicle and show info
+            $('.agent-select').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
                 const form = $(this).closest('form');
-                const vehicleSelect = form.find('select[name="vehicleId"]');
-                const infoDiv = form.closest('.card-body').find('.vehicle-info-container');
+                const vehicleSelect = form.find('.vehicle-select');
+                const infoContainer = form.find('.vehicle-info-container');
+                const confirmBtn = form.find('.confirm-dispatch-btn');
+                const overrideContainer = form.find('.override-container');
+                const orderWeight = parseFloat(form.data('order-weight')) || 0;
                 
-                if (!employeeId) {
-                    infoDiv.fadeOut();
+                const vehicleId = selectedOption.data('vehicle-id');
+                const vehiclePlate = selectedOption.data('vehicle-plate');
+                const vehicleType = selectedOption.data('vehicle-type');
+                const maxLoad = parseFloat(selectedOption.data('max-load')) || 0;
+                const currentLoad = parseFloat(selectedOption.data('current-load')) || 0;
+                const projectedScore = parseFloat(selectedOption.data('projected-score')) || 0;
+                const isRecommended = selectedOption.data('is-recommended');
+                
+                if (!vehicleId || vehicleId === 0) {
+                    vehicleSelect.html('<option value="">-- Choose Vehicle --</option>');
+                    infoContainer.hide();
+                    overrideContainer.hide();
+                    confirmBtn.prop('disabled', true);
                     return;
                 }
-
-                const orderWeight = form.data('order-weight') || 0;
-                $.ajax({
-                    url: '/Workforce/GetDriverDetails',
-                    data: { employeeId: employeeId, newOrderWeightKg: orderWeight },
-                    success: function(driverData) {
-                        if (driverData.vehicleId) {
-                            vehicleSelect.val(driverData.vehicleId);
-                            
-                            let statusColor = driverData.loadStatus === 'Critical' ? 'danger' : (driverData.loadStatus === 'High Risk' ? 'warning' : 'success');
-                            
-                            let alertHtml = '';
-                            if (driverData.isPhysicsViolation) {
-                                alertHtml = `<div class="alert alert-danger mt-2 py-2 smaller shadow-sm border-0 rounded-3">
-                                    <i class="fas fa-ban me-1"></i> <strong>PHYSICS VIOLATION:</strong> Too heavy!
-                                </div>`;
-                                form.find('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-ban me-2"></i> Invalid Payload');
-                            } else if (driverData.workloadScore > 100) {
-                                alertHtml = `<div class="alert alert-warning mt-2 py-2 smaller shadow-sm border-0 rounded-3 bg-opacity-10 border border-warning text-warning">
-                                    <i class="fas fa-exclamation-triangle me-1"></i> <strong>OVERLOADED:</strong> High risk delay.
-                                    <div class="form-check form-switch mt-2">
-                                        <input class="form-check-input" type="checkbox" id="overrideToggle" name="isOverride" value="true">
-                                        <label class="form-check-label fw-bold" for="overrideToggle">Override</label>
-                                    </div>
-                                    <div class="mt-1 d-none" id="overrideReasonDiv">
-                                        <input type="text" class="form-control form-control-sm border-theme bg-soft-secondary text-theme" name="overrideReason" placeholder="Reason...">
-                                    </div>
-                                </div>`;
-                                form.find('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-ban me-2"></i> Overloaded');
-                            } else {
-                                form.find('button[type="submit"]').prop('disabled', false).html('<i class="fas fa-truck-loading me-2"></i> Confirm Dispatch');
-                            }
-
-                            infoDiv.html(`
-                                <div class="alert alert-info border-0 shadow-sm rounded-4 mt-3 mb-0 bg-opacity-10 border border-info">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="fas fa-truck me-2 text-primary"></i>
-                                        <div>
-                                            <div class="small fw-bold text-theme">${driverData.licensePlate} (${driverData.vehicleType})</div>
-                                            <div class="smaller text-muted">Max Payload: ${driverData.maxLoadCapacity} KG</div>
-                                        </div>
-                                    </div>
-                                    <div class="p-2 rounded-3 bg-soft-secondary border border-theme">
-                                        <div class="d-flex justify-content-between smaller mb-1 text-theme">
-                                            <span>Projected Load:</span>
-                                            <strong>${driverData.projectedLoad} / ${driverData.maxLoadCapacity} KG</strong>
-                                        </div>
-                                        <div class="progress" style="height: 4px; background-color: var(--border);">
-                                            <div class="progress-bar bg-${statusColor}" style="width: ${Math.min(100, driverData.workloadScore)}%;"></div>
-                                        </div>
-                                        <div class="mt-2 small fw-bold text-theme">Score: ${driverData.workloadScore}% (${driverData.loadStatus})</div>
-                                        ${alertHtml}
-                                    </div>
-                                </div>`).fadeIn();
-                        }
-                    }
-                });
-            });
-
-            $(document).on('change', '#overrideToggle', function() {
-                const isChecked = $(this).is(':checked');
-                const form = $(this).closest('form');
-                const reasonDiv = form.find('#overrideReasonDiv');
-                if (isChecked) {
-                    reasonDiv.removeClass('d-none');
-                    form.find('button[type="submit"]').prop('disabled', false).addClass('btn-danger').html('Confirm Override');
+                
+                // Auto-select the vehicle
+                vehicleSelect.html(`<option value="${vehicleId}" selected data-max-load="${maxLoad}">${vehiclePlate} (${vehicleType}) - Max ${maxLoad} KG</option>`);
+                
+                // Calculate load percentage
+                const totalProjectedLoad = currentLoad + orderWeight;
+                const loadPercent = (totalProjectedLoad / maxLoad) * 100;
+                let statusColor = 'success';
+                let statusText = 'Safe';
+                let isOverloaded = false;
+                
+                if (loadPercent > 100) {
+                    statusColor = 'danger';
+                    statusText = 'OVERLOADED!';
+                    isOverloaded = true;
+                } else if (loadPercent > 80) {
+                    statusColor = 'warning';
+                    statusText = 'High Load';
+                }
+                
+                // Show vehicle info
+                infoContainer.html(`
+                    <div class="alert alert-${statusColor} border-0 shadow-sm rounded-4 mt-3 mb-0 bg-opacity-10">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-truck me-2 text-${statusColor}"></i>
+                            <div>
+                                <div class="small fw-bold text-theme">${vehiclePlate} (${vehicleType})</div>
+                                <div class="smaller text-muted">Max Payload: ${maxLoad} KG</div>
+                            </div>
+                        </div>
+                        <div class="p-2 rounded-3 bg-soft-secondary border border-theme">
+                            <div class="d-flex justify-content-between smaller mb-1 text-theme">
+                                <span>Current Load:</span>
+                                <strong>${Math.round(currentLoad)} KG</strong>
+                            </div>
+                            <div class="d-flex justify-content-between smaller mb-1 text-theme">
+                                <span>New Order:</span>
+                                <strong>${Math.round(orderWeight)} KG</strong>
+                            </div>
+                            <div class="d-flex justify-content-between smaller mb-1 text-theme border-top pt-1 mt-1">
+                                <span class="fw-bold">Total Projected:</span>
+                                <strong class="text-${statusColor}">${Math.round(totalProjectedLoad)} / ${maxLoad} KG (${Math.round(loadPercent)}%)</strong>
+                            </div>
+                            <div class="progress mt-2" style="height: 6px;">
+                                <div class="progress-bar bg-${statusColor}" style="width: ${Math.min(100, loadPercent)}%;"></div>
+                            </div>
+                            <div class="mt-2 small fw-bold text-${statusColor}">${statusText}</div>
+                        </div>
+                    </div>
+                `).fadeIn();
+                
+                // Handle overload override
+                if (isOverloaded) {
+                    overrideContainer.show();
+                    confirmBtn.prop('disabled', true);
+                    confirmBtn.html('<i class="fas fa-ban me-2"></i> Overloaded - Cannot Dispatch');
                 } else {
-                    reasonDiv.addClass('d-none');
-                    form.find('button[type="submit"]').prop('disabled', true).removeClass('btn-danger').html('Overloaded');
+                    overrideContainer.hide();
+                    confirmBtn.prop('disabled', false);
+                    confirmBtn.html('<i class="fas fa-truck-loading me-2"></i> Confirm Dispatch');
                 }
             });
-
+            
+            // Handle override checkbox
+            $(document).on('change', '#overrideCheckbox', function() {
+                const form = $(this).closest('form');
+                const reasonContainer = form.find('.override-reason-container');
+                const confirmBtn = form.find('.confirm-dispatch-btn');
+                
+                if ($(this).is(':checked')) {
+                    reasonContainer.show();
+                    confirmBtn.prop('disabled', false);
+                    confirmBtn.html('<i class="fas fa-exclamation-triangle me-2"></i> Confirm Override Dispatch');
+                    confirmBtn.removeClass('btn-primary').addClass('btn-warning');
+                } else {
+                    reasonContainer.hide();
+                    confirmBtn.prop('disabled', true);
+                    confirmBtn.html('<i class="fas fa-ban me-2"></i> Overloaded - Cannot Dispatch');
+                    confirmBtn.removeClass('btn-warning').addClass('btn-primary');
+                }
+            });
+            
+            // Prevent form submission if override reason is missing
+            $(document).on('submit', '.assign-delivery-form', function(e) {
+                const isOverrideChecked = $(this).find('#overrideCheckbox').is(':checked');
+                const overrideReason = $(this).find('input[name="overrideReason"]').val();
+                
+                if (isOverrideChecked && (!overrideReason || overrideReason.trim() === '')) {
+                    e.preventDefault();
+                    alert('Please enter a reason for the override.');
+                    return false;
+                }
+                return true;
+            });
+            
             // Trigger change on load if an agent is pre-selected
-            if ($('select[name="agentId"]').val()) {
-                $('select[name="agentId"]').trigger('change');
-            }
+            $('.agent-select').each(function() {
+                if ($(this).val()) {
+                    $(this).trigger('change');
+                }
+            });
         });
     </script>
 }

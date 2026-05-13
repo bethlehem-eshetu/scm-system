@@ -28,12 +28,6 @@
         <div class="login-card">
             <h1>LOGIN</h1>
 
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div class="alert alert-danger border-0 rounded-4 mb-4 py-3" style="background: rgba(220, 53, 69, 0.2); color: #ff8e9b;">
-                    <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
-                </div>
-            }
 
             <form asp-action="Login" method="post">
                 @Html.AntiForgeryToken()

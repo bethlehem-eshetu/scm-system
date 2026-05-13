@@ -88,6 +88,7 @@ namespace SCM_System.Services
                 }
             }
 
+            if (success) lastError = null;
             await LogToDatabase(toEmail, subject, type, referenceId, success, lastError);
             if (!success) throw new Exception($"Failed to send email after 3 attempts: {lastError}");
         }

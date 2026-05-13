@@ -96,22 +96,12 @@ namespace SCM_System.Controllers
         {
             int currentUserId = GetCurrentUserId();
             if (currentUserId == 0)
-                return Json(new { count = 0, items = new object[0] });
+                return Json(new { unreadCount = 0, notifications = new object[0] });
 
-            var count = await _notificationService.GetUnreadCountAsync(currentUserId);
-            var recent = await _notificationService.GetUserNotificationsAsync(currentUserId, 5);
+            var unreadCount = await _notificationService.GetUnreadCountForUser(currentUserId);
+            var notifications = await _notificationService.GetRecentForUser(currentUserId, 5);
             
-            var items = recent.Select(n => new {
-                n.Id,
-                n.Title,
-                n.Message,
-                n.IsRead,
-                n.CreatedAt,
-                n.Type,
-                ActionUrl = n.ActionUrl ?? "/Notification/Index"
-            }).ToList();
-
-            return Json(new { count, items });
+            return Json(new { unreadCount, notifications });
         }
     }
 }

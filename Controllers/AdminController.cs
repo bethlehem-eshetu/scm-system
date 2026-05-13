@@ -34,6 +34,47 @@ namespace SCM_System.Controllers
         private readonly IVerificationService _verificationService = verificationService;
         private readonly ILogger<AdminController> _logger = logger;
 
+        // GET: /Admin/TestCategories
+        [HttpGet]
+        public async Task<IActionResult> TestCategories()
+        {
+            var categories = await _context.ProductCategories
+                .Include(c => c.SubCategories)
+                .ToListAsync();
+            
+            var html = new StringBuilder();
+            html.Append("<h1>Categories in Database</h1>");
+            html.Append("<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse;'>");
+            html.Append("<tr><th>ID</th><th>Category Name</th><th>Parent ID</th><th>Has Subcategories?</th></tr>");
+            
+            foreach (var cat in categories)
+            {
+                var hasSubs = cat.SubCategories?.Any() == true;
+                html.Append($"<tr>");
+                html.Append($"<td>{cat.Id}</td>");
+                html.Append($"<td>{cat.CategoryName}</td>");
+                html.Append($"<td>{cat.ParentCategoryId?.ToString() ?? "NULL"}</td>");
+                html.Append($"<td>{(hasSubs ? $"Yes ({cat.SubCategories.Count()})" : "No")}</td>");
+                html.Append($"</tr>");
+                
+                if (hasSubs)
+                {
+                    foreach (var sub in cat.SubCategories)
+                    {
+                        html.Append($"<tr style='background:#f5f5f5;'>");
+                        html.Append($"<td>{sub.Id}</td>");
+                        html.Append($"<td style='padding-left: 20px;'>↳ {sub.CategoryName}</td>");
+                        html.Append($"<td>{sub.ParentCategoryId}</td>");
+                        html.Append($"<td>No</td>");
+                        html.Append($"</tr>");
+                    }
+                }
+            }
+            html.Append("</table>");
+            
+            return Content(html.ToString(), "text/html");
+        }
+
         private async Task<bool> IsAdminAndPopulateNotifications()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -2278,6 +2319,7 @@ namespace SCM_System.Controllers
             TempData["SuccessMessage"] = $"Fayda identity for {user.FullName} has been rejected.";
             return RedirectToAction("AllUsers");
         }
+
     }
 
     public class RejectRequest

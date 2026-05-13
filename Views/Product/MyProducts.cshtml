@@ -22,17 +22,6 @@
         </div>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert bg-accent-green text-dark-green border-0 rounded-5 shadow-premium mb-4 p-4 animate-slide-up d-flex align-items-center">
-            <i class="fas fa-check-circle fs-4 me-3"></i>
-            <div>
-                <h6 class="fw-bold mb-0">Action Successful</h6>
-                <p class="mb-0 small">@TempData["SuccessMessage"]</p>
-            </div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-        </div>
-    }
 
     <!-- Product Grid -->
     <div class="row g-4" id="productGrid">
