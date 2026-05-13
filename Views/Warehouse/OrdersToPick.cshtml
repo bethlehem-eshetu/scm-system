@@ -26,12 +26,12 @@
 
     @if (!Model.Any())
     {
-        <div class="card data-table py-5 text-center border-0 shadow-sm">
+        <div class="dashboard-card py-5 text-center">
             <div class="opacity-25 mb-3">
                 <i class="fas fa-clipboard-check fa-4x text-muted"></i>
             </div>
-            <h5 class="fw-bold">All clear! No orders are currently awaiting picking.</h5>
-            <p class="small opacity-75">New orders will appear here automatically when accepted by the supplier.</p>
+            <h5 class="text-muted">All clear! No orders are currently awaiting picking.</h5>
+            <p class="small text-secondary">New orders will appear here automatically when accepted by the supplier.</p>
         </div>
     }
     else
@@ -40,7 +40,7 @@
             @foreach (var po in Model)
             {
                 <div class="col-12">
-                    <div class="card overflow-hidden mb-3">
+                    <div class="dashboard-card overflow-hidden mb-3">
                         <div class="card-header bg-transparent border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="fw-bold text-primary">PO #@po.PONumber</span>
@@ -54,7 +54,7 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="data-table align-middle mb-0">
+                                <table class="table table-sm align-middle mb-0 border-0">
                                     @if (ViewBag.PicklistFormat == "Minimal")
                                     {
                                         <thead class="bg-soft-secondary smaller text-muted">
@@ -171,25 +171,43 @@
 </div>
 
 <style>
+    :root {
+        --bg-page: #F1F5F9;
+        --bg-card: #FFFFFF;
+        --bg-table-header: #F8FAFC;
+        --border: #E2E8F0;
+        --text-primary: #1A2C26;
+        --text-secondary: #4B5E55;
+    }
+
+    body.dark-mode {
+        --bg-page: #0A0F0D;
+        --bg-card: #1A1F1D;
+        --bg-table-header: #252B28;
+        --border: #2A3530;
+        --text-primary: #EDEDED;
+        --text-secondary: #B8C5BE;
+    }
+
     .content-wrapper {
         min-height: 100vh;
         width: 100%;
         padding: 2rem;
-        background-color: var(--table-bg);
-        color: var(--table-text);
+        background-color: var(--bg-page);
+        color: var(--text-primary);
     }
 
-    .card-header {
-        background-color: var(--table-header-bg) !important;
-        border-bottom: 1px solid var(--table-border) !important;
+    .dashboard-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
 
-    .card-footer {
-        background-color: var(--table-header-bg) !important;
-        border-top: 1px solid var(--table-border) !important;
-    }
-
-    .text-primary { color: var(--accent-green) !important; }
-    .text-theme { color: var(--table-text) !important; }
+    .bg-soft-secondary { background-color: var(--bg-table-header) !important; }
+    .border-theme { border-color: var(--border) !important; }
+    .text-theme { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-secondary) !important; }
     .smaller { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .extra-small { font-size: 0.65rem; }
 </style>
