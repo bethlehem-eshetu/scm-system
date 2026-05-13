@@ -45,9 +45,9 @@
     <!-- Nexus Financial KPI Bar -->
     <div class="row g-4 mb-5">
         <div class="col-md-4">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift">
+            <div class="card border-0 shadow-premium rounded-5 p-4 hover-lift" style="background-color: var(--card-bg);">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4">
+                    <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">
                         <i class="fas fa-coins fs-4"></i>
                     </div>
                     <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold">Live Value</span>
@@ -57,9 +57,9 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift">
+            <div class="card border-0 shadow-premium rounded-5 p-4 hover-lift" style="background-color: var(--card-bg);">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4">
+                    <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">
                         <i class="fas fa-clock-rotate-left fs-4"></i>
                     </div>
                     <span class="badge bg-soft-warning text-warning rounded-pill px-2 small fw-bold">Escrow</span>
@@ -85,12 +85,12 @@
     </div>
 
     <!-- Dynamic Filter Bar -->
-    <div class="card border-0 shadow-premium rounded-5 mb-5 bg-white">
+    <div class="card border-0 shadow-premium rounded-5 mb-5" style="background-color: var(--card-bg);">
         <div class="card-body p-4">
             <form id="filterForm" method="get" class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Fiscal Period</label>
-                    <select name="dateRange" class="form-select nexus-input border-0 bg-faint-green rounded-4 py-2 px-3 fw-bold small text-dark-green" onchange="this.form.submit()">
+                    <select name="dateRange" class="form-select nexus-input border-0 rounded-4 py-2 px-3 fw-bold small text-dark-green" style="background-color: var(--table-header-bg);" onchange="this.form.submit()">
                         <option value="all">Historical Ledger</option>
                         <option value="month">Current Quarter</option>
                         <option value="30days">Active Month</option>
@@ -98,7 +98,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Clearance Status</label>
-                    <select name="status" class="form-select nexus-input border-0 bg-faint-green rounded-4 py-2 px-3 fw-bold small text-dark-green" onchange="this.form.submit()">
+                    <select name="status" class="form-select nexus-input border-0 rounded-4 py-2 px-3 fw-bold small text-dark-green" style="background-color: var(--table-header-bg);" onchange="this.form.submit()">
                         <option value="all">All States</option>
                         <option value="Paid">Cleared / Finalized</option>
                         <option value="Pending">In Pipeline</option>
@@ -108,8 +108,8 @@
                 <div class="col-md-4">
                     <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Asset Search</label>
                     <div class="input-group">
-                        <span class="input-group-text border-0 bg-faint-green text-dark-green opacity-50"><i class="fas fa-search"></i></span>
-                        <input type="text" id="liveSearch" name="search" class="form-control nexus-input border-0 bg-faint-green py-2 fw-bold text-dark-green" placeholder="PO Reference or TX ID...">
+                        <span class="input-group-text border-0 text-dark-green opacity-50" style="background-color: var(--table-header-bg);"><i class="fas fa-search"></i></span>
+                        <input type="text" id="liveSearch" name="search" class="form-control nexus-input border-0 py-2 fw-bold text-dark-green" style="background-color: var(--table-header-bg);" placeholder="PO Reference or TX ID...">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -122,10 +122,10 @@
     </div>
 
     <!-- Main Financial Ledger -->
-    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white">
-        <div class="card-header bg-white py-4 px-5 d-flex justify-content-between align-items-center border-0">
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden" style="background-color: var(--card-bg);">
+        <div class="card-header py-4 px-5 d-flex justify-content-between align-items-center border-0" style="background-color: var(--card-bg);">
             <h5 class="fw-bold mb-0 text-dark-green">Transaction Intelligence Ledger</h5>
-            <span class="badge bg-faint-green text-dark-green rounded-pill px-4 py-2 fw-bold border small">@displayList.Count() Verified Records</span>
+            <span class="badge rounded-pill px-4 py-2 fw-bold border small" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">@displayList.Count() Verified Records</span>
         </div>
         <div class="table-responsive px-4 pb-4">
             <table class="table table-hover align-middle mb-0 custom-nexus-table">
@@ -164,7 +164,7 @@
                                     @if (payment.PurchaseOrder != null) { <text>PO Reference: #@payment.PurchaseOrder.PONumber</text> }
                                     else if (payment.Order != null) { <text>Order Ref: #@payment.Order.OrderNumber</text> }
                                 </div>
-                                <div class="badge bg-faint-green text-dark-green extra-small fw-bold border">TXID: #@payment.Id</div>
+                                <div class="badge extra-small fw-bold border" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">TXID: #@payment.Id</div>
                             </td>
                             <td>
                                 @if (payment.PaymentType == "OrderPayment") { <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-1 extra-small fw-bold ls-1">RETAILER SETTLEMENT</span> }
@@ -263,7 +263,7 @@
 
         .border-dashed-custom { border: 2px dashed rgba(26, 61, 49, 0.1); }
 
-        .nexus-input:focus { background-color: #fff !important; box-shadow: 0 0 0 4px rgba(212, 240, 109, 0.2) !important; border: 1px solid var(--accent-green) !important; }
+        .nexus-input:focus { background-color: var(--card-bg) !important; box-shadow: 0 0 0 4px rgba(212, 240, 109, 0.2) !important; border: 1px solid var(--accent-green) !important; }
 
         .custom-nexus-table thead th { border-bottom: none; padding: 20px 0; }
         .custom-nexus-table tbody td { padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.02); }
@@ -272,8 +272,8 @@
         .hover-lift { transition: all 0.3s ease; }
         .hover-lift:hover { transform: translateY(-10px); }
         
-        .btn-white { background: white; border: none; color: var(--dark-green); }
-        .btn-white:hover { background-color: var(--faint-green); }
+        .btn-white { background: var(--card-bg); border: 1px solid var(--table-border); color: var(--table-text); }
+        .btn-white:hover { background-color: var(--table-header-bg); }
         .btn-dark-green { background-color: var(--dark-green); color: white; border: none; }
         .btn-dark-green:hover { background-color: #244d3e; color: white; }
         .btn-faint-green { background-color: var(--faint-green); color: var(--dark-green); border: none; }

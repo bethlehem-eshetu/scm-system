@@ -25,9 +25,9 @@
             </div>
         </div>
         <div class="col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: var(--card-bg);">
                 <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
-                    <div class="icon-shape bg-success bg-opacity-10 text-success rounded-circle p-4 mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                    <div class="icon-shape rounded-circle p-4 mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: var(--table-header-bg); color: #198754;">
                         <i class="fas fa-check-double fs-2"></i>
                     </div>
                     <h5 class="fw-bold mb-1">Paid to Date</h5>
@@ -39,8 +39,8 @@
     </div>
 
     <!-- Commission Ledger -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: var(--card-bg);">
+        <div class="card-header border-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3" style="background-color: var(--card-bg);">
             <h5 class="fw-bold mb-0">Commission Ledger</h5>
             <div class="d-flex gap-3 align-items-center">
                 <div class="btn-group btn-group-sm rounded-pill overflow-hidden border">
@@ -54,7 +54,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-muted small text-uppercase fw-bold">
+                    <thead class="small text-uppercase fw-bold" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">
                         <tr>
                             <th class="ps-4">Reference</th>
                             <th>Order Details</th>
@@ -122,7 +122,7 @@
     </div>
 
     <!-- Security Information -->
-    <div class="mt-4 p-4 rounded-4 bg-light border border-dashed text-center">
+    <div class="mt-4 p-4 rounded-4 text-center" style="background-color: var(--table-header-bg); border: 1px dashed var(--table-border);">
         <p class="mb-0 small text-muted">
             <i class="fas fa-shield-alt text-success me-2"></i> All payments are processed securely via <strong>Chapa</strong>. We do not store your credit card details.
         </p>

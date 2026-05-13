@@ -29,56 +29,60 @@
             </div>
         </div>
 
-        <!-- KPI Cards -->
+        <!-- KPI Cards Grid -->
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-dark-green">
-                <div class="d-flex align-items-center">
-                    <div class="bg-faint-green text-dark-green rounded-4 p-3 me-3">
-                        <i class="fas fa-shopping-cart fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-card-color">
+                <div class="d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: var(--accent-green) !important;">
+                            <i class="fas fa-shopping-cart fa-lg"></i>
+                        </div>
+                        <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold" data-bs-toggle="tooltip" title="Total completed procurement cycles">Verified</span>
                     </div>
-                    <div>
-                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Total Orders</p>
-                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.TotalOrders</h4>
-                    </div>
+                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Total Orders</p>
+                    <h2 class="fw-bold text-success mb-0">@ViewBag.TotalOrders</h2>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-accent-green">
-                <div class="d-flex align-items-center">
-                    <div class="bg-faint-green text-dark-green rounded-4 p-3 me-3">
-                        <i class="fas fa-money-bill-wave fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-card-color">
+                <div class="d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: var(--accent-green) !important;">
+                            <i class="fas fa-money-bill-wave fa-lg"></i>
+                        </div>
+                        <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold">Live Value</span>
                     </div>
-                    <div>
-                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Total Procurement</p>
-                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.TotalSpent.ToString("N0") <small class="extra-small opacity-50">ETB</small></h4>
-                    </div>
+                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Total Procurement</p>
+                    <h2 class="fw-bold text-success mb-0">@ViewBag.TotalSpent.ToString("N0") <small class="fs-6 opacity-50">ETB</small></h2>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-info">
-                <div class="d-flex align-items-center">
-                    <div class="bg-soft-info text-info rounded-4 p-3 me-3">
-                        <i class="fas fa-truck-loading fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-card-color">
+                <div class="d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: #0dcaf0 !important;">
+                            <i class="fas fa-truck-loading fa-lg"></i>
+                        </div>
+                        <span class="badge bg-soft-info text-info rounded-pill px-2 small fw-bold" data-bs-toggle="tooltip" title="Adherence to Service Level Agreements">Compliance</span>
                     </div>
-                    <div>
-                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">SLA Compliance</p>
-                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.OnTimeDeliveryRate%</h4>
-                    </div>
+                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">SLA Compliance</p>
+                    <h2 class="fw-bold text-success mb-0">@ViewBag.OnTimeDeliveryRate%</h2>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white border-start border-5 border-warning">
-                <div class="d-flex align-items-center">
-                    <div class="bg-soft-warning text-warning rounded-4 p-3 me-3">
-                        <i class="fas fa-star fa-lg"></i>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-card-color">
+                <div class="d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: #ffc107 !important;">
+                            <i class="fas fa-star fa-lg"></i>
+                        </div>
+                        <span class="badge bg-soft-warning text-warning rounded-pill px-2 small fw-bold">Market Cap</span>
                     </div>
-                    <div>
-                        <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Market Trust</p>
-                        <h4 class="fw-bold text-dark-green mb-0">@ViewBag.AverageRatingGiven.ToString("F1") <small class="extra-small opacity-50">/ 5.0</small></h4>
-                    </div>
+                    <p class="extra-small text-muted fw-bold text-uppercase ls-1 mb-1">Market Trust</p>
+                    <h2 class="fw-bold text-success mb-0">@ViewBag.AverageRatingGiven.ToString("F1") <small class="fs-6 opacity-50">/ 5.0</small></h2>
                 </div>
             </div>
         </div>
@@ -259,29 +263,33 @@
 
                 <!-- Panel: Procurement Defaults -->
                 <div class="tab-pane fade" id="panel-procurement">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0">
+                    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-card-color">
+                        <div class="card-header py-4 px-5 border-0" style="background-color: var(--table-header-bg);">
                             <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-cog text-accent-green me-2"></i>Procurement Strategy</h5>
                         </div>
                         <div class="card-body p-5">
                             <form id="procurementForm" class="row g-4">
                                 <div class="col-md-6">
-                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Tender Lifecycle (Days)</label>
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2" data-bs-toggle="tooltip" title="Default duration for bidding processes">Tender Lifecycle (Days)</label>
                                     <input type="number" name="defaultTenderClosingDays" class="form-control scm-input" value="@Model.DefaultTenderClosingDays" />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Target Fulfillment Window</label>
+                                    <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2" data-bs-toggle="tooltip" title="Expected time between order and receipt">Target Fulfillment Window</label>
                                     <input type="number" name="preferredDeliveryTimeline" class="form-control scm-input" value="@Model.PreferredDeliveryTimeline" />
                                 </div>
                                 <div class="col-md-12">
                                     <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Asset Procurement Range (ETB)</label>
-                                    <div class="input-group">
-                                        <input type="number" name="budgetMin" class="form-control scm-input rounded-end-0 border-end" placeholder="Min" value="@Model.BudgetMin" />
-                                        <input type="number" name="budgetMax" class="form-control scm-input rounded-start-0" placeholder="Max" value="@Model.BudgetMax" />
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" name="budgetMin" class="form-control scm-input" placeholder="Min" value="@Model.BudgetMin" />
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" name="budgetMax" class="form-control scm-input" placeholder="Max" value="@Model.BudgetMax" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-12 text-end mt-4">
-                                    <button type="button" class="btn btn-dark-green rounded-pill px-5 py-3 fw-bold shadow-premium" onclick="saveSettings('UpdateProcurementDefaults', 'procurementForm')">Save Procurement Protocol</button>
+                                    <button type="button" class="btn btn-success rounded-pill px-5 py-3 fw-bold shadow-premium" onclick="saveSettings('UpdateProcurementDefaults', 'procurementForm')">Save Procurement Protocol</button>
                                 </div>
                             </form>
                         </div>
@@ -422,6 +430,46 @@
         .btn-dark-green { background-color: var(--dark-green); color: white; border: none; }
         .btn-dark-green:hover { background-color: #244d3e; transform: translateY(-2px); }
 
+        /* Dark Mode Consistency Overrides */
+        body.dark-mode .kpi-card,
+        body.dark-mode .metric-box,
+        body.dark-mode .form-group,
+        body.dark-mode .settings-section {
+            background-color: #1e2a2a !important; /* deep green base */
+            color: #ffffff !important;
+            border-color: #3a4a4a !important;
+        }
+
+        body.dark-mode input,
+        body.dark-mode .scm-input,
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: #2a3b3b !important;
+            color: #f0f0f0 !important;
+            border-color: #3a4a4a !important;
+        }
+
+        body.dark-mode .btn-outline-primary,
+        body.dark-mode .btn-outline-secondary {
+            border-color: #20C997;
+            color: #20C997;
+        }
+        body.dark-mode .btn-outline-primary:hover,
+        body.dark-mode .btn-outline-secondary:hover {
+            background-color: #20C997;
+            color: #1e2a2a;
+        }
+
+        /* Specifically target the Procurement Strategy section */
+        body.dark-mode .procurement-strategy,
+        body.dark-mode .procurement-strategy .card {
+            background-color: #1e2a2a !important;
+        }
+        body.dark-mode .procurement-strategy label,
+        body.dark-mode .procurement-strategy .form-label {
+            color: #ffffff !important;
+        }
+
         .fa-spin-slow { animation: fa-spin 10s infinite linear; }
         .bg-soft-success { background-color: rgba(25, 135, 84, 0.05); color: #198754; }
         .bg-soft-warning { background-color: rgba(255, 193, 7, 0.05); color: #ffc107; }
@@ -432,6 +480,12 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Initialize Tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+
             // Tab Persistence
             var activeTab = localStorage.getItem('retailerSettingsTab');
             if (activeTab) {

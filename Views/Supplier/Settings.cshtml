@@ -49,8 +49,8 @@
     <div class="row g-5">
         <!-- Sidebar Navigation -->
         <div class="col-lg-3">
-            <div class="card border-0 shadow-premium rounded-5 sticky-top bg-white overflow-hidden" style="top: 20px;">
-                <div class="p-5 text-center border-bottom border-faint bg-faint-green">
+            <div class="card border-0 shadow-premium rounded-5 sticky-top overflow-hidden" style="top: 20px; background-color: var(--card-bg);">
+                <div class="p-5 text-center border-bottom border-faint" style="background-color: var(--table-header-bg);">
                     <div class="position-relative d-inline-block mb-4">
                         <div class="bg-white rounded-circle shadow-premium d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white" style="width: 120px; height: 120px; margin: 0 auto;">
                                 <img src="@(string.IsNullOrEmpty(Model.ExistingLogo) ? "/img/default-company.png" : Model.ExistingLogo)" 
@@ -67,7 +67,7 @@
                         <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small ls-1 uppercase fw-bold">Active Supplier</span>
                     </div>
                 </div>
-                <div class="p-4 bg-white">
+                <div class="p-4" style="background-color: var(--card-bg);">
                     <div class="nav flex-column nav-pills scm-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                         <button class="nav-link active text-start mb-2 rounded-pill px-4 py-3 fw-bold transition-all" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
                             <i class="fas fa-id-card me-3 text-center opacity-75"></i>Business Profile
@@ -92,8 +92,8 @@
                 
                 <!-- 1. Business Profile -->
                 <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0">
+                    <div class="card border-0 shadow-premium rounded-5 overflow-hidden" style="background-color: var(--card-bg);">
+                        <div class="card-header py-4 px-5 border-0" style="background-color: var(--table-header-bg);">
                             <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-briefcase text-accent-green me-2"></i>Business Identity</h5>
                         </div>
                         <div class="card-body p-5">
@@ -106,7 +106,7 @@
                                     <!-- Logo Upload -->
                                     <div class="col-12 text-center mb-5">
                                         <div class="position-relative d-inline-block">
-                                            <div class="bg-faint-green rounded-circle shadow-inner d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white" style="width: 140px; height: 140px;">
+                                            <div class="rounded-circle shadow-inner d-flex align-items-center justify-content-center overflow-hidden border border-4" style="width: 140px; height: 140px; background-color: var(--table-header-bg); border-color: var(--table-border) !important;">
                                                 @if (!string.IsNullOrEmpty(Model.ExistingLogo))
                                                 {
                                                     <img src="@Model.ExistingLogo" id="logoPreview" class="img-fluid h-100 w-100 object-fit-cover" alt="Logo" />
@@ -171,8 +171,8 @@
 
                 <!-- 2. Financial Setup -->
                 <div class="tab-pane fade" id="v-pills-finance" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0 d-flex justify-content-between align-items-center">
+                    <div class="card border-0 shadow-premium rounded-5 overflow-hidden" style="background-color: var(--card-bg);">
+                        <div class="card-header py-4 px-5 border-0 d-flex justify-content-between align-items-center" style="background-color: var(--table-header-bg);">
                             <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-university text-accent-green me-2"></i>Treasury & Banking</h5>
                             <button type="button" class="btn btn-dark-green btn-sm rounded-pill px-4 py-2 shadow-sm fw-bold extra-small" data-bs-toggle="modal" data-bs-target="#bankAccountModal">
                                 <i class="fas fa-plus me-2 text-accent-green"></i> Register Account
@@ -183,7 +183,7 @@
                              <div class="table-responsive">
                                 <table class="table table-hover align-middle border-0">
                                     <thead>
-                                        <tr class="bg-faint-green">
+                                        <tr style="background-color: var(--table-header-bg);">
                                             <th class="border-0 rounded-start-pill ps-4 py-3 extra-small fw-bold text-muted uppercase">Bank Entity</th>
                                             <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Account Holder</th>
                                             <th class="border-0 py-3 extra-small fw-bold text-muted uppercase">Ledger Number</th>
@@ -230,13 +230,13 @@
 
                 <!-- 3. Security Hub -->
                 <div class="tab-pane fade" id="v-pills-security" role="tabpanel">
-                     <div class="card border-0 shadow-premium rounded-5 bg-white overflow-hidden">
-                        <div class="card-header bg-faint-green py-4 px-5 border-0">
+                     <div class="card border-0 shadow-premium rounded-5 overflow-hidden" style="background-color: var(--card-bg);">
+                        <div class="card-header py-4 px-5 border-0" style="background-color: var(--table-header-bg);">
                             <h5 class="mb-0 fw-bold text-dark-green"><i class="fas fa-key text-accent-green me-2"></i>Access & Appearance</h5>
                         </div>
                         <div class="card-body p-5">
                             <!-- Security Hub Content -->
-                             <div class="mb-5 p-4 bg-faint-green rounded-5 d-flex align-items-center justify-content-between shadow-inner">
+                             <div class="mb-5 p-4 rounded-5 d-flex align-items-center justify-content-between shadow-inner" style="background-color: var(--table-header-bg);">
                                 <div class="d-flex align-items-center">
                                     <div class="bg-white p-3 rounded-circle shadow-sm me-4 text-dark-green">
                                         <i class="fas fa-moon"></i>
@@ -276,7 +276,7 @@
 
                 <!-- 4. Danger Zone -->
                 <div class="tab-pane fade" id="v-pills-danger" role="tabpanel">
-                    <div class="card border-0 shadow-premium rounded-5 border-top border-5 border-danger bg-white overflow-hidden">
+                    <div class="card border-0 shadow-premium rounded-5 border-top border-5 border-danger overflow-hidden" style="background-color: var(--card-bg);">
                         <div class="card-header bg-soft-danger py-4 px-5 border-0">
                             <h5 class="mb-0 fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Strategic Termination</h5>
                         </div>
@@ -366,8 +366,8 @@
         .scm-pills .nav-link:hover { background-color: var(--faint-green); opacity: 1; }
         .scm-pills .nav-link.active { background-color: var(--dark-green); color: var(--accent-green); opacity: 1; box-shadow: 0 5px 15px rgba(26, 61, 49, 0.2); }
 
-        .scm-input { background-color: var(--faint-green); border: 2px solid transparent; border-radius: 100px; padding: 0.8rem 1.5rem; font-weight: 600; color: var(--dark-green); transition: all 0.3s ease; }
-        .scm-input:focus { background-color: white; border-color: var(--accent-green); box-shadow: 0 5px 20px rgba(212, 240, 109, 0.15); outline: none; }
+        .scm-input { background-color: var(--table-header-bg); border: 2px solid transparent; border-radius: 100px; padding: 0.8rem 1.5rem; font-weight: 600; color: var(--table-text); transition: all 0.3s ease; }
+        .scm-input:focus { background-color: var(--card-bg); border-color: var(--accent-green); box-shadow: 0 5px 20px rgba(212, 240, 109, 0.15); outline: none; }
 
         .border-faint { border-color: rgba(0,0,0,0.03) !important; }
         .bg-soft-danger { background-color: rgba(220, 53, 69, 0.05); color: #dc3545; }
