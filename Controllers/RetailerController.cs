@@ -964,10 +964,7 @@ namespace SCM_System.Controllers
         private string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
-<<<<<<< HEAD
 
-=======
->>>>>>> supplier-dashboard-redesign
         }
 
     }
