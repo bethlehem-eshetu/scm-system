@@ -14,9 +14,9 @@
         <div class="d-flex flex-wrap gap-2 gap-sm-3 align-items-center">
             <div class="search-bar-premium position-relative flex-grow-1 flex-md-grow-0">
                 <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                <input type="text" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm w-100" placeholder="Search transactions..." style="min-width: 250px; height: 45px;">
+                <input type="text" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm w-100 dark-mode-bg" placeholder="Search transactions..." style="min-width: 250px; height: 45px;">
             </div>
-            <button class="btn btn-white rounded-circle shadow-sm p-0 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 45px; height: 45px;" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+            <button class="btn btn-white rounded-circle shadow-sm p-0 d-flex align-items-center justify-content-center flex-shrink-0 dark-mode-btn" style="width: 45px; height: 45px;" data-bs-toggle="modal" data-bs-target="#withdrawModal">
                 <i class="fas fa-wallet text-dark-green"></i>
             </button>
         </div>
@@ -58,13 +58,13 @@
             </div>
         </div>
         <div class="col-6 col-xl-3">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 dark-mode-card">
                 <div class="card-body p-3 p-md-4">
-                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green">
+                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green dark-mode-icon-bg">
                         <i class="fas fa-hand-holding-usd"></i>
                     </div>
-                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Net Profit</p>
-                    <h3 class="text-dark-green fw-bold mb-0">@ViewBag.NetEarnings.ToString("C0")</h3>
+                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1 dark-mode-text">Net Profit</p>
+                    <h3 class="text-dark-green fw-bold mb-0 dark-mode-text">@ViewBag.NetEarnings.ToString("C0")</h3>
                     <div class="mt-2 mt-md-3 d-flex flex-wrap align-items-center gap-2">
                         <span class="badge bg-soft-success text-success rounded-pill x-small">+8.2%</span>
                     </div>
@@ -72,13 +72,13 @@
             </div>
         </div>
         <div class="col-6 col-xl-3">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 dark-mode-card">
                 <div class="card-body p-3 p-md-4">
-                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green">
+                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green dark-mode-icon-bg">
                         <i class="fas fa-university"></i>
                     </div>
-                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Pending</p>
-                    <h3 class="text-dark-green fw-bold mb-0">@ViewBag.PendingPayouts.ToString("C0")</h3>
+                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1 dark-mode-text">Pending</p>
+                    <h3 class="text-dark-green fw-bold mb-0 dark-mode-text">@ViewBag.PendingPayouts.ToString("C0")</h3>
                     <div class="mt-2 mt-md-3">
                         <span class="badge bg-soft-warning text-warning rounded-pill x-small">In Review</span>
                     </div>
@@ -86,13 +86,13 @@
             </div>
         </div>
         <div class="col-6 col-xl-3">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 dark-mode-card">
                 <div class="card-body p-3 p-md-4">
-                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green">
+                    <div class="bg-faint-green rounded-4 p-2 p-md-3 d-inline-flex mb-2 mb-md-3 text-dark-green dark-mode-icon-bg">
                         <i class="fas fa-percent"></i>
                     </div>
-                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1">Fees</p>
-                    <h3 class="text-dark-green fw-bold mb-0">@ViewBag.CommissionsPaid.ToString("C0")</h3>
+                    <p class="text-muted small text-uppercase fw-bold ls-1 mb-1 dark-mode-text">Fees</p>
+                    <h3 class="text-dark-green fw-bold mb-0 dark-mode-text">@ViewBag.CommissionsPaid.ToString("C0")</h3>
                     <div class="mt-2 mt-md-3">
                         <span class="badge bg-soft-danger text-danger rounded-pill x-small">Platform Fee</span>
                     </div>
@@ -104,11 +104,11 @@
     <!-- Tier 2: Analytics & Insights Row (Merged from Dev) -->
     <div class="row g-4 mb-5">
         <div class="col-xl-8">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4 dark-mode-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1">Earnings Analytics</h6>
-                        <h4 class="fw-bold mb-0 text-dark-green">Financial Performance</h4>
+                        <h6 class="fw-bold text-uppercase tracking-wider opacity-75 small mb-1 dark-mode-text">Earnings Analytics</h6>
+                        <h4 class="fw-bold mb-0 text-dark-green dark-mode-text">Financial Performance</h4>
                     </div>
                     <div class="d-flex gap-2">
                         <span class="badge bg-soft-success text-success rounded-pill px-3 py-2 fw-bold x-small">+15.2% growth</span>
@@ -120,21 +120,21 @@
             </div>
         </div>
         <div class="col-xl-4">
-            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green">Top Performing Retailers</h6>
+            <div class="card border-0 rounded-5 bg-white shadow-premium h-100 p-4 dark-mode-card">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green dark-mode-text">Top Performing Retailers</h6>
                 <div class="d-flex flex-column gap-3">
                     @if (ViewBag.TopRetailers != null)
                     {
                         foreach (var r in (dynamic)ViewBag.TopRetailers)
                         {
-                            <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-faint-green border-0">
+                            <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-faint-green border-0 dark-mode-retailer-item">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-white text-dark-green p-2 rounded-3 shadow-sm">
+                                    <div class="bg-white text-dark-green p-2 rounded-3 shadow-sm dark-mode-icon-box">
                                         <i class="fas fa-store"></i>
                                     </div>
-                                    <div class="fw-bold small text-dark-green">@r.Name</div>
+                                    <div class="fw-bold small text-dark-green dark-mode-text">@r.Name</div>
                                 </div>
-                                <div class="fw-bold text-dark-green small">@r.Amount.ToString("N0") ETB</div>
+                                <div class="fw-bold text-dark-green small dark-mode-text">@r.Amount.ToString("N0") ETB</div>
                             </div>
                         }
                     }
@@ -153,66 +153,86 @@
     <!-- Tier 3: Operation Status & Settlement Ledger -->
     <div class="row g-4 mb-5">
         <div class="col-xl-4">
-             <div class="card border-0 rounded-5 bg-white shadow-premium p-4 h-100">
-                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green">Operational Fleet Status</h6>
+             <div class="card border-0 rounded-5 bg-white shadow-premium p-4 h-100 dark-mode-card">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider opacity-75 small text-dark-green dark-mode-text">Operational Fleet Status</h6>
                 <div class="row g-3">
                     <div class="col-6">
-                        <div class="p-3 rounded-4 bg-faint-green text-center border-0">
+                        <div class="p-3 rounded-4 bg-faint-green text-center border-0 dark-mode-fleet-item">
                             <i class="fas fa-truck-moving fa-2x text-dark-green mb-2 opacity-75"></i>
-                            <div class="h4 fw-bold mb-0 text-dark-green">@Model.ActiveVehiclesCount</div>
-                            <div class="x-small text-muted">Active Fleet</div>
+                            <div class="h4 fw-bold mb-0 text-dark-green dark-mode-text">@Model.ActiveVehiclesCount</div>
+                            <div class="x-small text-muted dark-mode-text">Active Fleet</div>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="p-3 rounded-4 bg-faint-green text-center border-0">
+                        <div class="p-3 rounded-4 bg-faint-green text-center border-0 dark-mode-fleet-item">
                             <i class="fas fa-warehouse fa-2x text-accent-green mb-2 opacity-75"></i>
-                            <div class="h4 fw-bold mb-0 text-dark-green">@Model.HubUtilizationPercent%</div>
-                            <div class="x-small text-muted">Hub Usage</div>
+                            <div class="h4 fw-bold mb-0 text-dark-green dark-mode-text">@Model.HubUtilizationPercent%</div>
+                            <div class="x-small text-muted dark-mode-text">Hub Usage</div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-4 p-3 bg-dark-green bg-opacity-10 rounded-4 text-dark-green x-small">
+                <div class="mt-4 p-3 bg-dark-green bg-opacity-10 rounded-4 text-dark-green x-small dark-mode-info">
                     <i class="fas fa-info-circle me-2"></i> Fleet efficiency increased by 8% this week.
                 </div>
             </div>
         </div>
         <div class="col-xl-8">
-            <div class="card border-0 rounded-5 bg-white shadow-premium overflow-hidden">
-                <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark-green">Settlement Ledger</h5>
-                    <a asp-action="Payments" class="btn btn-faint-green text-dark-green rounded-pill px-4 fw-bold small shadow-sm">View All</a>
+            <div class="card border-0 rounded-5 bg-white shadow-premium overflow-hidden dark-mode-card">
+                <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center dark-mode-header">
+                    <h5 class="mb-0 fw-bold text-dark-green dark-mode-text">Settlement Ledger</h5>
+                    <a asp-action="Payments" class="btn btn-faint-green text-dark-green rounded-pill px-4 fw-bold small shadow-sm dark-mode-btn">View All</a>
                 </div>
-                <div class="table-responsive">
-                    <table class="table align-middle table-hover mb-0">
-                        <thead class="bg-faint-green">
+                <div class="table-responsive dark-mode-table-wrapper">
+                    <table class="table align-middle mb-0 dark-mode-table">
+                        <thead class="bg-faint-green dark-mode-thead">
                             <tr>
-                                <th class="ps-4 py-3 text-muted small text-uppercase fw-bold ls-1">Order Details</th>
-                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end">Gross</th>
-                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end">Fees</th>
-                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end">Net</th>
-                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-center">Status</th>
+                                <th class="ps-4 py-3 text-muted small text-uppercase fw-bold ls-1 dark-mode-text">Order Details</th>
+                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end dark-mode-text">Gross</th>
+                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end dark-mode-text">Fees</th>
+                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-end dark-mode-text">Net</th>
+                                <th class="py-3 text-muted small text-uppercase fw-bold ls-1 text-center dark-mode-text">Status</th>
                             </tr>
                         </thead>
-                        <tbody>
+                                               <tbody class="dark-mode-tbody">
                             @if (ViewBag.FinancialLedger != null)
                             {
                                 foreach (var entry in (dynamic)ViewBag.FinancialLedger)
                                 {
                                     <tr>
                                         <td class="ps-4 py-3">
-                                            <div class="fw-bold text-dark-green">#@entry.OrderNumber</div>
-                                            <div class="x-small text-muted">@entry.Retailer</div>
+                                            <div class="fw-bold text-dark-green dark-mode-text">#@entry.OrderNumber</div>
+                                            <div class="x-small text-muted dark-mode-text">@entry.Retailer</div>
                                         </td>
-                                        <td class="py-3 text-end fw-bold text-dark-green">@entry.Amount.ToString("N0")</td>
-                                        <td class="py-3 text-end text-danger x-small">-@entry.Commission.ToString("N0")</td>
-                                        <td class="py-3 text-end text-success fw-bold">+@entry.Net.ToString("N0")</td>
+                                        <td class="py-3 text-end fw-bold text-dark-green dark-mode-text">@entry.Amount.ToString("N0")</td>
+                                        <td class="py-3 text-end text-danger x-small dark-mode-fee">-@entry.Commission.ToString("N0")</td>
+                                        <td class="py-3 text-end text-success fw-bold dark-mode-net">+@entry.Net.ToString("N0")</td>
                                         <td class="py-3 text-center">
-                                            @if (entry.PayoutStatus == "Paid") { <span class="status-badge bg-soft-success text-success">Released</span> }
-                                            else if (entry.PayoutStatus == "Pending") { <span class="status-badge bg-soft-warning text-warning">Pending</span> }
-                                            else { <span class="status-badge bg-soft-secondary text-secondary">@entry.PayoutStatus</span> }
+                                            @if (entry.PayoutStatus == "Paid") 
+                                            { 
+                                                <span class="status-badge bg-soft-success text-success dark-mode-badge">Released</span> 
+                                            }
+                                            else if (entry.PayoutStatus == "Pending") 
+                                            { 
+                                                <span class="status-badge bg-soft-warning text-warning dark-mode-badge">Pending</span> 
+                                            }
+                                            else 
+                                            { 
+                                                <span class="status-badge bg-soft-secondary text-secondary dark-mode-badge">@entry.PayoutStatus</span> 
+                                            }
                                         </td>
                                     </tr>
                                 }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="opacity-50">
+                                            <i class="fas fa-receipt fa-3x mb-3"></i>
+                                            <p class="mb-0 dark-mode-text">No transactions found</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             }
                         </tbody>
                     </table>
@@ -225,22 +245,22 @@
 <!-- Withdraw Modal -->
 <div class="modal fade" id="withdrawModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden">
+        <div class="modal-content border-0 shadow-premium rounded-5 overflow-hidden dark-mode-modal">
             <div class="modal-header bg-dark-green text-white py-4 px-4 border-0">
                 <h5 class="modal-title fw-bold"><i class="fas fa-wallet me-2"></i> Request Payout</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4 text-center">
-                <div class="bg-faint-green rounded-5 p-4 mb-4 border-dashed-custom">
-                    <p class="text-muted small mb-1">Available for Withdrawal</p>
-                    <h2 class="fw-bold text-dark-green">@ViewBag.NetEarnings.ToString("C")</h2>
+            <div class="modal-body p-4 text-center dark-mode-modal-body">
+                <div class="bg-faint-green rounded-5 p-4 mb-4 border-dashed-custom dark-mode-modal-box">
+                    <p class="text-muted small mb-1 dark-mode-text">Available for Withdrawal</p>
+                    <h2 class="fw-bold text-dark-green dark-mode-text">@ViewBag.NetEarnings.ToString("C")</h2>
                 </div>
                 
-                <div class="alert bg-soft-info text-info border-0 rounded-4 x-small mb-4 text-start">
+                <div class="alert bg-soft-info text-info border-0 rounded-4 x-small mb-4 text-start dark-mode-alert">
                     <i class="fas fa-info-circle me-2"></i> Funds will be transferred to your primary bank account within 48 hours.
                 </div>
                 
-                <button class="btn btn-dark-green w-100 rounded-pill py-3 fw-bold shadow-premium" onclick="alert('Payout request submitted!'); $('#withdrawModal').modal('hide');">
+                <button class="btn btn-dark-green w-100 rounded-pill py-3 fw-bold shadow-premium dark-mode-btn" onclick="alert('Payout request submitted!'); $('#withdrawModal').modal('hide');">
                     Confirm Payout
                 </button>
             </div>
@@ -287,6 +307,147 @@
         }
         
         .tracking-wider { letter-spacing: 1px; }
+
+        /* ============================================ */
+        /* DARK MODE STYLES - FIXED FOR SETTLEMENT LEDGER */
+        /* ============================================ */
+        body.dark-mode .dark-mode-card {
+            background-color: #1e2a3a !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-text.text-muted {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-text.text-dark-green {
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-bg {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-bg::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-btn i {
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-bg {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-box {
+            background-color: #1e2a3a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-retailer-item {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-fleet-item {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-info {
+            background-color: rgba(37, 99, 235, 0.15) !important;
+            color: #93c5fd !important;
+        }
+
+        /* SETTLEMENT LEDGER TABLE - FIXED FOR DARK MODE */
+        body.dark-mode .dark-mode-table {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-thead {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-thead th {
+            color: #cbd5e1 !important;
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr:hover {
+            background-color: #2d3a4a !important;
+        }
+
+        body.dark-mode .dark-mode-tbody td {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+        }
+
+        body.dark-mode .dark-mode-fee {
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .dark-mode-net {
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-badge {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-badge.text-success {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-badge.text-warning {
+            background-color: rgba(251, 191, 36, 0.15) !important;
+            color: #fbbf24 !important;
+        }
+
+        /* Table wrapper for better dark mode */
+        body.dark-mode .dark-mode-table-wrapper {
+            background-color: #1e2a3a !important;
+        }
+
+        /* MODAL DARK MODE */
+        body.dark-mode .dark-mode-modal {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-modal-body {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-modal-box {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-alert {
+            background-color: rgba(13, 202, 240, 0.1) !important;
+            color: #67e8f9 !important;
+        }
+
+        /* Card header dark mode */
+        body.dark-mode .dark-mode-header {
+            background-color: #1e2a3a !important;
+            border-bottom-color: #334155 !important;
+        }
     </style>
 }
 

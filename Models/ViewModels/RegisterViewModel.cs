@@ -103,8 +103,5 @@ namespace SCM_System.Models.ViewModels
         // Selected Categories for Supplier
         [Display(Name = "Business Categories")]
         public List<int>? SelectedCategoryIds { get; set; } = new List<int>();
-
-        // Selected Categories for Retailer (Deprecated for registration bypass)
-        // public List<int>? SelectedRetailerCategoryIds { get; set; } = new List<int>();
     }
 }

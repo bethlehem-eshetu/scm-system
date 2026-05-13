@@ -189,16 +189,41 @@ namespace SCM_System.Services
 
                 _context.PurchaseOrders.Add(po);
 
-                // Notify supplier
+                // Notify Admin, Supplier and Retailer
                 var supplier = await _context.Suppliers.Include(s => s.User).FirstOrDefaultAsync(s => s.Id == supplierId);
                 if (supplier != null)
                 {
+                    // Admin Notification
+                    var adminNote = new AdminNotification
+                    {
+                        Title = "New Order Request",
+                        Message = $"A new order (#{order.OrderNumber}) has been placed by {retailer?.BusinessName ?? "Retailer"}.",
+                        NotificationType = "Order",
+                        ActionUrl = "/Admin/Orders",
+                        CreatedAt = DateTime.Now
+                    };
+                    await _notificationService.CreateAdminNotificationAsync(adminNote);
+
+                    // Supplier Notification
                     await _notificationService.SendNotificationAsync(
                         supplier.UserId,
-                        "New Order Request",
-                        $"New direct order request ({order.OrderNumber}) from {retailer?.BusinessName}. Please Review.",
-                        "Info"
+                        "New Order Received",
+                        $"New direct order request ({order.OrderNumber}) from {retailer?.BusinessName ?? "Retailer"}. Please Review.",
+                        "Order",
+                        $"/Order/Details/{order.Id}"
                     );
+
+                    // Retailer Notification
+                    if (retailer != null)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            retailer.UserId,
+                            "Order Placed successfully",
+                            $"Your order #{order.OrderNumber} has been received and is pending supplier acceptance.",
+                            "Order",
+                            $"/Retailer/OrderTracking"
+                        );
+                    }
                 }
             }
 

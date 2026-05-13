@@ -1,0 +1,227 @@
+@model SCM_System.Models.Entities.PurchaseOrder
+@{
+    ViewData["Title"] = "Order Tracking: #" + Model.PONumber;
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4 pb-5 px-4 mt-2">
+    <!-- Back Button & Breadcrumbs -->
+    <nav class="mb-4 animate-slide-up">
+        <a asp-action="MyDeliveries" class="btn btn-link text-dark-green p-0 fw-bold text-decoration-none">
+            <i class="fas fa-arrow-left me-2"></i> Back to Queue
+        </a>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Main Tracking Details -->
+        <div class="col-xl-8 animate-slide-up" style="animation-delay: 0.1s;">
+            <div class="card border-0 rounded-25 shadow-premium bg-white h-100 overflow-hidden">
+                <div class="card-header bg-soft-green border-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="fw-bold text-dark-green mb-1">Dispatch #@Model.PONumber</h4>
+                            <p class="text-muted extra-small mb-0">Retailer: @Model.Retailer?.BusinessName</p>
+                        </div>
+                        <span class="badge @(Model.Status == "In Transit" ? "bg-success" : "bg-warning") rounded-pill px-4 py-2">
+                            @Model.Status
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <!-- Delivery Progress Tracker -->
+                    <div class="delivery-tracker mb-5">
+                        <ul class="tracking-list">
+                            <li class="track-item done">
+                                <div class="track-marker"><i class="fas fa-check"></i></div>
+                                <div class="track-content">
+                                    <h6 class="fw-bold mb-0">Order Issued</h6>
+                                    <p class="extra-small text-muted mb-0">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                                </div>
+                            </li>
+                            <li class="track-item done">
+                                <div class="track-marker"><i class="fas fa-check"></i></div>
+                                <div class="track-content">
+                                    <h6 class="fw-bold mb-0">Packed & Dispatched from Hub</h6>
+                                    <p class="extra-small text-muted mb-0">@Model.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                                </div>
+                            </li>
+                            <li class="track-item @(Model.Status == "In Transit" || Model.Status == "Delivered" ? "done" : "active")">
+                                <div class="track-marker">@(Model.Status == "In Transit" || Model.Status == "Delivered" ? Html.Raw("<i class='fas fa-check'></i>") : Html.Raw("<i class='fas fa-truck-loading'></i>"))</div>
+                                <div class="track-content">
+                                    <h6 class="fw-bold mb-0">In Transit</h6>
+                                    <p class="extra-small text-muted mb-0">@(Model.Status == "In Transit" ? "Out for delivery" : "Completed")</p>
+                                </div>
+                            </li>
+                            <li class="track-item @(Model.Status == "Delivered" ? "done" : "")">
+                                <div class="track-marker"><i class="fas fa-home"></i></div>
+                                <div class="track-content">
+                                    <h6 class="fw-bold mb-0">Delivered</h6>
+                                    <p class="extra-small text-muted mb-0">@(Model.DeliveredAt.HasValue ? Model.DeliveredAt.Value.ToString("MMM dd, yyyy HH:mm") : "Estimated: Today")</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Order Items Table -->
+                    <h5 class="fw-bold text-dark mb-4">Package Contents</h5>
+                    <div class="table-responsive rounded-20 border">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-3 small text-muted">PRODUCT</th>
+                                    <th class="py-3 small text-muted">SKU</th>
+                                    <th class="py-3 small text-muted text-center">QTY</th>
+                                    <th class="pe-4 py-3 small text-muted text-end">WEIGHT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.PurchaseOrderItems)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="icon-sm bg-light-green-subtle text-dark-green rounded p-2">
+                                                    <i class="fas fa-box"></i>
+                                                </div>
+                                                <span class="fw-bold small">@item.Product?.ProductName</span>
+                                            </div>
+                                        </td>
+                                        <td><span class="text-muted extra-small">@item.Product?.SKU</span></td>
+                                        <td class="text-center"><span class="badge bg-soft-green text-dark-green rounded-pill">@item.Quantity Units</span></td>
+                                        <td class="pe-4 text-end"><span class="text-muted small">@((item.Product?.ShippingWeight ?? 0) * item.Quantity) KG</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Sidebar Tools -->
+        <div class="col-xl-4 animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="card border-0 rounded-25 shadow-premium bg-white mb-4">
+                <div class="card-body p-4 text-center">
+                    <div class="icon-shape bg-soft-green text-dark-green rounded-circle mx-auto mb-3">
+                        <i class="fas fa-map-pin fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Destination Info</h5>
+                    <p class="text-muted small mb-4">@Model.Retailer?.BusinessName</p>
+                    
+                    <div class="text-start p-3 bg-light rounded-20 mb-4 border border-dashed text-muted extra-small">
+                        <div class="d-flex gap-2 mb-2">
+                            <i class="fas fa-map-marker-alt mt-1"></i>
+                            <span>@Model.Retailer?.BusinessAddress</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-phone-alt mt-1"></i>
+                            <span>@Model.Retailer?.ContactPersonPhone</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="tel:@Model.Retailer?.ContactPersonPhone" class="btn btn-dark-green rounded-pill fw-bold text-white shadow-sm py-3">
+                            <i class="fas fa-phone-alt me-2"></i> CONTACT RETAILER
+                        </a>
+                        <button class="btn btn-outline-dark-green rounded-pill fw-bold py-3">
+                            <i class="fas fa-directions me-2"></i> OPEN IN MAPS
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 rounded-25 shadow-premium bg-white">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Fulfillment Tools</h5>
+                    <div class="d-grid gap-3">
+                        <button class="btn btn-soft-green text-start rounded-20 p-3 hvr-grow">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-sm bg-white rounded-circle shadow-sm"><i class="fas fa-barcode"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 small text-dark">Barcode Scan</h6>
+                                    <p class="extra-small text-muted mb-0">Verify item package</p>
+                                </div>
+                            </div>
+                        </button>
+                        <button class="btn btn-soft-green text-start rounded-20 p-3 hvr-grow">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-sm bg-white rounded-circle shadow-sm"><i class="fas fa-signature"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 small text-dark">E-Signature</h6>
+                                    <p class="extra-small text-muted mb-0">Capture retailer sign</p>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-25 { border-radius: 25px !important; }
+    .rounded-20 { border-radius: 20px !important; }
+    .shadow-premium { box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; }
+    .bg-soft-green { background-color: rgba(46, 125, 50, 0.08) !important; }
+    .bg-light-green-subtle { background-color: #f0f7f4 !important; }
+    .text-dark-green { color: #2e7d32 !important; }
+    .btn-dark-green { background: #2e7d32 !important; color: white !important; }
+    .btn-outline-dark-green { border: 2px solid #2e7d32; color: #2e7d32; font-weight: 600; }
+    .btn-soft-green { background: rgba(46, 125, 50, 0.05) !important; border: none; text-align: left; }
+    .icon-shape { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
+    .extra-small { font-size: 0.72rem !important; }
+    
+    /* Tracking List Styles */
+    .tracking-list {
+        list-style: none;
+        padding-left: 0;
+        position: relative;
+    }
+    .track-item {
+        display: flex;
+        gap: 30px;
+        position: relative;
+        padding-bottom: 40px;
+    }
+    .track-item:last-child { padding-bottom: 0; }
+    .track-item::before {
+        content: "";
+        position: absolute;
+        left: 20px;
+        top: 40px;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+    .track-item:last-child::before { display: none; }
+    .track-marker {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        color: #adb5bd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        border: 4px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .track-item.done .track-marker { background: #2e7d32; color: white; }
+    .track-item.done::before { background: #2e7d32; }
+    .track-item.active .track-marker { background: #2e7d32; color: white; border-color: #f0f7f4; }
+    .track-content h6 { font-size: 0.95rem; }
+
+    .hvr-grow { transition: all 0.3s ease; }
+    .hvr-grow:hover { transform: scale(1.02); background-color: rgba(46, 125, 50, 0.1) !important; }
+
+    .animate-slide-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideUp 0.6s forwards;
+    }
+    @@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+</style>

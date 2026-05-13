@@ -61,13 +61,25 @@ namespace SCM_System.Controllers
         }
 
         // GET: /Account/Register
+        [HttpGet]
+        // GET: /Account/Register
+        
         public async Task<IActionResult> Register()
         {
-            ViewBag.Categories = await _context.ProductCategories
-                .Include(c => c.SubCategories)
+            // Load ALL categories with proper includes
+            var allCategories = await _context.ProductCategories
+                .Include(c => c.SubCategories)  // This is CRITICAL - loads subcategories
+                .ToListAsync();
+
+            // Get only parent categories (ParentCategoryId == null)
+            var parentCategories = allCategories
                 .Where(c => c.ParentCategoryId == null)
                 .OrderBy(c => c.CategoryName)
-                .ToListAsync();
+                .ToList();
+
+            ViewBag.Categories = parentCategories;
+            ViewBag.AllCategories = allCategories; // Also pass all for reference
+
             return View();
         }
 
@@ -91,8 +103,6 @@ namespace SCM_System.Controllers
                     if (string.IsNullOrEmpty(model.CompanyName))
                         ModelState.AddModelError("CompanyName", "Company name is required");
 
-                    // Industry Focus (BusinessType) is now redundant as Categories define the scope
-
                     if (string.IsNullOrEmpty(model.LicenseNumber))
                         ModelState.AddModelError("LicenseNumber", "License number is required");
 
@@ -103,21 +113,13 @@ namespace SCM_System.Controllers
                     else
                     {
                         if (model.LicenseFile.Length > 5 * 1024 * 1024)
-                        {
                             ModelState.AddModelError("LicenseFile", "File size cannot exceed 5MB");
-                        }
 
                         string[] allowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
-                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
-
-                        string logMsg = $"[FILE VALIDATION] FileName: '{model.LicenseFile.FileName}' -> Extension: '{fileExtension}'\n";
-                        try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", logMsg); } catch { }
+                        string fileExtension = Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
 
                         if (!allowedExtensions.Contains(fileExtension))
-                        {
-                            try { System.IO.File.AppendAllText(@"c:\SCM_System\RegLog.txt", $"[FILE VALIDATION] Rejected! '{fileExtension}' not in allowed list.\n"); } catch { }
                             ModelState.AddModelError("LicenseFile", $"Only PDF, JPG, JPEG, and PNG files are allowed (Detected: {fileExtension})");
-                        }
                     }
 
                     if (string.IsNullOrEmpty(model.TaxIdentificationNumber))
@@ -125,33 +127,8 @@ namespace SCM_System.Controllers
 
                     if (string.IsNullOrEmpty(model.CompanyAddress))
                         ModelState.AddModelError("CompanyAddress", "Company address is required");
-
-                    // Website and Description are optional
                 }
-
-                // (FAN format validation is handled by RegisterViewModel DataAnnotations)
-
-                // Duplicate FAN Check
-                if (await _context.Users.AnyAsync(u => u.FAN == model.FAN))
-                {
-                    ModelState.AddModelError("FAN", "This Fayda ID is already registered.");
-                }
-
-                var faydaData = await _faydaService.GetIdentityDataAsync(model.FAN ?? "");
-                if (!faydaData.success)
-                {
-                    ModelState.AddModelError("FAN", "Fayda verification is required. Please verify your FAN first.");
-                }
-                else
-                {
-                    // Force the actual verified values for FullName, ignoring what user typed
-                    // PhoneNumber is editable and remains whatever they typed.
-                    model.FullName = faydaData.fullName;
-                }
-
-                // (Date of Birth check is handled by RegisterViewModel DataAnnotations)
-
-                if (model.Role == "Retailer")
+                else if (model.Role == "Retailer")
                 {
                     if (string.IsNullOrEmpty(model.BusinessName))
                         ModelState.AddModelError("BusinessName", "Business name is required");
@@ -162,51 +139,44 @@ namespace SCM_System.Controllers
                     if (string.IsNullOrEmpty(model.RetailerLicenseNumber))
                         ModelState.AddModelError("RetailerLicenseNumber", "Business license number is required");
 
-                    if (string.IsNullOrEmpty(model.BusinessAddress))
-                        ModelState.AddModelError("BusinessAddress", "Business address is required");
+                    // Use Address for physical location
+                    if (string.IsNullOrEmpty(model.Address))
+                        ModelState.AddModelError("Address", "Business address is required");
 
                     if (string.IsNullOrEmpty(model.StoreSize))
                         ModelState.AddModelError("StoreSize", "Store size is required");
-
-                    // Tax Id and Description are optional
                 }
 
-                // Check for duplicate license numbers and TIN
+                // Fayda validation
+                if (await _context.Users.AnyAsync(u => u.FAN == model.FAN))
+                    ModelState.AddModelError("FAN", "This Fayda ID is already registered.");
+
+                var faydaData = await _faydaService.GetIdentityDataAsync(model.FAN ?? "");
+                if (!faydaData.success)
+                {
+                    ModelState.AddModelError("FAN", "Fayda verification is required. Please verify your FAN first.");
+                }
+                else
+                {
+                    model.FullName = faydaData.fullName;
+                }
+
+                // Duplicate checks
                 if (model.Role == "Supplier")
                 {
-                    if (!string.IsNullOrEmpty(model.LicenseNumber))
-                    {
-                        if (await _context.Suppliers.AnyAsync(s => s.LicenseNumber == model.LicenseNumber))
-                        {
-                            ModelState.AddModelError("LicenseNumber", "This license number is already registered.");
-                        }
-                    }
+                    if (!string.IsNullOrEmpty(model.LicenseNumber) && await _context.Suppliers.AnyAsync(s => s.LicenseNumber == model.LicenseNumber))
+                        ModelState.AddModelError("LicenseNumber", "This license number is already registered.");
 
-                    if (!string.IsNullOrEmpty(model.TaxIdentificationNumber))
-                    {
-                        if (await _context.Suppliers.AnyAsync(s => s.TaxIdentificationNumber == model.TaxIdentificationNumber))
-                        {
-                            ModelState.AddModelError("TaxIdentificationNumber", "This Tax Identification Number (TIN) is already registered.");
-                        }
-                    }
+                    if (!string.IsNullOrEmpty(model.TaxIdentificationNumber) && await _context.Suppliers.AnyAsync(s => s.TaxIdentificationNumber == model.TaxIdentificationNumber))
+                        ModelState.AddModelError("TaxIdentificationNumber", "This Tax Identification Number (TIN) is already registered.");
 
                     if (SelectedCategoryIds == null || !SelectedCategoryIds.Any())
-                    {
                         ModelState.AddModelError("SelectedCategoryIds", "Please select at least one business category.");
-                    }
                 }
                 else if (model.Role == "Retailer")
                 {
-                    if (!string.IsNullOrEmpty(model.RetailerLicenseNumber))
-                    {
-                        if (await _context.Retailers.AnyAsync(r => r.BusinessLicenseNumber == model.RetailerLicenseNumber))
-                        {
-                            ModelState.AddModelError("RetailerLicenseNumber", "This business license number is already registered.");
-                        }
-                    }
-
-                    // Retailers no longer select categories during registration
-                    // Validation for SelectedRetailerCategoryIds removed
+                    if (!string.IsNullOrEmpty(model.RetailerLicenseNumber) && await _context.Retailers.AnyAsync(r => r.BusinessLicenseNumber == model.RetailerLicenseNumber))
+                        ModelState.AddModelError("RetailerLicenseNumber", "This business license number is already registered.");
                 }
 
                 // If there are validation errors, return to form
@@ -252,8 +222,7 @@ namespace SCM_System.Controllers
 
                 try
                 {
-                    // Create new user
-                    Console.WriteLine("Creating new user...");
+                    // Create user
                     var user = new User
                     {
                         FullName = model.FullName,
@@ -261,8 +230,6 @@ namespace SCM_System.Controllers
                         PasswordHash = HashPassword(model.Password),
                         PhoneNumber = model.PhoneNumber,
                         Role = model.Role,
-                        EmailVerified = false,
-                        PhoneVerified = false,
                         FAN = model.FAN,
                         DateOfBirth = model.DateOfBirth,
                         IsFaydaVerified = true,
@@ -275,55 +242,31 @@ namespace SCM_System.Controllers
                         ApprovalStatus = "Pending"
                     };
 
-                    // ALL newly registered users are PENDING and restricted from logging in
-                    user.IsApproved = false;
-                    user.AccountStatus = "Pending";
-
                     _context.Users.Add(user);
                     await _context.SaveChangesAsync();
-                    Console.WriteLine($"User created with ID: {user.Id}");
+
+                    string licenseFilePath = null;
 
                     // Handle file upload for supplier
-                    string licenseFilePath = null;
                     if (model.Role == "Supplier" && model.LicenseFile != null)
                     {
-                        Console.WriteLine("Processing file upload...");
-
-                        // File validation is now handled before the transaction
-                        string fileExtension = System.IO.Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
-
-                        // Create unique filename
+                        string fileExtension = Path.GetExtension(model.LicenseFile.FileName)?.ToLower()?.Trim() ?? "";
                         string fileName = $"supplier_{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
-
-                        string webRootPath = _webHostEnvironment.WebRootPath;
-                        if (string.IsNullOrEmpty(webRootPath))
-                        {
-                            webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                        }
-
-                        // Ensure upload directory exists
+                        string webRootPath = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                         string uploadPath = Path.Combine(webRootPath, "uploads", "licenses");
-                        if (!Directory.Exists(uploadPath))
-                        {
-                            Directory.CreateDirectory(uploadPath);
-                        }
-
-                        // Save file
+                        Directory.CreateDirectory(uploadPath);
                         string filePath = Path.Combine(uploadPath, fileName);
+
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
                             await model.LicenseFile.CopyToAsync(fileStream);
                         }
-
                         licenseFilePath = $"/uploads/licenses/{fileName}";
-                        Console.WriteLine($"File saved: {licenseFilePath}");
                     }
 
-                    // If supplier, create supplier record
+                    // Create Supplier or Retailer
                     if (model.Role == "Supplier")
                     {
-                        Console.WriteLine("Creating supplier record...");
-
                         var supplier = new Supplier
                         {
                             UserId = user.Id,
@@ -332,7 +275,7 @@ namespace SCM_System.Controllers
                             LicenseNumber = model.LicenseNumber,
                             LicenseFilePath = licenseFilePath,
                             TaxIdentificationNumber = model.TaxIdentificationNumber,
-                            CompanyAddress = model.Address ?? model.CompanyAddress,
+                            CompanyAddress = model.CompanyAddress ?? model.Address,
                             City = model.City,
                             Country = string.IsNullOrEmpty(model.Country) ? "Ethiopia" : model.Country,
                             Website = model.Website,
@@ -340,12 +283,10 @@ namespace SCM_System.Controllers
                             VerificationStatus = "Pending",
                             CreatedAt = DateTime.Now
                         };
-
                         _context.Suppliers.Add(supplier);
-                        await _context.SaveChangesAsync(); // Save to get Supplier.Id
-                        Console.WriteLine("Supplier record added to context");
+                        await _context.SaveChangesAsync();
 
-                        // Add Business Categories
+                        // Add categories
                         if (SelectedCategoryIds != null && SelectedCategoryIds.Any())
                         {
                             foreach (var categoryId in SelectedCategoryIds)
@@ -357,25 +298,20 @@ namespace SCM_System.Controllers
                                 });
                             }
                             await _context.SaveChangesAsync();
-                            Console.WriteLine($"{SelectedCategoryIds.Count} categories associated with supplier");
                         }
 
-                        // Create notification for admin about new supplier
                         await _notificationService.CreateAdminNotificationAsync(new AdminNotification
                         {
                             Title = "New Supplier Registration",
                             Message = $"New supplier '{model.CompanyName}' has registered and is waiting for approval.",
                             NotificationType = "Registration",
                             RelatedUserId = user.Id,
-                            ActionUrl = "/Admin/PendingUsers"
+                            ActionUrl = "/Admin/PendingUsers",
+                            CreatedAt = DateTime.UtcNow
                         });
                     }
-
-                    // If retailer, create retailer record
-                    if (model.Role == "Retailer")
+                    else if (model.Role == "Retailer")
                     {
-                        Console.WriteLine("Creating retailer record...");
-
                         var retailer = new Retailer
                         {
                             UserId = user.Id,
@@ -383,7 +319,7 @@ namespace SCM_System.Controllers
                             BusinessType = model.RetailerBusinessType,
                             TaxIdentificationNumber = model.TaxIdentificationNumber,
                             BusinessLicenseNumber = model.RetailerLicenseNumber,
-                            BusinessAddress = model.Address ?? model.BusinessAddress,
+                            BusinessAddress = model.Address,  // Map Address to BusinessAddress
                             City = model.City,
                             Country = string.IsNullOrEmpty(model.Country) ? "Ethiopia" : model.Country,
                             StoreSize = model.StoreSize,
@@ -391,35 +327,24 @@ namespace SCM_System.Controllers
                             IsVerified = false,
                             CreatedAt = DateTime.Now
                         };
-
                         _context.Retailers.Add(retailer);
-                        await _context.SaveChangesAsync(); // Save to get Retailer.Id
-                        Console.WriteLine("Retailer record added to context");
+                        await _context.SaveChangesAsync();
 
-                        // Add Purchase Categories for Retailer REMOVED as per new design
-
-                        // Create notification for admin about new retailer
                         await _notificationService.CreateAdminNotificationAsync(new AdminNotification
                         {
                             Title = "New Retailer Registration",
                             Message = $"New retailer '{model.BusinessName}' has registered and is waiting for approval.",
                             NotificationType = "Registration",
                             RelatedUserId = user.Id,
-                            ActionUrl = "/Admin/PendingUsers"
+                            ActionUrl = "/Admin/PendingUsers",
+                            CreatedAt = DateTime.UtcNow
                         });
                     }
 
-                    // Save all changes
                     await _context.SaveChangesAsync();
-
-                    // Commit transaction
                     await transaction.CommitAsync();
-                    Console.WriteLine("Transaction committed successfully");
 
-                    // Set success message
-                    TempData["SuccessMessage"] = $"✅ Registration successful! Your {model.Role.ToLower()} account is pending administrative review. We have recorded your Fayda verification status: {user.FaydaStatus}.";
-
-                    Console.WriteLine("Registration completed successfully!");
+                    TempData["SuccessMessage"] = $"✅ Registration successful! Your {model.Role.ToLower()} account is pending administrative review.";
                     return RedirectToAction("Login");
                 }
                 catch (Exception ex)
@@ -611,6 +536,9 @@ namespace SCM_System.Controllers
                         new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
+                    // Add proper success message for toast
+                    TempData["SuccessMessage"] = $"Welcome back, {user.FullName}!";
+
                     // Redirect based on role
                     if (user.Role == "Admin")
                     {
@@ -665,7 +593,9 @@ namespace SCM_System.Controllers
             HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-            TempData["SuccessMessage"] = $"👋 Goodbye, {userName}! You have been logged out successfully.";
+            TempData["LogoutMessage"] = $"Goodbye, {userName}!";
+            TempData["LogoutMessageType"] = "info";
+
             return RedirectToAction("Login");
         }
 

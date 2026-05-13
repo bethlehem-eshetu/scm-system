@@ -7,6 +7,10 @@ using SCM_System.Models.Constants;
 using SCM_System.Services;
 using System.Security.Claims;
 using System.IO;
+using SCM_System.Models.Enums;
+using SCM_System.Models.ViewModels;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace SCM_System.Controllers
 {
@@ -17,13 +21,15 @@ namespace SCM_System.Controllers
         private readonly IOrderService _orderService;
         private readonly IPurchaseOrderService _poService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly INotificationService _notificationService;
 
-        public DeliveryController(ApplicationDbContext context, IOrderService orderService, IPurchaseOrderService poService, IWebHostEnvironment webHostEnvironment)
+        public DeliveryController(ApplicationDbContext context, IOrderService orderService, IPurchaseOrderService poService, IWebHostEnvironment webHostEnvironment, INotificationService notificationService)
         {
             _context = context;
             _orderService = orderService;
             _poService = poService;
             _webHostEnvironment = webHostEnvironment;
+            _notificationService = notificationService;
         }
 
         private async Task<int> GetEmployeeIdAsync()
@@ -45,56 +51,16 @@ namespace SCM_System.Controllers
 
             var employee = await _context.SupplierEmployees
                 .Include(e => e.User)
+                .Include(e => e.Vehicle)
                 .FirstOrDefaultAsync(e => e.UserId == userId);
 
             if (employee == null) return NotFound();
-
-            // Stats for Performance Section
-            var now = DateTime.Now;
-            var startOfMonth = new DateTime(now.Year, now.Month, 1);
-            
-            var deliveries = await _context.PurchaseOrders
-                .Where(po => po.DeliveryAgentId == employee.Id && po.DeliveredAt >= startOfMonth)
-                .ToListAsync();
-
-            var totalDeliveries = deliveries.Count;
-            var onTimeDeliveries = deliveries.Count(po => po.DeliveredAt.HasValue && po.DeliveredAt <= po.ExpectedDeliveryDate);
-            var onTimePercentage = totalDeliveries > 0 ? (double)onTimeDeliveries / totalDeliveries * 100 : 100;
-
-            var ratings = await _context.Ratings
-                .Where(r => r.PurchaseOrder.DeliveryAgentId == employee.Id)
-                .Select(r => r.RatingValue)
-                .ToListAsync();
-            
-            var averageRating = ratings.Any() ? Math.Round(ratings.Average(), 1) : 5.0;
-
-            var model = new SCM_System.Models.ViewModels.DeliverySettingsViewModel
-            {
-                FullName = employee.User.FullName ?? "",
-                Email = employee.User.Email ?? "",
-                Phone = employee.User.PhoneNumber ?? employee.Phone ?? "",
-                ExistingProfilePicture = employee.ProfilePhotoPath,
-                VehicleId = employee.VehicleId,
-                IsOnDuty = employee.IsOnDuty,
-                WorkingHoursStart = employee.WorkingHoursStart,
-                WorkingHoursEnd = employee.WorkingHoursEnd,
-                MaxDailyDeliveries = employee.MaxDailyDeliveries,
-                RequireProofPhoto = employee.RequireProofPhoto,
-                RequireSignature = employee.RequireSignature,
-                AutoAcceptAssignments = employee.AutoAcceptAssignments,
-                AllowNightDeliveries = employee.AllowNightDeliveries,
-                NotifyNewAssignment = employee.NotifyNewAssignment,
-                SmsNotificationNumber = employee.SmsNotificationNumber,
-                TotalDeliveriesMonth = totalDeliveries,
-                AverageRating = averageRating,
-                OnTimePercentage = Math.Round(onTimePercentage, 1)
-            };
 
             ViewBag.Vehicles = await _context.Vehicles
                 .Where(v => v.SupplierId == employee.SupplierId && v.IsActive && !v.IsDeleted)
                 .ToListAsync();
 
-            return View(model);
+            return View(employee);
         }
 
         [Authorize(Roles = "DeliveryAgent")]
@@ -106,6 +72,8 @@ namespace SCM_System.Controllers
             var activeDeliveries = await _context.PurchaseOrders
                 .Include(po => po.Order)
                     .ThenInclude(o => o.Retailer)
+                .Include(po => po.Warehouse)
+                .Include(po => po.Retailer)
                 .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
                 .ToListAsync();
 
@@ -214,80 +182,87 @@ namespace SCM_System.Controllers
 
 
         // GET: /Delivery/Dashboard
+        [Authorize(Roles = "DeliveryAgent")]
         public async Task<IActionResult> Dashboard()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var employee = await _context.SupplierEmployees
+                .Include(e => e.User)
+                .FirstOrDefaultAsync(e => e.UserId == userId);
+
+            if (employee == null) return NotFound();
+
+            // Statistics
+            ViewBag.AssignedDeliveries = await _context.PurchaseOrders
+                .CountAsync(po => po.DeliveryAgentId == employee.Id && (po.Status == POStatus.Accepted || po.Status == POStatus.Ready));
+
+            ViewBag.InTransitDeliveries = await _context.PurchaseOrders
+                .CountAsync(po => po.DeliveryAgentId == employee.Id && po.Status == POStatus.InTransit);
+
+            ViewBag.CompletedDeliveries = await _context.PurchaseOrders
+                .CountAsync(po => po.DeliveryAgentId == employee.Id && (po.Status == POStatus.Delivered || po.Status == POStatus.Completed));
+
+            // Active Deliveries for the table
+            ViewBag.ActiveDeliveries = await _context.PurchaseOrders
+                .Include(po => po.Order)
+                    .ThenInclude(o => o.Retailer)
+                .Include(po => po.Warehouse)
+                .Include(po => po.Retailer)
+                .Where(po => po.DeliveryAgentId == employee.Id && po.Status != POStatus.Delivered && po.Status != POStatus.Completed)
+                .OrderByDescending(po => po.CreatedAt)
+                .ToListAsync();
+
+            return View(employee);
+        }
+
+        // GET: /Delivery/Tracking/20
+        [Authorize(Roles = "DeliveryAgent")]
+        public async Task<IActionResult> Tracking(int id)
         {
             var employeeId = await GetEmployeeIdAsync();
             if (employeeId == 0) return Unauthorized();
 
-            // Get statistics for the delivery agent
-            var assignedDeliveries = await _context.PurchaseOrders
-                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
-                .CountAsync();
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Order)
+                    .ThenInclude(o => o.Retailer)
+                .Include(p => p.Warehouse)
+                .Include(p => p.Retailer)
+                .Include(p => p.PurchaseOrderItems)
+                    .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(p => p.Id == id && p.DeliveryAgentId == employeeId);
 
-            var completedDeliveries = await _context.PurchaseOrders
-                .Where(po => po.DeliveryAgentId == employeeId && (po.Status == "Delivered" || po.Status == "Completed"))
-                .CountAsync();
+            if (po == null) return NotFound();
 
-            var inTransitDeliveries = await _context.PurchaseOrders
-                .Where(po => po.DeliveryAgentId == employeeId && po.Status == "In Transit")
-                .CountAsync();
+            return View(po);
+        }
 
-            // Get the delivery agent details
+        [HttpPost]
+        [Authorize(Roles = "DeliveryAgent")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateVehicleSettings(string status, string gpsMode)
+        {
+            var employeeId = await GetEmployeeIdAsync();
+            if (employeeId == 0) return Unauthorized();
+
             var employee = await _context.SupplierEmployees
-                .Include(e => e.User)
+                .Include(e => e.Vehicle)
                 .FirstOrDefaultAsync(e => e.Id == employeeId);
 
-            if (employee == null) return NotFound();
+            if (employee == null || employee.Vehicle == null) return NotFound();
 
-            ViewBag.AssignedDeliveries = assignedDeliveries;
-            ViewBag.CompletedDeliveries = completedDeliveries;
-            ViewBag.InTransitDeliveries = inTransitDeliveries;
-
-            // Get recent assigned deliveries for the table
-            var recentDeliveries = await _context.PurchaseOrders
-                .Include(po => po.Order)
-                    .ThenInclude(o => o.Retailer)
-                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
-                .OrderByDescending(po => po.CreatedAt)
-                .Take(5)
-                .Select(po => new
-                {
-                    po.PONumber,
-                    Destination = po.Order != null ? po.Order.Retailer.BusinessName : "N/A",
-                    po.Status,
-                    po.Id
-                })
-                .ToListAsync();
-
-            ViewBag.RecentDeliveries = recentDeliveries;
-            var activeDeliveries = await _context.PurchaseOrders
-                .Include(po => po.Order)
-                    .ThenInclude(o => o.Retailer)
-                .Where(po => po.DeliveryAgentId == employeeId && po.Status != "Delivered" && po.Status != "Completed")
-                .ToListAsync();
-
-            ViewBag.ActiveDeliveries = activeDeliveries;
-
-            var mapDataList = new List<object>();
-            var random = new Random();
-            var index = 0;
-            foreach (var po in activeDeliveries)
+            // Example telemetry update logic
+            // In a real app, this might update a Telemetry table or the Vehicle status
+            if (status == "critical")
             {
-                mapDataList.Add(new {
-                    id = po.Id,
-                    poNumber = po.PONumber,
-                    businessName = po.Order?.Retailer?.BusinessName ?? "Retailer",
-                    address = po.DeliveryAddress ?? (po.Order?.Retailer?.BusinessAddress ?? "Address not set"),
-                    lat = 9.02 + (index * 0.12) + (random.NextDouble() * 0.05),
-                    lng = 38.75 + (index * 0.09) + (random.NextDouble() * 0.03),
-                    priority = po.Status == "In Transit" ? "High" : "Normal",
-                    status = po.Status
-                });
-                index++;
+                employee.Vehicle.Status = VehicleStatus.Maintenance;
+                employee.IsOnDuty = false;
             }
-            ViewBag.MapData = Newtonsoft.Json.JsonConvert.SerializeObject(mapDataList);
-
-            return View(employee);
+            
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Vehicle telemetry settings updated.";
+            return RedirectToAction(nameof(Dashboard));
         }
 
         public async Task<IActionResult> MyDeliveries(string? searchTerm = null, string? status = null)
@@ -299,6 +274,8 @@ namespace SCM_System.Controllers
             var query = _context.PurchaseOrders
                 .Include(po => po.Order)
                     .ThenInclude(o => o.Retailer)
+                .Include(po => po.Warehouse)
+                .Include(po => po.Retailer)
                         .ThenInclude(r => r.User)
                 .Include(po => po.Supplier)
                 .Include(po => po.PurchaseOrderItems)
@@ -518,6 +495,18 @@ namespace SCM_System.Controllers
 
                 // ✅ Always pass "Delivered" to ensure commissions are created
                 await _orderService.UpdateOrderStatusAsync(po.OrderId, "Delivered", orderComment, userId);
+
+                // Send notification to retailer to rate delivery if order and retailer exist
+                if (po.Order?.Retailer?.UserId != null)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        po.Order.Retailer.UserId,
+                        "Rate Your Delivery Experience",
+                        $"Your order #{po.PONumber} has been delivered. Please rate your delivery experience.",
+                        "DeliveryRating",
+                        $"/Retailer/RateDelivery/{po.Id}"
+                    );
+                }
             }
 
             TempData["SuccessMessage"] = $"PO {po.PONumber} status updated to {status}.";
@@ -697,6 +686,82 @@ namespace SCM_System.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Details", "PurchaseOrder", new { id = id });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> RequestSupport([FromBody] SupportRequest request)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr)) return Json(new { success = false, message = "Session expired." });
+            int userId = int.Parse(userIdStr);
+
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Warehouse)
+                    .ThenInclude(w => w.PrimaryManager)
+                .FirstOrDefaultAsync(p => p.Id == request.PurchaseOrderId);
+
+            if (po == null || po.Warehouse == null || po.Warehouse.PrimaryManager == null)
+            {
+                return Json(new { success = false, message = "Unable to locate Warehouse Manager for this delivery." });
+            }
+
+            var agent = await _context.SupplierEmployees.Include(e => e.User).FirstOrDefaultAsync(e => e.UserId == userId);
+            
+            string messageBody = $"[SUPPORT REQUEST] Order #{po.PONumber}\n" +
+                                 $"Issue: {request.IssueType}\n" +
+                                 $"Agent: {agent?.User?.FullName ?? "Unknown"}\n" +
+                                 $"Status: {po.Status}\n" +
+                                 $"Notes: {request.Notes}";
+
+            await _notificationService.SendNotificationAsync(
+                po.Warehouse.PrimaryManager.UserId,
+                "Immediate Support Requested",
+                messageBody,
+                "Support",
+                $"/WarehouseManager/Dashboard/{po.WarehouseId}"
+            );
+
+            return Json(new { success = true, message = "Support request sent to Warehouse Manager." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MyPerformance()
+        {
+            var employeeId = await GetEmployeeIdAsync();
+            if (employeeId == 0) return NotFound();
+
+            var ratings = await _context.DeliveryRatings
+                .Where(r => r.DriverEmployeeId == employeeId)
+                .Include(r => r.PurchaseOrder)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            var viewModel = new DriverPerformanceViewModel
+            {
+
+                TotalDeliveries = await _context.PurchaseOrders.CountAsync(po => po.DeliveryAgentId == employeeId && po.Status == "Delivered"),
+                OverallRating = ratings.Any() ? ratings.Average(r => r.OverallRating) : 0,
+                AverageTimeliness = ratings.Any() ? ratings.Average(r => r.Timeliness) : 0,
+                AverageProfessionalism = ratings.Any() ? ratings.Average(r => r.Professionalism) : 0,
+                AverageVehicleCondition = ratings.Any() ? ratings.Average(r => r.VehicleCondition) : 0,
+                AverageCommunication = ratings.Any() ? ratings.Average(r => r.Communication) : 0,
+                
+                RecentRatings = ratings.Take(5).Select(r => new RecentRatingViewModel
+                {
+                    PONumber = r.PurchaseOrder?.PONumber ?? "N/A",
+                    OverallRating = r.OverallRating,
+                    Comment = r.Comment ?? "No comment provided.",
+                    CreatedAt = r.CreatedAt
+                }).ToList()
+            };
+
+            // Monthly Trend (Dummy data for now to populate chart labels)
+            viewModel.MonthlyLabels = new List<string> { "Jan", "Feb", "Mar", "Apr", "May", "Jun" };
+            viewModel.MonthlyRatings = ratings.Any() ? new List<double> { 4.2, 4.5, 4.3, 4.8, 4.6, viewModel.OverallRating } : new List<double> { 0, 0, 0, 0, 0, 0 };
+            viewModel.MonthlyOnTimeRates = new List<double> { 90, 92, 88, 95, 94, 98 };
+            viewModel.OnTimeRate = 95; // Placeholder
+
+            return View(viewModel);
+        }
     }
 
     public class QRVerificationRequest
@@ -704,5 +769,12 @@ namespace SCM_System.Controllers
         public int PurchaseOrderId { get; set; }
         public string QRCode { get; set; } = string.Empty;
         public bool IsManual { get; set; }
+    }
+
+    public class SupportRequest
+    {
+        public int PurchaseOrderId { get; set; }
+        public string IssueType { get; set; }
+        public string Notes { get; set; }
     }
 }

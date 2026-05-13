@@ -1,0 +1,101 @@
+/* Notification System Custom Styles */
+
+.notification-bell-wrapper .fa-bell {
+    font-size: 1.25rem;
+    color: #4B5E55;
+    transition: color 0.2s ease;
+}
+
+.notification-bell-wrapper:hover .fa-bell {
+    color: #1A2C26;
+}
+
+#notificationBadge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.5em;
+    border: 2px solid #ffffff;
+}
+
+.notification-list {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #edf2f7;
+}
+
+.notification-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notification-item {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.notification-item.unread {
+    background-color: rgba(46, 156, 122, 0.05);
+    border-left-color: #2E9C7A;
+}
+
+.notification-item:hover {
+    background-color: #f8faf9;
+}
+
+.notification-item.unread:hover {
+    background-color: rgba(46, 156, 122, 0.08);
+}
+
+/* Light Mode - Dark Text Visibility Fixes */
+.notification-item .notification-title {
+    color: #1A2C26 !important;
+    font-weight: 600;
+}
+
+.notification-item .notification-message {
+    color: #4B5E55 !important;
+    line-height: 1.4;
+}
+
+.notification-item .notification-time {
+    color: #7C8F86 !important;
+}
+
+/* Dark Mode Overrides */
+.dark-mode .notification-item {
+    border-bottom: 1px solid #2D3748 !important;
+}
+
+.dark-mode .notification-item:hover {
+    background-color: #2D3748;
+}
+
+.dark-mode .notification-item.unread {
+    background-color: rgba(46, 156, 122, 0.15);
+}
+
+.dark-mode .notification-item .notification-title {
+    color: #EDEDED !important;
+}
+
+.dark-mode .notification-item .notification-message {
+    color: #C5CDC8 !important;
+}
+
+.dark-mode .notification-item .notification-time {
+    color: #9EABA5 !important;
+}
+
+.dark-mode .dropdown-menu {
+    background-color: #1A202C;
+    border: 1px solid #2D3748;
+}
+
+.dark-mode .dropdown-header {
+    background-color: #2D3748 !important;
+    color: #EDEDED !important;
+    border-bottom: 1px solid #4A5568 !important;
+}
+
+.dark-mode .dropdown-footer {
+    background-color: #2D3748 !important;
+    border-top: 1px solid #4A5568 !important;
+}

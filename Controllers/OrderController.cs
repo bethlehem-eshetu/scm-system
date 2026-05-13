@@ -12,11 +12,15 @@ namespace SCM_System.Controllers
     {
         private readonly IOrderService _orderService;
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
+        private readonly IInventoryService _inventoryService;
 
-        public OrderController(IOrderService orderService, ApplicationDbContext context)
+        public OrderController(IOrderService orderService, ApplicationDbContext context, INotificationService notificationService, IInventoryService inventoryService)
         {
             _orderService = orderService;
             _context = context;
+            _notificationService = notificationService;
+            _inventoryService = inventoryService;
         }
 
         public async Task<IActionResult> Index()
@@ -154,11 +158,17 @@ namespace SCM_System.Controllers
             await _context.SaveChangesAsync();
 
             // Reserve stock via Inventory Service
-            var inventoryService = (IInventoryService)HttpContext.RequestServices.GetService(typeof(IInventoryService));
-            if (inventoryService != null)
-            {
-                await inventoryService.BulkReserveStockForPOAsync(po.Id, po.SupplierId, warehouseId);
-            }
+            await _inventoryService.BulkReserveStockForPOAsync(po.Id, po.SupplierId, warehouseId);
+
+            // Notify Warehouse Manager
+            await _notificationService.SendRoleNotificationAsync(
+                "WarehouseManager",
+                "New Order for Processing",
+                $"Order #{po.PONumber} has been assigned to your warehouse for processing.",
+                "Warehouse",
+                $"/Warehouse/OrdersToPick",
+                warehouseId
+            );
 
             TempData["SuccessMessage"] = warehouseId == -1 ? "Smart Auto Select successful. Fulfillment Hub assigned." : "Warehouse assigned and PO accepted successfully.";
 

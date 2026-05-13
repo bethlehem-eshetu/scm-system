@@ -56,7 +56,7 @@ namespace SCM_System.Controllers
 
             // Block if service is overdue
             if (vehicle.NextServiceDueDate.HasValue && vehicle.NextServiceDueDate.Value < DateTime.Now) return false;
-            
+
             // Block if insurance is expired
             if (vehicle.InsuranceExpiryDate.HasValue && vehicle.InsuranceExpiryDate.Value < DateTime.Now) return false;
 
@@ -100,7 +100,7 @@ namespace SCM_System.Controllers
             var activeOrders = await _context.PurchaseOrders
                 .Include(p => p.PurchaseOrderItems)
                     .ThenInclude(i => i.Product)
-                .Where(p => p.DeliveryAgentId == employeeId && 
+                .Where(p => p.DeliveryAgentId == employeeId &&
                             p.Status != SCM_System.Models.Constants.POStatus.Delivered &&
                             p.Status != SCM_System.Models.Constants.POStatus.Completed &&
                             p.Status != SCM_System.Models.Constants.POStatus.Cancelled &&
@@ -109,27 +109,27 @@ namespace SCM_System.Controllers
                             p.Status != SCM_System.Models.Constants.POStatus.Expired)
                 .ToListAsync();
 
-            decimal pickingQueue = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.Picking || 
-                                                       p.Status == SCM_System.Models.Constants.POStatus.Picked || 
-                                                       p.Status == SCM_System.Models.Constants.POStatus.Packing || 
-                                                       p.Status == SCM_System.Models.Constants.POStatus.Packed || 
-                                                       p.Status == SCM_System.Models.Constants.POStatus.Issued || 
-                                                       p.Status == SCM_System.Models.Constants.POStatus.Processing || 
+            decimal pickingQueue = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.Picking ||
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Picked ||
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Packing ||
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Packed ||
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Issued ||
+                                                       p.Status == SCM_System.Models.Constants.POStatus.Processing ||
                                                        p.Status == SCM_System.Models.Constants.POStatus.Accepted)
                                                 .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
-                                                
+
             decimal readyDispatch = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.Ready)
                                                  .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
-                                                 
+
             decimal inTransit = activeOrders.Where(p => p.Status == SCM_System.Models.Constants.POStatus.InTransit)
                                               .Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
-                                              
+
             decimal currentTotalLoad = pickingQueue + readyDispatch + inTransit;
             decimal vehicleCapacity = activeVehicle?.MaxLoadCapacity ?? 100;
-            
+
             decimal projectedTotalLoad = currentTotalLoad + newOrderWeightKg;
             decimal projectedScore = vehicleCapacity > 0 ? (projectedTotalLoad / vehicleCapacity) * 100 : 0;
-            
+
             string loadStatus = "Safe";
             if (projectedScore >= 120) loadStatus = "Critical"; // Red
             else if (projectedScore >= 90) loadStatus = "High Risk"; // Orange
@@ -143,13 +143,13 @@ namespace SCM_System.Controllers
                 maxLoadCapacity = vehicleCapacity,
                 licenseNumber = driver.DriverProfile?.DrivingLicenseNumber,
                 licenseExpiry = driver.DriverProfile?.LicenseExpiryDate?.ToString("yyyy-MM-dd"),
-                
+
                 currentLoad = currentTotalLoad,
                 projectedLoad = projectedTotalLoad,
                 pickingQueue = pickingQueue,
                 readyDispatch = readyDispatch,
                 inTransit = inTransit,
-                
+
                 workloadScore = (int)projectedScore,
                 loadStatus = loadStatus,
                 isPhysicsViolation = newOrderWeightKg > vehicleCapacity,
@@ -225,7 +225,7 @@ namespace SCM_System.Controllers
 
             if (model.Role == "WarehouseManager")
             {
-                if (!model.WarehouseId.HasValue) 
+                if (!model.WarehouseId.HasValue)
                 {
                     ModelState.AddModelError("WarehouseId", "Warehouse Manager must select a warehouse.");
                 }
@@ -241,7 +241,7 @@ namespace SCM_System.Controllers
             }
             else if (model.Role == "DeliveryAgent")
             {
-                if (!model.VehicleId.HasValue) 
+                if (!model.VehicleId.HasValue)
                 {
                     ModelState.AddModelError("VehicleId", "Delivery Agent must select a vehicle.");
                 }
@@ -260,16 +260,16 @@ namespace SCM_System.Controllers
                     }
                 }
                 model.WarehouseId = null;
-                
+
                 // Strict Document Validation for Delivery Agent
                 if (idDoc == null) ModelState.AddModelError("", "A valid Driving License or National ID document is required for Delivery Agents.");
                 if (contractDoc == null) ModelState.AddModelError("", "Employment Contract is required for Delivery Agents.");
             }
-            
+
             // Check file extensions and sizes limit (e.g. 5MB)
             var maxFileSize = 5 * 1024 * 1024;
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
-            foreach(var file in new[] {photoDoc, contractDoc, idDoc, Request.Form.Files.GetFile("medicalDoc")})
+            foreach (var file in new[] { photoDoc, contractDoc, idDoc, Request.Form.Files.GetFile("medicalDoc") })
             {
                 if (file != null && file.Length > 0)
                 {
@@ -312,7 +312,7 @@ namespace SCM_System.Controllers
                     await _context.SaveChangesAsync();
 
                     var employeeRole = model.Role == "WarehouseManager" ? "WarehouseManager" : "DeliveryAgent";
-                    
+
                     // Generate ERP-style Employee ID
                     var employeeCount = await _context.SupplierEmployees.CountAsync(e => e.SupplierId == supplier.Id);
                     var employeeDisplayId = $"EMP-{supplier.Id.ToString("D2")}-{(employeeCount + 1).ToString("D3")}";
@@ -351,7 +351,7 @@ namespace SCM_System.Controllers
                     if (photoDoc != null) _context.EmployeeDocuments.Add(new EmployeeDocument { SupplierEmployeeId = employee.Id, DocumentType = "ProfilePhoto", DocumentName = photoDoc.FileName ?? "Profile Photo", DocumentUrl = employee.ProfilePhotoPath });
                     if (contractDoc != null) _context.EmployeeDocuments.Add(new EmployeeDocument { SupplierEmployeeId = employee.Id, DocumentType = "Contract", DocumentName = contractDoc.FileName ?? "Employment Contract", DocumentUrl = employee.ContractDocumentUrl });
                     if (idDoc != null) _context.EmployeeDocuments.Add(new EmployeeDocument { SupplierEmployeeId = employee.Id, DocumentType = "FaydaID", DocumentName = idDoc.FileName ?? "Fayda National ID", DocumentUrl = employee.IdDocumentUrl });
-                    
+
                     IFormFile? medDoc = Request.Form.Files.GetFile("medicalDoc");
                     var medUrl = await SaveFileAsync(medDoc, "employees");
                     if (!string.IsNullOrEmpty(medUrl)) _context.EmployeeDocuments.Add(new EmployeeDocument { SupplierEmployeeId = employee.Id, DocumentType = "Medical", DocumentName = medDoc?.FileName ?? "Medical Certificate", DocumentUrl = medUrl });
@@ -364,19 +364,20 @@ namespace SCM_System.Controllers
                             CanManageInventory = model.CanManageInventory,
                             CanViewReports = model.CanViewReports
                         };
-                        
+
                         if (model.WarehouseId.HasValue)
                         {
                             employee.WarehouseId = model.WarehouseId;
-                            employee.WarehouseAssignments = new List<WarehouseAssignment> 
-                            { 
-                                new WarehouseAssignment { WarehouseId = model.WarehouseId.Value, StartDate = DateTime.Now, IsPrimary = true } 
+                            employee.WarehouseAssignments = new List<WarehouseAssignment>
+                            {
+                                new WarehouseAssignment { WarehouseId = model.WarehouseId.Value, StartDate = DateTime.Now, IsPrimary = true }
                             };
                         }
                     }
                     else if (model.Role == "DeliveryAgent")
                     {
-                        employee.DriverProfile = new DriverProfile { 
+                        employee.DriverProfile = new DriverProfile
+                        {
                             DrivingLicenseNumber = model.DrivingLicenseNumber,
                             LicenseType = model.LicenseType?.ToString(),
                             LicenseIssueDate = model.LicenseIssueDate,
@@ -390,9 +391,9 @@ namespace SCM_System.Controllers
                         if (model.VehicleId.HasValue)
                         {
                             employee.VehicleId = model.VehicleId;
-                            employee.VehicleAssignments = new List<VehicleAssignment> 
-                            { 
-                                new VehicleAssignment { VehicleId = model.VehicleId.Value, StartDate = DateTime.Now, IsPrimary = true } 
+                            employee.VehicleAssignments = new List<VehicleAssignment>
+                            {
+                                new VehicleAssignment { VehicleId = model.VehicleId.Value, StartDate = DateTime.Now, IsPrimary = true }
                             };
                         }
                     }
@@ -407,7 +408,7 @@ namespace SCM_System.Controllers
                         var otherAssignments = await _context.WarehouseAssignments
                             .Where(wa => wa.WarehouseId == model.WarehouseId.Value && wa.IsActive && wa.SupplierEmployeeId != employee.Id)
                             .ToListAsync();
-                        foreach(var oa in otherAssignments) { oa.IsActive = false; oa.EndDate = DateTime.Now; }
+                        foreach (var oa in otherAssignments) { oa.IsActive = false; oa.EndDate = DateTime.Now; }
 
                         // 2. Update Warehouse primary manager
                         var wh = await _context.Warehouses.FindAsync(model.WarehouseId.Value);
@@ -423,7 +424,7 @@ namespace SCM_System.Controllers
                         var otherAssignments = await _context.VehicleAssignments
                             .Where(va => va.VehicleId == model.VehicleId.Value && va.IsActive && va.SupplierEmployeeId != employee.Id)
                             .ToListAsync();
-                        foreach(var oa in otherAssignments) { oa.IsActive = false; oa.EndDate = DateTime.Now; }
+                        foreach (var oa in otherAssignments) { oa.IsActive = false; oa.EndDate = DateTime.Now; }
 
                         // 2. Update Vehicle primary driver
                         var vh = await _context.Vehicles.FindAsync(model.VehicleId.Value);
@@ -438,9 +439,9 @@ namespace SCM_System.Controllers
 
                     // AUDIT LOG
                     await _auditLogService.LogActionAsync(
-                        "Employee", 
-                        employee.Id.ToString(), 
-                        "Create", 
+                        "Employee",
+                        employee.Id.ToString(),
+                        "Create",
                         notes: $"New employee {employee.User.FullName} ({employee.EmployeeDisplayId}) registered as {employee.EmployeeRole}",
                         performedByUserId: userId
                     );
@@ -495,7 +496,7 @@ namespace SCM_System.Controllers
                 Shift = employee.Shift,
                 Status = employee.Status,
                 ForcePasswordChange = employee.ForcePasswordChange,
-                
+
                 // Mapping Assignment IDs
                 WarehouseId = employee.WarehouseAssignments?.FirstOrDefault(w => w.IsActive)?.WarehouseId,
                 VehicleId = employee.VehicleAssignments?.FirstOrDefault(v => v.IsActive)?.VehicleId,
@@ -531,9 +532,9 @@ namespace SCM_System.Controllers
 
             var warehouses = await _context.Warehouses
                 .Where(w => w.SupplierId == supplier.Id && (w.IsActive || w.Id == currentWarehouseId))
-                .Select(w => new SelectListItem 
-                { 
-                    Value = w.Id.ToString(), 
+                .Select(w => new SelectListItem
+                {
+                    Value = w.Id.ToString(),
                     Text = $"{w.Name} ({w.City}) - {(w.IsActive ? "Active" : "Closed")}",
                     Selected = w.Id == currentWarehouseId
                 })
@@ -542,10 +543,10 @@ namespace SCM_System.Controllers
             ViewBag.Warehouses = warehouses;
 
             var vehicles = await _context.Vehicles
-                .Where(v => v.SupplierId == supplier.Id && (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Id == currentVehicleId))
-                .Select(v => new SelectListItem 
-                { 
-                    Value = v.Id.ToString(), 
+                .Where(v => v.SupplierId == supplier.Id && (v.IsActive || v.Id == currentVehicleId))
+                .Select(v => new SelectListItem
+                {
+                    Value = v.Id.ToString(),
                     Text = $"{v.LicensePlate} ({v.VehicleType}) - {v.Status}",
                     Selected = v.Id == currentVehicleId
                 })
@@ -592,7 +593,7 @@ namespace SCM_System.Controllers
                     employee.User.FullName = model.FullName;
                     employee.User.Email = model.Email;
                     employee.User.PhoneNumber = model.PhoneNumber;
-                    
+
                     employee.Email = model.Email;
                     employee.Phone = model.PhoneNumber;
                     employee.Department = model.Department;
@@ -617,7 +618,7 @@ namespace SCM_System.Controllers
                     if (photoDoc != null) employee.ProfilePhotoPath = await SaveFileAsync(photoDoc, "employees");
                     if (idDoc != null) employee.IdDocumentUrl = await SaveFileAsync(idDoc, "employees");
                     if (contractDoc != null) employee.ContractDocumentUrl = await SaveFileAsync(contractDoc, "employees");
-                    
+
                     if (photoDoc != null) _context.EmployeeDocuments.Add(new EmployeeDocument { SupplierEmployeeId = id, DocumentType = "ProfilePhoto", DocumentName = photoDoc.FileName ?? "Profile Photo", DocumentUrl = employee.ProfilePhotoPath });
                     if (idDoc != null) _context.EmployeeDocuments.Add(new EmployeeDocument { SupplierEmployeeId = id, DocumentType = "FaydaID", DocumentName = idDoc.FileName ?? "Fayda National ID", DocumentUrl = employee.IdDocumentUrl });
                     if (contractDoc != null) _context.EmployeeDocuments.Add(new EmployeeDocument { SupplierEmployeeId = id, DocumentType = "Contract", DocumentName = contractDoc.FileName ?? "Employment Contract", DocumentUrl = employee.ContractDocumentUrl });
@@ -641,28 +642,51 @@ namespace SCM_System.Controllers
 
                         if (model.WarehouseId != employee.WarehouseId)
                         {
-                            // 1. End old assignments
+                            // 1. End old assignments for current employee
                             var activeAssigns = employee.WarehouseAssignments.Where(wa => wa.IsActive).ToList();
-                            foreach(var wa in activeAssigns) { wa.IsActive = false; wa.EndDate = DateTime.Now; }
+                            foreach (var wa in activeAssigns) { wa.IsActive = false; wa.EndDate = DateTime.Now; }
 
                             if (model.WarehouseId.HasValue)
                             {
-                                // 2. Deactivate other active managers for the target warehouse
-                                var otherManagers = await _context.WarehouseAssignments
+                                // 2. Robust Swap: Find ALL other employees assigned to this warehouse
+                                // A. Via Active Assignments
+                                var otherManagerAssignments = await _context.WarehouseAssignments
+                                    .Include(wa => wa.SupplierEmployee)
                                     .Where(wa => wa.WarehouseId == model.WarehouseId.Value && wa.IsActive && wa.SupplierEmployeeId != id)
                                     .ToListAsync();
-                                foreach(var om in otherManagers) { om.IsActive = false; om.EndDate = DateTime.Now; }
+
+                                foreach (var wa in otherManagerAssignments)
+                                {
+                                    wa.IsActive = false;
+                                    wa.EndDate = DateTime.Now;
+                                    
+                                    if (wa.SupplierEmployee != null)
+                                    {
+                                        wa.SupplierEmployee.WarehouseId = null;
+                                        _context.Update(wa.SupplierEmployee);
+                                    }
+                                }
+
+                                // B. Via Direct WarehouseId field (Double-tap)
+                                var otherDirectManagers = await _context.SupplierEmployees
+                                    .Where(e => e.WarehouseId == model.WarehouseId.Value && e.Id != id)
+                                    .ToListAsync();
+                                foreach (var dm in otherDirectManagers)
+                                {
+                                    dm.WarehouseId = null;
+                                    _context.Update(dm);
+                                }
 
                                 // 3. Create new primary assignment
-                                _context.WarehouseAssignments.Add(new WarehouseAssignment 
-                                { 
-                                    WarehouseId = model.WarehouseId.Value, 
-                                    SupplierEmployeeId = id, 
-                                    StartDate = DateTime.Now, 
-                                    IsPrimary = true, 
-                                    IsActive = true 
+                                _context.WarehouseAssignments.Add(new WarehouseAssignment
+                                {
+                                    WarehouseId = model.WarehouseId.Value,
+                                    SupplierEmployeeId = id,
+                                    StartDate = DateTime.Now,
+                                    IsPrimary = true,
+                                    IsActive = true
                                 });
-                                
+
                                 // 4. Update warehouse table
                                 var wh = await _context.Warehouses.FindAsync(model.WarehouseId.Value);
                                 if (wh != null)
@@ -684,16 +708,16 @@ namespace SCM_System.Controllers
                         employee.DriverProfile.MedicalFitnessExpiry = model.MedicalFitnessExpiryDate;
                         employee.DriverProfile.DeliveryRegion = model.DeliveryRegion;
                         employee.DriverProfile.CityCoverage = model.CityCoverage;
-                        
+
                         if (model.VehicleId != employee.VehicleId)
                         {
-                            // 1. End old assignments
+                            // 1. End old assignments for current employee
                             var activeAssigns = employee.VehicleAssignments.Where(va => va.IsActive).ToList();
-                            foreach(var va in activeAssigns) 
-                            { 
-                                va.IsActive = false; 
-                                va.EndDate = DateTime.Now; 
-                                
+                            foreach (var va in activeAssigns)
+                            {
+                                va.IsActive = false;
+                                va.EndDate = DateTime.Now;
+
                                 // Clear old vehicle driver link
                                 var oldVh = await _context.Vehicles.FindAsync(va.VehicleId);
                                 if (oldVh != null && oldVh.PrimaryDriverId == id)
@@ -704,7 +728,7 @@ namespace SCM_System.Controllers
                                 }
                             }
 
-                            if (model.VehicleId.HasValue) 
+                            if (model.VehicleId.HasValue)
                             {
                                 // Maintenance & Compliance Guard
                                 if (!await IsVehicleCompliantAsync(model.VehicleId.Value))
@@ -713,22 +737,45 @@ namespace SCM_System.Controllers
                                     goto RePopulateAndReturn;
                                 }
 
-                                // 2. Deactivate other active drivers for the target vehicle
-                                var otherDrivers = await _context.VehicleAssignments
+                                // 2. Robust Swap: Find ALL other employees assigned to this vehicle
+                                // A. Via Active Assignments
+                                var otherVehicleAssignments = await _context.VehicleAssignments
+                                    .Include(va => va.SupplierEmployee)
                                     .Where(va => va.VehicleId == model.VehicleId.Value && va.IsActive && va.SupplierEmployeeId != id)
                                     .ToListAsync();
-                                foreach(var od in otherDrivers) { od.IsActive = false; od.EndDate = DateTime.Now; }
+
+                                foreach (var va in otherVehicleAssignments)
+                                {
+                                    va.IsActive = false;
+                                    va.EndDate = DateTime.Now;
+
+                                    if (va.SupplierEmployee != null)
+                                    {
+                                        va.SupplierEmployee.VehicleId = null;
+                                        _context.Update(va.SupplierEmployee);
+                                    }
+                                }
+
+                                // B. Via Direct VehicleId field (Double-tap)
+                                var otherDirectDrivers = await _context.SupplierEmployees
+                                    .Where(e => e.VehicleId == model.VehicleId.Value && e.Id != id)
+                                    .ToListAsync();
+                                foreach (var dd in otherDirectDrivers)
+                                {
+                                    dd.VehicleId = null;
+                                    _context.Update(dd);
+                                }
 
                                 // 3. Create new primary assignment
-                                _context.VehicleAssignments.Add(new VehicleAssignment 
-                                { 
-                                    VehicleId = model.VehicleId.Value, 
-                                    SupplierEmployeeId = id, 
-                                    StartDate = DateTime.Now, 
-                                    IsPrimary = true, 
-                                    IsActive = true 
+                                _context.VehicleAssignments.Add(new VehicleAssignment
+                                {
+                                    VehicleId = model.VehicleId.Value,
+                                    SupplierEmployeeId = id,
+                                    StartDate = DateTime.Now,
+                                    IsPrimary = true,
+                                    IsActive = true
                                 });
-                                
+
                                 // 4. Update vehicle table
                                 var vh = await _context.Vehicles.FindAsync(model.VehicleId.Value);
                                 if (vh != null)
@@ -743,12 +790,12 @@ namespace SCM_System.Controllers
                     }
 
                     await _context.SaveChangesAsync();
-                    
+
                     // AUDIT LOG
                     await _auditLogService.LogActionAsync(
-                        "Employee", 
-                        employee.Id.ToString(), 
-                        "Update", 
+                        "Employee",
+                        employee.Id.ToString(),
+                        "Update",
                         notes: $"Profile updated for {employee.User.FullName} ({employee.EmployeeDisplayId})",
                         performedByUserId: userId
                     );
@@ -759,7 +806,7 @@ namespace SCM_System.Controllers
                         await _notificationService.SendNotificationAsync(
                             employee.UserId,
                             "Hub Assignment Updated",
-                            $"You have been assigned to warehouse hub: { (await _context.Warehouses.FindAsync(model.WarehouseId))?.Name }",
+                            $"You have been assigned to warehouse hub: {(await _context.Warehouses.FindAsync(model.WarehouseId))?.Name}",
                             "Info",
                             "/Warehouse/Dashboard"
                         );
@@ -841,11 +888,11 @@ namespace SCM_System.Controllers
                         va.EndDate = DateTime.Now;
                         // Clear primary driver reference and free up vehicle
                         var vh = await _context.Vehicles.FindAsync(va.VehicleId);
-                        if (vh != null && vh.PrimaryDriverId == id) 
-                        { 
-                            vh.PrimaryDriverId = null; 
+                        if (vh != null && vh.PrimaryDriverId == id)
+                        {
+                            vh.PrimaryDriverId = null;
                             vh.Status = SCM_System.Models.Enums.VehicleStatus.Available;
-                            _context.Update(vh); 
+                            _context.Update(vh);
                         }
                     }
 
@@ -853,9 +900,9 @@ namespace SCM_System.Controllers
 
                     // AUDIT LOG
                     await _auditLogService.LogActionAsync(
-                        "Employee", 
-                        employee.Id.ToString(), 
-                        "Delete", 
+                        "Employee",
+                        employee.Id.ToString(),
+                        "Delete",
                         notes: $"Soft delete performed for employee {employee.User.FullName}",
                         performedByUserId: userId
                     );
@@ -863,7 +910,7 @@ namespace SCM_System.Controllers
                     await transaction.CommitAsync();
                     TempData["SuccessMessage"] = "Employee deactivated successfully (Soft Delete).";
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
                     TempData["ErrorMessage"] = "Could not deactivate employee: " + ex.Message;
@@ -889,14 +936,14 @@ namespace SCM_System.Controllers
         private async Task<string?> SaveFileAsync(IFormFile? file, string subfolder)
         {
             if (file == null || file.Length == 0) return null;
-            
+
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!allowedExtensions.Contains(extension)) return null;
 
             var fileName = $"{Guid.NewGuid()}{extension}";
             var uploadPath = Path.Combine(_env.WebRootPath, "uploads", subfolder);
-            
+
             if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
 
             var filePath = Path.Combine(uploadPath, fileName);

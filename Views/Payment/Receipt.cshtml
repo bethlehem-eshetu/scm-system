@@ -19,59 +19,59 @@
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="card shadow-premium rounded-5 border-0 bg-white">
-                <div class="card-header bg-dark-green text-white text-center py-4 rounded-top-5 border-0">
+            <div class="card shadow-premium rounded-5 border-0 bg-white dark-mode-card">
+                <div class="card-header bg-dark-green text-white text-center py-4 rounded-top-5 border-0 dark-mode-header">
                     <h3 class="mb-0 fw-bold"><i class="fas fa-file-invoice-dollar me-2 text-accent-green"></i>EthioChain SCM - Payment Receipt</h3>
                 </div>
-                <div class="card-body p-5">
+                <div class="card-body p-5 dark-mode-card-body">
                     <!-- HEADER -->
-                    <div class="row mb-4 border-bottom border-faint pb-4">
+                    <div class="row mb-4 border-bottom border-faint pb-4 dark-mode-border">
                         <div class="col-md-6">
-                            <h5 class="fw-bold mb-3 text-dark-green">Transaction Summary</h5>
-                            <p class="mb-1 text-dark-green small"><strong>Transaction ID:</strong> @(masterPayment?.Id ?? Model.Id)</p>
+                            <h5 class="fw-bold mb-3 text-dark-green dark-mode-text">Transaction Summary</h5>
+                            <p class="mb-1 text-dark-green small dark-mode-text"><strong>Transaction ID:</strong> @(masterPayment?.Id ?? Model.Id)</p>
                             @if(Model.Order != null) {
-                                <p class="mb-1 text-dark-green small"><strong>Order:</strong> #@Model.Order.OrderNumber</p>
+                                <p class="mb-1 text-dark-green small dark-mode-text"><strong>Order:</strong> #@Model.Order.OrderNumber</p>
                             }
-                            <p class="mb-1 text-dark-green small"><strong>Date:</strong> @(masterPayment?.PaidAt?.ToLocalTime().ToString("MMM dd, yyyy HH:mm") ?? Model.PaidAt?.ToString("MMM dd, yyyy HH:mm") ?? Model.CreatedAt.ToString("MMM dd, yyyy HH:mm"))</p>
+                            <p class="mb-1 text-dark-green small dark-mode-text"><strong>Date:</strong> @(masterPayment?.PaidAt?.ToLocalTime().ToString("MMM dd, yyyy HH:mm") ?? Model.PaidAt?.ToString("MMM dd, yyyy HH:mm") ?? Model.CreatedAt.ToString("MMM dd, yyyy HH:mm"))</p>
                             <p class="mb-1">
-                                <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small fw-bold">CLEARED / PAID</span>
-                                <i class="fas fa-check-circle text-dark-green ms-2" title="Verified Payment"></i>
+                                <span class="badge bg-dark-green text-accent-green rounded-pill px-3 py-2 extra-small fw-bold dark-mode-badge">CLEARED / PAID</span>
+                                <i class="fas fa-check-circle text-dark-green ms-2 dark-mode-text" title="Verified Payment"></i>
                             </p>
                         </div>
                         <div class="col-md-6 text-md-end">
-                            <h6 class="text-muted mb-2 text-uppercase fw-bold extra-small ls-1">Platform Identity</h6>
-                            <h5 class="fw-bold mb-1 text-dark-green">EthioChain SCM</h5>
-                            <p class="text-muted mb-0 small">Nexus Hub, Addis Ababa</p>
-                            <p class="text-muted mb-0 small extra-small">TIN: 0001234567</p>
+                            <h6 class="text-muted mb-2 text-uppercase fw-bold extra-small ls-1 dark-mode-text">Platform Identity</h6>
+                            <h5 class="fw-bold mb-1 text-dark-green dark-mode-text">EthioChain SCM</h5>
+                            <p class="text-muted mb-0 small dark-mode-text">Nexus Hub, Addis Ababa</p>
+                            <p class="text-muted mb-0 small extra-small dark-mode-text">TIN: 0001234567</p>
                         </div>
                     </div>
 
                     <!-- PARTIES -->
-                    <div class="row mb-5 border-bottom border-faint pb-4">
+                    <div class="row mb-5 border-bottom border-faint pb-4 dark-mode-border">
                         <div class="col-sm-6">
-                            <h6 class="text-muted mb-2 text-uppercase fw-bold extra-small ls-1">Financial Origin (Retailer)</h6>
+                            <h6 class="text-muted mb-2 text-uppercase fw-bold extra-small ls-1 dark-mode-text">Financial Origin (Retailer)</h6>
                             @if (Model.Retailer != null)
                             {
-                                <h5 class="fw-bold mb-1 text-dark-green">@Model.Retailer.BusinessName</h5>
-                                <p class="text-muted mb-0 small"><strong>Email:</strong> @(Model.Retailer.User?.Email ?? "N/A")</p>
-                                <p class="mb-1 extra-small text-muted fw-bold"><strong>TIN:</strong> @(Model.Retailer.TaxIdentificationNumber ?? "Not Provided")</p>
+                                <h5 class="fw-bold mb-1 text-dark-green dark-mode-text">@Model.Retailer.BusinessName</h5>
+                                <p class="text-muted mb-0 small dark-mode-text"><strong>Email:</strong> @(Model.Retailer.User?.Email ?? "N/A")</p>
+                                <p class="mb-1 extra-small text-muted fw-bold dark-mode-text"><strong>TIN:</strong> @(Model.Retailer.TaxIdentificationNumber ?? "Not Provided")</p>
                             }
                             else
                             {
-                                <h5 class="fw-bold mb-1 text-dark-green">Retailer Entity</h5>
+                                <h5 class="fw-bold mb-1 text-dark-green dark-mode-text">Retailer Entity</h5>
                             }
                         </div>
                         <div class="col-sm-6 text-sm-end">
-                            <h6 class="text-muted mb-2 text-uppercase fw-bold extra-small ls-1">Settlement Destination (Supplier)</h6>
+                            <h6 class="text-muted mb-2 text-uppercase fw-bold extra-small ls-1 dark-mode-text">Settlement Destination (Supplier)</h6>
                             @if (Model.Supplier != null)
                             {
-                                <h5 class="fw-bold mb-1 text-dark-green">@Model.Supplier.CompanyName</h5>
-                                <p class="text-muted mb-0 small"><strong>Email:</strong> @(Model.Supplier.User?.Email ?? "N/A")</p>
-                                <p class="mb-1 extra-small text-muted fw-bold"><strong>TIN:</strong> @(Model.Supplier.TaxIdentificationNumber ?? "Not Provided")</p>
+                                <h5 class="fw-bold mb-1 text-dark-green dark-mode-text">@Model.Supplier.CompanyName</h5>
+                                <p class="text-muted mb-0 small dark-mode-text"><strong>Email:</strong> @(Model.Supplier.User?.Email ?? "N/A")</p>
+                                <p class="mb-1 extra-small text-muted fw-bold dark-mode-text"><strong>TIN:</strong> @(Model.Supplier.TaxIdentificationNumber ?? "Not Provided")</p>
                             }
                             else
                             {
-                                <h5 class="fw-bold mb-1 text-dark-green">System Entity</h5>
+                                <h5 class="fw-bold mb-1 text-dark-green dark-mode-text">System Entity</h5>
                             }
                         </div>
                     </div>
@@ -79,21 +79,21 @@
                     <!-- PAYMENT DETAILS -->
                     <div class="row mb-5">
                         <div class="col-12">
-                            <h5 class="fw-bold mb-4 text-dark-green"><i class="fas fa-receipt me-2 text-accent-green"></i>Financial Breakdown</h5>
-                            <div class="table-responsive">
-                                <table class="table table-borderless align-middle mb-0">
+                            <h5 class="fw-bold mb-4 text-dark-green dark-mode-text"><i class="fas fa-receipt me-2 text-accent-green"></i>Financial Breakdown</h5>
+                            <div class="table-responsive dark-mode-table-wrapper">
+                                <table class="table table-borderless align-middle mb-0 dark-mode-financial-table">
                                     <tbody>
-                                        <tr class="border-bottom border-faint">
-                                            <td class="py-3 text-muted fw-bold small">Net Asset Value (Subtotal)</td>
-                                            <td class="text-end py-3 fw-bold text-dark-green">@subtotal.ToString("N2") ETB</td>
+                                        <tr class="border-bottom border-faint dark-mode-border-row">
+                                            <td class="py-3 text-muted fw-bold small dark-mode-text">Net Asset Value (Subtotal)</td>
+                                            <td class="text-end py-3 fw-bold text-dark-green dark-mode-text">@subtotal.ToString("N2") ETB</td>
                                         </tr>
-                                        <tr class="border-bottom border-faint">
-                                            <td class="py-3 text-muted fw-bold small">VAT Contribution (15%)</td>
-                                            <td class="text-end py-3 text-dark-green fw-bold">@vat.ToString("N2") ETB</td>
+                                        <tr class="border-bottom border-faint dark-mode-border-row">
+                                            <td class="py-3 text-muted fw-bold small dark-mode-text">VAT Contribution (15%)</td>
+                                            <td class="text-end py-3 text-dark-green fw-bold dark-mode-text">@vat.ToString("N2") ETB</td>
                                         </tr>
-                                        <tr class="bg-faint-green rounded-4">
-                                            <td class="py-4 fw-bold fs-5 text-dark-green ps-4">TOTAL SETTLEMENT</td>
-                                            <td class="text-end py-4 fw-bold fs-4 text-dark-green pe-4">@totalPaid.ToString("N2") ETB</td>
+                                        <tr class="dark-mode-total-row">
+                                            <td class="py-4 fw-bold fs-5 text-dark-green ps-4 dark-mode-text">TOTAL SETTLEMENT</td>
+                                            <td class="text-end py-4 fw-bold fs-4 text-dark-green pe-4 dark-mode-text">@totalPaid.ToString("N2") ETB</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -102,76 +102,76 @@
                     </div>
 
                     <!-- PAYMENT FLOW VISUALIZATION -->
-                    <div class="bg-faint-green rounded-5 p-4 mb-5 border border-faint shadow-inner">
-                        <h6 class="text-uppercase fw-bold text-muted extra-small ls-1 mb-4">
+                    <div class="bg-faint-green rounded-5 p-4 mb-5 border border-faint shadow-inner dark-mode-flow-card">
+                        <h6 class="text-uppercase fw-bold text-muted extra-small ls-1 mb-4 dark-mode-text">
                             <i class="fas fa-project-diagram me-2 text-dark-green"></i>Nexus Fund Allocation Flow
                         </h6>
                         <div class="d-flex justify-content-between align-items-center position-relative px-3">
-                            <div class="position-absolute w-100 border-top border-dark-green opacity-10" style="top: 25px; left: 0; z-index: 0;"></div>
+                            <div class="position-absolute w-100 border-top border-dark-green opacity-10 dark-mode-flow-line" style="top: 25px; left: 0; z-index: 0;"></div>
                             
                             <!-- Node 1: Gross -->
-                            <div class="text-center position-relative bg-faint-green px-2" style="z-index: 1;">
-                                <div class="bg-dark-green rounded-circle d-inline-flex align-items-center justify-content-center shadow-premium" style="width: 50px; height: 50px;">
+                            <div class="text-center position-relative bg-faint-green px-2 dark-mode-flow-node" style="z-index: 1;">
+                                <div class="bg-dark-green rounded-circle d-inline-flex align-items-center justify-content-center shadow-premium dark-mode-node-icon" style="width: 50px; height: 50px;">
                                     <i class="fas fa-shopping-cart text-accent-green"></i>
                                 </div>
-                                <div class="mt-2 fw-bold text-dark-green" style="font-size: 0.65rem;">Retailer Paid</div>
-                                <div class="text-dark-green small fw-bold">@totalPaid.ToString("N2")</div>
+                                <div class="mt-2 fw-bold text-dark-green dark-mode-text" style="font-size: 0.65rem;">Retailer Paid</div>
+                                <div class="text-dark-green small fw-bold dark-mode-text">@totalPaid.ToString("N2")</div>
                             </div>
 
-                            <i class="fas fa-chevron-right text-dark-green opacity-25" style="z-index: 1;"></i>
+                            <i class="fas fa-chevron-right text-dark-green opacity-25 dark-mode-arrow" style="z-index: 1;"></i>
 
                             <!-- Node 2: Commission -->
-                            <div class="text-center position-relative bg-faint-green px-2" style="z-index: 1;">
-                                <div class="bg-white border border-dark-green border-opacity-25 rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
+                            <div class="text-center position-relative bg-faint-green px-2 dark-mode-flow-node" style="z-index: 1;">
+                                <div class="bg-white border border-dark-green border-opacity-25 rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm dark-mode-node-commission" style="width: 50px; height: 50px;">
                                     <i class="fas fa-percentage text-dark-green"></i>
                                 </div>
-                                <div class="mt-2 fw-bold text-dark-green" style="font-size: 0.65rem;">Platform Fee (@rate.ToString("0")%)</div>
-                                <div class="text-danger small fw-bold">-@platformCommission.ToString("N2")</div>
+                                <div class="mt-2 fw-bold text-dark-green dark-mode-text" style="font-size: 0.65rem;">Platform Fee (@rate.ToString("0")%)</div>
+                                <div class="text-danger small fw-bold dark-mode-fee">-@platformCommission.ToString("N2")</div>
                             </div>
 
-                            <i class="fas fa-chevron-right text-dark-green opacity-25" style="z-index: 1;"></i>
+                            <i class="fas fa-chevron-right text-dark-green opacity-25 dark-mode-arrow" style="z-index: 1;"></i>
 
                             <!-- Node 3: Net Payout -->
-                            <div class="text-center position-relative bg-faint-green px-2" style="z-index: 1;">
+                            <div class="text-center position-relative bg-faint-green px-2 dark-mode-flow-node" style="z-index: 1;">
                                 <div class="bg-accent-green rounded-circle d-inline-flex align-items-center justify-content-center shadow-premium" style="width: 50px; height: 50px;">
                                     <i class="fas fa-hand-holding-usd text-dark-green"></i>
                                 </div>
-                                <div class="mt-2 fw-bold text-dark-green" style="font-size: 0.65rem;">Supplier Earns</div>
-                                <div class="text-dark-green small fw-bold">@supplierPayout.ToString("N2")</div>
+                                <div class="mt-2 fw-bold text-dark-green dark-mode-text" style="font-size: 0.65rem;">Supplier Earns</div>
+                                <div class="text-dark-green small fw-bold dark-mode-text">@supplierPayout.ToString("N2")</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- TRANSACTION SECURE DATA -->
-                    <div class="bg-white border border-faint rounded-5 p-4 mb-4 shadow-premium">
+                    <div class="bg-white border border-faint rounded-5 p-4 mb-4 shadow-premium dark-mode-secure-card">
                         <div class="row text-center text-sm-start">
                             <div class="col-sm-6 mb-3 mb-sm-0">
-                                <p class="text-muted extra-small text-uppercase fw-bold ls-1 mb-1">External Tx Reference</p>
-                                <code class="small fw-bold text-dark-green mb-0 bg-faint-green px-2 py-1 rounded">@(masterPayment?.TxRef ?? Model.ChapaTransactionId ?? "PAY-N/A")</code>
+                                <p class="text-muted extra-small text-uppercase fw-bold ls-1 mb-1 dark-mode-text">External Tx Reference</p>
+                                <code class="small fw-bold text-dark-green mb-0 bg-faint-green px-2 py-1 rounded dark-mode-code">@(masterPayment?.TxRef ?? Model.ChapaTransactionId ?? "PAY-N/A")</code>
                             </div>
                             <div class="col-sm-6 text-sm-end">
-                                <p class="text-muted extra-small text-uppercase fw-bold ls-1 mb-1">Gateway Authorization</p>
-                                <p class="small fw-bold text-dark-green mb-0">
-                                    <span class="text-success"><i class="fas fa-shield-alt me-1"></i> Secured by Chapa Integration</span>
+                                <p class="text-muted extra-small text-uppercase fw-bold ls-1 mb-1 dark-mode-text">Gateway Authorization</p>
+                                <p class="small fw-bold text-dark-green mb-0 dark-mode-text">
+                                    <span class="text-success dark-mode-success"><i class="fas fa-shield-alt me-1"></i> Secured by Chapa Integration</span>
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <div class="text-center mt-5 mb-2 d-print-none">
-                        <button onclick="window.print()" class="btn btn-dark-green rounded-pill px-5 py-3 shadow-premium fw-bold">
+                        <button onclick="window.print()" class="btn btn-dark-green rounded-pill px-5 py-3 shadow-premium fw-bold dark-mode-primary-btn">
                             <i class="fas fa-print me-2 text-accent-green"></i>Print Official Ledger Extract
                         </button>
                         <div class="mt-4">
-                            <a href="/Payment/MyPayments" class="text-decoration-none text-dark-green opacity-75 small fw-bold hover-lift">
+                            <a href="/Payment/MyPayments" class="text-decoration-none text-dark-green opacity-75 small fw-bold hover-lift dark-mode-link">
                                 <i class="fas fa-arrow-left me-2"></i> Return to Ledger
                             </a>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-faint-green text-center py-4 border-0 rounded-bottom-5">
-                    <p class="text-dark-green extra-small fw-bold mb-1 opacity-75 uppercase ls-1">ETHIO-CHAIN SCM NEXUS | SECURE DIGITAL SETTLEMENT ENGINE</p>
-                    <p class="text-muted extra-small mb-0 opacity-50">This document serves as an immutable proof of fiscal allocation within the SCM ecosystem.</p>
+                <div class="card-footer bg-faint-green text-center py-4 border-0 rounded-bottom-5 dark-mode-footer">
+                    <p class="text-dark-green extra-small fw-bold mb-1 opacity-75 uppercase ls-1 dark-mode-text">ETHIO-CHAIN SCM NEXUS | SECURE DIGITAL SETTLEMENT ENGINE</p>
+                    <p class="text-muted extra-small mb-0 opacity-50 dark-mode-text">This document serves as an immutable proof of fiscal allocation within the SCM ecosystem.</p>
                 </div>
             </div>
         </div>
@@ -211,5 +211,155 @@
         body { background: white !important; padding: 0 !important; }
         .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
     }
-</style>
 
+    /* ============================================ */
+    /* DARK MODE STYLES - DARK BLUE THEME */
+    /* ============================================ */
+    body.dark-mode .dark-mode-card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-header {
+        background-color: #0f172a !important;
+    }
+
+    body.dark-mode .dark-mode-card-body {
+        background-color: #1e293b !important;
+    }
+
+    body.dark-mode .dark-mode-footer {
+        background-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-text {
+        color: #e2e8f0 !important;
+    }
+
+    body.dark-mode .dark-mode-border {
+        border-bottom-color: #334155 !important;
+        border-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-badge {
+        background-color: #0f172a !important;
+        color: #a5f3c3 !important;
+    }
+
+    /* FINANCIAL BREAKDOWN TABLE - FIXED */
+    body.dark-mode .dark-mode-table-wrapper {
+        background-color: transparent !important;
+    }
+
+    body.dark-mode .dark-mode-financial-table {
+        background-color: #1e293b !important;
+        width: 100%;
+    }
+
+    body.dark-mode .dark-mode-financial-table tbody {
+        background-color: #1e293b !important;
+    }
+
+    body.dark-mode .dark-mode-financial-table tr {
+        background-color: #1e293b !important;
+    }
+
+    body.dark-mode .dark-mode-financial-table td {
+        background-color: #1e293b !important;
+        border-bottom-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-border-row {
+        border-bottom-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-total-row {
+        background-color: #334155 !important;
+        border-radius: 12px !important;
+    }
+
+    body.dark-mode .dark-mode-total-row td {
+        background-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-flow-card {
+        background-color: #334155 !important;
+        border-color: #475569 !important;
+    }
+
+    body.dark-mode .dark-mode-flow-node {
+        background-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-node-icon {
+        background-color: #0f172a !important;
+    }
+
+    body.dark-mode .dark-mode-node-commission {
+        background-color: #1e293b !important;
+        border-color: #475569 !important;
+    }
+
+    body.dark-mode .dark-mode-flow-line {
+        border-top-color: #475569 !important;
+    }
+
+    body.dark-mode .dark-mode-arrow {
+        color: #64748b !important;
+    }
+
+    body.dark-mode .dark-mode-secure-card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+    }
+
+    body.dark-mode .dark-mode-code {
+        background-color: #334155 !important;
+        color: #a5f3c3 !important;
+    }
+
+    body.dark-mode .dark-mode-success {
+        color: #4ade80 !important;
+    }
+
+    body.dark-mode .dark-mode-primary-btn {
+        background-color: #0f172a !important;
+        color: #a5f3c3 !important;
+    }
+
+    body.dark-mode .dark-mode-link {
+        color: #a5f3c3 !important;
+    }
+
+    body.dark-mode .text-muted {
+        color: #9ca3af !important;
+    }
+
+    body.dark-mode .text-dark-green {
+        color: #a5f3c3 !important;
+    }
+
+    body.dark-mode .text-danger {
+        color: #f87171 !important;
+    }
+
+    body.dark-mode .text-success {
+        color: #4ade80 !important;
+    }
+
+    body.dark-mode .bg-faint-green {
+        background-color: #334155 !important;
+    }
+
+    body.dark-mode .border-faint {
+        border-color: #475569 !important;
+    }
+
+    body.dark-mode .shadow-inner {
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    body.dark-mode .dark-mode-fee {
+        color: #f87171 !important;
+    }
+</style>

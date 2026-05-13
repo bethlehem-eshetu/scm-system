@@ -7,7 +7,7 @@ using SCM_System.Services;
 
 namespace SCM_System.Controllers
 {
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Retailer,Supplier,WarehouseManager,Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Retailer,Supplier,Admin")]
     public class MessageController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -37,6 +37,7 @@ namespace SCM_System.Controllers
         {
             return HttpContext.Session.GetString("UserRole") ?? "";
         }
+
 
         // GET: /Message/Inbox
         public async Task<IActionResult> Inbox()
@@ -479,7 +480,9 @@ namespace SCM_System.Controllers
 
         private async Task<Conversation> GetOrCreateConversation(int currentUserId, string currentUserRole, int otherUserId)
         {
-            // 1. Identify the roles and profiles
+            var otherUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == otherUserId);
+
+            // Standard Supplier-Retailer logic
             var currentSupplier = await _context.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == currentUserId);
             var currentRetailer = await _context.Retailers.AsNoTracking().FirstOrDefaultAsync(r => r.UserId == currentUserId);
             
@@ -489,28 +492,23 @@ namespace SCM_System.Controllers
             int supplierId = 0;
             int retailerId = 0;
 
-            // Scenario A: Current is Supplier, Other is Retailer
             if (currentSupplier != null && otherRetailer != null)
             {
                 supplierId = currentSupplier.Id;
                 retailerId = otherRetailer.Id;
             }
-            // Scenario B: Current is Retailer, Other is Supplier
             else if (currentRetailer != null && otherSupplier != null)
             {
                 retailerId = currentRetailer.Id;
                 supplierId = otherSupplier.Id;
             }
-            // Scenario C: Fallback - Resolve based on roles if one profile is missing but user exists
             else
             {
-                var otherUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == otherUserId);
                 if (otherUser != null)
                 {
                     if (currentUserRole == "Supplier" && currentSupplier != null && otherUser.Role == "Retailer")
                     {
                         supplierId = currentSupplier.Id;
-                        // Attempt to find or create a dummy retailer profile if missing? No, we need a real profile.
                         if (otherRetailer != null) retailerId = otherRetailer.Id;
                     }
                     else if (currentUserRole == "Retailer" && currentRetailer != null && otherUser.Role == "Supplier")
@@ -521,13 +519,10 @@ namespace SCM_System.Controllers
                 }
             }
 
-            if (supplierId == 0 || retailerId == 0)
-            {
-                return null;
-            }
+            if (supplierId == 0 || retailerId == 0) return null;
 
             var conversation = await _context.Conversations
-                .FirstOrDefaultAsync(c => c.SupplierId == supplierId && c.RetailerId == retailerId);
+                .FirstOrDefaultAsync(c => c.SupplierId == supplierId && c.RetailerId == retailerId && c.OrderId == null);
 
             if (conversation == null)
             {
@@ -548,53 +543,58 @@ namespace SCM_System.Controllers
 
         private async Task<List<ConversationViewModel>> GetUserConversations(int userId, string userRole)
         {
-            IQueryable<Conversation> query;
-
-            if (userRole == "Supplier")
-            {
-                // First get the Supplier ID from UserId
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.UserId == userId);
-                if (supplier == null) return new List<ConversationViewModel>();
-
-                query = _context.Conversations
-                    .Include(c => c.Retailer)
-                        .ThenInclude(r => r.User)
-                    .Where(c => c.SupplierId == supplier.Id);
-            }
-            else
-            {
-                // First get the Retailer ID from UserId
-                var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
-                if (retailer == null) return new List<ConversationViewModel>();
-
-                query = _context.Conversations
-                    .Include(c => c.Supplier)
-                        .ThenInclude(s => s.User)
-                    .Where(c => c.RetailerId == retailer.Id);
-            }
-
-            var conversations = await query
+            // Get conversations where user is directly linked or has sent/received messages
+            var conversations = await _context.Conversations
+                .Include(c => c.Supplier).ThenInclude(s => s.User)
+                .Include(c => c.Retailer).ThenInclude(r => r.User)
+                .Include(c => c.Messages)
+                .Where(c => c.Supplier.UserId == userId || 
+                           c.Retailer.UserId == userId || 
+                           c.Messages.Any(m => m.SenderId == userId))
                 .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
-                .Select(c => new ConversationViewModel
+                .ToListAsync();
+
+            var result = new List<ConversationViewModel>();
+
+            foreach (var c in conversations)
+            {
+                // Determine who the "other" person is
+                User otherUser = null;
+                string otherType = "";
+
+                if (c.Supplier != null && c.Supplier.UserId == userId)
+                {
+                    otherUser = c.Retailer?.User;
+                    otherType = "Retailer";
+                }
+                else if (c.Retailer != null && c.Retailer.UserId == userId)
+                {
+                    otherUser = c.Supplier?.User;
+                    otherType = "Supplier";
+                }
+                else
+                {
+                    // No direct link, skip or handle as unknown
+                    continue;
+                }
+
+                if (otherUser == null) continue;
+
+                result.Add(new ConversationViewModel
                 {
                     Id = c.Id,
-                    OtherUserId = userRole == "Supplier" ? c.Retailer.UserId : c.Supplier.UserId,
-                    OtherUserName = userRole == "Supplier" ?
-                        (c.Retailer != null ? c.Retailer.User.FullName : $"Retailer {c.RetailerId}") :
-                        (c.Supplier != null ? c.Supplier.User.FullName : $"Supplier {c.SupplierId}"),
-                    OtherUserType = userRole == "Supplier" ? "Retailer" : "Supplier",
-                    LastMessage = c.Messages
-                        .OrderByDescending(m => m.CreatedAt)
-                        .Select(m => m.MessageText)
-                        .FirstOrDefault() ?? "No messages yet",
+                    OtherUserId = otherUser.Id,
+                    OtherUserName = string.IsNullOrEmpty(c.Title) ? otherUser.FullName : $"{c.Title} ({otherUser.FullName})",
+                    OtherUserType = string.IsNullOrEmpty(otherType) ? otherUser.Role : otherType,
+                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).Select(m => m.MessageText).FirstOrDefault() ?? "No messages yet",
                     LastMessageAt = c.LastMessageAt ?? c.CreatedAt,
                     UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead),
                     HasBlockedMessages = false,
                     IsActive = true
-                })
-                .ToListAsync();
+                });
+            }
 
-            return conversations;
+            return result;
         }
 
         private async Task MarkMessagesAsRead(int conversationId, int userId)

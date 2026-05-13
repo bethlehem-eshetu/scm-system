@@ -73,5 +73,7 @@ namespace SCM_System.Models.Entities
 
         [StringLength(200)]
         public string? QRCodeValue { get; set; }
+
+
     }
 }

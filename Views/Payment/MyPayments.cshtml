@@ -27,16 +27,16 @@
     <!-- Premium Header -->
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1">
+            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text">
                 <i class="fas fa-wallet me-2 text-accent-green"></i>@(userRole == "Supplier" ? "Financial Settlements" : "Payment History")
             </h1>
-            <p class="text-muted small mb-0 mt-1">Audit your transaction ledger, track clearance cycles, and manage platform settlements.</p>
+            <p class="text-muted small mb-0 mt-1 dark-mode-text">Audit your transaction ledger, track clearance cycles, and manage platform settlements.</p>
         </div>
         <div class="d-flex gap-3">
-            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center" onclick="window.print()">
+            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-btn" onclick="window.print()">
                 <i class="fas fa-file-pdf me-2 text-dark-green"></i> Export PDF
             </button>
-            <a asp-action="Dashboard" asp-controller="@(userRole == "Supplier" ? "Supplier" : "Retailer")" class="btn btn-dark-green rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center">
+            <a asp-action="Dashboard" asp-controller="@(userRole == "Supplier" ? "Supplier" : "Retailer")" class="btn btn-dark-green rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-primary-btn">
                 <i class="fas fa-home me-2 text-accent-green"></i> Home
             </a>
         </div>
@@ -45,32 +45,32 @@
     <!-- Nexus Financial KPI Bar -->
     <div class="row g-4 mb-5">
         <div class="col-md-4">
-            <div class="card border-0 shadow-premium rounded-5 p-4 hover-lift" style="background-color: var(--card-bg);">
+            <div class="card border-0 shadow-premium rounded-5 p-4 hover-lift theme-card">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">
+                    <div class="p-3 rounded-4 bg-faint-green theme-aware border border-faint dark-mode-icon-bg">
                         <i class="fas fa-coins fs-4"></i>
                     </div>
-                    <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold">Live Value</span>
+                    <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold dark-mode-badge">Live Value</span>
                 </div>
-                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1">@(userRole == "Supplier" ? "Cumulative Revenue" : "Total Procurement Spent")</label>
-                <h3 class="fw-bold text-dark-green mb-0">@totalAmount.ToString("C")</h3>
+                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">@(userRole == "Supplier" ? "Cumulative Revenue" : "Total Procurement Spent")</label>
+                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@totalAmount.ToString("C")</h3>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-premium rounded-5 p-4 hover-lift" style="background-color: var(--card-bg);">
+            <div class="card border-0 shadow-premium rounded-5 p-4 hover-lift theme-card">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">
+                    <div class="p-3 rounded-4 bg-faint-green theme-aware border border-faint dark-mode-icon-bg">
                         <i class="fas fa-clock-rotate-left fs-4"></i>
                     </div>
-                    <span class="badge bg-soft-warning text-warning rounded-pill px-2 small fw-bold">Escrow</span>
+                    <span class="badge bg-soft-warning text-warning rounded-pill px-2 small fw-bold dark-mode-badge">Chapa</span>
                 </div>
-                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1">Settlement in Pipeline</label>
-                <h3 class="fw-bold text-dark-green mb-0">@displayList.Where(p => p.Status == "Pending").Sum(p => p.CommissionAmount).ToString("C")</h3>
+                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">Settlement in Pipeline</label>
+                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@displayList.Where(p => p.Status == "Pending").Sum(p => p.CommissionAmount).ToString("C")</h3>
             </div>
         </div>
         @if (userRole == "Supplier") {
         <div class="col-md-4">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-dark-green text-white shadow-lg hover-lift">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-dark-green text-white shadow-lg hover-lift dark-mode-dark-card">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="bg-white bg-opacity-10 text-accent-green p-3 rounded-4">
                         <i class="fas fa-handshake fs-4"></i>
@@ -85,20 +85,20 @@
     </div>
 
     <!-- Dynamic Filter Bar -->
-    <div class="card border-0 shadow-premium rounded-5 mb-5" style="background-color: var(--card-bg);">
-        <div class="card-body p-4">
+    <div class="card border-0 shadow-premium rounded-5 mb-5 theme-card">
+        <div class="card-body p-4 dark-mode-card-body">
             <form id="filterForm" method="get" class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Fiscal Period</label>
-                    <select name="dateRange" class="form-select nexus-input border-0 rounded-4 py-2 px-3 fw-bold small text-dark-green" style="background-color: var(--table-header-bg);" onchange="this.form.submit()">
+                    <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1 dark-mode-text">Fiscal Period</label>
+                    <select name="dateRange" class="form-select nexus-input border-0 rounded-4 py-2 px-3 fw-bold small text-dark-green dark-mode-select" style="background-color: var(--table-header-bg);" onchange="this.form.submit()">
                         <option value="all">Historical Ledger</option>
                         <option value="month">Current Quarter</option>
                         <option value="30days">Active Month</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Clearance Status</label>
-                    <select name="status" class="form-select nexus-input border-0 rounded-4 py-2 px-3 fw-bold small text-dark-green" style="background-color: var(--table-header-bg);" onchange="this.form.submit()">
+                    <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1 dark-mode-text">Clearance Status</label>
+                    <select name="status" class="form-select nexus-input border-0 rounded-4 py-2 px-3 fw-bold small text-dark-green dark-mode-select" style="background-color: var(--table-header-bg);" onchange="this.form.submit()">
                         <option value="all">All States</option>
                         <option value="Paid">Cleared / Finalized</option>
                         <option value="Pending">In Pipeline</option>
@@ -106,14 +106,14 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1">Asset Search</label>
+                    <label class="form-label text-dark-green fw-bold extra-small text-uppercase ls-1 dark-mode-text">Asset Search</label>
                     <div class="input-group">
-                        <span class="input-group-text border-0 text-dark-green opacity-50" style="background-color: var(--table-header-bg);"><i class="fas fa-search"></i></span>
-                        <input type="text" id="liveSearch" name="search" class="form-control nexus-input border-0 py-2 fw-bold text-dark-green" style="background-color: var(--table-header-bg);" placeholder="PO Reference or TX ID...">
+                        <span class="input-group-text border-0 text-dark-green opacity-50 dark-mode-input-group" style="background-color: var(--table-header-bg);"><i class="fas fa-search"></i></span>
+                        <input type="text" id="liveSearch" name="search" class="form-control nexus-input border-0 py-2 fw-bold text-dark-green dark-mode-input" style="background-color: var(--table-header-bg);" placeholder="PO Reference or TX ID...">
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-dark-green w-100 rounded-pill py-2 fw-bold shadow-premium">
+                    <button type="submit" class="btn btn-dark-green w-100 rounded-pill py-2 fw-bold shadow-premium dark-mode-primary-btn">
                         Synchronize
                     </button>
                 </div>
@@ -122,65 +122,65 @@
     </div>
 
     <!-- Main Financial Ledger -->
-    <div class="card border-0 shadow-premium rounded-5 overflow-hidden" style="background-color: var(--card-bg);">
-        <div class="card-header py-4 px-5 d-flex justify-content-between align-items-center border-0" style="background-color: var(--card-bg);">
-            <h5 class="fw-bold mb-0 text-dark-green">Transaction Intelligence Ledger</h5>
-            <span class="badge rounded-pill px-4 py-2 fw-bold border small" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">@displayList.Count() Verified Records</span>
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden theme-card">
+        <div class="card-header py-4 px-5 d-flex justify-content-between align-items-center border-0 dark-mode-card-header" style="background-color: var(--table-header-bg);">
+            <h5 class="fw-bold mb-0 text-dark-green dark-mode-text">Transaction Intelligence Ledger</h5>
+            <span class="badge rounded-pill px-4 py-2 fw-bold border small dark-mode-badge" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">@displayList.Count() Verified Records</span>
         </div>
-        <div class="table-responsive px-4 pb-4">
-            <table class="table table-hover align-middle mb-0 custom-nexus-table">
-                <thead>
+        <div class="table-responsive px-4 pb-4 dark-mode-table-wrapper">
+            <table class="table table-hover align-middle mb-0 custom-nexus-table dark-mode-table">
+                <thead class="dark-mode-thead">
                     <tr class="extra-small text-muted text-uppercase ls-1">
-                        <th class="ps-4">Posting Date</th>
-                        <th>Strategic Reference</th>
-                        <th>Asset Classification</th>
-                        <th class="text-end">Fiscal Amount</th>
-                        <th class="text-center">Settlement Status</th>
-                        <th class="text-end pe-4">Audit Action</th>
+                        <th class="ps-4 dark-mode-text">Posting Date</th>
+                        <th class="dark-mode-text">Strategic Reference</th>
+                        <th class="dark-mode-text">Asset Classification</th>
+                        <th class="text-end dark-mode-text">Fiscal Amount</th>
+                        <th class="text-center dark-mode-text">Settlement Status</th>
+                        <th class="text-end pe-4 dark-mode-text">Audit Action</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="dark-mode-tbody">
                     @if (!displayList.Any())
                     {
                         <tr>
                             <td colspan="6" class="text-center py-5">
-                                <div class="bg-faint-green rounded-5 p-5 border-dashed-custom mx-4">
+                                <div class="bg-faint-green rounded-5 p-5 border-dashed-custom mx-4 dark-mode-empty-state">
                                     <i class="fas fa-file-invoice-dollar fa-4x text-dark-green opacity-10 mb-4"></i>
-                                    <h5 class="fw-bold text-dark-green">No Financial Records</h5>
-                                    <p class="text-muted small mb-0">No transactions matched your current ledger filters.</p>
+                                    <h5 class="fw-bold text-dark-green dark-mode-text">No Financial Records</h5>
+                                    <p class="text-muted small mb-0 dark-mode-text">No transactions matched your current ledger filters.</p>
                                 </div>
                             </td>
                         </tr>
                     }
                     @foreach (var payment in displayList.OrderByDescending(p => p.CreatedAt))
                     {
-                        <tr>
+                        <tr class="dark-mode-row">
                             <td class="ps-4">
-                                <div class="fw-bold text-dark-green mb-0">@payment.CreatedAt.ToString("MMM dd, yyyy")</div>
-                                <div class="extra-small text-muted fw-bold">Post Time: @payment.CreatedAt.ToString("HH:mm")</div>
+                                <div class="fw-bold text-dark-green mb-0 dark-mode-text">@payment.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                <div class="extra-small text-muted fw-bold dark-mode-text">Post Time: @payment.CreatedAt.ToString("HH:mm")</div>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark-green mb-1">
+                                <div class="fw-bold text-dark-green mb-1 dark-mode-text">
                                     @if (payment.PurchaseOrder != null) { <text>PO Reference: #@payment.PurchaseOrder.PONumber</text> }
                                     else if (payment.Order != null) { <text>Order Ref: #@payment.Order.OrderNumber</text> }
                                 </div>
-                                <div class="badge extra-small fw-bold border" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">TXID: #@payment.Id</div>
+                                <div class="badge bg-faint-green text-dark-green theme-aware extra-small fw-bold border dark-mode-ref-badge" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">TXID: #@payment.Id</div>
                             </td>
                             <td>
-                                @if (payment.PaymentType == "OrderPayment") { <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-1 extra-small fw-bold ls-1">RETAILER SETTLEMENT</span> }
-                                else if (payment.PaymentType == "SupplierPayout") { <span class="badge bg-soft-success text-success rounded-pill px-3 py-1 extra-small fw-bold ls-1">SUPPLIER EARNING</span> }
-                                else if (payment.PaymentType == "PlatformCommission") { <span class="badge bg-soft-danger text-danger rounded-pill px-3 py-1 extra-small fw-bold ls-1">PLATFORM FEE</span> }
+                                @if (payment.PaymentType == "OrderPayment") { <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-1 extra-small fw-bold ls-1 dark-mode-status">RETAILER SETTLEMENT</span> }
+                                else if (payment.PaymentType == "SupplierPayout") { <span class="badge bg-soft-success text-success rounded-pill px-3 py-1 extra-small fw-bold ls-1 dark-mode-status">SUPPLIER EARNING</span> }
+                                else if (payment.PaymentType == "PlatformCommission") { <span class="badge bg-soft-danger text-danger rounded-pill px-3 py-1 extra-small fw-bold ls-1 dark-mode-status">PLATFORM FEE</span> }
                             </td>
                             <td class="text-end">
-                                @if (payment.PaymentType == "PlatformCommission") { <span class="text-danger fw-bold">- @payment.CommissionAmount.ToString("C0")</span> }
-                                else if (payment.PaymentType == "SupplierPayout") { <span class="text-success fw-bold">+ @payment.CommissionAmount.ToString("C0")</span> }
-                                else { <span class="text-dark-green fw-bold">@payment.CommissionAmount.ToString("C0")</span> }
+                                @if (payment.PaymentType == "PlatformCommission") { <span class="text-danger fw-bold dark-mode-fee">- @payment.CommissionAmount.ToString("C0")</span> }
+                                else if (payment.PaymentType == "SupplierPayout") { <span class="text-success fw-bold dark-mode-earning">+ @payment.CommissionAmount.ToString("C0")</span> }
+                                else { <span class="text-dark-green fw-bold dark-mode-text">@payment.CommissionAmount.ToString("C0")</span> }
                             </td>
                             <td class="text-center">
-                                @if (payment.Status == "Paid") { <span class="status-badge bg-soft-success text-success px-3 py-2"><i class="fas fa-check-circle me-1"></i>Cleared</span> }
-                                else if (payment.Status == "Processing") { <span class="status-badge bg-soft-info text-info px-3 py-2"><i class="fas fa-sync fa-spin me-1"></i>Processing</span> }
-                                else if (payment.Status == "Failed") { <span class="status-badge bg-soft-danger text-danger px-3 py-2"><i class="fas fa-exclamation-triangle me-1"></i>Rejected</span> }
-                                else { <span class="status-badge bg-soft-warning text-warning px-3 py-2">In Pipeline</span> }
+                                @if (payment.Status == "Paid") { <span class="status-badge bg-soft-success text-success px-3 py-2 dark-mode-status-badge"><i class="fas fa-check-circle me-1"></i>Cleared</span> }
+                                else if (payment.Status == "Processing") { <span class="status-badge bg-soft-info text-info px-3 py-2 dark-mode-status-badge"><i class="fas fa-sync fa-spin me-1"></i>Processing</span> }
+                                else if (payment.Status == "Failed") { <span class="status-badge bg-soft-danger text-danger px-3 py-2 dark-mode-status-badge"><i class="fas fa-exclamation-triangle me-1"></i>Rejected</span> }
+                                else { <span class="status-badge bg-soft-warning text-warning px-3 py-2 dark-mode-status-badge">In Pipeline</span> }
                             </td>
                             <td class="text-end pe-4">
                                 @if (userRole == "Retailer" && payment.PaymentType == "OrderPayment")
@@ -189,19 +189,19 @@
                                     {
                                         <form asp-action="InitializePayment" asp-controller="Payment" method="post">
                                             <input type="hidden" name="commissionId" value="@payment.Id" />
-                                            <button type="submit" class="btn btn-dark-green btn-sm rounded-pill px-4 fw-bold shadow-premium">
+                                            <button type="submit" class="btn btn-dark-green btn-sm rounded-pill px-4 fw-bold shadow-premium dark-mode-action-btn">
                                                 <i class="fas fa-credit-card me-2 text-accent-green"></i>Settlement Now
                                             </button>
                                         </form>
                                     }
                                     else if (payment.Status == "Paid")
                                     {
-                                        <a href="/Payment/Receipt/@payment.Id" class="btn btn-faint-green text-dark-green btn-sm rounded-pill px-3 fw-bold">View Receipt</a>
+                                        <a href="/Payment/Receipt/@payment.Id" class="btn btn-faint-green text-dark-green btn-sm rounded-pill px-3 fw-bold dark-mode-view-btn">View Receipt</a>
                                     }
                                 }
                                 else
                                 {
-                                    <a href="/Payment/Receipt/@payment.Id" class="btn btn-faint-green text-dark-green btn-sm rounded-pill px-3 fw-bold">Digital Receipt</a>
+                                    <a href="/Payment/Receipt/@payment.Id" class="btn btn-faint-green text-dark-green btn-sm rounded-pill px-3 fw-bold dark-mode-view-btn">Digital Receipt</a>
                                 }
                             </td>
                         </tr>
@@ -282,6 +282,215 @@
             .btn, .nexus-filter-bar, .sticky-bottom { display: none !important; }
             .container-fluid { padding: 0 !important; }
             .card { box-shadow: none !important; border: 1px solid #eee !important; }
+        }
+
+        /* ============================================ */
+        /* DARK MODE STYLES - DARK BLUE THEME */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-header {
+            background-color: #1e293b !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-card-body {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-primary-btn {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-dark-card {
+            background-color: #0f2c24 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-bg {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-badge {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        /* Filter bar dark mode */
+        body.dark-mode .dark-mode-select {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-select option {
+            background-color: #1e293b !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-input {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-input-group {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Table dark mode styles */
+        body.dark-mode .dark-mode-table-wrapper {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-table {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-thead {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-thead th {
+            color: #cbd5e1 !important;
+            background-color: #334155 !important;
+            border-bottom-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr:hover {
+            background-color: #2d3a4a !important;
+        }
+
+        body.dark-mode .dark-mode-row td {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Reference badge dark mode */
+        body.dark-mode .dark-mode-ref-badge {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Status badge dark mode overrides */
+        body.dark-mode .dark-mode-status {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-primary {
+            background-color: rgba(37, 99, 235, 0.2) !important;
+            color: #93c5fd !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-success {
+            background-color: rgba(74, 222, 128, 0.2) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-status.bg-soft-danger {
+            background-color: rgba(248, 113, 113, 0.2) !important;
+            color: #f87171 !important;
+        }
+
+        /* Status badge for table */
+        body.dark-mode .dark-mode-status-badge {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dark-mode-status-badge.bg-soft-success {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-status-badge.bg-soft-info {
+            background-color: rgba(13, 202, 240, 0.15) !important;
+            color: #67e8f9 !important;
+        }
+
+        body.dark-mode .dark-mode-status-badge.bg-soft-danger {
+            background-color: rgba(248, 113, 113, 0.15) !important;
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .dark-mode-status-badge.bg-soft-warning {
+            background-color: rgba(251, 191, 36, 0.15) !important;
+            color: #fbbf24 !important;
+        }
+
+        /* Amount colors */
+        body.dark-mode .dark-mode-fee {
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .dark-mode-earning {
+            color: #4ade80 !important;
+        }
+
+        /* Action buttons */
+        body.dark-mode .dark-mode-action-btn {
+            background-color: #0f172a !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-view-btn {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-view-btn:hover {
+            background-color: #475569 !important;
+        }
+
+        /* Empty state */
+        body.dark-mode .dark-mode-empty-state {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Border colors */
+        body.dark-mode .custom-nexus-table tbody td {
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .text-muted {
+            color: #9ca3af !important;
+        }
+
+        body.dark-mode .text-success {
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .text-danger {
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .text-warning {
+            color: #fbbf24 !important;
         }
     </style>
 }

@@ -473,6 +473,53 @@ namespace SCM_System.Migrations
                     b.ToTable("Deliveries");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.DeliveryRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Communication")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DriverEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Professionalism")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetailerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Timeliness")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VehicleCondition")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverEmployeeId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("RetailerId");
+
+                    b.ToTable("DeliveryRatings");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryTracking", b =>
                 {
                     b.Property<int>("Id")
@@ -501,6 +548,41 @@ namespace SCM_System.Migrations
                     b.HasIndex("DeliveryId");
 
                     b.ToTable("DeliveryTrackings");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.DepositRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionRef")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("DepositRecords");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DispatchOverrideLog", b =>
@@ -3956,12 +4038,6 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ApprovalStatusMessage")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ApprovalStatusType")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
@@ -4872,6 +4948,33 @@ namespace SCM_System.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("SCM_System.Models.Entities.DeliveryRating", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.SupplierEmployee", "DriverEmployee")
+                        .WithMany()
+                        .HasForeignKey("DriverEmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SCM_System.Models.Entities.Retailer", "Retailer")
+                        .WithMany()
+                        .HasForeignKey("RetailerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DriverEmployee");
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Retailer");
+                });
+
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryTracking", b =>
                 {
                     b.HasOne("SCM_System.Models.Entities.Delivery", "Delivery")
@@ -4881,6 +4984,17 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.Navigation("Delivery");
+                });
+
+            modelBuilder.Entity("SCM_System.Models.Entities.DepositRecord", b =>
+                {
+                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DispatchOverrideLog", b =>

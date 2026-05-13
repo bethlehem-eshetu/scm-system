@@ -52,144 +52,141 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script>
-    let html5QrCode@(Model);
-    let isScanning@(Model) = false;
-    
-    function startQRScanner(@Model) {
-    if (isScanning@(Model)) {
-    return;
-    }
-        
-    const qrReaderId = `qr-reader-${@Model}`;
-    const resultContainerId = `qr-reader-results-${@Model}`;
-        
-    html5QrCode@(Model) = new Html5Qrcode(qrReaderId);
-        
-    const config = {
-    fps: 10,
-    qrbox: { width: 250, height: 250 },
-    aspectRatio: 1.0
-    };
-        
-    html5QrCode@(Model).start(
-    { facingMode: "environment" },
-    config,
-    (decodedText, decodedResult) => {
-    console.log(`QR Code scanned: ${decodedText}`);
-    handleQRScanResult(@Model, decodedText);
-    },
-    (errorMessage) => {
-    console.log(`QR Scan error: ${errorMessage}`);
-    }
-    ).catch(err => {
-    console.log(`Unable to start scanning: ${err}`);
-    document.getElementById(resultContainerId).innerHTML = `
-    <div class="alert alert-warning">
-    <i class="fas fa-exclamation-triangle me-2"></i>
-    Unable to access camera. Please check permissions or use manual entry.
-    </div>
-    `;
-    });
-        
-    isScanning@(Model) = true;
-    }
-    
-    function stopQRScanner(@Model) {
-    if (html5QrCode@(Model) && isScanning@(Model)) {
-    html5QrCode@(Model).stop().then(() => {
-    isScanning@(Model) = false;
-    }).catch(err => {
-    console.log(`Error stopping scanner: ${err}`);
-    });
-    }
-    }
-    
-    function handleQRScanResult(poId, qrValue) {
-    stopQRScanner(poId);
-        
-    fetch('@Url.Action("VerifyQRCode", "Delivery")', {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json',
-    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val()
-    },
-    body: JSON.stringify({
-    purchaseOrderId: poId,
-    qrCode: qrValue
-    })
-    })
-    .then(response => response.json())
-    .then(data => {
-            if (data.success) {
-                $('#qrScannerModal-' + poId).modal('hide');
-                
-                // Call global verification indicator
-                if (typeof window.onQRVerified === 'function') {
-                    window.onQRVerified(poId);
+    if (typeof startQRScanner !== 'function') {
+        window.startQRScanner = function(poId) {
+            const qrReaderId = `qr-reader-${poId}`;
+            const resultContainerId = `qr-reader-results-${poId}`;
+            
+            const html5QrCode = new Html5Qrcode(qrReaderId);
+            window[`html5QrCode_${poId}`] = html5QrCode;
+            
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText, decodedResult) => {
+                    console.log(`QR Code scanned: ${decodedText}`);
+                    handleQRScanResult(poId, decodedText);
+                },
+                (errorMessage) => {
+                    // console.log(`QR Scan error: ${errorMessage}`);
                 }
-            } else {
-                const resultDiv = document.getElementById('qr-reader-results-' + poId);
-                if (resultDiv) {
-                    resultDiv.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-times-circle me-2"></i>
-                            ${data.message || 'QR Code verification failed. Please try again or use manual entry.'}
-                        </div>
+            ).catch(err => {
+                console.log(`Unable to start scanning: ${err}`);
+                const resDiv = document.getElementById(resultContainerId);
+                if (resDiv) {
+                    resDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Unable to access camera. Please check permissions or use manual entry.
+                    </div>
                     `;
                 }
-                setTimeout(() => startQRScanner(poId), 3000);
+            });
+        };
+
+        window.stopQRScanner = function(poId) {
+            const html5QrCode = window[`html5QrCode_${poId}`];
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    delete window[`html5QrCode_${poId}`];
+                }).catch(err => {
+                    console.log(`Error stopping scanner: ${err}`);
+                });
             }
-        })
-        .catch(error => {
-            console.error('Error verifying QR:', error);
-        });
-    }
-    
-    function verifyManualQRCode(poId) {
-        const manualInput = document.getElementById('manualQRCode-' + poId);
-        const qrValue = manualInput.value.trim();
-        
-        if (!qrValue) {
-            alert('Please enter the QR code value or type "VERIFY" to confirm delivery');
-            return;
-        }
-        
-        const isManualConfirm = qrValue.toUpperCase() === 'VERIFY';
-        
-        fetch('@Url.Action("VerifyQRCode", "Delivery")', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val()
-            },
-            body: JSON.stringify({
-                purchaseOrderId: poId,
-                qrCode: qrValue,
-                isManual: isManualConfirm
+        };
+
+        window.handleQRScanResult = function(poId, qrValue) {
+            stopQRScanner(poId);
+            
+            fetch('@Url.Action("VerifyQRCode", "Delivery")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val()
+                },
+                body: JSON.stringify({
+                    purchaseOrderId: poId,
+                    qrCode: qrValue
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                $('#qrScannerModal-' + poId).modal('hide');
-                
-                if (typeof window.onQRVerified === 'function') {
-                    window.onQRVerified(poId);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#qrScannerModal-' + poId).modal('hide');
+                    
+                    if (typeof window.onQRVerified === 'function') {
+                        window.onQRVerified(poId);
+                    }
+                } else {
+                    const resultDiv = document.getElementById('qr-reader-results-' + poId);
+                    if (resultDiv) {
+                        resultDiv.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                ${data.message || 'QR Code verification failed. Please try again or use manual entry.'}
+                            </div>
+                        `;
+                    }
+                    setTimeout(() => startQRScanner(poId), 3000);
                 }
-            } else {
-                alert(data.message || 'Verification failed. Please check the QR code.');
+            })
+            .catch(error => {
+                console.error('Error verifying QR:', error);
+            });
+        };
+
+        window.verifyManualQRCode = function(poId) {
+            const manualInput = document.getElementById('manualQRCode-' + poId);
+            const qrValue = manualInput.value.trim();
+            
+            if (!qrValue) {
+                alert('Please enter the QR code value or type "VERIFY" to confirm delivery');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+            
+            const isManualConfirm = qrValue.toUpperCase() === 'VERIFY';
+            
+            fetch('@Url.Action("VerifyQRCode", "Delivery")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').first().val()
+                },
+                body: JSON.stringify({
+                    purchaseOrderId: poId,
+                    qrCode: qrValue,
+                    isManual: isManualConfirm
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#qrScannerModal-' + poId).modal('hide');
+                    
+                    if (typeof window.onQRVerified === 'function') {
+                        window.onQRVerified(poId);
+                    }
+                } else {
+                    alert(data.message || 'Verification failed. Please check the QR code.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        };
     }
     
     $('#qrScannerModal-@Model').on('hidden.bs.modal', function () {
-    stopQRScanner(@Model);
+        stopQRScanner(@Model);
     });
     
     $('#qrScannerModal-@Model').on('shown.bs.modal', function () {
-    startQRScanner(@Model);
+        startQRScanner(@Model);
     });
 </script>

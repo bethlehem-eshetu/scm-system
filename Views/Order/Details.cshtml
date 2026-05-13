@@ -28,6 +28,10 @@
     bool isDelivered = currentStatus == "Delivered" || currentStatus == "Completed";
 
     var requiredQty = Model.OrderItems?.Sum(x => x.Quantity) ?? 0;
+    
+    // Calculate deposit and remaining amounts
+    var depositAmount = Model.TotalAmount * 0.5m;
+    var remainingAmount = Model.TotalAmount - depositAmount;
 }
 
 <div class="container-fluid py-4 px-4 min-vh-100">
@@ -36,63 +40,86 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb extra-small fw-bold text-uppercase ls-1 mb-2">
-                    <li class="breadcrumb-item"><a asp-action="Index" class="text-dark-green opacity-50 text-decoration-none">Operational Hub</a></li>
-                    <li class="breadcrumb-item active text-dark-green" aria-current="page">Execution #@Model.OrderNumber</li>
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-dark-green opacity-50 text-decoration-none dark-mode-text">Operational Hub</a></li>
+                    <li class="breadcrumb-item active text-dark-green dark-mode-text" aria-current="page">Execution #@Model.OrderNumber</li>
                 </ol>
             </nav>
-            <h1 class="h2 fw-bold text-dark-green mb-1"><i class="fas fa-file-contract text-accent-green me-2"></i>Fulfillment Command Center</h1>
-            <p class="text-muted small mb-0 mt-1">Real-time oversight of the order execution lifecycle and logistics chain.</p>
+            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text"><i class="fas fa-file-contract text-accent-green me-2"></i>Fulfillment Command Center</h1>
+            <p class="text-muted small mb-0 mt-1 dark-mode-text">Real-time oversight of the order execution lifecycle and logistics chain.</p>
         </div>
         <div class="d-flex gap-3">
-            <button onclick="window.print()" class="btn btn-white rounded-pill px-4 py-2 shadow-sm fw-bold text-dark-green border">
-                <i class="fas fa-print me-2"></i> Generate Manifest
+            <button onclick="window.print()" class="btn btn-white rounded-pill px-4 py-2 shadow-sm fw-bold text-dark-green border dark-mode-btn">
+                <i class="fas fa-print me-2"></i> Export
             </button>
             @if (isSupplier)
             {
-                <a asp-controller="Message" asp-action="Conversation" asp-route-id="@(Model.Retailer?.UserId ?? 0)" class="btn btn-dark-green rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center">
-                    <i class="fas fa-comment-dots me-2 text-accent-green"></i> Stream to Retailer
+                <a asp-controller="Message" asp-action="Conversation" asp-route-id="@(Model.Retailer?.UserId ?? 0)" class="btn btn-dark-green rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-primary-btn">
+                    <i class="fas fa-comment-dots me-2 text-accent-green"></i> Message to Retailer
                 </a>
             }
         </div>
     </div>
 
     <!-- Executive Intelligence Summary -->
-    <div class="card border-0 shadow-premium rounded-5 overflow-hidden mb-5 bg-white">
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden mb-5 bg-white dark-mode-card">
         <div class="card-body p-0">
             <div class="row g-0">
-                <div class="col-xl-3 bg-dark-green p-5 text-center d-flex flex-column justify-content-center">
+                <div class="col-xl-3 bg-dark-green p-5 text-center d-flex flex-column justify-content-center dark-mode-dark-section">
                     <span class="text-white-50 extra-small fw-bold text-uppercase ls-1 d-block mb-3">Deployment Status</span>
                     <h2 class="fw-bold text-white mb-3">#@Model.OrderNumber</h2>
-                    <div class="status-pill-nexus @GetBadgeClass(currentStatus) rounded-pill py-2 shadow-lg">@currentStatus</div>
+                    <div class="status-pill-nexus @GetBadgeClass(currentStatus) rounded-pill py-2 shadow-lg dark-mode-status-pill">@currentStatus</div>
+                    @if (Model.PaymentStatus == "PartialPaid")
+                    {
+                        <div class="mt-3">
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 extra-small fw-bold">
+                                <i class="fas fa-percent me-1"></i> 50% Deposit Paid
+                            </span>
+                        </div>
+                    }
                 </div>
-                <div class="col-xl-9 p-5">
+                <div class="col-xl-9 p-5 dark-mode-summary-section">
                     <div class="row g-4">
-                        <div class="col-md-3 border-end border-faint">
+                        <div class="col-md-3 border-end border-faint dark-mode-border">
                             @{
                                 var topNet = Model.Subtotal > 0 ? Model.Subtotal : Model.OrderItems.Sum(item => item.Quantity * item.UnitPrice);
                                 var topVat = Model.VAT > 0 ? Model.VAT : Math.Round(topNet * 0.15m, 2);
                                 var topTotal = Model.TotalAmount > (topNet + topVat - 1) ? Model.TotalAmount : (topNet + topVat);
                             }
-                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Contract Value</label>
-                            <h3 class="fw-bold text-dark-green mb-1">@topTotal.ToString("N2") <small class="extra-small opacity-50">ETB</small></h3>
-                            <span class="extra-small text-success fw-bold"><i class="fas fa-shield-check me-1"></i>Secure Escrow</span>
+                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Contract Value</label>
+                            <h3 class="fw-bold text-dark-green mb-1 dark-mode-text">@topTotal.ToString("N2") <small class="extra-small opacity-50">ETB</small></h3>
                         </div>
-                        <div class="col-md-3 border-end border-faint">
-                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Issue Timestamp</label>
-                            <h4 class="fw-bold text-dark-green mb-1">@Model.CreatedAt.ToString("MMM dd, yyyy")</h4>
-                            <span class="extra-small text-muted fw-bold">ID: #SYS-@Model.Id</span>
+                        <div class="col-md-3 border-end border-faint dark-mode-border">
+                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Payment Status</label>
+                            <h4 class="fw-bold mb-1 dark-mode-text">
+                                @if (Model.PaymentStatus == "PartialPaid")
+                                {
+                                    <span class="text-warning">50% Paid</span>
+                                }
+                                else if (Model.PaymentStatus == "Paid")
+                                {
+                                    <span class="text-success">Fully Paid</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">@Model.PaymentStatus</span>
+                                }
+                            </h4>
+                            @if (Model.PaymentStatus == "PartialPaid")
+                            {
+                                <span class="extra-small text-muted fw-bold dark-mode-text">Remaining: @remainingAmount.ToString("N2") ETB</span>
+                            }
                         </div>
-                        <div class="col-md-3 border-end border-faint">
-                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Execution Hub</label>
+                        <div class="col-md-3 border-end border-faint dark-mode-border">
+                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Execution Hub</label>
                             @if (po?.WarehouseId.HasValue == true)
                             {
                                 <div class="d-flex align-items-center mt-1">
-                                    <div class="bg-faint-green text-dark-green rounded-circle p-2 me-3">
+                                    <div class="bg-faint-green text-dark-green rounded-circle p-2 me-3 dark-mode-icon-bg">
                                         <i class="fas fa-warehouse small"></i>
                                     </div>
                                     <div>
-                                        <h6 class="fw-bold text-dark-green mb-0 text-truncate" style="max-width: 140px;">@(po?.Warehouse?.Name ?? "PENDING")</h6>
-                                        <span class="extra-small text-muted fw-bold">@po.Warehouse?.City Hub</span>
+                                        <h6 class="fw-bold text-dark-green mb-0 text-truncate dark-mode-text" style="max-width: 140px;">@(po?.Warehouse?.Name ?? "PENDING")</h6>
+                                        <span class="extra-small text-muted fw-bold dark-mode-text">@po.Warehouse?.City Hub</span>
                                     </div>
                                 </div>
                             }
@@ -103,9 +130,9 @@
                             }
                         </div>
                         <div class="col-md-3">
-                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2">Target Delivery</label>
+                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Target Delivery</label>
                             <h4 class="fw-bold text-danger mb-1">@(Model.ExpectedDeliveryDate?.ToString("MMM dd, yyyy") ?? "TBD")</h4>
-                            <span class="extra-small text-muted fw-bold">SLA Compliance: 100%</span>
+                            <span class="extra-small text-muted fw-bold dark-mode-text">SLA Compliance: 100%</span>
                         </div>
                     </div>
                 </div>
@@ -114,11 +141,11 @@
     </div>
 
     <!-- Multi-Stage Fulfillment Pipeline -->
-    <div class="card border-0 shadow-premium rounded-5 mb-5 bg-white overflow-hidden">
+    <div class="card border-0 shadow-premium rounded-5 mb-5 bg-white overflow-hidden dark-mode-card">
         <div class="card-body p-5">
-            <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-5">Workflow Lifecycle Progression</h6>
+            <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-5 dark-mode-text">Workflow Lifecycle Progression</h6>
             <div class="nexus-stepper position-relative">
-                <div class="stepper-track bg-faint-green rounded-pill"></div>
+                <div class="stepper-track bg-faint-green rounded-pill dark-mode-track"></div>
                 <div class="stepper-progress bg-dark-green rounded-pill shadow-premium" style="width: @(currentIdx * (100.0 / (statuses.Length - 1)))%;"></div>
                 
                 <div class="d-flex justify-content-between position-relative" style="z-index: 2; margin-top: -18px;">
@@ -129,11 +156,11 @@
                         var icon = i switch { 0 => "fa-clock", 1 => "fa-file-invoice", 2 => "fa-check", 3 => "fa-dolly", 4 => "fa-clipboard-check", 5 => "fa-box-open", 6 => "fa-box", 7 => "fa-shipping-fast", 8 => "fa-truck-moving", 9 => "fa-house-user", _ => "fa-flag-checkered" };
                         
                         <div class="step-node-nexus d-flex flex-column align-items-center" style="width: 40px;">
-                            <div class="node-circle rounded-circle d-flex align-items-center justify-content-center shadow-sm @(isActive ? "bg-dark-green text-accent-green" : "bg-white text-muted border border-faint")" 
+                            <div class="node-circle rounded-circle d-flex align-items-center justify-content-center shadow-sm @(isActive ? "bg-dark-green text-accent-green" : "bg-white text-muted border border-faint dark-mode-inactive-circle")" 
                                  style="width: 36px; height: 36px; transition: all 0.5s ease; @(isCurrent ? "transform: scale(1.3); box-shadow: 0 0 15px rgba(212, 240, 109, 0.4);" : "")">
                                 <i class="fas @icon extra-small"></i>
                             </div>
-                            <div class="node-label extra-small fw-bold mt-3 text-center text-truncate @(isActive ? "text-dark-green" : "text-muted opacity-50")" 
+                            <div class="node-label extra-small fw-bold mt-3 text-center text-truncate @(isActive ? "text-dark-green dark-mode-active-label" : "text-muted opacity-50 dark-mode-inactive-label")" 
                                  style="width: 80px; @(isCurrent ? "transform: scale(1.1);" : "")">@statuses[i]</div>
                         </div>
                     }
@@ -146,14 +173,14 @@
         <!-- Main Data Workspace -->
         <div class="col-lg-8">
             <!-- Order Manifest (Deep Dark Green Card) -->
-            <div class="card border-0 shadow-premium rounded-5 overflow-hidden mb-5 bg-dark-green text-white">
-                <div class="card-header bg-white bg-opacity-10 border-0 py-4 px-5">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden mb-5 bg-dark-green text-white dark-mode-manifest-card">
+                <div class="card-header bg-white bg-opacity-10 border-0 py-4 px-5 dark-mode-manifest-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0 text-white"><i class="fas fa-boxes text-accent-green me-2"></i>Strategic Manifest</h5>
                         <span class="badge bg-accent-green text-dark-green rounded-pill px-3 py-2 fw-bold extra-small">@Model.OrderItems.Count LINE ITEMS</span>
                     </div>
                 </div>
-                <div class="card-body p-5">
+                <div class="card-body p-5 dark-mode-manifest-body">
                     <div class="manifest-nexus">
                         @foreach (var item in Model.OrderItems)
                         {
@@ -175,7 +202,7 @@
                         }
                     </div>
 
-                    <div class="mt-5 p-4 bg-black bg-opacity-20 rounded-5 border border-white border-opacity-10 shadow-inner">
+                    <div class="mt-5 p-4 bg-black bg-opacity-20 rounded-5 border border-white border-opacity-10 shadow-inner dark-mode-total-box">
                         @{
                             var netSubtotal = Model.OrderItems.Sum(item => item.Quantity * item.UnitPrice);
                             var vatTotal = Math.Round(netSubtotal * 0.15m, 2);
@@ -195,17 +222,30 @@
                                 <h3 class="fw-bold mb-0 text-accent-green">@grandTotal.ToString("N2") <small class="extra-small opacity-50">ETB</small></h3>
                             </div>
                         </div>
+                        @if (Model.PaymentStatus == "PartialPaid")
+                        {
+                            <div class="mt-3 pt-3 border-top border-white border-opacity-10">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-white-50 extra-small">Deposit Paid (50%)</span>
+                                    <span class="text-accent-green fw-bold">@depositAmount.ToString("N2") ETB</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span class="text-white-50 extra-small">Remaining Balance (50%)</span>
+                                    <span class="text-warning fw-bold">@remainingAmount.ToString("N2") ETB</span>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
 
             <!-- Audit Trail -->
-            <div class="card border-0 shadow-premium rounded-5 mb-5 bg-white overflow-hidden">
-                <div class="card-header bg-faint-green py-4 px-5 border-0 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold text-dark-green mb-0">Operational Lifecycle Audit</h6>
-                    <span class="badge bg-white text-dark-green rounded-pill px-3 py-1 extra-small fw-bold border">Full Traceability</span>
+            <div class="card border-0 shadow-premium rounded-5 mb-5 bg-white overflow-hidden dark-mode-card">
+                <div class="card-header bg-faint-green py-4 px-5 border-0 d-flex justify-content-between align-items-center dark-mode-audit-header">
+                    <h6 class="fw-bold text-dark-green mb-0 dark-mode-text">Operational Lifecycle Audit</h6>
+                    <span class="badge bg-white text-dark-green rounded-pill px-3 py-1 extra-small fw-bold border dark-mode-badge">Full Traceability</span>
                 </div>
-                <div class="card-body p-5">
+                <div class="card-body p-5 dark-mode-audit-body">
                     @await Html.PartialAsync("_ActivityTimeline", Model.StatusHistory?.OrderByDescending(h => h.ChangedAt).ToList() ?? new List<OrderStatusHistory>())
                 </div>
             </div>
@@ -216,29 +256,74 @@
             <!-- Dynamic Action Console -->
             @if (isRetailer && !new[] { "Picked", "Packing", "Packed", "Ready Dispatch", "In Transit", "Delivered", "Completed", "Cancelled" }.Contains(currentStatus))
             {
-                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-danger">
-                    <h5 class="fw-bold text-dark-green mb-2">Strategic Interruption</h5>
-                    <p class="text-muted small mb-4 fw-bold">Administrative termination of this deployment.</p>
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-danger dark-mode-card dark-mode-danger-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text">Strategic Interruption</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Administrative termination of this deployment.</p>
                     
-                    <button class="btn btn-soft-danger w-100 rounded-pill fw-bold py-3 shadow-sm cancel-order-btn" data-id="@Model.Id" data-total="@grandTotal.ToString("N2") ETB">
+                    <button class="btn btn-soft-danger w-100 rounded-pill fw-bold py-3 shadow-sm cancel-order-btn dark-mode-danger-btn" data-id="@Model.Id" data-total="@grandTotal.ToString("N2") ETB">
                         <i class="fas fa-ban me-2"></i> ABORT FULFILLMENT
                     </button>
-                    <p class="extra-small text-muted mt-3 fw-bold text-center">Safety Protocol: Only available pre-picking phase.</p>
+                    <p class="extra-small text-muted mt-3 fw-bold text-center dark-mode-text">Safety Protocol: Only available pre-picking phase.</p>
                 </div>
             }
+            @if (isSupplier && Model.OrderStatus == "Pending")
+            {
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-dark-green dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text">Order Validation</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Review and validate this incoming order contract.</p>
+                    
+                    <form asp-controller="Order" asp-action="StatusAction" method="post" class="mb-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="actionType" value="Accept" />
+                        
+                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-3 dark-mode-text">Assign Initial Hub (Optional)</label>
+                        <select name="warehouseId" class="form-select border-0 bg-faint-green rounded-4 py-3 px-4 fw-bold text-dark-green mb-4 shadow-sm dark-mode-select">
+                            <option value="">-- AUTO-SELECT BEST HUB --</option>
+                            @if (ViewBag.Warehouses != null)
+                            {
+                                foreach (dynamic w in ViewBag.Warehouses)
+                                {
+                                    <option value="@w.Id">@w.Name Hub (@w.City)</option>
+                                }
+                            }
+                        </select>
+                        
+                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium mb-3 dark-mode-primary-btn">
+                            <i class="fas fa-check-circle me-2 text-accent-green"></i> ACCEPT ORDER
+                        </button>
+                    </form>
+
+                    <button type="button" class="btn btn-white w-100 rounded-pill fw-bold py-2 text-danger border border-danger border-opacity-10 small dark-mode-reject-btn" data-bs-toggle="collapse" data-bs-target="#rejectOrderForm">
+                        Reject Order
+                    </button>
+
+                    <div class="collapse mt-3" id="rejectOrderForm">
+                        <form asp-controller="Order" asp-action="StatusAction" method="post" class="p-3 bg-light rounded-4 dark-mode-icon-bg">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="actionType" value="Reject" />
+                            <label class="extra-small fw-bold text-danger mb-2">REJECTION REASON</label>
+                            <textarea name="rejectionReason" class="form-control border-0 rounded-3 mb-3 small" rows="3" placeholder="Explain why this order is being rejected..." required></textarea>
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold small">CONFIRM REJECTION</button>
+                        </form>
+                    </div>
+                </div>
+            }
+
             @if (showAssignPanel)
             {
-                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-dark-green">
-                    <h5 class="fw-bold text-dark-green mb-2">Fulfillment Activation</h5>
-                    <p class="text-muted small mb-4 fw-bold">Commit resources to the execution hub.</p>
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-dark-green dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text">Fulfillment Activation</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Commit resources to the execution hub.</p>
                     
                     <form asp-controller="Order" asp-action="AcceptPO" method="post" class="mb-4">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="orderId" value="@Model.Id" />
                         <input type="hidden" name="poId" value="@po.Id" />
                         
-                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-3">Primary Logistics Hub</label>
-                        <select name="warehouseId" class="form-select border-0 bg-faint-green rounded-4 py-3 px-4 fw-bold text-dark-green mb-4 shadow-sm" required>
+                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-3 dark-mode-text">Primary Logistics Hub</label>
+                        <select name="warehouseId" class="form-select border-0 bg-faint-green rounded-4 py-3 px-4 fw-bold text-dark-green mb-4 shadow-sm dark-mode-select" required>
                             <option value="-1">-- AUTO-ALLOCATE LOAD --</option>
                             @if (ViewBag.Warehouses != null)
                             {
@@ -249,7 +334,7 @@
                             }
                         </select>
                         
-                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium mb-3">
+                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium mb-3 dark-mode-primary-btn">
                             <i class="fas fa-bolt me-2 text-accent-green"></i> ACTIVATE FULFILLMENT
                         </button>
                     </form>
@@ -259,26 +344,82 @@
                         <input type="hidden" name="id" value="@Model.Id" />
                         <input type="hidden" name="actionType" value="Reject" />
                         <input type="hidden" name="rejectionReason" value="Rejected by fulfillment manager" />
-                        <button type="submit" class="btn btn-white w-100 rounded-pill fw-bold py-2 text-danger border border-danger border-opacity-10 small">
+                        <button type="submit" class="btn btn-white w-100 rounded-pill fw-bold py-2 text-danger border border-danger border-opacity-10 small dark-mode-reject-btn">
                             Reject Contract
                         </button>
                     </form>
                 </div>
             }
 
+            @if (isRetailer && Model.PaymentStatus == "Pending" && (Model.OrderStatus == "Accepted" || Model.OrderStatus == "Picking"))
+            {
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-accent-green dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text"><i class="fas fa-wallet me-2 text-accent-green"></i>Financial Activation</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Your order has been accepted! Please pay the 50% advanced deposit to initiate fulfillment.</p>
+                    
+                    <div class="text-center mb-4">
+                        <div class="bg-faint-green rounded-4 p-4 dark-mode-icon-bg">
+                            <span class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Initial Deposit Required</span>
+                            <h2 class="fw-bold text-dark-green mb-0 dark-mode-text">@depositAmount.ToString("N2") <small class="fs-6 opacity-50">ETB</small></h2>
+                        </div>
+                    </div>
+
+                    <form asp-controller="Payment" asp-action="InitializeDepositPayment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="orderId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium mb-3 dark-mode-primary-btn">
+                            <i class="fas fa-credit-card me-2 text-accent-green"></i> PAY 50% DEPOSIT NOW
+                        </button>
+                    </form>
+                    
+                    <p class="extra-small text-muted mt-2 fw-bold text-center dark-mode-text">
+                        <i class="fas fa-shield-alt me-1 text-success"></i> Secured by Chapa Gateway
+                    </p>
+                </div>
+            }
+
+            <!-- Remaining Balance Card (NEW for 50% deposit feature) -->
+            @if (isRetailer && Model.PaymentStatus == "PartialPaid" && Model.OrderStatus != "Completed" && Model.OrderStatus != "Cancelled")
+            {
+                <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white border-top border-5 border-warning dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text"><i class="fas fa-credit-card me-2 text-warning"></i>Remaining Balance</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Pay the remaining 50% when you receive your order.</p>
+                    
+                    <div class="text-center mb-4">
+                        <div class="bg-warning bg-opacity-10 rounded-4 p-4">
+                            <span class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Amount Due on Delivery</span>
+                            <h2 class="fw-bold text-warning mb-0">@remainingAmount.ToString("C")</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info border-0 rounded-4 small dark-mode-alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        The remaining balance will be collected when your order is delivered to you.
+                    </div>
+                    
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-success" style="width: 50%">50% Paid</div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Deposit Paid ✅</span>
+                        <span>Due on Delivery ⏳</span>
+                    </div>
+                </div>
+            }
+
             <!-- Intelligence Cards -->
-            <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white">
-                <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-4">Strategic Partners</h6>
-                <div class="d-flex align-items-center mb-4 p-3 bg-faint-green rounded-4">
+            <div class="card border-0 shadow-premium rounded-5 p-5 mb-5 bg-white dark-mode-card">
+                <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-4 dark-mode-text">Strategic Partners</h6>
+                <div class="d-flex align-items-center mb-4 p-3 bg-faint-green rounded-4 dark-mode-partner-card">
                     <div class="avatar shadow-sm rounded-circle bg-dark-green text-accent-green d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 44px; height: 44px; flex-shrink: 0;">
                         <i class="fas fa-store extra-small"></i>
                     </div>
                     <div class="overflow-hidden">
-                        <label class="extra-small text-muted d-block fw-bold opacity-75">RETAIL ENTITY</label>
-                        <span class="fw-bold text-dark-green text-truncate d-block">@Model.Retailer?.BusinessName</span>
+                        <label class="extra-small text-muted d-block fw-bold opacity-75 dark-mode-text">RETAIL ENTITY</label>
+                        <span class="fw-bold text-dark-green text-truncate d-block dark-mode-text">@Model.Retailer?.BusinessName</span>
                     </div>
                 </div>
-                <div class="d-flex align-items-center p-3 bg-dark-green text-white rounded-4 shadow-premium">
+                <div class="d-flex align-items-center p-3 bg-dark-green text-white rounded-4 shadow-premium dark-mode-supplier-card">
                     <div class="avatar shadow-sm rounded-circle bg-white bg-opacity-20 text-accent-green d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 44px; height: 44px; flex-shrink: 0;">
                         <i class="fas fa-industry extra-small"></i>
                     </div>
@@ -290,42 +431,42 @@
             </div>
 
             <!-- Logistics Intel -->
-            <div class="card border-0 shadow-premium rounded-5 p-5 bg-white">
-                <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-4">Logistics Stream</h6>
-                <div class="mb-4 d-flex align-items-center p-3 bg-faint-green rounded-4">
-                    <div class="bg-white rounded-circle p-2 me-3 text-dark-green shadow-sm"><i class="fas fa-map-marker-alt extra-small"></i></div>
+            <div class="card border-0 shadow-premium rounded-5 p-5 bg-white dark-mode-card">
+                <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-4 dark-mode-text">Logistics Stream</h6>
+                <div class="mb-4 d-flex align-items-center p-3 bg-faint-green rounded-4 dark-mode-logistics-card">
+                    <div class="bg-white rounded-circle p-2 me-3 text-dark-green shadow-sm dark-mode-icon-circle"><i class="fas fa-map-marker-alt extra-small"></i></div>
                     <div>
-                        <label class="extra-small text-muted d-block fw-bold opacity-75">DESTINATION</label>
-                        <span class="extra-small fw-bold text-dark-green">@Model.DeliveryCity, Ethiopia</span>
+                        <label class="extra-small text-muted d-block fw-bold opacity-75 dark-mode-text">DESTINATION</label>
+                        <span class="extra-small fw-bold text-dark-green dark-mode-text">@Model.DeliveryCity, Ethiopia</span>
                     </div>
                 </div>
-                <div class="mb-4 d-flex align-items-center p-3 bg-faint-green rounded-4">
-                    <div class="bg-white rounded-circle p-2 me-3 text-dark-green shadow-sm"><i class="fas fa-user-astronaut extra-small"></i></div>
+                <div class="mb-4 d-flex align-items-center p-3 bg-faint-green rounded-4 dark-mode-logistics-card">
+                    <div class="bg-white rounded-circle p-2 me-3 text-dark-green shadow-sm dark-mode-icon-circle"><i class="fas fa-user-astronaut extra-small"></i></div>
                     <div>
-                        <label class="extra-small text-muted d-block fw-bold opacity-75">CARRIER AGENT</label>
-                        <span class="extra-small fw-bold text-dark-green">@(po?.DeliveryAgent?.User?.FullName ?? "PENDING ALLOCATION")</span>
+                        <label class="extra-small text-muted d-block fw-bold opacity-75 dark-mode-text">CARRIER AGENT</label>
+                        <span class="extra-small fw-bold text-dark-green dark-mode-text">@(po?.DeliveryAgent?.User?.FullName ?? "PENDING ALLOCATION")</span>
                     </div>
                 </div>
                 
                 @if (isRetailer && currentStatus == "In Transit")
                 {
-                    <div class="mt-4 pt-4 border-top border-faint text-center">
-                        <h6 class="extra-small fw-bold text-dark-green mb-3 uppercase tracking-widest"><i class="fas fa-qrcode me-2 text-accent-green"></i>Verification Identity</h6>
-                        <div id="retailer-qrcode" class="d-inline-block bg-white p-3 rounded-5 shadow-premium border border-faint mb-4"></div>
-                        <p class="extra-small text-muted fw-bold mb-0">SCAN TO VERIFY POSSESSION</p>
+                    <div class="mt-4 pt-4 border-top border-faint text-center dark-mode-border">
+                        <h6 class="extra-small fw-bold text-dark-green mb-3 uppercase tracking-widest dark-mode-text"><i class="fas fa-qrcode me-2 text-accent-green"></i>Verification Identity</h6>
+                        <div id="retailer-qrcode" class="d-inline-block bg-white p-3 rounded-5 shadow-premium border border-faint mb-4 dark-mode-qr"></div>
+                        <p class="extra-small text-muted fw-bold mb-0 dark-mode-text">SCAN TO VERIFY POSSESSION</p>
                     </div>
                 }
 
                 @if (isDelivered)
                 {
-                    <div class="mt-4 pt-4 border-top border-faint">
-                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 mb-4">Verification Artifacts</label>
+                    <div class="mt-4 pt-4 border-top border-faint dark-mode-border">
+                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 mb-4 dark-mode-text">Verification Artifacts</label>
                         
                         @if (!string.IsNullOrEmpty(po.SignaturePath))
                         {
                             <div class="mb-4">
-                                <span class="extra-small text-muted fw-bold d-block mb-2">AUTHENTICATED SIGNATURE</span>
-                                <div class="border rounded-4 p-3 bg-faint-green shadow-inner">
+                                <span class="extra-small text-muted fw-bold d-block mb-2 dark-mode-text">AUTHENTICATED SIGNATURE</span>
+                                <div class="border rounded-4 p-3 bg-faint-green shadow-inner dark-mode-signature-box">
                                     <img src="@po.SignaturePath" class="img-fluid" style="max-height: 80px;" alt="Signature">
                                 </div>
                             </div>
@@ -334,14 +475,14 @@
                         @if (!string.IsNullOrEmpty(po.ProofOfDelivery))
                         {
                             <div class="mb-4">
-                                <span class="extra-small text-muted fw-bold d-block mb-2">POSSESSION PROOF PHOTO</span>
+                                <span class="extra-small text-muted fw-bold d-block mb-2 dark-mode-text">POSSESSION PROOF PHOTO</span>
                                 <a href="@po.ProofOfDelivery" target="_blank" class="d-block rounded-4 overflow-hidden shadow-premium">
                                     <img src="@po.ProofOfDelivery" class="img-fluid" style="width: 100%;" alt="Photo Proof">
                                 </a>
                             </div>
                         }
                         
-                        <div class="d-flex align-items-center p-2 bg-soft-success text-success rounded-pill extra-small fw-bold mb-2">
+                        <div class="d-flex align-items-center p-2 bg-soft-success text-success rounded-pill extra-small fw-bold mb-2 dark-mode-verified">
                             <i class="fas fa-shield-check mx-2"></i> IDENTITY QR VERIFIED
                         </div>
                     </div>
@@ -412,6 +553,207 @@
         @@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
         .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
+
+        /* ============================================ */
+        /* DARK MODE STYLES */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-dark-section {
+            background-color: #0f2c24 !important;
+        }
+
+        body.dark-mode .dark-mode-summary-section {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-border {
+            border-right-color: #334155 !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-primary-btn {
+            background-color: #0f2c24 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-bg {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Stepper dark mode */
+        body.dark-mode .dark-mode-track {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-inactive-circle {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-active-label {
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-inactive-label {
+            color: #64748b !important;
+        }
+
+        /* Manifest card (stays dark but readable) */
+        body.dark-mode .dark-mode-manifest-card {
+            background-color: #0f2c24 !important;
+        }
+
+        body.dark-mode .dark-mode-manifest-header {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        body.dark-mode .dark-mode-manifest-body {
+            background-color: #0f2c24 !important;
+        }
+
+        body.dark-mode .dark-mode-total-box {
+            background-color: rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Audit trail dark mode */
+        body.dark-mode .dark-mode-audit-header {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-audit-body {
+            background-color: #1e293b !important;
+        }
+
+        body.dark-mode .dark-mode-badge {
+            background-color: #1e293b !important;
+            color: #a5f3c3 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Action cards dark mode */
+        body.dark-mode .dark-mode-danger-card {
+            border-top-color: #dc2626 !important;
+        }
+
+        body.dark-mode .dark-mode-danger-btn {
+            background-color: rgba(220, 38, 38, 0.15) !important;
+            color: #f87171 !important;
+            border: 1px solid rgba(220, 38, 38, 0.3) !important;
+        }
+
+        body.dark-mode .dark-mode-select {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-select option {
+            background-color: #1e293b !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-reject-btn {
+            background-color: #334155 !important;
+            color: #f87171 !important;
+            border-color: rgba(248, 113, 113, 0.3) !important;
+        }
+
+        /* Partner cards dark mode */
+        body.dark-mode .dark-mode-partner-card {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-supplier-card {
+            background-color: #0f2c24 !important;
+        }
+
+        /* Logistics cards dark mode */
+        body.dark-mode .dark-mode-logistics-card {
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-circle {
+            background-color: #1e293b !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* QR code dark mode */
+        body.dark-mode .dark-mode-qr {
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+        }
+
+        /* Signature box dark mode */
+        body.dark-mode .dark-mode-signature-box {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Verified badge dark mode */
+        body.dark-mode .dark-mode-verified {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+        
+        /* Alert dark mode */
+        body.dark-mode .dark-mode-alert {
+            background-color: rgba(13, 202, 240, 0.15) !important;
+            color: #67e8f9 !important;
+        }
+
+        /* Status badge overrides */
+        body.dark-mode .status-pill-nexus.bg-soft-info {
+            background-color: rgba(13, 202, 240, 0.15) !important;
+            color: #67e8f9 !important;
+        }
+
+        body.dark-mode .status-pill-nexus.bg-soft-primary {
+            background-color: rgba(37, 99, 235, 0.15) !important;
+            color: #93c5fd !important;
+        }
+
+        body.dark-mode .status-pill-nexus.bg-soft-success {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .status-pill-nexus.bg-accent-green {
+            background-color: var(--accent-green) !important;
+            color: #1a3d31 !important;
+        }
+
+        body.dark-mode .status-pill-nexus.bg-soft-danger {
+            background-color: rgba(248, 113, 113, 0.15) !important;
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .status-pill-nexus.bg-soft-warning {
+            background-color: rgba(251, 191, 36, 0.15) !important;
+            color: #fbbf24 !important;
+        }
+        
+        body.dark-mode .text-warning {
+            color: #fbbf24 !important;
+        }
+        
+        body.dark-mode .text-success {
+            color: #4ade80 !important;
+        }
     </style>
 }
 
@@ -430,6 +772,31 @@
                     correctLevel : QRCode.CorrectLevel.H
                 });
             }
+        });
+        
+        // Cancel order functionality
+        document.querySelectorAll('.cancel-order-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const orderId = this.dataset.id;
+                const total = this.dataset.total;
+                if (confirm(`Are you sure you want to cancel this order? This action cannot be undone.`)) {
+                    fetch(`/Order/CancelOrder/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    });
+                }
+            });
         });
     </script>
 }

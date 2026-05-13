@@ -8,19 +8,20 @@
     <!-- Premium Header -->
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1">
-                <i class="fas fa-file-invoice-dollar me-2 text-accent-green"></i>Fulfillment Pipeline
+            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text">
+                <i class="fas fa-clipboard-list me-2"></i>
+                Fulfillment Pipeline
             </h1>
-            <p class="text-muted small mb-0 mt-1">Manage incoming purchase orders, dispatch logistics, and track financial settlements.</p>
+            <p class="text-muted small mb-0 dark-mode-text">Track and manage all your purchase orders</p>
         </div>
         <div class="d-flex gap-3 align-items-center">
             <div class="search-bar-premium position-relative">
                 <form asp-action="SupplierIndex" method="get" class="d-flex w-100">
-                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                    <input type="text" name="searchTerm" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm" placeholder="Search PO# or Client..." value="@ViewBag.SearchTerm" style="width: 280px; height: 45px;">
+                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted dark-mode-text"></i>
+                    <input type="text" name="searchTerm" class="form-control border-0 bg-white rounded-pill ps-5 shadow-sm dark-mode-input" placeholder="Search PO# or Client..." value="@ViewBag.SearchTerm" style="width: 280px; height: 45px;">
                 </form>
             </div>
-            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center">
+            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-btn">
                 <i class="fas fa-file-export me-2 text-dark-green"></i> Export
             </button>
         </div>
@@ -35,48 +36,48 @@
     }
     <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift dark-mode-card">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4">
+                    <div class="bg-faint-green text-dark-green p-3 rounded-4 dark-mode-icon-bg">
                         <i class="fas fa-wallet fs-4"></i>
                     </div>
-                    <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold">+12%</span>
+                    <span class="badge bg-soft-success text-success rounded-pill px-2 small fw-bold dark-mode-badge">+12%</span>
                 </div>
-                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1">Total Receivables</label>
-                <h3 class="fw-bold text-dark-green mb-0">@totalReceivable.ToString("N0") <span class="extra-small opacity-50 fw-normal">ETB</span></h3>
-                <div class="progress mt-3 rounded-pill" style="height: 6px; background-color: rgba(0,0,0,0.05);">
+                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">Total Receivables</label>
+                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@totalReceivable.ToString("N0") <span class="extra-small opacity-50 fw-normal">ETB</span></h3>
+                <div class="progress mt-3 rounded-pill dark-mode-progress" style="height: 6px; background-color: rgba(0,0,0,0.05);">
                     <div class="progress-bar bg-dark-green rounded-pill" style="width: 85%"></div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift dark-mode-card">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4">
+                    <div class="bg-faint-green text-dark-green p-3 rounded-4 dark-mode-icon-bg">
                         <i class="fas fa-truck-loading fs-4"></i>
                     </div>
-                    <span class="badge bg-soft-info text-info rounded-pill px-2 small fw-bold">Live</span>
+                    <span class="badge bg-soft-info text-info rounded-pill px-2 small fw-bold dark-mode-badge">Live</span>
                 </div>
-                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1">Active Pipeline</label>
-                <h3 class="fw-bold text-dark-green mb-0">@activePOs.Count() <span class="extra-small opacity-50 fw-normal">POs</span></h3>
-                <span class="extra-small text-dark-green fw-bold opacity-75">@pendingDispatch Pending Dispatch</span>
+                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">Active Pipeline</label>
+                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@activePOs.Count() <span class="extra-small opacity-50 fw-normal">POs</span></h3>
+                <span class="extra-small text-dark-green fw-bold opacity-75 dark-mode-text">@pendingDispatch Pending Dispatch</span>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-white hover-lift dark-mode-card">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="bg-faint-green text-dark-green p-3 rounded-4">
+                    <div class="bg-faint-green text-dark-green p-3 rounded-4 dark-mode-icon-bg">
                         <i class="fas fa-chart-line fs-4"></i>
                     </div>
-                    <span class="badge bg-soft-warning text-warning rounded-pill px-2 small fw-bold">OTIF</span>
+                    <span class="badge bg-soft-warning text-warning rounded-pill px-2 small fw-bold dark-mode-badge">OTIF</span>
                 </div>
-                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1">Fulfillment Health</label>
-                <h3 class="fw-bold text-dark-green mb-0">@completionRate%</h3>
-                <span class="extra-small text-muted opacity-75 fw-bold">On-Time Completion</span>
+                <label class="extra-small text-muted text-uppercase fw-bold ls-1 d-block mb-1 dark-mode-text">Fulfillment Health</label>
+                <h3 class="fw-bold text-dark-green mb-0 dark-mode-text">@completionRate%</h3>
+                <span class="extra-small text-muted opacity-75 fw-bold dark-mode-text">On-Time Completion</span>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-premium rounded-5 p-4 bg-dark-green text-white shadow-lg hover-lift">
+            <div class="card border-0 shadow-premium rounded-5 p-4 bg-dark-green text-white shadow-lg hover-lift dark-mode-dark-card">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="bg-white bg-opacity-10 text-accent-green p-3 rounded-4">
                         <i class="fas fa-shield-alt fs-4"></i>
@@ -91,85 +92,79 @@
     </div>
 
     <!-- PO Workspace Pipeline -->
-    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white">
-        <div class="card-header bg-white py-4 px-5 border-0">
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white dark-mode-card">
+        <div class="card-header bg-white py-4 px-5 border-0 dark-mode-header">
             <div class="row align-items-center">
                 <div class="col">
-                    <h5 class="fw-bold text-dark-green mb-0">Order Workflow Intelligence</h5>
-                </div>
-                <div class="col-auto">
-                    <div class="btn-group p-1 bg-faint-green rounded-pill">
-                        <button class="btn btn-white nexus-filter-btn active rounded-pill px-4 py-2 small fw-bold">Active Stream</button>
-                        <button class="btn btn-white nexus-filter-btn rounded-pill px-4 py-2 small fw-bold">Historical</button>
-                    </div>
+                    <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">Order Workflow</h5>
                 </div>
             </div>
         </div>
-        <div class="table-responsive px-4 pb-4">
-            <table class="table table-hover align-middle mb-0 custom-nexus-table">
+        <div class="table-responsive px-4 pb-4 dark-mode-table-wrapper">
+            <table class="table table-hover align-middle mb-0 custom-nexus-table dark-mode-table">
                 <thead>
-                    <tr class="extra-small text-muted text-uppercase ls-1">
-                        <th class="ps-4">Order Identification</th>
-                        <th>Client / Merchant</th>
-                        <th>Fiscal Value</th>
-                        <th class="text-center">Assigned Node</th>
-                        <th class="text-center">Workflow Status</th>
-                        <th class="text-end pe-4">Operations</th>
+                    <tr class="extra-small text-muted text-uppercase ls-1 dark-mode-thead">
+                        <th class="ps-4 dark-mode-text">Order Identification</th>
+                        <th class="dark-mode-text">Client / Merchant</th>
+                        <th class="dark-mode-text">Money Value</th>
+                        <th class="text-center dark-mode-text">Assigned Node</th>
+                        <th class="text-center dark-mode-text">Workflow Status</th>
+                        <th class="text-end pe-4 dark-mode-text">Operations</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="dark-mode-tbody">
                     @foreach (var po in Model.OrderByDescending(p => p.CreatedAt))
                     {
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
-                                    <div class="bg-faint-green text-dark-green rounded-4 p-3 me-3 shadow-sm">
+                                    <div class="bg-faint-green text-dark-green rounded-4 p-3 me-3 shadow-sm dark-mode-icon-bg">
                                         <i class="fas fa-file-invoice fs-5"></i>
                                     </div>
                                     <div>
-                                        <div class="fw-bold text-dark-green mb-0">#@po.PONumber</div>
-                                        <div class="extra-small text-muted fw-bold">Issued: @po.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                        <div class="fw-bold text-dark-green mb-0 dark-mode-text">#@po.PONumber</div>
+                                        <div class="extra-small text-muted fw-bold dark-mode-text">Issued: @po.CreatedAt.ToString("MMM dd, yyyy")</div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark-green mb-0">@po.Retailer?.BusinessName</div>
-                                <div class="extra-small text-muted fw-bold"><i class="fas fa-map-marker-alt me-1"></i> @po.Retailer?.City</div>
-                            </td>
+                                <div class="fw-bold text-dark-green mb-0 dark-mode-text">@po.Retailer?.BusinessName</div>
+                                <div class="extra-small text-muted fw-bold dark-mode-text"><i class="fas fa-map-marker-alt me-1"></i> @po.Retailer?.City</div>
+                             </td>
                             <td>
-                                <div class="fw-bold text-dark-green mb-0">@po.TotalAmount.ToString("N2") <span class="extra-small opacity-50">ETB</span></div>
-                                <div class="extra-small text-muted fw-bold">@po.PurchaseOrderItems?.Count() Items in Parcel</div>
-                            </td>
+                                <div class="fw-bold text-dark-green mb-0 dark-mode-text">@po.TotalAmount.ToString("N2") <span class="extra-small opacity-50">ETB</span></div>
+                                <div class="extra-small text-muted fw-bold dark-mode-text">@po.PurchaseOrderItems?.Count() Items in Parcel</div>
+                             </td>
                             <td class="text-center">
                                 @if(po.Warehouse != null) {
-                                    <span class="badge bg-faint-green text-dark-green rounded-pill px-3 py-2 fw-bold small">
+                                    <span class="badge bg-faint-green text-dark-green rounded-pill px-3 py-2 fw-bold small dark-mode-warehouse-badge">
                                         <i class="fas fa-warehouse me-2 opacity-50"></i>@po.Warehouse.Name
                                     </span>
                                 } else {
-                                    <span class="badge bg-soft-secondary text-secondary border rounded-pill px-3 py-2 fw-bold extra-small">UNASSIGNED</span>
+                                    <span class="badge bg-soft-secondary text-secondary border rounded-pill px-3 py-2 fw-bold extra-small dark-mode-unassigned">UNASSIGNED</span>
                                 }
-                            </td>
+                             </td>
                             <td class="text-center">
-                                <span class="status-badge @GetPOStatusClass(po.Status)">@po.Status</span>
-                            </td>
+                                <span class="status-badge @GetPOStatusClass(po.Status) dark-mode-status">@po.Status</span>
+                             </td>
                             <td class="text-end pe-4">
-                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-faint-green text-dark-green rounded-pill px-4 fw-bold shadow-sm py-2">
+                                <a asp-action="Details" asp-route-id="@po.Id" class="btn btn-faint-green text-dark-green rounded-pill px-4 fw-bold shadow-sm py-2 dark-mode-action-btn">
                                     Workspace <i class="fas fa-arrow-right ms-2 opacity-50"></i>
                                 </a>
-                            </td>
-                        </tr>
+                             </td>
+                         </tr>
                     }
                     @if (!Model.Any())
                     {
                         <tr>
                             <td colspan="6" class="text-center py-5">
-                                <div class="bg-faint-green rounded-5 p-5 border-dashed-custom">
+                                <div class="bg-faint-green rounded-5 p-5 border-dashed-custom dark-mode-empty-state">
                                     <i class="fas fa-inbox fa-4x text-dark-green opacity-10 mb-4"></i>
-                                    <h5 class="fw-bold text-dark-green">No Orders Pipeline</h5>
-                                    <p class="text-muted small mb-0">Your fulfillment stream is currently empty.</p>
+                                    <h5 class="fw-bold text-dark-green dark-mode-text">No Orders Pipeline</h5>
+                                    <p class="text-muted small mb-0 dark-mode-text">Your fulfillment stream is currently empty.</p>
                                 </div>
-                            </td>
-                        </tr>
+                             </td>
+                         </tr>
                     }
                 </tbody>
             </table>
@@ -178,13 +173,13 @@
         <!-- Pagination Footer -->
         @if (ViewBag.TotalPages > 1)
         {
-            <div class="card-footer bg-white border-0 py-4 px-5">
+            <div class="card-footer bg-white border-0 py-4 px-5 dark-mode-footer">
                 <nav>
                     <ul class="pagination pagination-premium justify-content-center gap-3 mb-0">
                         @for (int i = 1; i <= ViewBag.TotalPages; i++)
                         {
                             <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                                <a class="page-link rounded-circle border-0 d-flex align-items-center justify-content-center shadow-sm @(i == ViewBag.CurrentPage ? "bg-dark-green text-white" : "bg-white text-dark-green")" 
+                                <a class="page-link rounded-circle border-0 d-flex align-items-center justify-content-center shadow-sm @(i == ViewBag.CurrentPage ? "bg-dark-green text-white" : "bg-white text-dark-green dark-mode-page-link")" 
                                    style="width: 45px; height: 45px;"
                                    asp-action="SupplierIndex" asp-route-page="@i" asp-route-searchTerm="@ViewBag.SearchTerm">@i</a>
                             </li>
@@ -260,5 +255,162 @@
         
         .btn-white { background: white; border: none; color: var(--dark-green); }
         .btn-white:hover { background-color: var(--faint-green); }
+
+        /* ============================================ */
+        /* DARK MODE STYLES */
+        /* ============================================ */
+        body.dark-mode .dark-mode-text {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-card {
+            background-color: #1e2a3a !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-dark-card {
+            background-color: #0f2c24 !important;
+        }
+
+        body.dark-mode .dark-mode-header {
+            background-color: #1e2a3a !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-footer {
+            background-color: #1e2a3a !important;
+            border-top-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-input {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .dark-mode-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .dark-mode-btn {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .dark-mode-btn i {
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-icon-bg {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-badge {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .dark-mode-progress {
+            background-color: #334155 !important;
+        }
+
+        /* Table dark mode styles */
+        body.dark-mode .dark-mode-table {
+            background-color: #1e2a3a !important;
+        }
+
+        body.dark-mode .dark-mode-thead th {
+            color: #cbd5e1 !important;
+            background-color: transparent !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+
+        body.dark-mode .dark-mode-tbody tr:hover {
+            background-color: #2d3a4a !important;
+        }
+
+        body.dark-mode .dark-mode-tbody td {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+        }
+
+        /* Badge dark mode overrides */
+        body.dark-mode .status-badge.bg-soft-success {
+            background-color: rgba(74, 222, 128, 0.15) !important;
+            color: #4ade80 !important;
+        }
+
+        body.dark-mode .status-badge.bg-soft-warning {
+            background-color: rgba(251, 191, 36, 0.15) !important;
+            color: #fbbf24 !important;
+        }
+
+        body.dark-mode .status-badge.bg-soft-info {
+            background-color: rgba(13, 202, 240, 0.15) !important;
+            color: #67e8f9 !important;
+        }
+
+        body.dark-mode .status-badge.bg-soft-primary {
+            background-color: rgba(37, 99, 235, 0.15) !important;
+            color: #93c5fd !important;
+        }
+
+        body.dark-mode .status-badge.bg-soft-danger {
+            background-color: rgba(248, 113, 113, 0.15) !important;
+            color: #f87171 !important;
+        }
+
+        body.dark-mode .status-badge.bg-soft-secondary {
+            background-color: rgba(100, 116, 139, 0.3) !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Warehouse badge dark mode */
+        body.dark-mode .dark-mode-warehouse-badge {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        body.dark-mode .dark-mode-unassigned {
+            background-color: rgba(100, 116, 139, 0.2) !important;
+            color: #94a3b8 !important;
+        }
+
+        /* Action button dark mode */
+        body.dark-mode .dark-mode-action-btn {
+            background-color: #334155 !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Empty state dark mode */
+        body.dark-mode .dark-mode-empty-state {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+        }
+
+        /* Pagination dark mode */
+        body.dark-mode .dark-mode-page-link {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode .page-item.active .dark-mode-page-link {
+            background-color: var(--dark-green) !important;
+            color: #a5f3c3 !important;
+        }
+
+        /* Table wrapper */
+        body.dark-mode .dark-mode-table-wrapper {
+            background-color: #1e2a3a !important;
+        }
+
+        /* Border colors */
+        body.dark-mode .custom-nexus-table tbody td {
+            border-bottom-color: #334155 !important;
+        }
     </style>
 }

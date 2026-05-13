@@ -22,6 +22,7 @@ namespace SCM_System.Controllers
         IAuditLogService auditLogService, 
         ISupplierService supplierService, 
         IInventoryService inventoryService,
+        INotificationService notificationService,
         ILogger<WarehouseController> logger,
         IWebHostEnvironment env) : Controller
     {
@@ -30,6 +31,7 @@ namespace SCM_System.Controllers
         private readonly IAuditLogService _auditLogService = auditLogService;
         private readonly ISupplierService _supplierService = supplierService;
         private readonly IInventoryService _inventoryService = inventoryService;
+        private readonly INotificationService _notificationService = notificationService;
         private readonly ILogger<WarehouseController> _logger = logger;
         private readonly IWebHostEnvironment _env = env;
 
@@ -159,6 +161,7 @@ namespace SCM_System.Controllers
         }
 
         [Route("AssignDelivery/{id?}")]
+        
         public async Task<IActionResult> AssignDelivery(int? id)
         {
             var manager = await GetCurrentManagerAsync();
@@ -174,7 +177,7 @@ namespace SCM_System.Controllers
                     wId = targetPO.WarehouseId.Value;
                 }
             }
-            
+
             var pos = await _context.PurchaseOrders
                 .Include(p => p.Order)
                 .Include(p => p.Retailer)
@@ -183,73 +186,83 @@ namespace SCM_System.Controllers
                 .Where(p => p.WarehouseId == wId && p.Status == POStatus.Packed)
                 .ToListAsync();
 
-            // Calculate Order Weights for each PO in the list
-            // We'll store these in a temporary dictionary or dynamic object if needed, 
-            // but for now, the View can handle it since we Inclulde Items.
-
-            // Fetch agents with their vehicles for workload calculation
+            // Fetch agents with their assigned vehicles (with status)
             var agents = await _context.SupplierEmployees
                 .Include(e => e.User)
-                .Include(e => e.VehicleAssignments)
-                    .ThenInclude(va => va.Vehicle) // Fixed navigation path
-                .Where(e => e.SupplierId == manager.SupplierId && 
+                .Include(e => e.Vehicle)  // Include the assigned vehicle
+                .Where(e => e.SupplierId == manager.SupplierId &&
                             e.IsActive && !e.IsDeleted &&
-                            !string.IsNullOrEmpty(e.EmployeeRole) &&
-                            (e.EmployeeRole.ToLower().Contains("driver") || e.EmployeeRole.ToLower().Contains("deliver")))
+                            (e.EmployeeRole == "DeliveryAgent" || e.EmployeeRole == "delivery_person"))
                 .ToListAsync();
 
-            // PROACTIVE SORTING LOGIC
-            // For a single PO assignment (if id is passed), we sort by PROJECTED load.
-            // If viewing the general list, we'll sort by current workload.
-            decimal targetOrderWeight = 0;
-            if (id.HasValue)
-            {
-                var targetPoForWeight = pos.FirstOrDefault(p => p.Id == id.Value);
-                if (targetPoForWeight != null)
-                {
-                    targetOrderWeight = targetPoForWeight.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0));
-                }
-            }
-
-            // Enhanced sorting with workload awareness
+            // Enhanced sorting with workload and vehicle status
             var sortedAgents = new List<dynamic>();
+
             foreach (var agent in agents)
             {
+                // Get agent's current active deliveries
                 var activePOs = await _context.PurchaseOrders
                     .Include(p => p.PurchaseOrderItems)
                         .ThenInclude(i => i.Product)
-                    .Where(p => p.DeliveryAgentId == agent.Id && 
-                                p.Status != POStatus.Failed)
+                    .Where(p => p.DeliveryAgentId == agent.Id &&
+                                p.Status != POStatus.Delivered &&
+                                p.Status != POStatus.Completed &&
+                                p.Status != POStatus.Failed &&
+                                p.Status != POStatus.Rejected &&
+                                p.Status != POStatus.Expired)
                     .ToListAsync();
 
                 decimal currentLoadKg = activePOs.Sum(p => p.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0)));
-                
-                // Get primary vehicle capacity
-                var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.PrimaryDriverId == agent.Id || v.DeliveryAgents.Any(da => da.Id == agent.Id));
-                decimal capacity = vehicle?.MaxLoadCapacity ?? 100; // fallback
 
-                decimal projectedScore = capacity > 0 ? (currentLoadKg + targetOrderWeight) / capacity : 2; // high score if no capacity
+                // Get agent's assigned vehicle - Allow InUse status since it's their primarily assigned asset
+                var vehicle = agent.Vehicle;
+                bool isVehicleAvailable = vehicle != null && (vehicle.Status == VehicleStatus.Available || vehicle.Status == VehicleStatus.InUse);
+                bool isVehicleUnderMaintenance = vehicle != null && vehicle.Status == VehicleStatus.Maintenance;
+                decimal capacity = vehicle?.MaxLoadCapacity ?? 0;
 
-                sortedAgents.Add(new { 
-                    Agent = agent, 
-                    ProjectedScore = projectedScore, 
+                // Calculate projected score for this order (if id is provided)
+                decimal targetOrderWeight = 0;
+                if (id.HasValue)
+                {
+                    var targetPo = pos.FirstOrDefault(p => p.Id == id.Value);
+                    if (targetPo != null)
+                    {
+                        targetOrderWeight = targetPo.PurchaseOrderItems.Sum(i => i.Quantity * (i.Product.ShippingWeight ?? 0));
+                    }
+                }
+
+                decimal projectedScore = capacity > 0 ? (currentLoadKg + targetOrderWeight) / capacity : 2;
+
+                sortedAgents.Add(new
+                {
+                    Agent = agent,
+                    ProjectedScore = projectedScore,
                     CurrentLoad = currentLoadKg,
                     Capacity = capacity,
                     IsPhysicsViolation = targetOrderWeight > capacity,
-                    VehicleId = vehicle?.Id ?? 0
+                    VehicleId = vehicle?.Id ?? 0,
+                    VehiclePlate = vehicle?.LicensePlate ?? "No Vehicle",
+                    VehicleType = vehicle?.VehicleType.ToString() ?? "N/A",
+                    VehicleStatus = vehicle?.Status.ToString() ?? "Unassigned",
+                    IsVehicleAvailable = isVehicleAvailable,
+                    IsVehicleUnderMaintenance = isVehicleUnderMaintenance
                 });
             }
 
-            // Order by Projection (Safe -> Moderate -> High -> Violation), then by Rank
-            ViewBag.SortedAgents = sortedAgents.OrderBy(a => a.IsPhysicsViolation).ThenBy(a => a.ProjectedScore).ToList();
-            ViewBag.Agents = agents; // Keep original for backwards compatibility in view if needed
+            // Order: Available vehicles first, then by projected score
+            ViewBag.SortedAgents = sortedAgents
+                .OrderByDescending(a => a.IsVehicleAvailable)
+                .ThenBy(a => a.IsVehicleUnderMaintenance)
+                .ThenBy(a => a.ProjectedScore)
+                .ToList();
 
             ViewBag.Vehicles = await _context.Vehicles
-                .Where(v => v.SupplierId == manager.SupplierId && (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse) && v.WarehouseId == wId)
+                .Where(v => v.SupplierId == manager.SupplierId &&
+                            (v.Status == VehicleStatus.Available || v.Status == VehicleStatus.InUse) &&
+                            (v.WarehouseId == null || v.WarehouseId == wId))
                 .ToListAsync();
 
             ViewBag.SelectedWarehouseId = wId;
-            ViewBag.PicklistFormat = manager.PicklistFormat ?? "Detailed";
             return View(pos);
         }
 
@@ -652,7 +665,7 @@ namespace SCM_System.Controllers
 
             var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == vehicleId && 
                                                                            (v.Status == SCM_System.Models.Enums.VehicleStatus.Available || v.Status == SCM_System.Models.Enums.VehicleStatus.InUse) && 
-                                                                           v.WarehouseId == wId);
+                                                                           (v.WarehouseId == null || v.WarehouseId == wId));
             if (vehicle == null)
             {
                 TempData["ErrorMessage"] = "Selected vehicle is unavailable or not assigned to this hub.";
@@ -738,6 +751,18 @@ namespace SCM_System.Controllers
 
             await _poService.UpdatePurchaseOrderStatusAsync(id, POStatus.InTransit, userId);
             
+            // Notify Delivery Agent
+            if (agent.UserId != 0)
+            {
+                await _notificationService.SendNotificationAsync(
+                    agent.UserId,
+                    "New Delivery Assigned",
+                    $"Order #{po.PONumber} has been assigned to you. Vehicle: {vehicle.LicensePlate}.",
+                    "Delivery",
+                    $"/Delivery/MyDeliveries"
+                );
+            }
+
             // AUDIT LOG
             await _auditLogService.LogActionAsync(
                 "PurchaseOrder", 
@@ -1324,5 +1349,7 @@ namespace SCM_System.Controllers
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
             return File(buffer, "text/csv", $"Warehouse_Profile_{warehouse.Id}.csv");
         }
+
+
     }
 }

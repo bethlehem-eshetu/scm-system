@@ -29,16 +29,6 @@
         </div>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-check-circle me-3 fa-lg"></i>
-                <div>@TempData["SuccessMessage"]</div>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
 
     <div class="row g-4">
         <!-- Sidebar Navigation -->
@@ -535,7 +525,7 @@
         // 2FA Handlers
         function handle2FAToggle(checkbox) {
             const enable = $(checkbox).is(':checked');
-            $.post('/Warehouse/Toggle2FA', { enable: enable }, function(res) {
+            $.post('/WarehouseManager/Toggle2FA', { enable: enable }, function(res) {
                 if (res.success) {
                     if (enable) {
                         $('#qrCodeImg').attr('src', res.qrCodeUri);
@@ -558,7 +548,7 @@
         function verify2FA() {
             const code = $('#verifyCode').val();
             if (!code) { toastr.warning('Enter code.'); return; }
-            $.post('/Warehouse/Verify2FA', { code: code }, function(res) {
+            $.post('/WarehouseManager/Verify2FA', { code: code }, function(res) {
                 if (res.success) {
                     $('#tfaSetupArea').addClass('d-none');
                     $('#tfaStatusLabel').text('2FA Active');
@@ -571,7 +561,7 @@
 
         function revokeSession(id) {
             if (confirm('Revoke this session?')) {
-                $.post('/Warehouse/RevokeSession', { sessionId: id }, function(res) {
+                $.post('/WarehouseManager/RevokeSession', { sessionId: id }, function(res) {
                     if (res.success) { location.reload(); }
                 });
             }
@@ -580,7 +570,7 @@
         function confirmDeactivate() {
             const pwd = $('#deactivatePwd').val();
             if (!pwd) { toastr.warning('Password required.'); return; }
-            $.post('/Warehouse/DeactivateAccount', { password: pwd }, function(res) {
+            $.post('/WarehouseManager/DeactivateAccount', { password: pwd }, function(res) {
                 if (res.success) {
                     window.location.href = '/Account/Login';
                 } else {
