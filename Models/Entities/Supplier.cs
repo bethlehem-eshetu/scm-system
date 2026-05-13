@@ -75,6 +75,21 @@ namespace SCM_System.Models.Entities
             _ => 5.0m // Bronze or default
         };
 
+        /// <summary>
+        /// Calculates commission rate based on the total order amount.
+        /// Larger amounts result in lower commission percentages (Sliding Scale).
+        /// Updated thresholds to be more accessible.
+        /// </summary>
+        public static decimal GetTieredCommissionRate(decimal amount) => amount switch
+        {
+            > 500000  => 2.5m, // Above 500k ETB: 2.5%
+            > 300000  => 3.0m, // Above 300k ETB: 3.0%
+            > 150000  => 3.5m, // Above 150k ETB: 3.5%
+            > 50000   => 4.0m, // Above 50k ETB: 4.0%
+            > 10000   => 4.5m, // Above 10k ETB: 4.5%
+            _         => 5.0m  // Below 10k ETB: 5.0%
+        };
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         [Column(TypeName = "decimal(18,2)")]

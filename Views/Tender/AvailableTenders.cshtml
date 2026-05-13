@@ -4,15 +4,15 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="container-fluid py-4 px-4">
+<div class="container-fluid py-3 px-3 available-tenders-container">
     <!-- Premium Header -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h2 fw-bold text-dark-green mb-1 dark-mode-text"><i class="fas fa-gavel me-2 text-accent-green"></i>Marketplace Tenders</h1>
-            <p class="text-muted small mb-0 mt-1 dark-mode-text">Discover and bid on procurement contracts matched to your business specialization.</p>
+            <h4 class="fw-bold text-dark-green mb-1 dark-mode-text"><i class="fas fa-gavel me-2 text-accent-green"></i>Marketplace Tenders</h4>
+            <p class="text-muted extra-small mb-0 mt-1 dark-mode-text">Discover and bid on procurement contracts matched to your business specialization.</p>
         </div>
-        <div class="d-flex gap-3">
-            <button class="btn btn-white rounded-pill px-4 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-filter-btn">
+        <div class="d-flex gap-2">
+            <button class="btn btn-white rounded-pill px-3 py-2 shadow-premium fw-bold d-flex align-items-center dark-mode-filter-btn small">
                 <i class="fas fa-filter me-2 text-dark-green"></i> Smart Filter
             </button>
         </div>
@@ -20,10 +20,10 @@
 
     <!-- Tenders Intelligence Pipeline -->
     <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white dark-mode-card">
-        <div class="card-header bg-white py-4 px-5 border-0 dark-mode-card-header">
-            <h5 class="fw-bold text-dark-green mb-0 dark-mode-text">Live Procurement Streams</h5>
+        <div class="card-header bg-white py-3 px-4 border-0 dark-mode-card-header">
+            <h6 class="fw-bold text-dark-green mb-0 dark-mode-text text-uppercase ls-1">Live Procurement Streams</h6>
         </div>
-        <div class="table-responsive px-4 pb-4 dark-mode-table-wrapper">
+        <div class="table-responsive px-3 pb-3 dark-mode-table-wrapper">
             <table class="table table-hover align-middle mb-0 custom-nexus-table dark-mode-table">
                 <thead class="dark-mode-thead">
                     <tr class="extra-small text-muted text-uppercase ls-1">
@@ -117,13 +117,34 @@
         .bg-accent-green { background-color: var(--accent-green) !important; }
         .text-accent-green { color: var(--accent-green) !important; }
 
-        .rounded-5 { border-radius: 24px !important; }
-        .shadow-premium { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important; }
-        .ls-1 { letter-spacing: 1px; }
-        .extra-small { font-size: 0.7rem; }
+        .rounded-5, .rounded-4 { border-radius: 16px !important; }
+        .shadow-premium { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04) !important; }
+        .ls-1 { letter-spacing: 0.5px; }
+        .extra-small { font-size: 0.62rem; }
+
+        .available-tenders-container {
+            zoom: 0.92;
+            max-width: 1450px;
+            margin: auto;
+        }
+
+        .btn {
+            font-size: 0.85rem;
+        }
+
+        body {
+            font-size: 0.92rem;
+        }
+
+        h1, .h1 { font-size: 1.75rem; }
+        h2, .h2 { font-size: 1.5rem; }
+        h3, .h3 { font-size: 1.25rem; }
+        h4, .h4 { font-size: 1.1rem; }
+        h5, .h5 { font-size: 1rem; }
+        h6, .h6 { font-size: 0.85rem; }
         
-        .custom-nexus-table thead th { border-bottom: none; padding: 20px 0; }
-        .custom-nexus-table tbody td { padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.02); }
+        .custom-nexus-table thead th { border-bottom: none; padding: 12px 0; }
+        .custom-nexus-table tbody td { padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.02); }
         .custom-nexus-table tbody tr:last-child td { border-bottom: none; }
 
         .border-dashed-custom { border: 2px dashed rgba(26, 61, 49, 0.1); }

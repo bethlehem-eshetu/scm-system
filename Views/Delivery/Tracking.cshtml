@@ -123,9 +123,9 @@
                         <a href="tel:@Model.Retailer?.ContactPersonPhone" class="btn btn-dark-green rounded-pill fw-bold text-white shadow-sm py-3">
                             <i class="fas fa-phone-alt me-2"></i> CONTACT RETAILER
                         </a>
-                        <button class="btn btn-outline-dark-green rounded-pill fw-bold py-3">
+                        <a href="https://www.google.com/maps/search/?api=1&query=@System.Net.WebUtility.UrlEncode(Model.Retailer?.BusinessAddress ?? "")" target="_blank" class="btn btn-outline-dark-green rounded-pill fw-bold py-3">
                             <i class="fas fa-directions me-2"></i> OPEN IN MAPS
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
