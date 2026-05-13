@@ -1,0 +1,239 @@
+@model SCM_System.Models.ViewModels.DriverPerformanceViewModel
+@{
+    ViewData["Title"] = "My Performance Metrics";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container-fluid py-4 px-4 bg-light-green-subtle min-vh-100">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5 animate-slide-up">
+        <div>
+            <h1 class="h2 fw-bold text-dark-green mb-1">Performance Dashboard</h1>
+            <p class="text-muted small mb-0"><i class="fas fa-chart-line me-2"></i>Live metrics for your delivery excellence.</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-white p-2 px-3 rounded-pill shadow-sm d-flex align-items-center gap-2">
+                <span class="small text-muted">Status:</span>
+                <span class="badge bg-accent-green text-dark-green rounded-pill px-3">Top Rated</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="row g-4 mb-5 animate-slide-up" style="animation-delay: 0.1s;">
+        <!-- Overall Rating -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-20 h-100 p-4 text-center bg-white transition-hover">
+                <div class="d-inline-flex p-3 rounded-circle bg-faint-green mb-3 mx-auto">
+                    <i class="fas fa-star text-dark-green fa-lg"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-dark-green mb-1">@Model.OverallRating.ToString("F1")</h2>
+                <div class="mb-2 text-warning">
+                    @for (int i = 1; i <= 5; i++) {
+                        if (i <= Math.Round(Model.OverallRating)) { <i class="fas fa-star"></i> }
+                        else { <i class="far fa-star"></i> }
+                    }
+                </div>
+                <p class="small text-muted mb-0">Aggregate Rating</p>
+            </div>
+        </div>
+
+        <!-- Total Deliveries -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-20 h-100 p-4 text-center bg-white transition-hover">
+                <div class="d-inline-flex p-3 rounded-circle bg-faint-green mb-3 mx-auto">
+                    <i class="fas fa-box text-dark-green fa-lg"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-dark-green mb-1">@Model.TotalDeliveries</h2>
+                <p class="small text-muted mb-0">Total Shipments</p>
+            </div>
+        </div>
+
+        <!-- On-Time Rate -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-20 h-100 p-4 text-center bg-white transition-hover">
+                <div class="d-inline-flex p-3 rounded-circle bg-faint-green mb-3 mx-auto">
+                    <i class="fas fa-clock text-dark-green fa-lg"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-dark-green mb-1">@Model.OnTimeRate%</h2>
+                <p class="small text-muted mb-0">On-Time Fulfillment</p>
+            </div>
+        </div>
+
+        <!-- Timeliness Hub -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-premium rounded-20 h-100 p-4 text-center bg-white transition-hover">
+                <div class="d-inline-flex p-3 rounded-circle bg-faint-green mb-3 mx-auto">
+                    <i class="fas fa-shipping-fast text-dark-green fa-lg"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-dark-green mb-1">@Model.AverageTimeliness.ToString("F1")</h2>
+                <p class="small text-muted mb-0">Dispatch Score</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5 animate-slide-up" style="animation-delay: 0.2s;">
+        <!-- Rating Breakdown -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-premium rounded-20 p-4 h-100 bg-white">
+                <h5 class="fw-bold text-dark-green mb-4">Metric Breakdown</h5>
+                <div class="space-y-4">
+                    <div class="metric-item mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-bold">Professionalism</span>
+                            <span class="badge bg-faint-green text-dark-green">@Model.AverageProfessionalism.ToString("F1") / 5.0</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 10px;">
+                            <div class="progress-bar bg-dark-green" style="width: @(Model.AverageProfessionalism * 20)%"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-item mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-bold">Vehicle Logistics</span>
+                            <span class="badge bg-faint-green text-dark-green">@Model.AverageVehicleCondition.ToString("F1") / 5.0</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 10px;">
+                            <div class="progress-bar bg-accent-green" style="width: @(Model.AverageVehicleCondition * 20)%"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-item mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-bold">Customer Comm.</span>
+                            <span class="badge bg-faint-green text-dark-green">@Model.AverageCommunication.ToString("F1") / 5.0</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 10px;">
+                            <div class="progress-bar bg-info" style="width: @(Model.AverageCommunication * 20)%"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-item mb-0">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-bold">Route Efficiency</span>
+                            <span class="badge bg-faint-green text-dark-green">@Model.AverageTimeliness.ToString("F1") / 5.0</span>
+                        </div>
+                        <div class="progress rounded-pill" style="height: 10px;">
+                            <div class="progress-bar bg-warning" style="width: @(Model.AverageTimeliness * 20)%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Feedback -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-premium rounded-20 p-4 h-100 bg-white">
+                <h5 class="fw-bold text-dark-green mb-4">Recent Verification Feedback</h5>
+                <div class="feedback-stack">
+                    @if (Model.RecentRatings != null && Model.RecentRatings.Any()) {
+                        @foreach (var rating in Model.RecentRatings) {
+                            <div class="p-3 rounded-15 bg-light-green-subtle mb-3 border-start border-4 border-dark-green shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="text-warning small">
+                                        @for(int i=1; i<=5; i++) {
+                                            if(i <= rating.OverallRating) { <i class="fas fa-star"></i> }
+                                            else { <i class="far fa-star"></i> }
+                                        }
+                                    </div>
+                                    <span class="text-muted extra-small">@rating.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                </div>
+                                <p class="small mb-1 fst-italic">"@rating.Comment"</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-white text-dark-green border extra-small">PO #@rating.PONumber</span>
+                                </div>
+                            </div>
+                        }
+                    } else {
+                        <div class="text-center py-5">
+                            <i class="fas fa-comment-slash fa-3x text-muted opacity-25 mb-3"></i>
+                            <p class="text-muted">No ratings yet. Your service quality analysis will appear here.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Chart -->
+    <div class="card border-0 shadow-premium rounded-20 p-5 bg-white animate-slide-up" style="animation-delay: 0.3s;">
+        <h5 class="fw-bold text-dark-green mb-4">Performance Trend Analysis</h5>
+        <div style="height: 400px; position: relative;">
+            <canvas id="performanceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-20 { border-radius: 20px !important; }
+    .rounded-15 { border-radius: 15px !important; }
+    .bg-light-green-subtle { background-color: #f8fbf9 !important; }
+    .bg-dark-green { background-color: #1a4d2e !important; }
+    .bg-faint-green { background-color: rgba(26, 77, 46, 0.08); }
+    .bg-accent-green { background-color: #ccff00 !important; }
+    .text-dark-green { color: #1a4d2e !important; }
+    .extra-small { font-size: 0.75rem; }
+    .transition-hover:hover { transform: translateY(-5px); transition: 0.3s ease; }
+    .shadow-premium { box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important; }
+
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); }
+    @@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.MonthlyLabels)),
+                datasets: [
+                    {
+                        label: 'Overall Rating (1-5)',
+                        data: @Html.Raw(Json.Serialize(Model.MonthlyRatings)),
+                        borderColor: '#1a4d2e',
+                        backgroundColor: 'rgba(26, 77, 46, 0.1)',
+                        pointBackgroundColor: '#1a4d2e',
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'On-Time Rate (%)',
+                        data: @Html.Raw(Json.Serialize(Model.MonthlyOnTimeRates)),
+                        borderColor: '#ccff00',
+                        backgroundColor: 'rgba(204, 255, 0, 0.05)',
+                        pointBackgroundColor: '#ccff00',
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, font: { weight: 'bold' } } },
+                    tooltip: { padding: 15, borderRadius: 10, titleFont: { size: 14 } }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        grid: { display: false },
+                        title: { display: true, text: 'Rating' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        max: 100,
+                        position: 'right',
+                        grid: { color: 'rgba(0,0,0,0.03)' },
+                        title: { display: true, text: 'Fulfillment %' }
+                    }
+                }
+            }
+        });
+    });
+</script>

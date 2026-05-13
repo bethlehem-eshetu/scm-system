@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SCM_System.Data;
 using SCM_System.Services;
 
 namespace SCM_System.Controllers
@@ -6,10 +8,46 @@ namespace SCM_System.Controllers
     public class HomeController : Controller
     {
         private readonly IEmailService _emailService;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(IEmailService emailService)
+        public HomeController(IEmailService emailService, ApplicationDbContext context)
         {
             _emailService = emailService;
+            _context = context;
+        }
+
+        [HttpGet("FixDatabase")]
+        public async Task<IActionResult> FixDatabase()
+        {
+            try
+            {
+                string sql = @"
+                    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DeliveryRatings]') AND type in (N'U'))
+                    BEGIN
+                        CREATE TABLE DeliveryRatings (
+                            Id INT PRIMARY KEY IDENTITY(1,1),
+                            PurchaseOrderId INT NOT NULL,
+                            DriverEmployeeId INT NOT NULL,
+                            RetailerId INT NOT NULL,
+                            Timeliness INT NOT NULL,
+                            Professionalism INT NOT NULL,
+                            VehicleCondition INT NOT NULL,
+                            Communication INT NOT NULL,
+                            Comment NVARCHAR(500) NULL,
+                            CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+                            CONSTRAINT FK_DeliveryRatings_PurchaseOrders FOREIGN KEY (PurchaseOrderId) REFERENCES PurchaseOrders(Id),
+                            CONSTRAINT FK_DeliveryRatings_Retailers FOREIGN KEY (RetailerId) REFERENCES Retailers(Id),
+                            CONSTRAINT FK_DeliveryRatings_SupplierEmployees FOREIGN KEY (DriverEmployeeId) REFERENCES SupplierEmployees(Id)
+                        )
+                    END";
+                
+                await _context.Database.ExecuteSqlRawAsync(sql);
+                return Content("Database table 'DeliveryRatings' checked/created successfully.");
+            }
+            catch (Exception ex)
+            {
+                return Content("Error fixing database: " + ex.Message + (ex.InnerException != null ? " | Inner: " + ex.InnerException.Message : ""));
+            }
         }
 
         public IActionResult Index()

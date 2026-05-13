@@ -78,6 +78,7 @@ builder.Services.AddHostedService<SCM_System.Services.PaymentExpiryBackgroundSer
 builder.Services.AddHostedService<SCM_System.Services.InventorySnapshotBackgroundService>();
 builder.Services.AddHostedService<SCM_System.Services.ReorderSuggestionBackgroundService>();
 builder.Services.AddHostedService<SCM_System.Services.DeliverySLABackgroundService>();
+builder.Services.AddHostedService<SCM_System.Services.TenderExpiryService>();
 
 builder.Services.AddScoped<ICommissionService, CommissionService>();
 builder.Services.AddScoped<IChapaService, ChapaService>();

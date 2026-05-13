@@ -5,6 +5,7 @@ using SCM_System.Models.Entities;
 using SCM_System.Services;
 using System.Security.Claims;
 using SCM_System.Models.Enums;
+using SCM_System.Models.ViewModels;
 
 namespace SCM_System.Controllers
 {
@@ -813,6 +814,63 @@ namespace SCM_System.Controllers
             return RedirectToAction("OrderTracking");
         }
 
+<<<<<<< HEAD
+        // GET: /Retailer/RateDelivery/5
+        [HttpGet]
+        public async Task<IActionResult> RateDelivery(int id)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var po = await _context.PurchaseOrders
+                .Include(p => p.DeliveryAgent)
+                .Include(p => p.Vehicle)
+                .Include(p => p.Retailer)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (po == null) return NotFound();
+
+            var viewModel = new DeliveryRatingViewModel
+            {
+                PurchaseOrderId = po.Id,
+                PONumber = po.PONumber,
+                DriverName = po.DeliveryAgent?.FullName ?? "Unknown Agent",
+                VehiclePlate = po.Vehicle?.LicensePlate ?? "N/A"
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitDeliveryRating(DeliveryRatingViewModel model)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var po = await _context.PurchaseOrders.FindAsync(model.PurchaseOrderId);
+            if (po == null) return NotFound();
+
+            var retailerId = await GetRetailerIdInternalAsync();
+            if (po.RetailerId != retailerId) return Unauthorized();
+
+            var rating = new DeliveryRating
+            {
+                PurchaseOrderId = po.Id,
+                DriverEmployeeId = po.DeliveryAgentId ?? 0,
+                RetailerId = retailerId,
+                Timeliness = model.Timeliness,
+                Professionalism = model.Professionalism,
+                VehicleCondition = model.VehicleCondition,
+                Communication = model.Communication,
+                Comment = model.Comment,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.DeliveryRatings.Add(rating);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Thank you for rating your delivery experience!";
+            return RedirectToAction("Dashboard");
+=======
 
         // Add to RetailerController.cs
 
@@ -902,6 +960,7 @@ namespace SCM_System.Controllers
         private string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+>>>>>>> a1be27034ef112e51dc7a51bd12800c01b912210
         }
     }
 }

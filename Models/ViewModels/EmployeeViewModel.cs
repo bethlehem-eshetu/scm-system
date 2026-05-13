@@ -4,20 +4,23 @@ namespace SCM_System.Models.ViewModels
 {
     public class EmployeeViewModel
     {
+        // ========== IDENTITY & ID ==========
+        public int Id { get; set; }  // ← ADD THIS - CRITICAL FOR EDIT
+
         [Required(ErrorMessage = "Full Name is required")]
         [Display(Name = "Full Name")]
-        public string FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Phone]
         [Display(Name = "Phone Number")]
         public string? PhoneNumber { get; set; }
 
         [Required(ErrorMessage = "Role is required")]
-        public string Role { get; set; } // "Warehouse" or "Delivery"
+        public string Role { get; set; } = "DeliveryAgent"; // "WarehouseManager" or "DeliveryAgent"
 
         [Display(Name = "Assigned Warehouse")]
         public int? WarehouseId { get; set; }
@@ -25,7 +28,7 @@ namespace SCM_System.Models.ViewModels
         [Display(Name = "Assigned Vehicle")]
         public int? VehicleId { get; set; }
 
-        // Personal Information
+        // ========== PERSONAL INFORMATION ==========
         [Display(Name = "Gender")]
         public string? Gender { get; set; }
 
@@ -36,12 +39,12 @@ namespace SCM_System.Models.ViewModels
         [Display(Name = "National ID")]
         public string? NationalID { get; set; }
 
-        // Employment Details
+        // ========== EMPLOYMENT DETAILS ==========
         [Display(Name = "Employee ID (Display)")]
         public string? EmployeeDisplayId { get; set; }
 
         public string? Department { get; set; } = "Logistics";
-        
+
         [Display(Name = "Employment Type")]
         public SCM_System.Models.Enums.EmploymentType EmploymentType { get; set; } = SCM_System.Models.Enums.EmploymentType.FullTime;
 
@@ -52,7 +55,10 @@ namespace SCM_System.Models.ViewModels
         [Display(Name = "Shift")]
         public SCM_System.Models.Enums.ShiftType Shift { get; set; } = SCM_System.Models.Enums.ShiftType.Day;
 
-        [Display(Name = "Salary (Gross)")]
+        [Display(Name = "Current Status")]
+        public SCM_System.Models.Enums.EmployeeStatus Status { get; set; } = SCM_System.Models.Enums.EmployeeStatus.Active;
+
+        [Display(Name = "Monthly Salary (ETB)")]
         public decimal? MonthlySalary { get; set; }
 
         [Display(Name = "Emergency Contact Name")]
@@ -61,15 +67,23 @@ namespace SCM_System.Models.ViewModels
         [Display(Name = "Emergency Contact Phone")]
         public string? EmergencyContactPhone { get; set; }
 
-        // Compliance & Security
+        // ========== SECURITY & COMPLIANCE ==========
         public bool FaydaVerified { get; set; }
         public int SecurityLevel { get; set; } = 1;
 
-        // Security
-        [Display(Name = "Force Password Change")]
-        public bool ForcePasswordChange { get; set; }
+        [Display(Name = "Force password change on next login")]
+        public bool ForcePasswordChange { get; set; } = false;
 
-        // Driver License Information
+        [DataType(DataType.Password)]
+        [Display(Name = "New Password")]
+        public string? Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm Password")]
+        [Compare("Password", ErrorMessage = "Passwords do not match")]
+        public string? ConfirmPassword { get; set; }
+
+        // ========== DRIVER LICENSE INFORMATION ==========
         [Display(Name = "Driving License Number")]
         public string? DrivingLicenseNumber { get; set; }
 
@@ -84,11 +98,11 @@ namespace SCM_System.Models.ViewModels
         [DataType(DataType.Date)]
         public DateTime? LicenseExpiryDate { get; set; }
 
-        [Display(Name = "Medical Fitness Expiry Date")]
+        [Display(Name = "Medical Fitness Expiry")]
         [DataType(DataType.Date)]
         public DateTime? MedicalFitnessExpiryDate { get; set; }
 
-        // Coverage Area
+        // ========== DELIVERY COVERAGE ==========
         [Display(Name = "Primary Delivery Region")]
         public string? DeliveryRegion { get; set; }
 
@@ -98,23 +112,17 @@ namespace SCM_System.Models.ViewModels
         [Display(Name = "Detailed Coverage Area")]
         public string? CoverageArea { get; set; }
 
-        // Permissions (Warehouse Manager)
+        // ========== WAREHOUSE MANAGER PERMISSIONS ==========
+        [Display(Name = "Can Approve Transfers")]
         public bool CanApproveTransfers { get; set; } = true;
+
+        [Display(Name = "Can Manage Inventory")]
         public bool CanManageInventory { get; set; } = true;
+
+        [Display(Name = "Can View Reports")]
         public bool CanViewReports { get; set; } = true;
 
-        // Status
-        public SCM_System.Models.Enums.EmployeeStatus Status { get; set; } = SCM_System.Models.Enums.EmployeeStatus.Active;
-
-        [DataType(DataType.Password)]
-        public string? Password { get; set; }
-
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm Password")]
-        [Compare("Password", ErrorMessage = "Passwords do not match")]
-        public string? ConfirmPassword { get; set; }
-
-        // Documents for Display
+        // ========== DOCUMENT PATHS (FOR DISPLAY) ==========
         public string? ProfilePhotoPath { get; set; }
         public string? IdDocumentUrl { get; set; }
         public string? ContractDocumentUrl { get; set; }

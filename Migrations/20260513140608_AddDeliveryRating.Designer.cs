@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SCM_System.Data;
 
@@ -11,9 +12,11 @@ using SCM_System.Data;
 namespace SCM_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513140608_AddDeliveryRating")]
+    partial class AddDeliveryRating
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -548,41 +551,6 @@ namespace SCM_System.Migrations
                     b.HasIndex("DeliveryId");
 
                     b.ToTable("DeliveryTrackings");
-                });
-
-            modelBuilder.Entity("SCM_System.Models.Entities.DepositRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TransactionRef")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("DepositRecords");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DispatchOverrideLog", b =>
@@ -4038,6 +4006,12 @@ namespace SCM_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ApprovalStatusMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ApprovalStatusType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
@@ -4984,17 +4958,6 @@ namespace SCM_System.Migrations
                         .IsRequired();
 
                     b.Navigation("Delivery");
-                });
-
-            modelBuilder.Entity("SCM_System.Models.Entities.DepositRecord", b =>
-                {
-                    b.HasOne("SCM_System.Models.Entities.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DispatchOverrideLog", b =>
