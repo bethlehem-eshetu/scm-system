@@ -15,7 +15,7 @@ using System.Text.Json;
 namespace SCM_System.Controllers
 {
     [Authorize(Roles = "Warehouse,WarehouseManager")]
-    [Route("WarehouseManager")]
+    [Route("Warehouse")]
     public class WarehouseController(
         ApplicationDbContext context, 
         IPurchaseOrderService poService, 
@@ -959,8 +959,8 @@ namespace SCM_System.Controllers
             return RedirectToAction(nameof(OperationalSettings));
         }
 
-        [Route("Settings")]
-        public async Task<IActionResult> Settings()
+        [Route("AccountSettings")]
+        public async Task<IActionResult> AccountSettings()
         {
             var manager = await GetCurrentManagerAsync();
             if (manager == null || manager.User == null) return Unauthorized();
@@ -1011,9 +1011,9 @@ namespace SCM_System.Controllers
             return View(viewModel);
         }
 
-        [HttpPost("Settings")]
+        [HttpPost("AccountSettings")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Settings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
+        public async Task<IActionResult> AccountSettings(SCM_System.Models.ViewModels.WarehouseManagerSettingsViewModel model)
         {
             var manager = await _context.SupplierEmployees
                 .Include(e => e.User)
@@ -1070,13 +1070,13 @@ namespace SCM_System.Controllers
                 if (string.IsNullOrEmpty(model.CurrentPassword))
                 {
                     ModelState.AddModelError("CurrentPassword", "Current password is required.");
-                    return await Settings();
+                    return await AccountSettings();
                 }
 
                 if (manager.User.PasswordHash != HashPassword(model.CurrentPassword))
                 {
                     ModelState.AddModelError("CurrentPassword", "Incorrect current password.");
-                    return await Settings();
+                    return await AccountSettings();
                 }
 
                 manager.User.PasswordHash = HashPassword(model.NewPassword);
@@ -1084,12 +1084,12 @@ namespace SCM_System.Controllers
 
             if (!ModelState.IsValid)
             {
-                return await Settings();
+                return await AccountSettings();
             }
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Settings updated successfully.";
-            return RedirectToAction(nameof(Settings));
+            return RedirectToAction(nameof(AccountSettings));
         }
 
         [HttpPost("Toggle2FA")]

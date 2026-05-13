@@ -434,7 +434,7 @@ namespace SCM_System.Controllers
                     }
 
                     // ADMIN & EMPLOYEE BYPASS: Admins and Supplier Employees (Warehouse/Delivery) bypass administrative/fayda approval checks
-                    bool isSpecialAccount = user.Role == "Admin" || user.Role == "WarehouseManager" || user.Role == "DeliveryAgent";
+                    bool isSpecialAccount = user.Role == "Admin" || user.Role == "Warehouse" || user.Role == "WarehouseManager" || user.Role == "DeliveryAgent";
 
                     if (isSpecialAccount && user.Role != "Admin")
                     {
@@ -514,15 +514,7 @@ namespace SCM_System.Controllers
                     // Add EmployeeId claim for all employee roles
                     if (user.Role == "Warehouse" || user.Role == "WarehouseManager" || user.Role == "DeliveryAgent")
                     {
-                        SupplierEmployee employee = null;
-                        if (user.Role == "WarehouseManager")
-                        {
-                            employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.Email == user.Email);
-                        }
-                        else
-                        {
-                            employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.UserId == user.Id);
-                        }
+                        var employee = await _context.SupplierEmployees.FirstOrDefaultAsync(e => e.Email == user.Email);
 
                         if (employee != null)
                         {

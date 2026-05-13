@@ -38,7 +38,7 @@
             --bg-color: #0A0F0D;
             --text-color: #EDEDED;
             --text-muted: #B8C5BE;
-            --card-bg: #1A1F1D;
+            --card-bg: #1E2A2A;
             --border-color: #2A3530;
             --top-nav-bg: #1A1F1D;
             --primary-color: #3BAE86;
@@ -922,7 +922,7 @@
                         <a asp-controller="Retailer" asp-action="Settings"><i class="fas fa-user-cog"></i> Account Settings</a>
                     </li>
                 }
-                else if (role == "WarehouseManager")
+                else if (role == "Warehouse" || role == "WarehouseManager")
                 {
                     <li>
                         <a asp-controller="Warehouse" asp-action="Dashboard"><i class="fas fa-th-large"></i> Dashboard</a>

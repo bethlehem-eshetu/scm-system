@@ -22,10 +22,10 @@
     </div>
 
     <!-- Ratings Content -->
-    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white">
-        <div class="card-header bg-white py-4 px-5 d-flex justify-content-between align-items-center border-0">
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden" style="background-color: var(--card-bg);">
+        <div class="card-header py-4 px-5 d-flex justify-content-between align-items-center border-0" style="background-color: var(--card-bg);">
             <h5 class="fw-bold mb-0 text-dark-green">Supplier Feedback History</h5>
-            <span class="badge bg-faint-green text-dark-green rounded-pill px-4 py-2 fw-bold border small">@Model.Count() Reviews Published</span>
+            <span class="badge rounded-pill px-4 py-2 fw-bold border small" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">@Model.Count() Reviews Published</span>
         </div>
         <div class="card-body p-0">
             @if (!Model.Any())
@@ -46,7 +46,7 @@
                         <div class="list-group-item border-0 p-5 hover-bg-faint transition-all border-bottom-faint">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-faint-green text-dark-green p-3 rounded-4">
+                                    <div class="p-3 rounded-4" style="background-color: var(--table-header-bg); color: var(--table-text) !important;">
                                         <i class="fas fa-store fs-5"></i>
                                     </div>
                                     <div>
@@ -80,7 +80,7 @@
                             
                             @if (!string.IsNullOrEmpty(rating.Comment))
                             {
-                                <div class="bg-faint-green rounded-4 p-4 mt-3 border-start border-4 border-success">
+                                <div class="rounded-4 p-4 mt-3 border-start border-4 border-success" style="background-color: var(--table-header-bg);">
                                     <p class="mb-0 text-dark-green italic fst-italic">"@rating.Comment"</p>
                                 </div>
                             }
