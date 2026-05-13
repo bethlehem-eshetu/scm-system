@@ -279,5 +279,51 @@ namespace SCM_System.Services
             }
             await _context.SaveChangesAsync();
         }
+        public async Task<int> GetUnreadCountForUser(int userId)
+        {
+            return await GetUnreadCountAsync(userId);
+        }
+
+        public async Task<List<SCM_System.Models.ViewModels.NotificationDto>> GetRecentForUser(int userId, int count)
+        {
+            var notifications = await GetUserNotificationsAsync(userId, count);
+            return notifications.Select(n => new SCM_System.Models.ViewModels.NotificationDto
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Message = n.Message,
+                Type = n.Type,
+                CreatedAt = n.CreatedAt,
+                TimeAgo = GetTimeAgo(n.CreatedAt),
+                ActionUrl = n.ActionUrl,
+                IsRead = n.IsRead,
+                Icon = GetNotificationIcon(n.Type)
+            }).ToList();
+        }
+
+        private string GetNotificationIcon(string type)
+        {
+            return type switch
+            {
+                "Order" => "🛒",
+                "Delivery" => "🚚",
+                "Warehouse" => "📦",
+                "Payment" => "💰",
+                "Approval" => "✅",
+                "Rejection" => "❌",
+                "Warning" => "⚠️",
+                "Info" => "ℹ️",
+                _ => "🔔"
+            };
+        }
+
+        private string GetTimeAgo(DateTime dateTime)
+        {
+            var span = DateTime.Now - dateTime;
+            if (span.TotalDays > 1) return $"{(int)span.TotalDays}d ago";
+            if (span.TotalHours > 1) return $"{(int)span.TotalHours}h ago";
+            if (span.TotalMinutes > 1) return $"{(int)span.TotalMinutes}m ago";
+            return "Just now";
+        }
     }
-}
+}

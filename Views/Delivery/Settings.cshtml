@@ -80,12 +80,6 @@
 
         <!-- Right Column: Settings Sections -->
         <div class="col-lg-8">
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert bg-soft-success text-success border-0 shadow-sm rounded-5 mb-4 px-4 py-3 animate-slide-down" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-                </div>
-            }
 
             <form asp-action="Settings" method="post" enctype="multipart/form-data" id="settingsForm">
                 <input type="file" asp-for="ProfilePicture" class="d-none" onchange="previewProfile(this)" />

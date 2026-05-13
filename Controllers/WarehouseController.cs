@@ -22,6 +22,7 @@ namespace SCM_System.Controllers
         IAuditLogService auditLogService, 
         ISupplierService supplierService, 
         IInventoryService inventoryService,
+        INotificationService notificationService,
         ILogger<WarehouseController> logger,
         IWebHostEnvironment env) : Controller
     {
@@ -30,6 +31,7 @@ namespace SCM_System.Controllers
         private readonly IAuditLogService _auditLogService = auditLogService;
         private readonly ISupplierService _supplierService = supplierService;
         private readonly IInventoryService _inventoryService = inventoryService;
+        private readonly INotificationService _notificationService = notificationService;
         private readonly ILogger<WarehouseController> _logger = logger;
         private readonly IWebHostEnvironment _env = env;
 
@@ -738,6 +740,18 @@ namespace SCM_System.Controllers
 
             await _poService.UpdatePurchaseOrderStatusAsync(id, POStatus.InTransit, userId);
             
+            // Notify Delivery Agent
+            if (agent.UserId != 0)
+            {
+                await _notificationService.SendNotificationAsync(
+                    agent.UserId,
+                    "New Delivery Assigned",
+                    $"Order #{po.PONumber} has been assigned to you. Vehicle: {vehicle.LicensePlate}.",
+                    "Delivery",
+                    $"/DeliveryAgent/Dashboard"
+                );
+            }
+
             // AUDIT LOG
             await _auditLogService.LogActionAsync(
                 "PurchaseOrder", 

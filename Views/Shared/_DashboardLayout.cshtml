@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/notification.css" asp-append-version="true" />
 
     <style>
         :root {
@@ -1035,62 +1036,8 @@
                         <i class="fas fa-moon fs-5" style="color: var(--text-color);"></i>
                     </a>
 
-                    <!-- Admin/User Notifications -->
-                    <div class="dropdown me-2">
-                        <a href="#" class="text-muted position-relative text-decoration-none d-flex align-items-center justify-content-center rounded-circle" data-bs-toggle="dropdown" title="Notifications" style="width: 36px; height: 36px; background-color: var(--hover-state); transition: all 0.2s;">
-                            <i class="fas fa-bell fs-5" style="color: var(--text-color);"></i>
-                            @if (ViewBag.UnreadNotificationCount != null && ViewBag.UnreadNotificationCount > 0)
-                            {
-                                <span class="position-absolute rounded-circle text-white d-flex align-items-center justify-content-center shadow-sm" style="top: -4px; right: -4px; background-color: #E05A5A; font-size: 10px; width: 18px; height: 18px; font-weight: bold; border: 2px solid var(--top-nav-bg);">
-                                    @ViewBag.UnreadNotificationCount
-                                </span>
-                            }
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-0" style="width: 320px; border-radius: 12px; margin-top: 10px; overflow: hidden;">
-                            <li class="p-3 border-bottom d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 fw-bold">Notifications</h6>
-                                <a asp-controller="Notification" asp-action="Index" class="text-primary small text-decoration-none fw-semibold">View All</a>
-                            </li>
-                            <li class="notification-list" style="max-height: 350px; overflow-y: auto;">
-                                @if (Context.Session.GetString("UserRole") == "Admin")
-                                {
-                                    var adminNotifications = ViewBag.AdminNotifications as List<SCM_System.Models.Entities.AdminNotification>;
-                                    if (adminNotifications != null && adminNotifications.Any())
-                                    {
-                                        foreach (var adminNotif in adminNotifications)
-                                        {
-                                            <a href="@adminNotif.ActionUrl" class="dropdown-item p-3 border-bottom d-flex align-items-start gap-3 notification-item @(adminNotif.IsRead ? "" : "bg-light")">
-                                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2" style="width: 38px; height: 38px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="fas @(adminNotif.NotificationType == "Registration" ? "fa-user-plus" : "fa-info-circle")"></i>
-                                                </div>
-                                                <div class="overflow-hidden">
-                                                    <div class="fw-bold text-truncate small notification-title">@adminNotif.Title</div>
-                                                    <div class="text-muted text-wrap x-small notification-message" style="font-size: 11px; line-height: 1.4;">@adminNotif.Message</div>
-                                                    <div class="text-primary mt-1 notification-time" style="font-size: 10px;">@adminNotif.CreatedAt.ToString("MMM dd, HH:mm")</div>
-                                                </div>
-                                            </a>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <div class="p-4 text-center text-muted small">
-                                            <i class="fas fa-bell-slash d-block mb-2 opacity-50 fs-4"></i>
-                                            No admin alerts
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <div class="p-4 text-center text-muted small">
-                                        No new notifications
-                                    </div>
-                                }
-                            </li>
-                            <li class="p-2 border-top bg-light text-center">
-                                <a href="#" class="text-muted small text-decoration-none">Mark all as read</a>
-                            </li>
-                        </ul>
-                    </div>
+                    <!-- New Dynamic Notifications Bell -->
+                    @await Component.InvokeAsync("NotificationBell")
 
                     @if (Context.Session.GetString("UserRole") == "Retailer")
                     {
@@ -1136,22 +1083,6 @@
             </header>
 
             <div class="dashboard-wrapper">
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
-                        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3">
-                        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-
                 @RenderBody()
             </div>
         </main>
@@ -1162,8 +1093,29 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     
+    <!-- Toast Notifications -->
+    <partial name="_Toast" />
+
     <script>
         $(document).ready(function () {
+            // Show toasts from TempData
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>showToast('@TempData["SuccessMessage"]', 'success');</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>showToast('@TempData["ErrorMessage"]', 'error');</text>
+            }
+            @if (TempData["LogoutMessage"] != null)
+            {
+                <text>showToast('@TempData["LogoutMessage"]', 'info', '👋 Goodbye');</text>
+            }
+            @if (TempData["WarningMessage"] != null)
+            {
+                <text>showToast('@TempData["WarningMessage"]', 'warning');</text>
+            }
+
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
                 $('#content').toggleClass('active');
@@ -1521,5 +1473,6 @@
             });
         });
     </script>
+    <script src="~/js/notification.js" asp-append-version="true"></script>
 </body>
 </html>

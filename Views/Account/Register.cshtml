@@ -1,866 +1,1228 @@
-
 @model SCM_System.Models.ViewModels.RegisterViewModel
 @{
-    ViewData["Title"] = "Enterprise Registration";
+    ViewData["Title"] = "Create Account - EthioChain SCM";
     Layout = "_Layout";
+
+    var allCategories = ViewBag.Categories as IEnumerable<SCM_System.Models.Entities.ProductCategory>;
+    var mainCategories = allCategories?
+        .Where(c => c.ParentCategoryId == null)
+        .GroupBy(c => c.CategoryName)
+        .Select(g => g.First())
+        .OrderBy(c => c.CategoryName)
+        .ToList();
 }
 
-<div class="container-fluid p-0 overflow-hidden">
-    <div class="row g-0 min-vh-100">
-        <!-- Left Column: Value Props & Sticky Branding -->
-        <div class="col-lg-4 d-none d-lg-block p-5 position-relative brand-section overflow-hidden">
-            <div class="brand-overlay"></div>
-            <div class="motif-pattern"></div>
-            
-            <div class="sticky-top z-index-2 position-relative pt-4" style="top: 80px;">
-                <div class="mb-5" data-aos="fade-right">
-                    <div class="d-inline-flex align-items-center bg-white bg-opacity-25 px-3 py-1 rounded-pill mb-4 border border-white border-opacity-25">
-                        <span class="badge bg-warning text-dark me-2 rounded-pill">V 2.0</span>
-                        <span class="small fw-semibold letter-spacing-1 text-white">ETHIOCHAIN UNIFIED</span>
-                    </div>
-                    <h2 class="fw-bold text-white mb-3 text-shadow-sm">Join the Future of Supply Chain</h2>
-                    <p class="text-white text-opacity-75 lead fw-light">Onboard securely today and connect with thousands of verified trading partners.</p>
-                </div>
-
-                <div class="list-group list-group-flush bg-transparent border-0 gap-4 mb-5" data-aos="fade-up">
-                    <div class="d-flex align-items-start gap-3 glass-card rounded-4 p-3 border border-white border-opacity-10">
-                        <div class="bg-warning bg-opacity-20 text-warning rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
-                            <i class="fas fa-handshake"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-white fw-bold mb-1">One-Click Tenders</h6>
-                            <p class="small text-white text-opacity-75 mb-0">Post procurement needs and get bids from top-tier suppliers instantly.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-start gap-3 glass-card rounded-4 p-3 border border-white border-opacity-10">
-                        <div class="bg-info bg-opacity-20 text-info rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
-                            <i class="fas fa-route"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-white fw-bold mb-1">Robust Tracking</h6>
-                            <p class="small text-white text-opacity-75 mb-0">Monitor inventory, orders, and deliveries with synchronized milestone telemetry.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-start gap-3 glass-card rounded-4 p-3 border border-white border-opacity-10">
-                        <div class="bg-success bg-opacity-20 text-success rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-white fw-bold mb-1">Verified Partners</h6>
-                            <p class="small text-white text-opacity-75 mb-0">Integrated securely with National Fayda IDs for trusted marketplace interaction.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="register-page-wrapper">
+    <!-- Left Section: Illustration & Organic Blobs -->
+    <div class="left-section">
+        <div class="blobs">
+            <div class="blob blob-lg"></div>
+            <div class="blob blob-md"></div>
+            <div class="blob blob-sm"></div>
+            <div class="blob blob-xs"></div>
         </div>
 
-        <!-- Right Column: Registration Form -->
-        <div class="col-lg-8 bg-light-surface p-5 d-flex flex-column align-items-center">
-            <div class="w-100" style="max-width: 700px;" data-aos="fade-up">
-                <div class="mb-5 text-center text-lg-start">
-                    <h3 class="fw-bold text-dark-blue mb-2">Create Your Account</h3>
-                    <p class="text-muted">Fill in your details to get started with the EthioChain network.</p>
-                </div>
+        <img src="/images/register-illustration.png" alt="Illustration" class="illustration bounce-effect" />
 
-                @if (TempData["ErrorMessage"] != null)
+        <div class="wave-divider">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M100,0 C80,10 60,30 60,50 C60,70 80,90 100,100 Z" fill="#0b2e24"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Right Section: Dark Form -->
+    <div class="right-section">
+        <div class="register-card">
+            <h1>CREATE ACCOUNT</h1>
+
+            <!-- Step Progress -->
+            <div class="step-progress">
+                <div class="step-item active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <span>Identity</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item" data-step="2">
+                    <div class="step-circle">2</div>
+                    <span>Account</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item" data-step="3">
+                    <div class="step-circle">3</div>
+                    <span>Business</span>
+                </div>
+            </div>
+
+            <form asp-action="Register" asp-controller="Account" method="post" enctype="multipart/form-data" id="registerForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Role" id="RoleHidden" />
+
+                @if (!ViewData.ModelState.IsValid)
                 {
-                    <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
-                        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                    <div class="alert alert-danger border-0 rounded-4 mb-4 small">
+                        <div asp-validation-summary="All"></div>
                     </div>
                 }
-                <div id="registrationStepper" class="mb-4">
-                    <div class="d-flex justify-content-between position-relative">
-                        <div class="step-item active" id="step-1-indicator">
-                            <div class="step-number">1</div>
-                            <div class="step-label">Identity</div>
+
+                <!-- STEP 1: Identity Verification -->
+                <div id="step-1" class="form-step active">
+                    <div class="form-group">
+                        <label asp-for="Email">Email Address</label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-envelope"></i></div>
+                            <input asp-for="Email" id="EmailInput" type="email" placeholder="Enter your email" autocomplete="off" />
                         </div>
-                        <div class="step-item" id="step-2-indicator">
-                            <div class="step-number">2</div>
-                            <div class="step-label">Account</div>
+                        <span asp-validation-for="Email" class="text-danger extra-small"></span>
+                    </div>
+
+                    <div id="fanSection">
+                        <div class="form-group">
+                            <label>Fayda Account Number (FAN)</label>
+                            <div class="input-pill">
+                                <div class="icon-box"><i class="fas fa-id-card"></i></div>
+                                <input asp-for="FAN" id="FANInput" placeholder="16-digit FAN" maxlength="16" />
+                            </div>
+                            <span id="fanError" class="text-danger extra-small"></span>
                         </div>
-                        <div class="step-item" id="step-3-indicator">
-                            <div class="step-number">3</div>
-                            <div class="step-label">Business</div>
+                        <button type="button" class="btn-otp" id="btnRequestOtp">Request OTP</button>
+                    </div>
+
+                    <div id="otpSection" style="display: none;">
+                        <div class="alert alert-info py-2 mb-3 bg-opacity-10 border-teal text-white small">
+                            <i class="fas fa-info-circle me-2 text-teal"></i>
+                            OTP sent to: <strong id="targetEmailDisplay" class="text-teal"></strong>
+                            <button type="button" id="btnChangeEmail" class="btn btn-link btn-sm p-0 ms-2 text-decoration-none text-white-50 hover-teal" style="font-size: 0.75rem;">(Change)</button>
                         </div>
-                        <div class="step-connector"></div>
+                        <div class="form-group">
+                            <label>Verification Code (OTP)</label>
+                            <div class="input-pill">
+                                <div class="icon-box"><i class="fas fa-key"></i></div>
+                                <input type="text" id="OTPInput" placeholder="Enter 6-digit code" maxlength="6" />
+                            </div>
+                            <div class="otp-timer">
+                                <span id="expiryTimerDisplay" class="text-white-50 small">Expires in: 05:00</span>
+                                <button type="button" id="btnResendOtp" disabled class="resend-link">Resend OTP</button>
+                            </div>
+                            <span id="otpError" class="text-danger extra-small"></span>
+                        </div>
+                        <button type="button" class="btn-verify" id="btnVerifyOtp">Verify OTP</button>
                     </div>
                 </div>
 
-                <form asp-action="Register" method="post" enctype="multipart/form-data" id="registerForm" class="needs-validation">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="Role" id="RoleHidden" />
+                <!-- STEP 2: Account Details -->
+                <div id="step-2" class="form-step" style="display: none;">
+                    <div class="success-alert">
+                        <i class="fas fa-check-circle"></i> Identity Verified!
+                    </div>
+
+                    <div class="form-group">
+                        <label>Full Name (Verified)</label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-user"></i></div>
+                            <input asp-for="FullName" id="FullNameInput" readonly placeholder="Auto-filled from Fayda" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Register As</label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-briefcase"></i></div>
+                            <select id="RoleSelect" class="form-select">
+                                <option value="">Select Role</option>
+                                <option value="Supplier">Supplier (Sell Products)</option>
+                                <option value="Retailer">Retailer (Buy Products)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Password</label>
+                            <div class="input-pill password-field">
+                                <div class="icon-box"><i class="fas fa-lock"></i></div>
+                                <input asp-for="Password" type="password" id="regPassword" placeholder="·······" />
+                                <button type="button" class="password-toggle" data-target="regPassword">
+                                    <i class="far fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger extra-small"></span>
+                        </div>
+                        <div class="form-group half">
+                            <label>Confirm Password</label>
+                            <div class="input-pill password-field">
+                                <div class="icon-box"><i class="fas fa-lock"></i></div>
+                                <input asp-for="ConfirmPassword" type="password" id="regConfirmPassword" placeholder="·······" />
+                                <button type="button" class="password-toggle" data-target="regConfirmPassword">
+                                    <i class="far fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger extra-small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-calendar"></i></div>
+                            <input asp-for="DateOfBirth" type="date" id="DateOfBirth" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Business Profile -->
+                <div id="step-3" class="form-step" style="display: none;">
                     
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="alert alert-danger border-0 rounded-4 mb-4 small shadow-sm">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</h6>
-                            <div asp-validation-summary="All" class="mb-0"></div>
+                    <!-- Role-Specific Top Labels -->
+                    <div class="form-group role-supplier-only">
+                        <label>Company Name <span class="text-danger">*</span></label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-building"></i></div>
+                            <input asp-for="CompanyName" placeholder="e.g. Acme Innovations PLC" />
                         </div>
-                    }
+                        <span asp-validation-for="CompanyName" class="text-danger extra-small"></span>
+                    </div>
 
-                    <!-- Step 1: Fayda Identity Verification -->
-                    <div id="step-1" class="registration-step">
-                        <div class="mb-5">
-                            <div class="d-flex align-items-center mb-4">
-                                <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">1</span>
-                                <h5 class="fw-bold mb-0">Identity Verification (Fayda)</h5>
+                    <div class="form-group role-retailer-only">
+                        <label>Business Name <span class="text-danger">*</span></label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-store"></i></div>
+                            <input asp-for="BusinessName" placeholder="e.g. My Neighborhood Grocery" />
+                        </div>
+                        <span asp-validation-for="BusinessName" class="text-danger extra-small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Physical Address <span class="text-danger">*</span></label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-location-dot"></i></div>
+                            <input asp-for="Address" placeholder="City, Sub-city, Woreda" />
+                        </div>
+                        <span asp-validation-for="Address" class="text-danger extra-small"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>City <span class="text-danger">*</span></label>
+                            <div class="input-pill">
+                                <div class="icon-box"><i class="fas fa-city"></i></div>
+                                <input asp-for="City" placeholder="e.g. Addis Ababa" />
                             </div>
-                            <div class="row g-3">
-                                <div class="col-12 mb-3">
-                                    <label asp-for="Email" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Email Address (For OTP)</label>
-                                    <input asp-for="Email" id="EmailInput" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" type="email" placeholder="john@company.com" />
-                                    <span asp-validation-for="Email" class="text-danger extra-small"></span>
-                                </div>
-                                <div class="col-12" id="fanSection">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Fayda Account Number (FAN)</label>
-                                    <div class="input-group">
-                                        <input asp-for="FAN" id="FANInput" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none" placeholder="16-digit number" maxlength="16" />
-                                        <button class="btn btn-primary px-4 fw-bold" type="button" id="btnRequestOtp">Request OTP</button>
-                                    </div>
-                                    <span id="fanError" class="text-danger extra-small"></span>
-                                    <p class="text-muted extra-small mt-2"><i class="fas fa-shield-alt me-1"></i> We verify your identity via the Fayda registry for security. We will send an OTP to your email.</p>
-                                </div>
-
-                                <div class="col-12" id="otpSection" style="display: none;">
-                                    <label class="form-label small fw-bold text-muted text-uppercase d-flex justify-content-between">
-                                        Verification Code (OTP)
-                                        <span id="expiryTimerDisplay" class="fw-bold">Expires in: 05:00</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="text" id="OTPInput" name="OTPInputDummy" class="form-control bg-light border-0 rounded-start-3 py-2 px-3 shadow-none text-center fs-4 fw-bold" placeholder="••••••" maxlength="6" style="letter-spacing: 5px;" />
-                                        <button class="btn btn-success px-4 fw-bold" type="button" id="btnVerifyOtp">Verify OTP</button>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mt-2">
-                                        <span id="otpError" class="text-danger extra-small"></span>
-                                        <button type="button" class="btn btn-link extra-small text-decoration-none p-0 fw-bold" id="btnResendOtp" disabled>Resend available in <span id="resendTimer">60</span>s</button>
-                                    </div>
-
-                                </div>
+                        </div>
+                        <div class="form-group half">
+                            <label>Country</label>
+                            <div class="input-pill">
+                                <div class="icon-box"><i class="fas fa-globe"></i></div>
+                                <input asp-for="Country" value="Ethiopia" />
                             </div>
                         </div>
                     </div>
 
-                    <!-- Step 2: Account Essentials -->
-                    <div id="step-2" class="registration-step" style="display: none;">
-                        <div class="mb-5">
-                            <div class="d-flex align-items-center mb-4">
-                                <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">2</span>
-                                <h5 class="fw-bold mb-0">Account Essentials</h5>
-                            </div>
-                            
-                            <div class="alert alert-success border-0 rounded-4 mb-4 small shadow-sm d-flex align-items-center">
-                                <i class="fas fa-check-circle me-3 fs-4"></i>
-                                <div>
-                                    <p class="mb-0 fw-bold">Identity Verified!</p>
-                                    <p class="mb-0 text-opacity-75">Your name and phone number used for business will be locked to your Fayda identity.</p>
+                    <!-- Supplier Specific Fields -->
+                    <div class="role-supplier-only">
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label>License Number <span class="text-danger">*</span></label>
+                                <div class="input-pill">
+                                    <div class="icon-box"><i class="fas fa-certificate"></i></div>
+                                    <input asp-for="LicenseNumber" placeholder="Business License #" />
                                 </div>
                             </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label asp-for="FullName" class="form-label small fw-bold text-muted text-uppercase d-block">
-                                        Verified Name
-                                        <span id="nameBadge" style="display:none" class="badge bg-success float-end"><i class="fas fa-check-circle"></i> Fayda Verified</span>
-                                    </label>
-                                    <input asp-for="FullName" id="VerifiedFullName" class="form-control bg-white border-0 rounded-3 py-2 px-3 shadow-none fw-bold" readonly />
-                                    <small id="fullNameHelpText" class="form-text text-muted"></small>
+                            <div class="form-group half">
+                                <label>Tax ID (TIN) <span class="text-danger">*</span></label>
+                                <div class="input-pill">
+                                    <div class="icon-box"><i class="fas fa-percent"></i></div>
+                                    <input asp-for="TaxIdentificationNumber" placeholder="9-digit TIN" maxlength="9" />
                                 </div>
-                                <div class="col-md-6">
-                                    <label asp-for="PhoneNumber" class="form-label small fw-bold text-muted text-uppercase d-block">
-                                        Phone Number *
-                                        <span id="phoneBadge" style="display:none" class="badge bg-info float-end"><i class="fas fa-check-circle"></i> Fayda Verified</span>
-                                    </label>
-                                    <input asp-for="PhoneNumber" id="VerifiedPhone" class="form-control bg-white border-0 rounded-3 py-2 px-3 shadow-none fw-bold" placeholder="Enter your phone number" />
-                                    <small id="phoneHelpText" class="form-text text-muted">
-                                        If Fayda provides a phone number, it will be pre-filled. You can change it if needed.
-                                    </small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Register As</label>
-                                    <select id="RoleSelect" name="RoleSelectDummy" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none" required>
-                                        <option value="">-- Select Model --</option>
-                                        <option value="Supplier">Supplier (Sell Products)</option>
-                                        <option value="Retailer">Retailer (Buy Products)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label asp-for="Password" class="form-label small fw-bold text-muted text-uppercase">Secure Password</label>
-                                    <div class="position-relative">
-                                        <input asp-for="Password" id="regPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" autocomplete="new-password" />
-                                        <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegPassword">
-                                            <i class="far fa-eye"></i>
-                                        </button>
-                                    </div>
-                                    <span asp-validation-for="Password" class="text-danger extra-small mt-1 d-block"></span>
-                                </div>
-                                <div class="col-md-6">
-                                    <label asp-for="ConfirmPassword" class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
-                                    <div class="position-relative">
-                                        <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control bg-light border-0 rounded-3 py-2 px-3 pe-5 shadow-none" type="password" placeholder="••••••••" autocomplete="new-password" />
-                                        <button type="button" class="btn border-0 shadow-none position-absolute top-50 end-0 translate-middle-y text-muted px-3" id="toggleRegConfirmPassword">
-                                            <i class="far fa-eye"></i>
-                                        </button>
-                                    </div>
-                                    <span asp-validation-for="ConfirmPassword" class="text-danger extra-small mt-1 d-block"></span>
-                                </div>
-                                <div class="col-md-12">
-                                    <label asp-for="DateOfBirth" class="form-label small fw-bold text-muted text-uppercase d-block">
-                                        Date of Birth
-                                        <span id="dobBadge" style="display:none" class="badge bg-success float-end"><i class="fas fa-check-circle"></i> Fayda Verified</span>
-                                    </label>
-                                    <input asp-for="DateOfBirth" type="date" id="DateOfBirth" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                    <span asp-validation-for="DateOfBirth" class="text-danger extra-small"></span>
-                                    <small id="dobHelpText" class="form-text text-muted"></small>
-                                </div>
-                            </div>
-                            <div class="mt-4 d-flex justify-content-between">
-                                <button type="button" class="btn btn-outline-secondary px-4 rounded-pill fw-bold btnBackToStep1"><i class="fas fa-arrow-left me-2"></i> Back</button>
-                                <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold" id="btnNextToStep3">Continue to Business Profile <i class="fas fa-arrow-right ms-2"></i></button>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Step 3: Dynamic Business Profile & Logistics -->
-                    <div id="step-3" class="registration-step" style="display: none;">
-                        <div id="BusinessProfileSection" class="mb-5 animate-slide-up">
-                            <div class="d-flex align-items-center mb-4">
-                                <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">3</span>
-                                <h5 class="fw-bold mb-0">Network Profile</h5>
+                        <div class="form-group">
+                            <label>Website (Optional)</label>
+                            <div class="input-pill">
+                                <div class="icon-box"><i class="fas fa-link"></i></div>
+                                <input asp-for="Website" type="url" placeholder="https://example.com" />
                             </div>
+                        </div>
 
-                            <!-- Supplier Fields -->
-                            <div id="SupplierFields" style="display: none;">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="CompanyName" class="form-label small fw-bold text-muted text-uppercase">Legal Company Name</label>
-                                        <input asp-for="CompanyName" id="CompanyName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="CompanyName" class="text-danger extra-small"></span>
-                                    </div>
-@* Removed Industry Focus as per refinement plan *@
+                        <div class="form-group">
+                            <label>Company Description</label>
+                            <div class="input-pill" style="border-radius: 20px;">
+                                <textarea asp-for="CompanyDescription" placeholder="Tell us about your products..." style="background:none; border:none; color:white; width:100%; padding: 10px 15px; outline:none; height: 80px; resize: none;"></textarea>
+                            </div>
+                        </div>
 
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted text-uppercase">Business Categories / What do you supply? *</label>
-                                        <div class="card border-0 bg-light rounded-4 p-3 mb-2" style="max-height: 400px; overflow-y: auto;">
-                                            <div class="category-hierarchy">
-                                                @if (ViewBag.Categories != null)
-                                                {
-                                                    @foreach (var category in (IEnumerable<SCM_System.Models.Entities.ProductCategory>)ViewBag.Categories)
-                                                    {
-                                                        <div class="category-group mb-3">
-                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white d-flex align-items-center mb-2 shadow-sm">
-                                                                <input class="form-check-input ms-0 me-3 parent-category" type="checkbox" name="SelectedCategoryIds" value="@category.Id" id="cat_@category.Id" @(Model?.SelectedCategoryIds != null && Model.SelectedCategoryIds.Contains(category.Id) ? "checked" : "")>
-                                                                <label class="form-check-label small mb-0 fw-bold text-dark" for="cat_@category.Id">
-                                                                    <i class="fas fa-folder-open me-2 text-primary"></i> @category.CategoryName
+                        <!-- Category Selection - Using SubCategories Navigation Property -->
+                        <div class="form-group">
+                            <label>Business Categories <span class="text-danger">*</span></label>
+                            <div class="category-container" style="max-height: 400px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 15px;">
+                                @if (ViewBag.Categories != null)
+                                {
+                                    var parentCats = ViewBag.Categories as IEnumerable<SCM_System.Models.Entities.ProductCategory>;
+                                    
+                                    @foreach (var parent in parentCats)
+                                    {
+                                        <div class="category-group mb-3" style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 12px; border-left: 3px solid #4da699;">
+                                            <!-- Parent Category -->
+                                            <div style="display: flex; align-items: center; gap: 12px; padding: 8px; background: rgba(77, 166, 153, 0.15); border-radius: 12px; margin-bottom: 12px;">
+                                                <input type="checkbox" class="parent-category" name="SelectedCategoryIds" value="@parent.Id" id="parent_@parent.Id" style="width: 18px; height: 18px;">
+                                                <label for="parent_@parent.Id" style="font-weight: bold; color: white; margin: 0; cursor: pointer;">
+                                                    <i class="fas fa-folder-open" style="color: #4da699; margin-right: 8px;"></i>
+                                                    @parent.CategoryName
+                                                </label>
+                                            </div>
+                                            
+                                            <!-- Subcategories - Using SubCategories navigation property -->
+                                            @if (parent.SubCategories != null && parent.SubCategories.Any())
+                                            {
+                                                <div class="subcategories-wrapper" style="margin-left: 25px; padding-left: 15px; border-left: 2px solid rgba(77, 166, 153, 0.3);">
+                                                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                                        @foreach (var sub in parent.SubCategories.OrderBy(s => s.CategoryName))
+                                                        {
+                                                            <div style="flex: 1; min-width: 150px;">
+                                                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 12px; background: rgba(255,255,255,0.03); border-radius: 20px;">
+                                                                    <input type="checkbox" class="sub-category" name="SelectedCategoryIds" value="@sub.Id" id="sub_@sub.Id" data-parent="parent_@parent.Id" style="width: 16px; height: 16px;">
+                                                                    <span style="color: rgba(255,255,255,0.8); font-size: 13px;">
+                                                                        <i class="fas fa-folder" style="color: #4da699; margin-right: 6px;"></i>
+                                                                        @sub.CategoryName
+                                                                    </span>
                                                                 </label>
                                                             </div>
-                                                            @if (category.SubCategories != null && category.SubCategories.Any())
-                                                            {
-                                                                <div class="ms-4 ps-2 border-start border-2 border-primary border-opacity-25 row g-2">
-                                                                    @foreach (var sub in category.SubCategories)
-                                                                    {
-                                                                        <div class="col-md-4">
-                                                                            <div class="form-check custom-checkbox p-2 rounded-3 border bg-white h-100 d-flex align-items-center hover-shadow transition">
-                                                                                <input class="form-check-input ms-0 me-3 sub-category" type="checkbox" name="SelectedCategoryIds" value="@sub.Id" id="cat_@sub.Id" data-parent="cat_@category.Id" @(Model?.SelectedCategoryIds != null && Model.SelectedCategoryIds.Contains(sub.Id) ? "checked" : "")>
-                                                                                <label class="form-check-label small mb-0 text-muted" for="cat_@sub.Id">
-                                                                                    @sub.CategoryName
-                                                                                </label>
-                                                                            </div>
-                                                                        </div>
-                                                                    }
-                                                                </div>
-                                                            }
-                                                        </div>
-                                                    }
-                                                }
-                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div style="margin-left: 25px; padding: 8px;">
+                                                    <small style="color: rgba(255,255,255,0.4);">No subcategories</small>
+                                                </div>
+                                            }
                                         </div>
-                                        <div class="alert alert-info py-2 px-3 rounded-3 small mb-0 border-0 shadow-sm mt-3">
-                                            <i class="fas fa-info-circle me-2"></i> 
-                                            <strong>Matching Rule:</strong> Selecting a <span class="text-primary fw-bold">Main Category</span> automatically qualifies you for <span class="fw-bold">all its subcategories</span>.
-                                        </div>
-                                        <span id="categoryError" class="text-danger extra-small d-block mt-2"></span>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-center text-white-50 py-4">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading categories...
                                     </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="LicenseNumber" class="form-label small fw-bold text-muted text-uppercase">Business License #</label>
-                                        <input asp-for="LicenseNumber" id="LicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="LicenseNumber" class="text-danger extra-small"></span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="TaxIdentificationNumber" class="form-label small fw-bold text-muted text-uppercase">TIN</label>
-                                        <input asp-for="TaxIdentificationNumber" id="TaxIdentificationNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="TaxIdentificationNumber" class="text-danger extra-small"></span>
-                                    </div>
-                                    <div class="col-12">
-                                        <label asp-for="LicenseFile" class="form-label small fw-bold text-muted text-uppercase">Legal Verification (PDF/IMG) *</label>
-                                        <input asp-for="LicenseFile" id="LicenseFile" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control bg-light border-0 rounded-3 py-2 shadow-none" />
-                                        <span asp-validation-for="LicenseFile" class="text-danger extra-small"></span>
-                                        <small class="text-muted d-block mt-1">Please re-select your file if you encounter any errors.</small>
-                                    </div>
-                                    <div class="col-12">
-                                        <label asp-for="CompanyAddress" class="form-label small fw-bold text-muted text-uppercase">Headquarters Address</label>
-                                        <textarea asp-for="CompanyAddress" id="CompanyAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2"></textarea>
-                                        <span asp-validation-for="CompanyAddress" class="text-danger extra-small"></span>
-                                    </div>
-                                </div>
+                                }
                             </div>
-
-                            <!-- Retailer Fields -->
-                            <div id="RetailerFields" style="display: none;">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="BusinessName" class="form-label small fw-bold text-muted text-uppercase">Retail Business Name</label>
-                                        <input asp-for="BusinessName" id="BusinessName" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="BusinessName" class="text-danger extra-small"></span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="RetailerBusinessType" class="form-label small fw-bold text-muted text-uppercase">Retail Model</label>
-                                        <select asp-for="RetailerBusinessType" id="RetailerBusinessType" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
-                                            <option value="Retail Shop">Retail Shop</option>
-                                            <option value="Supermarket">Supermarket</option>
-                                            <option value="Restaurant">Restaurant</option>
-                                            <option value="Hotel">Hotel</option>
-                                            <option value="Pharmacy">Pharmacy</option>
-                                            <option value="Construction Company">Construction Company</option>
-                                            <option value="Office / Corporate">Office / Corporate</option>
-                                            <option value="Distributor">Distributor</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="StoreSize" class="form-label small fw-bold text-muted text-uppercase">Operational Scale</label>
-                                        <select asp-for="StoreSize" id="StoreSize" class="form-select bg-light border-0 rounded-3 py-2 px-3 shadow-none">
-                                            <option value="Small">Small-Scale</option>
-                                            <option value="Medium">Medium-Scale</option>
-                                            <option value="Large">Large-Scale</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="RetailerLicenseNumber" class="form-label small fw-bold text-muted text-uppercase">License Number</label>
-                                        <input asp-for="RetailerLicenseNumber" id="RetailerLicenseNumber" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" />
-                                        <span asp-validation-for="RetailerLicenseNumber" class="text-danger extra-small"></span>
-                                    </div>
-                                    <div class="col-12">
-                                        <label asp-for="BusinessAddress" class="form-label small fw-bold text-muted text-uppercase">Main Store Location</label>
-                                        <textarea asp-for="BusinessAddress" id="BusinessAddress" class="form-control bg-light border-0 rounded-3 px-3 shadow-none" rows="2"></textarea>
-                                        <span asp-validation-for="BusinessAddress" class="text-danger extra-small"></span>
-                                    </div>
-                                </div>
+                            <div class="info-note mt-2" style="font-size: 11px; color: rgba(255,255,255,0.5); padding: 8px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+                                <i class="fas fa-info-circle me-1" style="color: #4da699;"></i>
+                                Selecting a main category automatically selects all its subcategories.
                             </div>
-                        </div>
-
-                        <div id="LogisticsSection" class="mb-5 animate-slide-up">
-                            <div class="d-flex align-items-center mb-4">
-                                <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">4</span>
-                                <h5 class="fw-bold mb-0">Logistics Connectivity</h5>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label asp-for="City" class="form-label small fw-bold text-muted text-uppercase">Operational City</label>
-                                    <input asp-for="City" id="CityField" class="form-control bg-light border-0 rounded-3 py-2 px-3 shadow-none" required />
-                                    <span asp-validation-for="City" class="text-danger extra-small"></span>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Country</label>
-                                    <input value="Ethiopia" class="form-control bg-light border-0 rounded-3 py-2 px-3 opacity-75" readonly />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="p-4 bg-light bg-opacity-50 rounded-4 border-dashed border-2 text-center mb-5">
-                            <div class="form-check d-inline-block">
-                                <input class="form-check-input" type="checkbox" name="agreeTermsDummy" required id="agreeTerms">
-                                <label class="form-check-label small text-muted ms-2" for="agreeTerms">
-                                    I verify all information is accurate and agree to the <a asp-controller="Home" asp-action="Terms" class="text-primary fw-bold" target="_blank">Terms of Service</a>.
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="d-flex gap-3 mb-4">
-                            <button type="button" class="btn btn-outline-secondary py-3 px-4 rounded-pill fw-bold shadow-sm btnBackToStep2">
-                                <i class="fas fa-arrow-left me-2"></i> Back
-                            </button>
-                            <button type="submit" class="btn btn-primary flex-grow-1 py-3 rounded-pill fw-bold shadow-sm">
-                                <i class="fas fa-check-double me-2"></i> Complete Registration
-                            </button>
+                            <span id="categoryError" class="text-danger extra-small d-block mt-2"></span>
                         </div>
                     </div>
 
-                    <div class="text-center mt-3">
-                        <p class="text-muted small">
-                            Already part of the network? 
-                            <a asp-action="Login" class="text-primary fw-bold text-decoration-none ms-1">Sign In instead</a>
-                        </p>
+                    <!-- Retailer Specific Fields -->
+                    <div class="role-retailer-only">
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label>Business Type <span class="text-danger">*</span></label>
+                                <div class="input-pill">
+                                    <div class="icon-box"><i class="fas fa-tag"></i></div>
+                                    <select asp-for="RetailerBusinessType">
+                                        <option value="">Select Type</option>
+                                        <option value="Supermarket">Supermarket</option>
+                                        <option value="Wholesaler">Wholesaler</option>
+                                        <option value="Pharmacy">Pharmacy</option>
+                                        <option value="Electronics">Electronics Store</option>
+                                        <option value="Boutique">Fashion Boutique</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group half">
+                                <label>Store Size <span class="text-danger">*</span></label>
+                                <div class="input-pill">
+                                    <div class="icon-box"><i class="fas fa-ruler-combined"></i></div>
+                                    <select asp-for="StoreSize">
+                                        <option value="">Select Size</option>
+                                        <option value="Small">Small (less than 50sqm)</option>
+                                        <option value="Medium">Medium (50-200sqm)</option>
+                                        <option value="Large">Large (greater than 200sqm)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>License Number <span class="text-danger">*</span></label>
+                            <div class="input-pill">
+                                <div class="icon-box"><i class="fas fa-certificate"></i></div>
+                                <input asp-for="RetailerLicenseNumber" placeholder="Business License #" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Business Description</label>
+                            <div class="input-pill" style="border-radius: 20px;">
+                                <textarea asp-for="BusinessDescription" placeholder="Tell us about your business operations..." style="background:none; border:none; color:white; width:100%; padding: 10px 15px; outline:none; height: 80px; resize: none;"></textarea>
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </div>
+
+                    <div class="form-group">
+                        <label>Contact Phone <span class="text-danger">*</span></label>
+                        <div class="input-pill">
+                            <div class="icon-box"><i class="fas fa-phone"></i></div>
+                            <input asp-for="PhoneNumber" placeholder="+251 XXX XXX XXX" />
+                        </div>
+                        <span asp-validation-for="PhoneNumber" class="text-danger extra-small"></span>
+                    </div>
+
+                    <div class="form-group role-supplier-only">
+                        <label>Business License Document <span class="text-danger">*</span></label>
+                        <div class="file-input-pill">
+                            <div class="icon-box"><i class="fas fa-file-alt"></i></div>
+                            <input type="file" name="LicenseFile" id="LicenseFile" accept=".pdf,.jpg,.jpeg,.png" />
+                        </div>
+                        <span class="file-hint">Max size: 5MB (PDF, JPG, PNG)</span>
+                    </div>
+
+                    <div class="form-group terms">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <span>I agree to the <a href="/Home/Terms" target="_blank">Terms of Service</a></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="btn-back" id="btnBack" style="display: none;">← Back</button>
+                    <button type="button" class="btn-next" id="btnNext">Continue →</button>
+                    <button type="submit" class="btn-submit" id="btnSubmit" style="display: none;">CREATE ACCOUNT</button>
+                </div>
+
+                <div class="extra-links">
+                    Already have an account? <a asp-action="Login">Sign In</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 @section Styles {
     <style>
-        .extra-small { font-size: 0.75rem; }
-        
-        /* Premium Core Styling (Ported from Login) */
+        @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@@400;500;600;700;800&display=swap');
+
         :root {
-            --ethio-blue: #0b3d60;
-            --ethio-blue-dark: #07253b;
-            --ethio-gold: #cba052;
-            --bg-surface: #f8f9fc;
+            --deep-dark-green: #0b2e24;
+            --mid-green: #1a3d31;
+            --accent-teal: #4da699;
+            --blob-light: #e0f2ef;
+            --blob-mid: #a3d8d1;
+            --text-white: #ffffff;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
         }
 
-        .bg-light-surface { background-color: var(--bg-surface); }
-        .text-dark-blue { color: var(--ethio-blue-dark) !important; }
-        .tracking-wide { letter-spacing: 0.05em; }
-        .letter-spacing-1 { letter-spacing: 1px; }
+        main { padding: 0 !important; }
+        .footer { margin-top: 0 !important; }
 
-        .brand-section {
-            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
-        }
-        .brand-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 20% 80%, rgba(203, 160, 82, 0.15) 0%, transparent 50%);
-            z-index: 1;
-        }
-        .motif-pattern {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.03;
-            background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 30px 30px; z-index: 1;
-        }
-        .z-index-2 { z-index: 2; }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: transform 0.3s ease, background 0.3s ease;
-        }
-        .glass-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.1);
+        .register-page-wrapper {
+            display: flex;
+            min-height: 85vh;
+            width: 100%;
+            position: relative;
+            background: white;
+            overflow: hidden;
+            margin-top: 70px;
         }
 
-        .btn-brand {
-            background: linear-gradient(135deg, var(--ethio-blue) 0%, var(--ethio-blue-dark) 100%);
-            color: white; border: none;
+        .left-section {
+            flex: 1.2;
+            background-color: #ffffff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 40px;
         }
 
-        .animate-slide-up { animation: slideUp 0.4s ease-out; }
-        @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .border-dashed { border: 2px dashed #dee2e6 !important; }
+        .blob { position: absolute; border-radius: 50%; z-index: 1; opacity: 0.6; }
+        .blob-lg { width: 450px; height: 450px; background: var(--blob-mid); top: 5%; left: -10%; border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%; }
+        .blob-md { width: 280px; height: 280px; background: var(--blob-light); bottom: -5%; left: 15%; border-radius: 50% 50% 30% 70% / 50% 50% 70% 30%; }
+        .blob-sm { width: 120px; height: 120px; background: var(--blob-mid); top: 40%; left: 60%; }
+        .blob-xs { width: 60px; height: 60px; background: var(--blob-light); top: 15%; left: 45%; }
 
-        /* General form override to match new aesthetics */
-        .form-control, .form-select { border: 1px solid rgba(0,0,0,0.05) !important; }
-        .form-control:focus, .form-select:focus { box-shadow: 0 0 0 4px rgba(11, 61, 96, 0.1) !important; background-color: #fff !important; }
+        .illustration {
+            position: relative;
+            z-index: 5;
+            max-width: 75%;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.1));
+        }
 
-        /* Stepper Styles */
-        .step-item { text-align: center; z-index: 2; background: var(--bg-surface); padding: 0 10px; }
-        .step-number { width: 35px; height: 35px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 auto 5px; border: 2px solid #e9ecef; transition: all 0.3s ease; }
-        .step-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #6c757d; transition: all 0.3s ease; }
-        .step-item.active .step-number { background: var(--ethio-blue); color: white; border-color: var(--ethio-blue); box-shadow: 0 0 10px rgba(11,61,96,0.3); }
-        .step-item.active .step-label { color: var(--ethio-blue); }
-        .step-item.completed .step-number { background: #198754; color: white; border-color: #198754; }
-        .step-item.completed .step-label { color: #198754; }
-        .step-connector { position: absolute; top: 17px; left: 0; right: 0; height: 2px; background: #e9ecef; z-index: 1; }
-        .transition { transition: all 0.2s ease-in-out; }
-        .hover-shadow:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); transform: translateY(-2px); border-color: var(--ethio-blue) !important; }
-        .category-group { border-radius: 12px; }
+        .bounce-effect {
+            animation: floatBounce 4s ease-in-out infinite;
+        }
+
+        @@keyframes floatBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .wave-divider {
+            position: absolute;
+            top: 0;
+            right: -1px;
+            height: 100%;
+            width: 200px;
+            z-index: 8;
+            pointer-events: none;
+        }
+        .wave-divider svg { height: 100%; width: 100%; }
+
+        .right-section {
+            flex: 1;
+            background-color: var(--deep-dark-green);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            z-index: 9;
+            overflow-y: auto;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .register-card h1 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+        }
+
+        .step-progress {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .step-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: rgba(255,255,255,0.6);
+            margin: 0 auto 6px;
+            transition: all 0.3s;
+        }
+
+        .step-item.active .step-circle {
+            background: var(--accent-teal);
+            color: white;
+            box-shadow: 0 0 0 3px rgba(77, 166, 153, 0.3);
+        }
+
+        .step-item.completed .step-circle {
+            background: var(--accent-teal);
+            color: white;
+        }
+
+        .step-item span {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-item.active span {
+            color: var(--accent-teal);
+        }
+
+        .step-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            margin-left: 15px;
+        }
+
+        .input-pill {
+            background: rgba(255,255,255,0.08);
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+        }
+
+        .input-pill:focus-within {
+            background: rgba(255,255,255,0.12);
+            border-color: var(--accent-teal);
+        }
+
+        .icon-box {
+            width: 38px;
+            height: 38px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .input-pill input, .input-pill select {
+            background: none;
+            border: none;
+            color: white;
+            padding: 8px 5px;
+            width: 100%;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .input-pill select option {
+            background: var(--deep-dark-green);
+            color: white;
+        }
+
+        .input-pill input::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+
+        .password-field {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: var(--accent-teal);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .half {
+            flex: 1;
+        }
+
+        .btn-otp, .btn-verify {
+            width: 100%;
+            padding: 12px;
+            background: var(--mid-green);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-otp:hover, .btn-verify:hover {
+            background: var(--accent-teal);
+            transform: translateY(-2px);
+        }
+
+        .otp-timer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding: 0 12px;
+        }
+
+        .resend-link {
+            background: none;
+            border: none;
+            color: var(--accent-teal);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .resend-link:disabled {
+            color: rgba(255,255,255,0.3);
+            cursor: not-allowed;
+        }
+
+        .success-alert {
+            background: rgba(77, 166, 153, 0.15);
+            border-left: 3px solid var(--accent-teal);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: var(--accent-teal);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-container {
+            max-height: 320px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 12px;
+        }
+
+        .category-group {
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .parent-category-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            padding: 4px 8px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .parent-category-label:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .parent-category-label input {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: var(--accent-teal);
+            cursor: pointer;
+        }
+
+        .subcategories {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-left: 8px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sub-category-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 25px;
+            color: rgba(255,255,255,0.75);
+            transition: all 0.2s;
+        }
+
+        .sub-category-label:hover {
+            background: rgba(77, 166, 153, 0.2);
+        }
+
+        .sub-category-label input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            accent-color: var(--accent-teal);
+            cursor: pointer;
+        }
+
+        .info-note {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-note i {
+            color: var(--accent-teal);
+        }
+
+        .file-input-pill {
+            background: rgba(255,255,255,0.08);
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+
+        .file-input-pill input {
+            background: none;
+            border: none;
+            color: white;
+            padding: 8px 5px;
+            width: 100%;
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        .file-hint {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            display: block;
+            margin-top: 4px;
+            margin-left: 12px;
+        }
+
+        .terms {
+            margin-top: 20px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .checkbox-label input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--accent-teal);
+        }
+
+        .checkbox-label a {
+            color: var(--accent-teal);
+            text-decoration: none;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        .form-navigation {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-back, .btn-next, .btn-submit {
+            flex: 1;
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .btn-back {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-next, .btn-submit {
+            background: var(--mid-green);
+            border: none;
+            color: white;
+        }
+
+        .btn-next:hover, .btn-submit:hover {
+            background: var(--accent-teal);
+            transform: translateY(-2px);
+        }
+
+        .extra-links {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .extra-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .extra-links a:hover {
+            text-decoration: underline;
+        }
+
+        .text-danger {
+            color: #E05A5A !important;
+            font-size: 11px;
+        }
+
+        @@media (max-width: 992px) {
+            .wave-divider { display: none; }
+            .left-section { display: none; }
+            .right-section { flex: 1; width: 100%; padding: 40px 20px; }
+            .register-card { max-width: 100%; }
+        }
+
+        @@media (max-width: 576px) {
+            .form-row { flex-direction: column; gap: 0; }
+            .step-circle { width: 30px; height: 30px; font-size: 12px; }
+            .step-item span { font-size: 9px; }
+            .subcategories { margin-left: 20px; }
+        }
     </style>
 }
 
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Prevent Enter key from submitting the form unexpectedly
-            $('#registerForm').on('keydown', 'input', function(e) {
-                if (e.which == 13) {
-                    e.preventDefault();
-                    var $step = $(this).closest('.registration-step');
-                    var stepId = $step.attr('id');
-                    
-                    if (stepId === 'step-1') {
-                        if ($('#otpSection').is(':visible')) {
-                            $('#btnVerifyOtp').click();
-                        } else {
-                            $('#btnRequestOtp').click();
-                        }
-                    } else if (stepId === 'step-2') {
-                        $('#btnNextToStep3').click();
-                    }
-                    return false;
+            let currentStep = 1;
+            const totalSteps = 3;
+            let expiryTimer, resendTimer;
+
+            $('.password-toggle').click(function() {
+                const targetId = $(this).data('target');
+                const input = $('#' + targetId);
+                const icon = $(this).find('i');
+                
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                } else {
+                    input.attr('type', 'password');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
                 }
             });
 
-            $('#registerForm').on('submit', function(e) {
-                // Prevent submission if not on the final step
-                if (!$('#step-3').is(':visible')) {
-                    e.preventDefault();
-                    return false;
+            function updateStepUI() {
+                $('.form-step').hide();
+                $('#step-' + currentStep).show();
+
+                $('.step-item').removeClass('active completed');
+                for (let i = 1; i <= totalSteps; i++) {
+                    if (i < currentStep) {
+                        $('.step-item[data-step="' + i + '"]').addClass('completed');
+                    } else if (i === currentStep) {
+                        $('.step-item[data-step="' + i + '"]').addClass('active');
+                    }
                 }
 
-                var role = $('#RoleHidden').val() || $('#RoleSelect').val();
-                var isFormValid = true;
+                if (currentStep === 1) {
+                    $('#btnBack').hide();
+                    $('#btnNext').show();
+                    $('#btnSubmit').hide();
+                } else if (currentStep === totalSteps) {
+                    $('#btnBack').show();
+                    $('#btnNext').hide();
+                    $('#btnSubmit').show();
+                } else {
+                    $('#btnBack').show();
+                    $('#btnNext').show();
+                    $('#btnSubmit').hide();
+                }
+            }
 
+            $('#btnNext').click(function() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateStepUI();
+                }
+            });
+
+            $('#btnBack').click(function() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateStepUI();
+                }
+            });
+
+            $('#btnSubmit').click(function(e) {
+                const role = $('#RoleSelect').val();
                 if (role === 'Supplier') {
                     if ($('input[name="SelectedCategoryIds"]:checked').length === 0) {
                         $('#categoryError').text('Please select at least one business category.');
-                        isFormValid = false;
+                        e.preventDefault();
+                        return false;
                     } else {
                         $('#categoryError').text('');
                     }
-                } else if (role === 'Retailer') {
-                    // Retailers no longer select categories during registration
-                    // This section is kept for future-proofing or if logic is restored
                 }
-
-                if (!isFormValid) {
+                
+                const password = $('#regPassword').val();
+                const confirmPassword = $('#regConfirmPassword').val();
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match!');
                     e.preventDefault();
-                    window.scrollTo(0, 0);
                     return false;
                 }
-
-                return true;
+                
+                if (!$('#agreeTerms').is(':checked')) {
+                    alert('Please agree to the Terms of Service');
+                    e.preventDefault();
+                    return false;
+                }
+                
+                $('#registerForm').submit();
             });
-            var expiryTimer = null;
-            var resendTimer = null;
-            var expiryCountdown = 300; // 5 minutes
-            var resendCountdown = 60; // 60 seconds
 
-            // Auto-recovery for server-side validation errors
-            var hasErrors = @(ViewData.ModelState.IsValid ? "false" : "true");
-            var savedRole = "@Model?.Role";
+            $('#RoleSelect').change(function() {
+                const role = $(this).val();
+                $('#RoleHidden').val(role);
+                
+                if (role === 'Supplier') {
+                    $('.role-supplier-only').show();
+                    $('.role-retailer-only').hide();
+                } else if (role === 'Retailer') {
+                    $('.role-supplier-only').hide();
+                    $('.role-retailer-only').show();
+                } else {
+                    $('.role-supplier-only').hide();
+                    $('.role-retailer-only').hide();
+                }
+            });
+
+            // When parent checkbox changes
+            $(document).on('change', '.parent-category', function() {
+                var isChecked = $(this).prop('checked');
+                var parentId = $(this).attr('id');
+                
+                // Find all sub-categories under this parent
+                $(`.sub-category[data-parent="${parentId}"]`).each(function() {
+                    $(this).prop('checked', isChecked);
+                });
+            });
             
-            if (hasErrors) {
-                var currentStep = 1;
+            // When any sub-category checkbox changes
+            $(document).on('change', '.sub-category', function() {
+                var parentId = $(this).data('parent');
+                var $parent = $(`#${parentId}`);
+                var $allSubs = $(`.sub-category[data-parent="${parentId}"]`);
+                var $checkedSubs = $(`.sub-category[data-parent="${parentId}"]:checked`);
                 
-                // Determine which step to show based on what data is present
-                if ($('#VerifiedFullName').val() && $('#VerifiedFullName').val().trim() !== "") {
-                    // Step 1 completed (Fayda verified)
-                    currentStep = 2;
-                    
-                    // Re-populate verification UI state
-                    $('#nameBadge').show();
-                    $('#fullNameHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
-                    $('#phoneBadge').show();
-                    $('#phoneHelpText').html('<span class="badge bg-info">✓ Verified by Fayda</span>');
-                    $('#dobBadge').show();
-                    $('#dobHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
-
-                    // Check if business info is partially filled or Role was selected (meaning they passed step 2)
-                    if (savedRole && savedRole.trim() !== "") {
-                        currentStep = 3;
-                    }
+                // If ALL sub-categories are checked, check the parent
+                if ($checkedSubs.length === $allSubs.length && $allSubs.length > 0) {
+                    $parent.prop('checked', true);
+                } 
+                // If ANY sub-category is unchecked, uncheck the parent
+                else if ($checkedSubs.length < $allSubs.length) {
+                    $parent.prop('checked', false);
                 }
-                
-                showStep(currentStep);
-                
-                if (savedRole) {
-                    $('#RoleSelect').val(savedRole).trigger('change');
-                }
-            }
+            });
 
-            function showStep(step) {
-                $('.registration-step').hide();
-                $('#step-' + step).show();
-                
-                // Update indicators
-                $('.step-item').removeClass('active');
-                for(var i=1; i<=step; i++) {
-                    if(i < step) {
-                        $('#step-' + i + '-indicator').addClass('completed').removeClass('active');
-                    } else {
-                        $('#step-' + i + '-indicator').addClass('active').removeClass('completed');
-                    }
-                }
-                window.scrollTo(0, 0);
-            }
+            $('#btnRequestOtp').click(function() {
+                const fan = $('#FANInput').val();
+                const email = $('#EmailInput').val();
+                const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
 
-            // --- Step 1: Fayda Verification ---
-
-            // --- Step 1: Fayda Identity Verification ---
-            function requestOtp() {
-                var fan = $('#FANInput').val();
-                var email = $('#EmailInput').val();
-
-                if (!email) {
-                    $('#fanError').text('Please enter your Corporate Email first.');
-                    $('#otpError').text('Please enter your Corporate Email first.');
-                    return;
-                }
-
-                if (!fan || fan.length !== 16) {
+                if (fan.length !== 16) {
                     $('#fanError').text('Please enter a valid 16-digit FAN.');
                     return;
                 }
-                
+                if (!email) {
+                    $('#fanError').text('Please enter your email.');
+                    return;
+                }
+                if (!emailRegex.test(email)) {
+                    $('#fanError').text('Please enter a valid email address (e.g., name@domain.com).');
+                    return;
+                }
+
+                const $btn = $(this);
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Sending...');
                 $('#fanError').text('');
-                $('#otpError').text('');
-                
-                var $btnReq = $('#btnRequestOtp');
-                var $btnRes = $('#btnResendOtp');
-                
-                $btnReq.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Sending...');
-                $btnRes.prop('disabled', true).text('Sending...');
 
                 $.ajax({
                     url: '/Account/RequestFaydaOtp',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ FAN: fan, Email: email }),
+                    data: JSON.stringify({ fan: fan, email: email }),
                     success: function(response) {
                         if (response.success) {
-                            if ($('#fanSection').is(':visible')) {
-                                $('#fanSection').fadeOut(300, function() {
-                                    $(this).next('#otpSection').fadeIn(300);
-                                });
-                            }
+                            $('#targetEmailDisplay').text(email);
+                            $('#fanSection').hide();
+                            $('#otpSection').show();
                             startTimers();
-                            $('#otpError').removeClass('text-danger').addClass('text-success').text('OTP sent successfully!');
-                            setTimeout(function() { $('#otpError').text(''); }, 5000);
                         } else {
                             $('#fanError').text(response.message);
-                            $('#otpError').addClass('text-danger').removeClass('text-success').text(response.message);
-                            $btnReq.prop('disabled', false).text('Request OTP');
-                            $btnRes.prop('disabled', false).text('Resend OTP');
                         }
                     },
-                    error: function(xhr) {
-                        var errorMsg = 'Error connecting to verification service.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) errorMsg = xhr.responseJSON.message;
-                        
-                        $('#fanError').text(errorMsg);
-                        $('#otpError').addClass('text-danger').removeClass('text-success').text(errorMsg);
-                        $btnReq.prop('disabled', false).text('Request OTP');
-                        $btnRes.prop('disabled', false).text('Resend OTP');
+                    error: function() {
+                        $('#fanError').text('Service unavailable. Please try again.');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('Request OTP');
                     }
                 });
-            }
-
-            $('#btnRequestOtp').click(function() {
-                requestOtp();
             });
 
-            $('#btnResendOtp').click(function() {
-                requestOtp();
+            $('#btnChangeEmail').click(function() {
+                clearInterval(expiryTimer);
+                clearInterval(resendTimer);
+                $('#otpSection').hide();
+                $('#fanSection').show();
+                $('#OTPInput').val('');
+                $('#otpError').text('');
             });
 
             $('#btnVerifyOtp').click(function() {
-                var fan = $('#FANInput').val();
-                var otp = $('#OTPInput').val();
-                var $btn = $(this);
-                if (!otp || otp.length !== 6) {
+                const otp = $('#OTPInput').val();
+                const fan = $('#FANInput').val();
+
+                if (otp.length !== 6) {
                     $('#otpError').text('Enter 6-digit code.');
                     return;
                 }
-                $('#otpError').text('');
+
+                const $btn = $(this);
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
 
                 $.ajax({
                     url: '/Account/VerifyFaydaOtp',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ FAN: fan, OTP: otp }),
+                    data: JSON.stringify({ fan: fan, otp: otp }),
                     success: function(response) {
                         if (response.success) {
                             clearInterval(expiryTimer);
                             clearInterval(resendTimer);
-                            // Populate fields and show badges
-                            $('#VerifiedFullName').val(response.fullName);
-                            $('#nameBadge').show();
-                            
-                            if (response.phoneNumber) {
-                                $('#VerifiedPhone').val(response.phoneNumber);
-                                $('#phoneBadge').show();
-                                $('#phoneHelpText').html('<span class="badge bg-info">✓ Verified by Fayda</span>');
-                            } else {
-                                $('#VerifiedPhone').attr('placeholder', 'Enter your phone number');
-                                $('#phoneBadge').removeClass('bg-info').addClass('bg-warning').html('Not found in Fayda').show();
-                                $('#phoneHelpText').html('<span class="text-warning">Phone number not found in Fayda. Please enter manually.</span>');
-                            }
-                            
-                            // Ensure phone is editable
-                            $('#VerifiedPhone').prop('readonly', false);
-                            $('#VerifiedFullName').val(response.fullName).prop('readonly', true);
-                            $('#nameBadge').show();
-                            $('#fullNameHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
-                            
+                            $('#FullNameInput').val(response.fullName);
                             if (response.dateOfBirth) {
-                                // Convert date to YYYY-MM-DD for input type="date"
                                 var dob = new Date(response.dateOfBirth);
-                                var day = ("0" + dob.getDate()).slice(-2);
-                                var month = ("0" + (dob.getMonth() + 1)).slice(-2);
-                                var dateString = dob.getFullYear() + "-" + (month) + "-" + (day);
-                                
-                                $('#DateOfBirth').val(dateString).prop('readonly', true);
-                                $('#dobBadge').show();
-                                $('#dobHelpText').html('<span class="badge bg-success">✓ Verified by Fayda</span>');
+                                var year = dob.getFullYear();
+                                var month = ('0' + (dob.getMonth() + 1)).slice(-2);
+                                var day = ('0' + dob.getDate()).slice(-2);
+                                $('#DateOfBirth').val(year + '-' + month + '-' + day);
                             }
-                            
-                            // Move to Step 2
-                            showStep(2);
+                            if (response.phoneNumber) {
+                                $('#PhoneNumber').val(response.phoneNumber);
+                            }
+                            currentStep = 2;
+                            updateStepUI();
                         } else {
                             $('#otpError').text(response.message);
-                            $btn.prop('disabled', false).text('Verify OTP');
                         }
+                        $btn.prop('disabled', false).html('Verify OTP');
                     },
                     error: function() {
-                        $('#otpError').text('Error verifying OTP.');
-                        $btn.prop('disabled', false).text('Verify OTP');
+                        $('#otpError').text('Verification failed. Try again.');
+                        $btn.prop('disabled', false).html('Verify OTP');
                     }
                 });
             });
 
             function startTimers() {
+                var expiryCountdown = 300;
+                var resendCountdown = 60;
+
                 clearInterval(expiryTimer);
                 clearInterval(resendTimer);
-                
-                expiryCountdown = 300;
-                resendCountdown = 60;
-                
-                $('#btnResendOtp').prop('disabled', true).text('Resend available in 60s');
-                $('#expiryTimerDisplay').removeClass('text-danger').text('Expires in: 05:00');
 
-                // Expiry Timer
+                $('#btnResendOtp').prop('disabled', true);
+
                 expiryTimer = setInterval(function() {
                     expiryCountdown--;
                     var mins = Math.floor(expiryCountdown / 60);
                     var secs = expiryCountdown % 60;
-                    var timeStr = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
-                    
-                    $('#expiryTimerDisplay').text('Expires in: ' + timeStr);
-                    
-                    if (expiryCountdown < 60) {
-                        $('#expiryTimerDisplay').addClass('text-danger');
-                    }
-                    
+                    $('#expiryTimerDisplay').text('Expires in: ' + (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs);
                     if (expiryCountdown <= 0) {
                         clearInterval(expiryTimer);
-                        $('#otpError').text('OTP has expired. Please request a new one.');
+                        $('#otpError').text('OTP expired. Request a new one.');
                         $('#btnVerifyOtp').prop('disabled', true);
                     }
                 }, 1000);
 
-                // Resend Timer
                 resendTimer = setInterval(function() {
                     resendCountdown--;
                     if (resendCountdown <= 0) {
                         clearInterval(resendTimer);
                         $('#btnResendOtp').prop('disabled', false).text('Resend OTP');
-                    } else {
-                        $('#btnResendOtp').text('Resend available in ' + resendCountdown + 's');
                     }
                 }, 1000);
             }
 
-            // --- Step 2: Account Essentials ---
+            $('#btnResendOtp').click(function() {
+                var fan = $('#FANInput').val();
+                var email = $('#EmailInput').val();
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('Sending...');
 
-            $('#btnNextToStep3').click(function() {
-                var isValid = true;
-                $('#step-2 input[required], #step-2 select[required]').each(function() {
-                    if (!$(this).val()) {
-                        $(this).addClass('is-invalid');
-                        isValid = false;
-                    } else {
-                        $(this).removeClass('is-invalid');
+                $.ajax({
+                    url: '/Account/RequestFaydaOtp',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ fan: fan, email: email }),
+                    success: function(response) {
+                        if (response.success) {
+                            startTimers();
+                            $('#otpError').text('New OTP sent!').css('color', '#4da699');
+                            setTimeout(function() { $('#otpError').text(''); }, 3000);
+                        } else {
+                            $('#otpError').text(response.message);
+                        }
+                        $btn.prop('disabled', false).text('Resend OTP');
+                    },
+                    error: function() {
+                        $('#otpError').text('Failed to resend OTP.');
+                        $btn.prop('disabled', false).text('Resend OTP');
                     }
                 });
-
-                if ($('#Password').val() && $('#Password').val() !== $('#ConfirmPassword').val()) {
-                    $('#ConfirmPassword').addClass('is-invalid');
-                    isValid = false;
-                }
-
-                if (isValid) {
-                    showStep(3);
-                }
             });
 
-            $('.btnBackToStep1').click(function() {
-                showStep(1);
-            });
-
-            $('.btnBackToStep2').click(function() {
-                showStep(2);
-            });
-
-            $('#RoleSelect').change(function() {
-                var role = $(this).val();
-                $('#RoleHidden').val(role);
-
-                if (role) {
-                    $('#BusinessProfileSection').show();
-                    $('#SupplierFields').toggle(role === 'Supplier');
-                    $('#RetailerFields').toggle(role === 'Retailer');
-                    
-                    // Toggle required
-                    if (role === 'Supplier') {
-                        $('#CompanyName, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress').prop('required', true);
-                        $('#BusinessType, #BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', false);
-                    } else {
-                        $('#CompanyName, #LicenseNumber, #LicenseFile, #TaxIdentificationNumber, #CompanyAddress').prop('required', false);
-                        $('#BusinessName, #RetailerBusinessType, #RetailerLicenseNumber, #BusinessAddress, #StoreSize').prop('required', true);
-                    }
-                } else {
-                    $('#BusinessProfileSection').hide();
-                }
-            });
-            
-            // Password Toggle Logic
-            $('#toggleRegPassword').click(function() {
-                const passwordInput = $('#regPassword');
-                const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
-                passwordInput.attr('type', type);
-                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
-            });
-
-            $('#toggleRegConfirmPassword').click(function() {
-                const confirmPasswordInput = $('#regConfirmPassword');
-                const type = confirmPasswordInput.attr('type') === 'password' ? 'text' : 'password';
-                confirmPasswordInput.attr('type', type);
-                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
-            });
-
-            // Re-trigger if model error
+            updateStepUI();
+            // Trigger role change on page load if role is pre-selected
             if ($('#RoleHidden').val()) {
                 $('#RoleSelect').val($('#RoleHidden').val()).trigger('change');
             }
-
-            // --- Step 3: Business Profile & Categories ---
-
-            // Parent category checkbox change logic
-            $(document).on('change', '.parent-category', function() {
-                var isChecked = $(this).is(':checked');
-                var categoryId = $(this).attr('id');
-                // Check/uncheck all sub-categories
-                $('.sub-category[data-parent="' + categoryId + '"]').prop('checked', isChecked);
-                
-                // Visual feedback
-                if (isChecked) {
-                    $(this).closest('.category-group').addClass('bg-primary bg-opacity-10 border-primary');
-                } else {
-                    $(this).closest('.category-group').removeClass('bg-primary bg-opacity-10 border-primary');
-                }
-            });
-
-            // Sub-category checkbox change logic
-            $(document).on('change', '.sub-category', function() {
-                var parentId = $(this).data('parent');
-                var $parent = $('#' + parentId);
-                var $allSubs = $('.sub-category[data-parent="' + parentId + '"]');
-                var $checkedSubs = $('.sub-category[data-parent="' + parentId + '"]:checked');
-
-                // If any sub-category is checked, we don't necessarily check the parent, 
-                // but if ALL are unchecked, and parent was checked only for subs, maybe uncheck?
-                // Actually, according to rule "Selecting Main Category qualifies for all subs",
-                // we should probably let them select subs individually if they want only specific ones.
-                // But if they select the parent, they get all.
-                
-                if ($checkedSubs.length > 0 && $checkedSubs.length === $allSubs.length) {
-                    $parent.prop('checked', true).closest('.category-group').addClass('bg-primary bg-opacity-10 border-primary');
-                } else if ($checkedSubs.length === 0) {
-                    $parent.prop('checked', false).closest('.category-group').removeClass('bg-primary bg-opacity-10 border-primary');
-                }
-            });
         });
     </script>
     <partial name="_ValidationScriptsPartial" />
 }
-
