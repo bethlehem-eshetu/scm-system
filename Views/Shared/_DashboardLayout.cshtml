@@ -1189,7 +1189,7 @@
                 <div class="border-top pt-3 bg-white mt-auto rounded-3 shadow-sm p-3 border">
                     <div class="d-flex justify-content-between mb-3 align-items-center">
                         <span class="fw-bold text-muted">Subtotal:</span>
-                        <span class="fw-bold fs-5" style="color: #10b981;" id="cartSubtotal">$0.00</span>
+                        <span class="fw-bold fs-5" style="color: #10b981;" id="cartSubtotal">ETB 0.00</span>
                     </div>
                     
                     <form asp-controller="Retailer" asp-action="Checkout" method="post" id="checkoutForm">
@@ -1227,13 +1227,13 @@
                                                             <small class="text-muted"><i class="fas fa-store me-1"></i>${item.supplierName}</small>
                                                         </div>
                                                         <div class="text-end">
-                                                            <div class="fw-bold" style="color: #10b981;">$${item.price.toFixed(2)}</div>
+                                                            <div class="fw-bold" style="color: #10b981;">ETB ${item.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                                         </div>
                                                     </div>
                                                     <div class="d-flex justify-content-between align-items-center mt-3">
                                                         <div class="input-group input-group-sm" style="width: 100px;">
                                                             <button class="btn btn-outline-secondary btn-update-qty border-end-0" data-change="-1" type="button"><i class="fas fa-minus small"></i></button>
-                                                            <input type="text" class="form-control text-center border-secondary border-start-0 border-end-0 item-qty" value="${item.quantity}" readonly>
+                                                            <input type="number" class="form-control text-center border-secondary border-start-0 border-end-0 item-qty" value="${item.quantity}" min="1">
                                                             <button class="btn btn-outline-secondary btn-update-qty border-start-0" data-change="1" type="button"><i class="fas fa-plus small"></i></button>
                                                         </div>
                                                         <button class="btn btn-link text-danger p-0 btn-remove-item" type="button"><i class="fas fa-trash"></i></button>
@@ -1243,7 +1243,7 @@
                                 });
                                 $('#cartItemsContainer').html(html);
                                 $('#globalCartCount').text(count).show();
-                                $('#cartSubtotal').text('$' + res.subtotal.toFixed(2));
+                                $('#cartSubtotal').text('ETB ' + res.subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                                 $('#checkoutBtn').prop('disabled', false);
                             } else {
                                 $('#cartItemsContainer').html(`
@@ -1254,7 +1254,7 @@
                                     </div>
                                 `);
                                 $('#globalCartCount').hide();
-                                $('#cartSubtotal').text('$0.00');
+                                $('#cartSubtotal').text('ETB 0.00');
                                 $('#checkoutBtn').prop('disabled', true);
                             }
                         }
@@ -1303,21 +1303,46 @@
                     
                     if (newQty < 1) return;
                     
-                    btn.prop('disabled', true);
-                    qtyInput.val(newQty);
-                    qtyInput.addClass('opacity-50');
+                    updateGlobalCartItem(id, newQty, btn, qtyInput, currentQty);
+                });
 
-                    $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: newQty }, function(res) {
-                        btn.prop('disabled', false);
-                        qtyInput.removeClass('opacity-50');
+                $(document).on('change', '.item-qty', function() {
+                    let input = $(this);
+                    let itemCard = input.closest('.cart-item');
+                    let id = itemCard.data('id');
+                    let currentQty = parseInt(input.attr('value')); // Store original if needed
+                    let newQty = parseInt(input.val());
+                    
+                    if (isNaN(newQty) || newQty < 1) {
+                        newQty = 1;
+                        input.val(1);
+                    }
+                    
+                    updateGlobalCartItem(id, newQty, null, input, currentQty);
+                });
+
+                function updateGlobalCartItem(id, quantity, btn, input, fallbackQty) {
+                    if (btn) btn.prop('disabled', true);
+                    if (input) {
+                        input.val(quantity);
+                        input.addClass('opacity-50').prop('disabled', true);
+                    }
+
+                    $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: quantity }, function(res) {
+                        if (btn) btn.prop('disabled', false);
+                        if (input) input.removeClass('opacity-50').prop('disabled', false).attr('value', quantity);
                         if (res.success) {
                             loadGlobalCart();
+                        } else {
+                            alert(res.message || 'Error updating cart');
+                            if (input) input.val(fallbackQty).attr('value', fallbackQty);
                         }
                     }).fail(function() {
-                        btn.prop('disabled', false);
-                        qtyInput.removeClass('opacity-50').val(currentQty);
+                        if (btn) btn.prop('disabled', false);
+                        if (input) input.removeClass('opacity-50').prop('disabled', false).val(fallbackQty).attr('value', fallbackQty);
+                        alert('Error updating cart.');
                     });
-                });
+                }
 
                 $(document).on('click', '.btn-remove-item', function() {
                     if(!confirm("Remove this item?")) return;

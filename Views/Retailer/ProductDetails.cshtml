@@ -53,9 +53,9 @@
                             var vatAmount = Math.Round(netPrice * 0.15m, 2);
                             var finalPrice = netPrice + vatAmount;
                         }
-                        <div class="text-muted smaller mb-1">Net Value: @netPrice.ToString("C")</div>
-                        <div class="text-info smaller mb-2">VAT (15%): @vatAmount.ToString("C")</div>
-                        <div class="h2 fw-bold text-primary mb-0">@finalPrice.ToString("C")</div>
+                        <div class="text-muted smaller mb-1">Net Value: ETB @netPrice.ToString("#,##0.00")</div>
+                        <div class="text-info smaller mb-2">VAT (15%): ETB @vatAmount.ToString("#,##0.00")</div>
+                        <div class="h2 fw-bold text-primary mb-0">ETB @finalPrice.ToString("#,##0.00")</div>
                         <div class="text-muted small text-uppercase fw-bold">Total Payable</div>
                     </div>
                 </div>
