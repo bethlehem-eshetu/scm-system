@@ -637,21 +637,60 @@ namespace SCM_System.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkAsFailed(int purchaseOrderId, string reason)
+        [Authorize(Roles = "DeliveryAgent")]
+        public async Task<IActionResult> MarkAsFailed(int purchaseOrderId, string reason, string? notes)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var po = await _context.PurchaseOrders.FindAsync(purchaseOrderId);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var po = await _context.PurchaseOrders
+                .Include(p => p.Warehouse)
+                    .ThenInclude(w => w.PrimaryManager)
+                .FirstOrDefaultAsync(p => p.Id == purchaseOrderId);
+
             if (po == null) return NotFound();
 
+            var employeeId = await GetEmployeeIdAsync();
+            if (employeeId != 0 && po.DeliveryAgentId != employeeId) return Unauthorized();
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                po.FailureReason = reason;
+                // 1. Create DeliveryFailure record
+                var failure = new DeliveryFailure
+                {
+                    PurchaseOrderId = purchaseOrderId,
+                    FailureReason = reason,
+                    Notes = notes,
+                    ReportedAt = DateTime.Now,
+                    Status = "Reported"
+                };
+                _context.DeliveryFailures.Add(failure);
+
+                // 2. Update PO status
                 await _poService.UpdatePurchaseOrderStatusAsync(purchaseOrderId, POStatus.Failed, userId);
-                TempData["SuccessMessage"] = "Delivery marked as failed. Recovery options available for manager.";
+
+                // 3. Notify Warehouse Manager
+                if (po.Warehouse?.PrimaryManager?.UserId != null)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        po.Warehouse.PrimaryManager.UserId,
+                        "Delivery Failure Reported",
+                        $"Delivery for Order #{po.PONumber} failed. Reason: {reason}. Manager action required to reschedule or cancel.",
+                        "DeliveryFailure",
+                        $"/WarehouseManager/FailedDeliveries"
+                    );
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = "Delivery failure reported. The Warehouse Manager has been notified to handle the resolution.";
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = "Failed to report delivery failure: " + ex.Message;
             }
 
             return RedirectToAction(nameof(MyDeliveries));

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SCM_System.Data;
 
@@ -11,9 +12,11 @@ using SCM_System.Data;
 namespace SCM_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514054931_AddDeliveryFailureHandling")]
+    partial class AddDeliveryFailureHandling
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -534,6 +537,9 @@ namespace SCM_System.Migrations
                     b.Property<int?>("CancellationRequestedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<int>("DispatchTaskId")
+                        .HasColumnType("int");
+
                     b.Property<string>("FailureReason")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -542,9 +548,6 @@ namespace SCM_System.Migrations
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("PurchaseOrderId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("ReportedAt")
                         .HasColumnType("datetime2");
@@ -562,7 +565,7 @@ namespace SCM_System.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PurchaseOrderId");
+                    b.HasIndex("DispatchTaskId");
 
                     b.ToTable("DeliveryFailures");
                 });
@@ -5099,13 +5102,13 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryFailure", b =>
                 {
-                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
+                    b.HasOne("SCM_System.Models.Entities.DispatchTask", "DispatchTask")
                         .WithMany()
-                        .HasForeignKey("PurchaseOrderId")
+                        .HasForeignKey("DispatchTaskId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PurchaseOrder");
+                    b.Navigation("DispatchTask");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryRating", b =>

@@ -1,0 +1,88 @@
+@model IEnumerable<SCM_System.Models.Entities.RetailerAvailability>
+@{
+    ViewData["Title"] = "Store Availability Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var days = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
+}
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-dark-green mb-1">Logistics Availability</h1>
+            <p class="text-muted small mb-0">Define when your store is ready to receive deliveries.</p>
+        </div>
+        <div class="bg-faint-green p-2 rounded-circle shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-clock text-dark-green"></i>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-premium rounded-5 overflow-hidden bg-white">
+        <div class="card-body p-4 p-lg-5">
+            <form asp-action="UpdateAvailability" method="post">
+                @Html.AntiForgeryToken()
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border-0">
+                        <thead>
+                            <tr class="text-muted small text-uppercase ls-1">
+                                <th class="border-0 pb-3" style="width: 200px;">Day of Week</th>
+                                <th class="border-0 pb-3" style="width: 100px;">Status</th>
+                                <th class="border-0 pb-3">Open Time</th>
+                                <th class="border-0 pb-3">Close Time</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            @for (int i = 0; i < 7; i++)
+                            {
+                                var day = (DayOfWeek)i;
+                                var avail = Model?.FirstOrDefault(a => a.DayOfWeek == day) ?? new SCM_System.Models.Entities.RetailerAvailability { DayOfWeek = day, IsAvailable = true, OpenTime = new TimeSpan(8, 0, 0), CloseTime = new TimeSpan(18, 0, 0) };
+                                
+                                <tr>
+                                    <td class="py-3">
+                                        <div class="fw-bold text-dark-green">@day.ToString()</div>
+                                        <input type="hidden" name="availabilities[@i].DayOfWeek" value="@day" />
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input custom-switch" type="checkbox" name="availabilities[@i].IsAvailable" value="true" @(avail.IsAvailable ? "checked" : "") id="switch-@i">
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <input type="time" name="availabilities[@i].OpenTime" class="form-control border-0 bg-faint-green rounded-3 px-3 py-2 fw-medium" value="@avail.OpenTime.ToString(@"hh\:mm")" @(!avail.IsAvailable ? "disabled" : "") />
+                                    </td>
+                                    <td class="py-3">
+                                        <input type="time" name="availabilities[@i].CloseTime" class="form-control border-0 bg-faint-green rounded-3 px-3 py-2 fw-medium" value="@avail.CloseTime.ToString(@"hh\:mm")" @(!avail.IsAvailable ? "disabled" : "") />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-5 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-dark-green btn-lg rounded-pill px-5 shadow-premium fw-bold">
+                        <i class="fas fa-save me-2"></i> Save Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-switch { width: 3em !important; height: 1.5em !important; cursor: pointer; }
+    .custom-switch:checked { background-color: var(--dark-green); border-color: var(--dark-green); }
+    .table th { font-weight: 700; color: #9ca3af; }
+    .form-control:disabled { opacity: 0.5; background-color: #f8fafc !important; }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.form-check-input').on('change', function() {
+                const row = $(this).closest('tr');
+                const inputs = row.find('input[type="time"]');
+                inputs.prop('disabled', !this.checked);
+            });
+        });
+    </script>
+}

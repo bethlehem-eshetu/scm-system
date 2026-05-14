@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,14 +11,15 @@ namespace SCM_System.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "ApprovalStatusMessage",
-                table: "Users");
+            // migrationBuilder.DropColumn(
+            //     name: "ApprovalStatusMessage",
+            //     table: "Users");
 
-            migrationBuilder.DropColumn(
-                name: "ApprovalStatusType",
-                table: "Users");
+            // migrationBuilder.DropColumn(
+            //     name: "ApprovalStatusType",
+            //     table: "Users");
 
+            /*
             migrationBuilder.CreateTable(
                 name: "DepositRecords",
                 columns: table => new
@@ -47,6 +48,7 @@ namespace SCM_System.Migrations
                 name: "IX_DepositRecords_OrderId",
                 table: "DepositRecords",
                 column: "OrderId");
+            */
         }
 
         /// <inheritdoc />

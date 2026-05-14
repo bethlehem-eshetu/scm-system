@@ -921,6 +921,9 @@
                     <li>
                         <a asp-controller="Retailer" asp-action="Settings"><i class="fas fa-user-cog"></i> Account Settings</a>
                     </li>
+                    <li>
+                        <a asp-controller="Retailer" asp-action="ManageAvailability"><i class="fas fa-clock"></i> Store Availability</a>
+                    </li>
                 }
                 else if (role == "Warehouse" || role == "WarehouseManager")
                 {
@@ -952,6 +955,9 @@
                     </li>
                     <li>
                         <a asp-controller="Warehouse" asp-action="History"><i class="fas fa-history"></i> Dispatch History</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Warehouse" asp-action="FailedDeliveries"><i class="fas fa-exclamation-triangle text-danger"></i> Failed Deliveries</a>
                     </li>
 
                     <li class="menu-label">Management</li>
