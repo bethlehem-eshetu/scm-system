@@ -560,6 +560,128 @@ namespace SCM_System.Controllers
             return RedirectToAction(returnAction);
         }
 
+        [Route("FailedDeliveries")]
+        public async Task<IActionResult> FailedDeliveries()
+        {
+            var manager = await GetCurrentManagerAsync();
+            int? wId = manager?.WarehouseId ?? manager?.WarehouseAssignments.FirstOrDefault(a => a.IsActive)?.WarehouseId;
+            if (manager == null || !wId.HasValue) return Unauthorized();
+
+            var failures = await _context.DeliveryFailures
+                .Include(f => f.PurchaseOrder)
+                    .ThenInclude(po => po.Retailer)
+                .Include(f => f.PurchaseOrder)
+                    .ThenInclude(po => po.Order)
+                .Where(f => f.PurchaseOrder.WarehouseId == wId.Value && f.Status != "Resolved" && f.Status != "Cancelled")
+                .OrderByDescending(f => f.ReportedAt)
+                .ToListAsync();
+
+            return View(failures);
+        }
+
+        [HttpPost("RescheduleDelivery")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RescheduleDelivery(int failureId, DateTime newDate, int? newAgentId)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var failure = await _context.DeliveryFailures
+                .Include(f => f.PurchaseOrder)
+                    .ThenInclude(po => po.Retailer)
+                .FirstOrDefaultAsync(f => f.Id == failureId);
+
+            if (failure == null) return NotFound();
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Update Failure Record
+                failure.Status = "Rescheduled";
+                failure.ResolvedAt = DateTime.Now;
+                failure.ResolutionNotes = $"Rescheduled for {newDate:yyyy-MM-dd HH:mm} by Manager.";
+
+                // 2. Update Purchase Order
+                var po = failure.PurchaseOrder;
+                po.Status = POStatus.Ready; // Move back to Ready Dispatch
+                if (newAgentId.HasValue) po.DeliveryAgentId = newAgentId.Value;
+                po.UpdatedAt = DateTime.Now;
+
+                // 3. Notify Retailer
+                if (po.Retailer?.UserId != null)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        po.Retailer.UserId,
+                        "Delivery Rescheduled",
+                        $"Your delivery for Order #{po.PONumber} has been rescheduled to {newDate:f}.",
+                        "DeliveryUpdate",
+                        $"/Retailer/OrderDetails/{po.OrderId}"
+                    );
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = "Delivery rescheduled successfully.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = "Failed to reschedule: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(FailedDeliveries));
+        }
+
+        [HttpPost("RequestCancellation")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestCancellation(int failureId, string reason)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var failure = await _context.DeliveryFailures
+                .Include(f => f.PurchaseOrder)
+                    .ThenInclude(po => po.Supplier)
+                .FirstOrDefaultAsync(f => f.Id == failureId);
+
+            if (failure == null) return NotFound();
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Update Failure Record
+                failure.Status = "CancellationRequested";
+                failure.CancellationRequestedByUserId = userId;
+                failure.CancellationRequestedAt = DateTime.Now;
+                failure.ResolutionNotes = $"Cancellation requested by Manager. Reason: {reason}";
+
+                // 2. Notify Supplier
+                if (failure.PurchaseOrder?.Supplier?.UserId != null)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        failure.PurchaseOrder.Supplier.UserId,
+                        "Cancellation Approval Required",
+                        $"Warehouse Manager requested cancellation for Order #{failure.PurchaseOrder.PONumber}. Reason: {reason}",
+                        "CancellationRequest",
+                        $"/Supplier/CancellationRequests"
+                    );
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = "Cancellation request sent to Supplier for approval.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = "Failed to request cancellation: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(FailedDeliveries));
+        }
+
         [Route("Inventory")]
         public async Task<IActionResult> Inventory()
         {
@@ -631,9 +753,11 @@ namespace SCM_System.Controllers
             var manager = await GetCurrentManagerAsync();
             if (manager == null) return Unauthorized();
 
-            // Load PO first to determine which hub we are dealing with
+            // Load PO with items for accurate weight calculation
             var po = await _context.PurchaseOrders
                 .Include(p => p.Order)
+                .Include(p => p.PurchaseOrderItems)
+                    .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (po == null) return NotFound();
@@ -1249,6 +1373,9 @@ namespace SCM_System.Controllers
                 return await _context.SupplierEmployees
                     .Include(e => e.Warehouse)
                     .Include(e => e.User)
+                    .Include(e => e.HubAccesses)
+                        .ThenInclude(a => a.Warehouse)
+                    .Include(e => e.WarehouseAssignments)
                     .FirstOrDefaultAsync(e => e.Id == employeeId);
             }
             

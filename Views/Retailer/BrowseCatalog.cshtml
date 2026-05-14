@@ -92,8 +92,8 @@
                         <div class="p-3 d-flex flex-column" style="flex-grow: 1;">
                             <h6 class="fw-bold mb-2 text-dark-green text-truncate dark-mode-text" title="@product.ProductName">@product.ProductName</h6>
                             <div class="d-flex flex-column mb-3">
-                                <span class="fw-bold text-dark-green mb-0 dark-mode-text h5">@product.BasePrice.ToString("N2") <small class="extra-small opacity-50">ETB</small></span>
-                                <span class="text-muted extra-small dark-mode-text">inc. VAT: @((product.BasePrice * 1.15m).ToString("N2"))</span>
+                                <span class="fw-bold text-dark-green mb-0 dark-mode-text h5">ETB @product.BasePrice.ToString("#,##0.00")</span>
+                                <span class="text-muted extra-small dark-mode-text">inc. VAT: ETB @((product.BasePrice * 1.15m).ToString("#,##0.00"))</span>
                             </div>
                             
                             <div class="mb-3">

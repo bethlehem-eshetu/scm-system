@@ -110,8 +110,12 @@ namespace SCM_System.Data
         public DbSet<SystemConfiguration> SystemConfigurations { get; set; }
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
 
-        // Add this DbSet inside your ApplicationDbContext class
         public DbSet<DepositRecord> DepositRecords { get; set; }
+
+        // Delivery Failure Handling Tables
+        public DbSet<RetailerAvailability> RetailerAvailabilities { get; set; }
+        public DbSet<AddressUpdateRequest> AddressUpdateRequests { get; set; }
+        public DbSet<DeliveryFailure> DeliveryFailures { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -800,6 +804,31 @@ namespace SCM_System.Data
             modelBuilder.Entity<Delivery>()
                 .Property(d => d.DeliveryStatus)
                 .HasDefaultValue("Preparing");
+
+            // ========== DELIVERY FAILURE CONFIGURATIONS ==========
+            modelBuilder.Entity<RetailerAvailability>()
+                .HasOne(ra => ra.Retailer)
+                .WithMany()
+                .HasForeignKey(ra => ra.RetailerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AddressUpdateRequest>()
+                .HasOne(aur => aur.Order)
+                .WithMany()
+                .HasForeignKey(aur => aur.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AddressUpdateRequest>()
+                .HasOne(aur => aur.Retailer)
+                .WithMany()
+                .HasForeignKey(aur => aur.RetailerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryFailure>()
+                .HasOne(df => df.PurchaseOrder)
+                .WithMany()
+                .HasForeignKey(df => df.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // ========== SUPPLIER TRANSACTION CONFIGURATIONS ==========
             modelBuilder.Entity<SupplierTransaction>()

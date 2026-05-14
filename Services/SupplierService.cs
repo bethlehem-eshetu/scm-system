@@ -12,10 +12,14 @@ namespace SCM_System.Services
     public class SupplierService : ISupplierService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IInventoryService _inventoryService;
+        private readonly INotificationService _notificationService;
 
-        public SupplierService(ApplicationDbContext context)
+        public SupplierService(ApplicationDbContext context, IInventoryService inventoryService, INotificationService notificationService)
         {
             _context = context;
+            _inventoryService = inventoryService;
+            _notificationService = notificationService;
         }
 
         public async Task<SupplierDashboardViewModel> GetDashboardAnalyticsAsync(int supplierId)
@@ -287,6 +291,45 @@ namespace SCM_System.Services
             }
 
             return false;
+        }
+
+        public async Task<bool> CancelOrderAsync(int orderId, string reason)
+        {
+            var order = await _context.Orders
+                .Include(o => o.PurchaseOrders)
+                .Include(o => o.Retailer)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null) return false;
+
+            order.OrderStatus = "Cancelled";
+            order.CancellationReason = reason;
+            order.UpdatedAt = DateTime.Now;
+
+            foreach (var po in order.PurchaseOrders)
+            {
+                po.Status = "Cancelled";
+                po.UpdatedAt = DateTime.Now;
+            }
+
+            // Return stock to inventory
+            await _inventoryService.ReturnStockOnCancelAsync(orderId);
+
+            await _context.SaveChangesAsync();
+
+            // Notify Retailer
+            if (order.Retailer?.UserId != null)
+            {
+                await _notificationService.SendNotificationAsync(
+                    order.Retailer.UserId,
+                    "Order Cancelled",
+                    $"Your Order #{order.OrderNumber} has been cancelled. Reason: {reason}",
+                    "Error",
+                    "/Order/MyOrders"
+                );
+            }
+
+            return true;
         }
     }
 }

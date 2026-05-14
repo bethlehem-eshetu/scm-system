@@ -65,13 +65,14 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="py-4 dark-mode-text">@item.Product.BasePrice.ToString("C")</td>
+                                        <td class="py-4 dark-mode-text">ETB @item.Product.BasePrice.ToString("#,##0.00")</td>
                                         <td class="py-4">
                                             <div class="input-group input-group-sm rounded-pill border bg-white overflow-hidden dark-mode-qty-group" style="width: 120px;">
                                                 <button class="btn btn-link text-dark text-decoration-none px-2 update-qty" data-id="@item.Id" data-delta="-1">
                                                     <i class="fas fa-minus small"></i>
                                                 </button>
-                                                <input type="text" class="form-control border-0 text-center fw-bold bg-transparent px-0 qty-input dark-mode-text" value="@item.Quantity" readonly>
+                                                <input type="number" class="form-control border-0 text-center fw-bold bg-transparent px-0 qty-input dark-mode-text" 
+                                                       value="@item.Quantity" data-id="@item.Id" min="1">
                                                 <button class="btn btn-link text-dark text-decoration-none px-2 update-qty" data-id="@item.Id" data-delta="1">
                                                     <i class="fas fa-plus small"></i>
                                                 </button>
@@ -83,8 +84,8 @@
                                                 var itemVat = Math.Round(itemNet * 0.15m, 2);
                                                 var itemTotal = itemNet + itemVat;
                                             }
-                                            <div class="text-dark dark-mode-text">@itemTotal.ToString("C")</div>
-                                            <div class="text-muted smaller fw-normal dark-mode-text">Net: @itemNet.ToString("N2")</div>
+                                            <div class="text-dark dark-mode-text">ETB @itemTotal.ToString("#,##0.00")</div>
+                                            <div class="text-muted smaller fw-normal dark-mode-text">Net: ETB @itemNet.ToString("#,##0.00")</div>
                                         </td>
                                         <td class="pe-4 py-4 text-end">
                                             <form asp-action="RemoveFromCart" method="post" class="d-inline">
@@ -117,11 +118,11 @@
         
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted dark-mode-text">Subtotal</span>
-                        <span class="fw-bold dark-mode-text">@netTotal.ToString("C")</span>
+                        <span class="fw-bold dark-mode-text">ETB @netTotal.ToString("#,##0.00")</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted dark-mode-text">VAT (15%)</span>
-                        <span class="fw-bold text-info dark-mode-text">@vatTotal.ToString("C")</span>
+                        <span class="fw-bold text-info dark-mode-text">ETB @vatTotal.ToString("#,##0.00")</span>
                     </div>
                     <div class="d-flex justify-content-between mb-3">
                         <span class="text-muted dark-mode-text">Delivery Fee</span>
@@ -130,18 +131,18 @@
                     <hr class="my-4 opacity-50 dark-mode-border">
                     <div class="d-flex justify-content-between mb-3">
                         <span class="fw-bold dark-mode-text">Total Order Value</span>
-                        <h5 class="fw-bold text-primary mb-0 dark-mode-text">@grandTotal.ToString("C")</h5>
+                        <h5 class="fw-bold text-primary mb-0 dark-mode-text">ETB @grandTotal.ToString("#,##0.00")</h5>
                     </div>
         
                     <!-- Deposit Breakdown -->
                     <div class="bg-light rounded-3 p-3 mb-4 dark-mode-payment-box">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="small fw-bold dark-mode-text">💰 You Pay Now (50% Deposit)</span>
-                            <span class="fw-bold text-success dark-mode-text">@depositAmount.ToString("C")</span>
+                            <span class="fw-bold text-success dark-mode-text">ETB @depositAmount.ToString("#,##0.00")</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span class="small text-muted dark-mode-text">📦 Pay on Delivery (50%)</span>
-                            <span class="fw-bold text-warning dark-mode-text">@remainingAmount.ToString("C")</span>
+                            <span class="fw-bold text-warning dark-mode-text">ETB @remainingAmount.ToString("#,##0.00")</span>
                         </div>
                     </div>
         
@@ -175,7 +176,7 @@
                         </div>
             
                         <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-bold mb-3 shadow">
-                            <i class="fas fa-credit-card me-2"></i> Pay @depositAmount.ToString("C") (50% Deposit)
+                            <i class="fas fa-credit-card me-2"></i> Pay ETB @depositAmount.ToString("#,##0.00") (50% Deposit)
                         </button>
                     </form>
         
@@ -295,11 +296,30 @@
             
             if (newQty < 1) return;
             
-            $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: newQty }, function(res) {
+            updateCartItem(id, newQty);
+        });
+
+        $(document).on('change', '.qty-input', function() {
+            const input = $(this);
+            const id = input.data('id');
+            let newQty = parseInt(input.val());
+            
+            if (isNaN(newQty) || newQty < 1) {
+                newQty = 1;
+                input.val(1);
+            }
+            
+            updateCartItem(id, newQty);
+        });
+
+        function updateCartItem(id, quantity) {
+            $.post('/Retailer/UpdateCartItem', { cartItemId: id, quantity: quantity }, function(res) {
                 if (res.success) {
                     location.reload();
+                } else {
+                    alert(res.message || 'Error updating cart');
                 }
             });
-        });
+        }
     </script>
 }

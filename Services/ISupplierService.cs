@@ -14,5 +14,6 @@ namespace SCM_System.Services
         Task<List<VehicleSuggestion>> GetSmartDispatchSuggestionsAsync(int warehouseId);
         Task<List<DriverSuggestion>> GetSmartDriverSuggestionsAsync(int warehouseId);
         Task<bool> UpdateSupplierTierAsync(int supplierId);
+        Task<bool> CancelOrderAsync(int orderId, string reason);
     }
 }

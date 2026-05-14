@@ -734,6 +734,129 @@ namespace SCM_System.Controllers
             return File(buffer, "text/csv", $"Retailer_Data_{retailer.Id}.csv");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ManageAvailability()
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var rId = await GetRetailerIdInternalAsync();
+            var availabilities = await _context.RetailerAvailabilities
+                .Where(a => a.RetailerId == rId)
+                .OrderBy(a => a.DayOfWeek)
+                .ToListAsync();
+
+            return View(availabilities);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAvailability(List<RetailerAvailability> availabilities)
+        {
+            if (!IsRetailer()) return Unauthorized();
+
+            var rId = await GetRetailerIdInternalAsync();
+            
+            // Remove old
+            var old = await _context.RetailerAvailabilities.Where(a => a.RetailerId == rId).ToListAsync();
+            _context.RetailerAvailabilities.RemoveRange(old);
+
+            // Add new
+            foreach (var item in availabilities)
+            {
+                item.RetailerId = rId;
+                item.CreatedAt = DateTime.Now;
+                item.UpdatedAt = DateTime.Now;
+                _context.RetailerAvailabilities.Add(item);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Availability updated successfully.";
+            return RedirectToAction(nameof(ManageAvailability));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RequestAddressUpdate(int orderId)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var rId = await GetRetailerIdInternalAsync();
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.RetailerId == rId);
+            if (order == null) return NotFound();
+
+            var model = new AddressUpdateRequest
+            {
+                OrderId = orderId,
+                OldAddress = order.DeliveryAddress ?? "",
+                RetailerId = rId
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestAddressUpdate(AddressUpdateRequest model)
+        {
+            if (!IsRetailer()) return Unauthorized();
+
+            var rId = await GetRetailerIdInternalAsync();
+            var order = await _context.Orders
+                .Include(o => o.PurchaseOrders)
+                .FirstOrDefaultAsync(o => o.Id == model.OrderId && o.RetailerId == rId);
+
+            if (order == null) return NotFound();
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Record the history
+                model.RetailerId = rId;
+                model.CreatedAt = DateTime.Now;
+                model.Status = "Applied";
+                _context.AddressUpdateRequests.Add(model);
+
+                // 2. Apply change directly
+                order.DeliveryAddress = model.NewAddress;
+                order.UpdatedAt = DateTime.Now;
+
+                foreach (var po in order.PurchaseOrders)
+                {
+                    po.DeliveryAddress = model.NewAddress;
+                    po.UpdatedAt = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // 3. Notify Warehouse Managers of the CHANGE
+                var warehouseManagers = order.PurchaseOrders
+                    .Select(po => po.Warehouse?.PrimaryManager?.UserId ?? 0)
+                    .Where(id => id != 0)
+                    .Distinct()
+                    .ToList();
+
+                foreach (var managerUserId in warehouseManagers)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        managerUserId,
+                        "Address Updated by Retailer",
+                        $"Retailer has updated the delivery address for Order #{order.OrderNumber}.",
+                        "AddressUpdate",
+                        $"/WarehouseManager/FailedDeliveries"
+                    );
+                }
+
+                TempData["SuccessMessage"] = "Delivery address has been updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = "Failed to update address: " + ex.Message;
+            }
+
+            return RedirectToAction("Details", "Order", new { id = model.OrderId });
+        }
+
         // GET: /Retailer/PayOrder/5
         public async Task<IActionResult> PayOrder(int id)
         {
@@ -816,6 +939,64 @@ namespace SCM_System.Controllers
         }
 
 
+
+
+        // GET: /Retailer/RateDelivery/5
+        [HttpGet]
+        public async Task<IActionResult> RateDelivery(int id)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var po = await _context.PurchaseOrders
+                .Include(p => p.DeliveryAgent)
+                .Include(p => p.Vehicle)
+                .Include(p => p.Retailer)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (po == null) return NotFound();
+
+            var viewModel = new DeliveryRatingViewModel
+            {
+                PurchaseOrderId = po.Id,
+                PONumber = po.PONumber,
+                DriverName = po.DeliveryAgent?.FullName ?? "Unknown Agent",
+                VehiclePlate = po.Vehicle?.LicensePlate ?? "N/A"
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitDeliveryRating(DeliveryRatingViewModel model)
+        {
+            if (!IsRetailer()) return RedirectToAction("Login", "Account");
+
+            var po = await _context.PurchaseOrders.FindAsync(model.PurchaseOrderId);
+            if (po == null) return NotFound();
+
+            var retailerId = await GetRetailerIdInternalAsync();
+            if (po.RetailerId != retailerId) return Unauthorized();
+
+            var rating = new DeliveryRating
+            {
+                PurchaseOrderId = po.Id,
+                DriverEmployeeId = po.DeliveryAgentId ?? 0,
+                RetailerId = retailerId,
+                Timeliness = model.Timeliness,
+                Professionalism = model.Professionalism,
+                VehicleCondition = model.VehicleCondition,
+                Communication = model.Communication,
+                Comment = model.Comment,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.DeliveryRatings.Add(rating);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Thank you for rating your delivery experience!";
+            return RedirectToAction("Dashboard");
+        }
 
         // Add to RetailerController.cs - Checkout from Supplier Branch
         [HttpPost]

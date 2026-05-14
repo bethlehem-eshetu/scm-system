@@ -225,7 +225,48 @@
                     <p class="extra-small text-muted mt-3 fw-bold text-center dark-mode-text">Safety Protocol: Only available pre-picking phase.</p>
                 </div>
             }
-            @if (showAssignPanel)
+            @if (isSupplier && (Model.OrderStatus == "Pending" || Model.OrderStatus == "Issued"))
+            {
+                <div class="card border-0 shadow-premium rounded-5 p-4 mb-4 bg-white border-top border-5 border-dark-green dark-mode-card">
+                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text">New Order Request</h5>
+                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Review and accept this contract to begin fulfillment.</p>
+                    
+                    <form asp-controller="Order" asp-action="StatusAction" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="actionType" value="Accept" />
+                        
+                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-3 dark-mode-text">Assign Initial Hub</label>
+                        <select name="warehouseId" class="form-select border-0 bg-faint-green rounded-4 py-3 px-4 fw-bold text-dark-green mb-4 shadow-sm dark-mode-select" required>
+                            <option value="-1">-- AUTO-ALLOCATE LOAD --</option>
+                            @if (ViewBag.Warehouses != null)
+                            {
+                                foreach (dynamic w in ViewBag.Warehouses)
+                                {
+                                    <option value="@w.Id">@w.Name Hub (@w.City)</option>
+                                }
+                            }
+                        </select>
+
+                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium dark-mode-primary-btn">
+                            <i class="fas fa-check-circle me-2 text-accent-green"></i> ACCEPT ORDER
+                        </button>
+                    </form>
+
+                    <form asp-controller="Order" asp-action="StatusAction" method="post" onsubmit="return confirm('Abort this deployment?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="actionType" value="Reject" />
+                        <div class="mb-3">
+                            <input type="text" name="rejectionReason" class="form-control form-control-sm border-0 bg-light rounded-pill px-3" placeholder="Reason for rejection..." required />
+                        </div>
+                        <button type="submit" class="btn btn-white w-100 rounded-pill fw-bold py-2 text-danger border border-danger border-opacity-10 small dark-mode-reject-btn">
+                            Reject Order
+                        </button>
+                    </form>
+                </div>
+            }
+            @if (showAssignPanel && Model.OrderStatus != "Pending" && Model.OrderStatus != "Issued")
             {
                 <div class="card border-0 shadow-premium rounded-5 p-4 mb-4 bg-white border-top border-5 border-dark-green dark-mode-card">
                     <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-4 dark-mode-text">Fulfillment Activation</h6>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SCM_System.Data;
 
@@ -11,9 +12,11 @@ using SCM_System.Data;
 namespace SCM_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514054931_AddDeliveryFailureHandling")]
+    partial class AddDeliveryFailureHandling
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -534,6 +537,9 @@ namespace SCM_System.Migrations
                     b.Property<int?>("CancellationRequestedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<int>("DispatchTaskId")
+                        .HasColumnType("int");
+
                     b.Property<string>("FailureReason")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -542,9 +548,6 @@ namespace SCM_System.Migrations
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("PurchaseOrderId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("ReportedAt")
                         .HasColumnType("datetime2");
@@ -562,7 +565,7 @@ namespace SCM_System.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PurchaseOrderId");
+                    b.HasIndex("DispatchTaskId");
 
                     b.ToTable("DeliveryFailures");
                 });
@@ -2756,14 +2759,8 @@ namespace SCM_System.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int?>("Communication")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeliveryAgentId")
-                        .HasColumnType("int");
 
                     b.Property<int>("HelpfulCount")
                         .HasColumnType("int");
@@ -2777,21 +2774,8 @@ namespace SCM_System.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PackagingQuality")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ProductQuality")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Professionalism")
-                        .HasColumnType("int");
-
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int");
-
-                    b.Property<string>("RatingType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("RatingValue")
                         .HasColumnType("int");
@@ -2799,24 +2783,13 @@ namespace SCM_System.Migrations
                     b.Property<int>("RetailerId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ShippingSpeed")
-                        .HasColumnType("int");
-
                     b.Property<int>("SupplierId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Timeliness")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("VehicleCondition")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("DeliveryAgentId");
 
                     b.HasIndex("OrderId");
 
@@ -3386,9 +3359,6 @@ namespace SCM_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("AverageRating")
-                        .HasColumnType("decimal(3,2)");
-
                     b.Property<decimal>("Balance")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -3568,9 +3538,6 @@ namespace SCM_System.Migrations
 
                     b.Property<bool>("AutoAcceptPickTasks")
                         .HasColumnType("bit");
-
-                    b.Property<decimal>("AverageRating")
-                        .HasColumnType("decimal(3,2)");
 
                     b.Property<string>("BloodGroup")
                         .HasMaxLength(10)
@@ -5135,13 +5102,13 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryFailure", b =>
                 {
-                    b.HasOne("SCM_System.Models.Entities.PurchaseOrder", "PurchaseOrder")
+                    b.HasOne("SCM_System.Models.Entities.DispatchTask", "DispatchTask")
                         .WithMany()
-                        .HasForeignKey("PurchaseOrderId")
+                        .HasForeignKey("DispatchTaskId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PurchaseOrder");
+                    b.Navigation("DispatchTask");
                 });
 
             modelBuilder.Entity("SCM_System.Models.Entities.DeliveryRating", b =>
@@ -5865,10 +5832,6 @@ namespace SCM_System.Migrations
 
             modelBuilder.Entity("SCM_System.Models.Entities.Rating", b =>
                 {
-                    b.HasOne("SCM_System.Models.Entities.SupplierEmployee", "DeliveryAgent")
-                        .WithMany()
-                        .HasForeignKey("DeliveryAgentId");
-
                     b.HasOne("SCM_System.Models.Entities.Order", "Order")
                         .WithMany()
                         .HasForeignKey("OrderId")
@@ -5892,8 +5855,6 @@ namespace SCM_System.Migrations
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("DeliveryAgent");
 
                     b.Navigation("Order");
 
