@@ -380,3 +380,25 @@ body.dark-mode .table-hover tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
+/* Fix dark mode for Live Order Tracking page */
+body.dark-mode .order-tracking-container,
+body.dark-mode .order-card,
+body.dark-mode .card,
+body.dark-mode .timeline,
+body.dark-mode .order-details,
+body.dark-mode .delivery-progress,
+body.dark-mode .order-timeline,
+body.dark-mode .alert.alert-light {
+    background-color: #1e2a2a !important;
+    color: #ffffff !important;
+    border-color: #3a4a4a !important;
+}
+body.dark-mode .order-card *,
+body.dark-mode .card *,
+body.dark-mode .timeline *,
+body.dark-mode .alert.alert-light * {
+    color: #ffffff !important;
+}
+body.dark-mode .progress-bar {
+    background-color: #20C997 !important; /* accent green for progress */
+}
