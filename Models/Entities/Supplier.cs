@@ -110,6 +110,9 @@ namespace SCM_System.Models.Entities
         public bool NotifyDisputeAlert { get; set; } = true;
         public string NotifyChannel { get; set; } = "Both"; // Email, SMS, Both
 
+        [Column(TypeName = "decimal(3,2)")]
+        public decimal AverageRating { get; set; } = 5.00m;
+
         // Navigation properties
         public ICollection<Product> Products { get; set; } = [];
 

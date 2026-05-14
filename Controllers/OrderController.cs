@@ -70,12 +70,15 @@ namespace SCM_System.Controllers
             
             ViewBag.PrimaryPO = primaryPO;
 
-            if (User.IsInRole("Supplier") || User.IsInRole("WarehouseManager"))
+            if (User.IsInRole("Supplier") || User.IsInRole("WarehouseManager") || User.IsInRole("Warehouse") || User.IsInRole("Admin"))
             {
                 var sId = await GetSupplierIdAsync();
                 
+                // Admin bypass: if sId is 0 (Admin not linked to supplier), use order's supplier
+                if (sId == 0 && User.IsInRole("Admin")) sId = order.SupplierId;
+
                 // Security check
-                if (order.SupplierId != sId) return Forbid();
+                if (order.SupplierId != sId && !User.IsInRole("Admin")) return Forbid();
 
                 ViewBag.Warehouses = await _context.Warehouses
                     .Where(w => w.SupplierId == sId && w.IsActive)

@@ -25,21 +25,37 @@ namespace SCM_System.Models.Entities
 
         [Required]
         [Range(1, 5)]
-        public int RatingValue { get; set; } // 1 to 5 stars
+        public int RatingValue { get; set; } // 1 to 5 stars (Overall)
+
+        [StringLength(50)]
+        public string? RatingType { get; set; } // "Delivery" or "Supplier"
+
+        // Delivery specific
+        public int? DeliveryAgentId { get; set; }
+        public SupplierEmployee? DeliveryAgent { get; set; }
+
+        public int? Timeliness { get; set; }
+        public int? Professionalism { get; set; }
+        public int? VehicleCondition { get; set; }
+        public int? Communication { get; set; }
+
+        // Supplier specific
+        public int? ProductQuality { get; set; }
+        public int? PackagingQuality { get; set; }
+        public int? ShippingSpeed { get; set; }
 
         [StringLength(1000)]
         public string? Comment { get; set; }
 
         [StringLength(50)]
-        public string? Category { get; set; } // Product Quality, Delivery Speed, Communication, etc.
+        public string? Category { get; set; } // Legacy field for product categorizations
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public bool IsVerifiedPurchase { get; set; } = true; // Only verified purchases can rate
+        public bool IsVerifiedPurchase { get; set; } = true;
 
         public DateTime? UpdatedAt { get; set; }
 
-        // Helpful counts
         public int HelpfulCount { get; set; } = 0;
         public int NotHelpfulCount { get; set; } = 0;
     }

@@ -13,34 +13,144 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/finance.css" asp-append-version="true" />
+    <style>
+        /* Compact Chart Containers */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-height: 280px;
+            overflow: hidden;
+        }
+        
+        .chart-wrapper {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        /* Fix for canvas overflow */
+        canvas {
+            max-height: 250px;
+            width: 100% !important;
+        }
+        
+        /* KPI Cards Compact */
+        .finance-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .fin-kpi-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--accent, #2E9C7A);
+        }
+        
+        .fin-kpi-icon {
+            font-size: 32px;
+            opacity: 0.8;
+        }
+        
+        .fin-kpi-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .fin-kpi-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        /* Health Bars */
+        .health-item {
+            margin-bottom: 16px;
+        }
+        
+        .health-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .health-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .health-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        /* Table Compact */
+        .admin-table td, .admin-table th {
+            padding: 12px 8px;
+        }
+        
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .finance-kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .chart-container {
+                max-height: 220px;
+            }
+        }
+    </style>
 }
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-3">
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center fin-page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
         <div>
-            <div class="fin-page-title">Financial Dashboard</div>
-            <div class="fin-page-subtitle">Real-time marketplace revenue, settlements, and commission tracking.</div>
+            <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary);">Financial Dashboard</h1>
+            <p class="text-muted small mb-0">Real-time marketplace revenue, settlements, and commission tracking.</p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="ExportFinancials" class="fin-action-btn">
+            <a asp-action="ExportFinancials" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                 <i class="fas fa-file-csv"></i> Export CSV
             </a>
-            <a asp-action="Transactions" class="fin-action-btn primary">
-                <i class="fas fa-exchange-alt"></i> Transaction Ledger
+            <a asp-action="Transactions" class="btn btn-sm btn-primary rounded-pill px-3">
+                <i class="fas fa-exchange-alt"></i> Transactions
             </a>
         </div>
     </div>
 
-    <!-- Primary KPI Grid -->
+    <!-- Primary KPI Grid (4 cards) -->
     <div class="finance-kpi-grid">
         <div class="fin-kpi-card">
-            <i class="fas fa-shopping-cart fin-kpi-icon"></i>
+            <i class="fas fa-shopping-cart fin-kpi-icon" style="color: #2E9C7A;"></i>
             <div>
                 <div class="fin-kpi-value">@grossSales.ToString("C0")</div>
                 <div class="fin-kpi-label">Gross Sales (inc. VAT)</div>
-                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> Revenue</div>
+                <div class="small text-success">↑ Active</div>
             </div>
         </div>
         <div class="fin-kpi-card" style="--accent: #5B8FF9;">
@@ -48,7 +158,7 @@
             <div>
                 <div class="fin-kpi-value">@platformRevenue.ToString("C0")</div>
                 <div class="fin-kpi-label">Platform Revenue</div>
-                <div class="fin-kpi-trend positive"><i class="fas fa-arrow-up"></i> Commissions Earned</div>
+                <div class="small text-info">↑ Commissions</div>
             </div>
         </div>
         <div class="fin-kpi-card" style="--accent: #E67E22;">
@@ -56,7 +166,7 @@
             <div>
                 <div class="fin-kpi-value">@supplierPayables.ToString("C0")</div>
                 <div class="fin-kpi-label">Supplier Payables</div>
-                <div class="fin-kpi-trend neutral"><i class="fas fa-arrow-right"></i> Processing</div>
+                <div class="small text-warning">Processing</div>
             </div>
         </div>
         <div class="fin-kpi-card" style="--accent: #E05A5A;">
@@ -64,233 +174,290 @@
             <div>
                 <div class="fin-kpi-value">@failedPayments</div>
                 <div class="fin-kpi-label">Failed Settlements</div>
-                <div class="fin-kpi-trend @(failedPayments > 0 ? "negative" : "positive")">
-                    @(failedPayments > 0 ? "Review Required" : "All Clear")
-                </div>
+                <div class="small text-danger">Review</div>
             </div>
         </div>
     </div>
 
-    <!-- Secondary KPI Strip (merged from Financial Reports) -->
+    <!-- Secondary Stats Row (3 cards) -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="fin-panel p-3 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(46,156,122,0.12);flex-shrink:0;">
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(46,156,122,0.12);">
                     <i class="fas fa-receipt" style="color:#2E9C7A; font-size:18px;"></i>
                 </div>
                 <div>
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600;">Total Order Value</div>
-                    <div style="font-size:20px; font-weight:800; color:var(--text-color);">@totalOrderValue.ToString("C0")</div>
+                    <div class="small text-muted text-uppercase fw-bold">Total Order Value</div>
+                    <div class="h5 fw-bold mb-0">@totalOrderValue.ToString("C0")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="fin-panel p-3 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(230,126,34,0.12);flex-shrink:0;">
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(230,126,34,0.12);">
                     <i class="fas fa-clock" style="color:#E67E22; font-size:18px;"></i>
                 </div>
                 <div>
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600;">Pending Commissions</div>
-                    <div style="font-size:20px; font-weight:800; color:var(--text-color);">@pendingCommissions.ToString("C0")</div>
+                    <div class="small text-muted text-uppercase fw-bold">Pending Commissions</div>
+                    <div class="h5 fw-bold mb-0">@pendingCommissions.ToString("C0")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="fin-panel p-3 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(91,143,249,0.12);flex-shrink:0;">
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:rgba(91,143,249,0.12);">
                     <i class="fas fa-wallet" style="color:#5B8FF9; font-size:18px;"></i>
                 </div>
                 <div>
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600;">Total Payouts</div>
-                    <div style="font-size:20px; font-weight:800; color:var(--text-color);">@totalPayouts.ToString("C0")</div>
+                    <div class="small text-muted text-uppercase fw-bold">Total Payouts</div>
+                    <div class="h5 fw-bold mb-0">@totalPayouts.ToString("C0")</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts Row -->
+    <!-- Charts Row - FIXED SIZE -->
     <div class="row g-4 mb-4">
-        <!-- Revenue Trend Chart (6-month) -->
-        <div class="col-lg-8">
-            <div class="chart-wrapper h-100">
+        <!-- Revenue Trend Chart -->
+        <div class="col-lg-7">
+            <div class="chart-wrapper">
                 <div class="chart-title">
-                    <span><i class="fas fa-chart-line me-2" style="color:#2E9C7A;"></i>Revenue Trend (Last 6 Months)</span>
+                    <i class="fas fa-chart-line me-2" style="color:#2E9C7A;"></i> Revenue Trend (Last 6 Months)
                 </div>
-                <canvas id="revenueTrendChart" style="height: 280px;"></canvas>
+                <div class="chart-container">
+                    <canvas id="revenueTrendChart" style="height: 250px; width: 100%;"></canvas>
+                </div>
             </div>
         </div>
+        
         <!-- Settlement Health -->
-        <div class="col-lg-4">
-            <div class="chart-wrapper h-100">
+        <div class="col-lg-5">
+            <div class="chart-wrapper">
                 <div class="chart-title">
-                    <span><i class="fas fa-heartbeat me-2" style="color:#2E9C7A;"></i>Settlement Health</span>
+                    <i class="fas fa-heartbeat me-2" style="color:#2E9C7A;"></i> Settlement Health
                 </div>
-                <div style="max-width: 200px; margin: 0 auto 20px;">
-                    <canvas id="statusPieChart"></canvas>
-                </div>
-                @{
-                    var allItems = Model.ToList();
-                    var totalCount = allItems.Count > 0 ? allItems.Count : 1;
-                    var paidPct = Math.Round(allItems.Count(c => c.Status == "Paid") * 100.0 / totalCount);
-                    var pendingPct = Math.Round(allItems.Count(c => c.Status == "Pending") * 100.0 / totalCount);
-                    var failedPct = Math.Round(allItems.Count(c => c.Status == "Failed") * 100.0 / totalCount);
-                }
-                <div class="health-item">
-                    <div class="health-label">Cleared Payments <span class="health-val">@paidPct%</span></div>
-                    <div class="health-bar"><div class="health-fill" style="width:@paidPct%; background:#2E9C7A;"></div></div>
-                </div>
-                <div class="health-item">
-                    <div class="health-label">Pending Payouts <span class="health-val">@pendingPct%</span></div>
-                    <div class="health-bar"><div class="health-fill" style="width:@pendingPct%; background:#E67E22;"></div></div>
-                </div>
-                <div class="health-item" style="margin-bottom:0;">
-                    <div class="health-label">Failed / Expired <span class="health-val">@failedPct%</span></div>
-                    <div class="health-bar"><div class="health-fill" style="width:@failedPct%; background:#E05A5A;"></div></div>
+                <div class="row align-items-center">
+                    <div class="col-5">
+                        <div style="max-width: 140px; margin: 0 auto;">
+                            <canvas id="statusPieChart" style="height: 140px; width: 100%;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-7">
+                        @{
+                            var allItems = Model.ToList();
+                            var totalCount = allItems.Count > 0 ? allItems.Count : 1;
+                            var paidPct = Math.Round(allItems.Count(c => c.Status == "Paid") * 100.0 / totalCount);
+                            var pendingPct = Math.Round(allItems.Count(c => c.Status == "Pending") * 100.0 / totalCount);
+                            var failedPct = Math.Round(allItems.Count(c => c.Status == "Failed") * 100.0 / totalCount);
+                        }
+                        <div class="health-item">
+                            <div class="health-label">Cleared Payments <span class="health-val">@paidPct%</span></div>
+                            <div class="health-bar"><div class="health-fill" style="width:@paidPct%; background:#2E9C7A;"></div></div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">Pending Payouts <span class="health-val">@pendingPct%</span></div>
+                            <div class="health-bar"><div class="health-fill" style="width:@pendingPct%; background:#E67E22;"></div></div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">Failed / Expired <span class="health-val">@failedPct%</span></div>
+                            <div class="health-bar"><div class="health-fill" style="width:@failedPct%; background:#E05A5A;"></div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Row: Top Suppliers + Recent Transactions -->
+    <!-- Bottom Row -->
     <div class="row g-4">
         <!-- Top Earning Suppliers -->
         <div class="col-lg-4">
-            <div class="fin-panel h-100">
-                <div class="fin-panel-header">
-                    <span class="fin-panel-title"><i class="fas fa-trophy me-2" style="color:#2E9C7A;"></i>Top Earning Suppliers</span>
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-trophy me-2" style="color:#2E9C7A;"></i>Top Earning Suppliers</h6>
                 </div>
-                @{
-                    int rank = 1;
-                    foreach (var supplier in (dynamic)ViewBag.TopSuppliers)
-                    {
-                        <div class="supplier-rank-item">
-                            <div class="supplier-rank-num">#@rank</div>
-                            <div>
-                                <div class="supplier-rank-name">@supplier.Name</div>
-                                <div class="supplier-rank-sub">Marketplace Partner</div>
+                <div class="card-body pt-2">
+                    @{
+                        var topSuppliers = ViewBag.TopSuppliers as IEnumerable<dynamic>;
+                        int rankNum = 1;
+                        if (topSuppliers != null && topSuppliers.Any())
+                        {
+                            foreach (var supplier in topSuppliers)
+                            {
+                                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="fw-bold text-muted" style="width: 30px;">#@rankNum</div>
+                                        <div>
+                                            <div class="fw-bold small">@supplier.Name</div>
+                                            <div class="small text-muted">Marketplace Partner</div>
+                                        </div>
+                                    </div>
+                                    <div class="fw-bold text-success">@supplier.Revenue.ToString("C0")</div>
+                                </div>
+                                rankNum++;
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-trophy opacity-25 mb-2" style="font-size: 32px;"></i>
+                                <p class="small mb-0">No supplier data yet</p>
                             </div>
-                            <div class="supplier-rank-amount">@supplier.Revenue.ToString("C0")</div>
-                        </div>
-                        rank++;
+                        }
                     }
-                }
-                @if (rank == 1)
-                {
-                    <div class="text-center py-4" style="color:var(--text-muted);">
-                        <i class="fas fa-trophy opacity-25 d-block mb-2" style="font-size:28px;"></i>
-                        <small>No supplier data yet</small>
-                    </div>
-                }
+                </div>
             </div>
         </div>
+        
         <!-- Recent Commissions -->
         <div class="col-lg-8">
-            <div class="fin-panel h-100">
-                <div class="fin-panel-header">
-                    <span class="fin-panel-title"><i class="fas fa-stream me-2" style="color:#2E9C7A;"></i>Recent Commission Activity</span>
-                    <a asp-action="Transactions" class="fin-action-btn" style="font-size:13px; padding:7px 14px;">View All →</a>
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-0">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-stream me-2" style="color:#2E9C7A;"></i>Recent Commission Activity</h6>
+                    <a asp-action="Transactions" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All →</a>
                 </div>
-                <div class="table-responsive">
-                    <table class="table admin-table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">ID</th>
-                                <th>Type</th>
-                                <th>Supplier</th>
-                                <th>Amount</th>
-                                <th class="pe-4">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var c in Model.Take(8))
-                            {
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <td class="ps-4" style="color:var(--text-muted); font-size:13px; font-weight:700;">#@c.Id</td>
-                                    <td>
-                                        @if (c.PaymentType?.Contains("Order") == true) { <span class="txn-type txn-type-order">OrderPayment</span> }
-                                        else if (c.PaymentType?.Contains("Commission") == true) { <span class="txn-type txn-type-commission">Commission</span> }
-                                        else { <span class="txn-type txn-type-payout">Payout</span> }
-                                    </td>
-                                    <td style="color:var(--text-muted); font-size:13px;">@(c.Supplier?.CompanyName ?? "Platform")</td>
-                                    <td style="font-weight:800; color:#2E9C7A;">@c.CommissionAmount.ToString("C")</td>
-                                    <td class="pe-4">
-                                        @if (c.Status == "Paid") { <span class="txn-status txn-status-paid"><i class="fas fa-check-circle"></i> Cleared</span> }
-                                        else if (c.Status == "Pending") { <span class="txn-status txn-status-pending"><i class="fas fa-clock"></i> Pending</span> }
-                                        else { <span class="txn-status txn-status-failed"><i class="fas fa-times-circle"></i> Failed</span> }
-                                    </td>
+                                    <th class="ps-3 small">ID</th>
+                                    <th class="small">Type</th>
+                                    <th class="small">Supplier</th>
+                                    <th class="small">Amount</th>
+                                    <th class="pe-3 small">Status</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in Model.Take(8))
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold small">#@c.Id</td>
+                                        <td>
+                                            @if (c.PaymentType?.Contains("Order") == true)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill">OrderPayment</span>
+                                            }
+                                            else if (c.PaymentType?.Contains("Commission") == true)
+                                            {
+                                                <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill">Commission</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill">Payout</span>
+                                            }
+                                        </td>
+                                        <td class="small text-muted">@(c.Supplier?.CompanyName ?? "Platform")</td>
+                                        <td class="fw-bold text-success small">@c.CommissionAmount.ToString("C")</td>
+                                        <td class="pe-3">
+                                            @if (c.Status == "Paid")
+                                            {
+                                                <span class="badge bg-success rounded-pill px-2 py-1"><i class="fas fa-check-circle me-1"></i> Cleared</span>
+                                            }
+                                            else if (c.Status == "Pending")
+                                            {
+                                                <span class="badge bg-warning rounded-pill px-2 py-1"><i class="fas fa-clock me-1"></i> Pending</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger rounded-pill px-2 py-1"><i class="fas fa-times-circle me-1"></i> Failed</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        $(document).ready(function() {
         const isDark = document.body.classList.contains('dark-mode');
         const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
         const labelColor = isDark ? '#9EABA5' : '#6F7E78';
+        const textColor = isDark ? '#EDEDED' : '#1A2C26';
 
-        // Revenue Trend (6-month line chart)
+        // Revenue Trend Chart - FIXED SIZE
         const tCtx = document.getElementById('revenueTrendChart').getContext('2d');
-        const grad = tCtx.createLinearGradient(0, 0, 0, 300);
+        const grad = tCtx.createLinearGradient(0, 0, 0, 200);
         grad.addColorStop(0, 'rgba(46,156,122,0.25)');
         grad.addColorStop(1, 'rgba(46,156,122,0)');
+            
         new Chart(tCtx, {
-            type: 'line',
-            data: {
-                labels: @Html.Raw(Json.Serialize(ViewBag.TrendLabels)),
-                datasets: [{
-                    label: 'Platform Revenue',
-                    data: @Html.Raw(Json.Serialize(ViewBag.TrendAmounts)),
-                    borderColor: '#2E9C7A',
-                    borderWidth: 3,
-                    fill: true,
-                    backgroundColor: grad,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#2E9C7A',
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: labelColor } },
-                    x: { grid: { display: false }, ticks: { color: labelColor } }
-                }
-            }
+        type: 'line',
+        data: {
+        labels: @Html.Raw(Json.Serialize(ViewBag.TrendLabels ?? new string[0])),
+        datasets: [{
+        label: 'Platform Revenue (ETB)',
+        data: @Html.Raw(Json.Serialize(ViewBag.TrendAmounts ?? new decimal[0])),
+        borderColor: '#2E9C7A',
+        borderWidth: 2,
+        fill: true,
+        backgroundColor: grad,
+        tension: 0.3,
+        pointRadius: 3,
+        pointBackgroundColor: '#2E9C7A',
+        pointHoverRadius: 5
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: isDark ? '#1A1F1D' : '#FFFFFF' }
+        },
+        scales: {
+        y: {
+        beginAtZero: true,
+        grid: { color: gridColor },
+        ticks: { color: labelColor }
+        },
+        x: {
+        grid: { display: false },
+        ticks: { color: labelColor }
+        }
+        }
+        }
         });
 
-        // Settlement Donut
+        // Settlement Donut Chart - FIXED SIZE
         const sCtx = document.getElementById('statusPieChart').getContext('2d');
         new Chart(sCtx, {
-            type: 'doughnut',
-            data: {
-                labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels)),
-                datasets: [{
-                    data: @Html.Raw(Json.Serialize(ViewBag.StatusCounts)),
-                    backgroundColor: ['#2E9C7A', '#E67E22', '#E05A5A', '#5B8FF9'],
-                    borderWidth: 0,
-                    hoverOffset: 8
-                }]
-            },
-            options: {
-                cutout: '72%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { usePointStyle: true, padding: 16, color: labelColor }
-                    }
-                }
-            }
+        type: 'doughnut',
+        data: {
+        labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels ?? new string[0])),
+        datasets: [{
+        data: @Html.Raw(Json.Serialize(ViewBag.StatusCounts ?? new int[0])),
+        backgroundColor: ['#2E9C7A', '#E67E22', '#E05A5A', '#5B8FF9'],
+        borderWidth: 0,
+        hoverOffset: 5
+        }]
+        },
+        options: {
+        cutout: '65%',
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        legend: {
+        position: 'bottom',
+        labels: {
+        usePointStyle: true,
+        padding: 10,
+        boxWidth: 8,
+        font: { size: 10 },
+        color: labelColor
+        }
+        }
+        }
+        }
+        });
         });
     </script>
 }

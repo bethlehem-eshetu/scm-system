@@ -1,3 +1,4 @@
+
 @using SCM_System.Models.Entities
 @using SCM_System.Models.Constants
 @model Order
@@ -5,8 +6,8 @@
     ViewData["Title"] = "Fulfillment Command Center";
     Layout = "_DashboardLayout";
     bool isRetailer = User.IsInRole("Retailer");
-    bool isSupplier = User.IsInRole("Supplier") || User.IsInRole("WarehouseManager");
-    bool isWarehouseRole = User.IsInRole("WarehouseManager");
+    bool isSupplier = User.IsInRole("Supplier") || User.IsInRole("WarehouseManager") || User.IsInRole("Warehouse") || User.IsInRole("Admin");
+    bool isWarehouseRole = User.IsInRole("WarehouseManager") || User.IsInRole("Warehouse") || User.IsInRole("Admin");
 
     // Primary PO context for fulfillment tracking
     var po = ViewBag.PrimaryPO as PurchaseOrder;
@@ -19,11 +20,10 @@
 
     bool isTerminal = new[] { "Rejected", "Expired", "Completed" }.Contains(currentStatus);
 
-    // ✅ FIXED: show panel whenever warehouse missing and PO is still active
+    // ✅ FIXED: show panel whenever warehouse missing OR PO hasn't been created yet
     bool showAssignPanel = (isSupplier || isWarehouseRole) && 
-                          po != null && 
-                          !po.WarehouseId.HasValue && 
-                          !new[] { "Rejected", "Completed", "Delivered", "Expired" }.Contains(po.Status);
+                          !new[] { "Rejected", "Completed", "Delivered", "Expired" }.Contains(currentStatus) &&
+                          (po == null || !po.WarehouseId.HasValue);
 
     bool isDelivered = currentStatus == "Delivered" || currentStatus == "Completed";
 
@@ -228,36 +228,60 @@
             @if (showAssignPanel)
             {
                 <div class="card border-0 shadow-premium rounded-5 p-4 mb-4 bg-white border-top border-5 border-dark-green dark-mode-card">
-                    <h5 class="fw-bold text-dark-green mb-2 dark-mode-text">Fulfillment Activation</h5>
-                    <p class="text-muted small mb-4 fw-bold dark-mode-text">Commit resources to the execution hub.</p>
+                    <h6 class="extra-small fw-bold text-uppercase ls-1 text-muted mb-4 dark-mode-text">Fulfillment Activation</h6>
                     
-                    <form asp-controller="Order" asp-action="AcceptPO" method="post" class="mb-4">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="orderId" value="@Model.Id" />
-                        <input type="hidden" name="poId" value="@po.Id" />
+                    @if (po != null)
+                    {
+                        <p class="text-muted small mb-4 fw-bold dark-mode-text">Commit resources to the execution hub.</p>
                         
-                        <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-3 dark-mode-text">Primary Logistics Hub</label>
-                        <select name="warehouseId" class="form-select border-0 bg-faint-green rounded-4 py-3 px-4 fw-bold text-dark-green mb-4 shadow-sm dark-mode-select" required>
-                            <option value="-1">-- AUTO-ALLOCATE LOAD --</option>
-                            @if (ViewBag.Warehouses != null)
-                            {
-                                foreach (dynamic w in ViewBag.Warehouses)
+                        <form asp-controller="Order" asp-action="AcceptPO" method="post" class="mb-4">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="orderId" value="@Model.Id" />
+                            <input type="hidden" name="poId" value="@po.Id" />
+                            
+                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-3 dark-mode-text">Primary Logistics Hub</label>
+                            <select name="warehouseId" class="form-select border-0 bg-faint-green rounded-pill py-2 px-4 fw-bold text-dark-green mb-4 shadow-sm dark-mode-select" required style="font-size: 0.85rem;">
+                                <option value="-1">-- AUTO-ALLOCATE LOAD --</option>
+                                @if (ViewBag.Warehouses != null)
                                 {
-                                    <option value="@w.Id">@w.Name Hub (@w.City)</option>
+                                    foreach (dynamic w in ViewBag.Warehouses)
+                                    {
+                                        <option value="@w.Id">@w.Name Hub (@w.City)</option>
+                                    }
                                 }
-                            }
-                        </select>
+                            </select>
+                            
+                            <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-2 shadow-premium mb-3 dark-mode-primary-btn">
+                                <i class="fas fa-bolt me-2 text-accent-green"></i> ACTIVATE FULFILLMENT
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-4 fw-bold dark-mode-text">Review and authorize this deployment request.</p>
                         
-                        <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium mb-3 dark-mode-primary-btn">
-                            <i class="fas fa-bolt me-2 text-accent-green"></i> ACTIVATE FULFILLMENT
-                        </button>
-                    </form>
+                        <form asp-controller="Order" asp-action="StatusAction" method="post" class="mb-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="actionType" value="Accept" />
+                            <button type="submit" class="btn btn-dark-green w-100 rounded-pill fw-bold py-3 shadow-premium dark-mode-primary-btn">
+                                <i class="fas fa-check-circle me-2 text-accent-green"></i> ACCEPT ORDER
+                            </button>
+                        </form>
+                    }
 
                     <form asp-controller="Order" asp-action="StatusAction" method="post" onsubmit="return confirm('Abort this deployment?');">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@Model.Id" />
                         <input type="hidden" name="actionType" value="Reject" />
-                        <input type="hidden" name="rejectionReason" value="Rejected by fulfillment manager" />
+                        <div class="mb-3 @(po == null ? "" : "d-none")">
+                            <label class="extra-small text-muted fw-bold text-uppercase ls-1 d-block mb-2 dark-mode-text">Rejection Intelligence</label>
+                            <textarea name="rejectionReason" class="form-control border-0 bg-faint-green rounded-4 p-3 small dark-mode-textarea" placeholder="Provide strategic rationale for rejection..."></textarea>
+                        </div>
+                        @if (po != null)
+                        {
+                            <input type="hidden" name="rejectionReason" value="Rejected by fulfillment manager" />
+                        }
                         <button type="submit" class="btn btn-white w-100 rounded-pill fw-bold py-2 text-danger border border-danger border-opacity-10 small dark-mode-reject-btn">
                             Reject Contract
                         </button>

@@ -39,10 +39,23 @@ namespace SCM_System.Controllers
                             CONSTRAINT FK_DeliveryRatings_Retailers FOREIGN KEY (RetailerId) REFERENCES Retailers(Id),
                             CONSTRAINT FK_DeliveryRatings_SupplierEmployees FOREIGN KEY (DriverEmployeeId) REFERENCES SupplierEmployees(Id)
                         )
-                    END";
+                    END
+
+                    -- Add AverageRating to Suppliers if missing
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Suppliers]') AND name = 'AverageRating')
+                    BEGIN
+                        ALTER TABLE Suppliers ADD AverageRating DECIMAL(3,2) NOT NULL DEFAULT 5.00
+                    END
+
+                    -- Add AverageRating to SupplierEmployees if missing
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[SupplierEmployees]') AND name = 'AverageRating')
+                    BEGIN
+                        ALTER TABLE SupplierEmployees ADD AverageRating DECIMAL(3,2) NOT NULL DEFAULT 5.00
+                    END
+                ";
                 
                 await _context.Database.ExecuteSqlRawAsync(sql);
-                return Content("Database table 'DeliveryRatings' checked/created successfully.");
+                return Content("Database schema 'AverageRating' columns and 'DeliveryRatings' table checked/created successfully.");
             }
             catch (Exception ex)
             {

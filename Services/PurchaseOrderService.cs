@@ -309,26 +309,12 @@ namespace SCM_System.Services
                     string msg = "";
                     string type = "Info";
 
-                    if (status == POStatus.Packed)
-                    {
-                        title = "Order Packed 📦";
-                        msg = $"Items from your order #{po.Order?.OrderNumber} have been packed at {po.Warehouse?.Name}.";
-                    }
-                    else if (status == POStatus.InTransit)
+                    if (status == POStatus.InTransit)
                     {
                         title = "Order Shipped 🚚";
                         msg = $"A shipment for your order #{po.Order?.OrderNumber} is now in transit.";
                         type = "Success";
-                    }
-                    else if (status == POStatus.Delivered)
-                    {
-                        title = "Order Delivered ✅";
-                        msg = $"Your shipment from order #{po.Order?.OrderNumber} has been delivered.";
-                        type = "Success";
-                    }
-
-                    if (!string.IsNullOrEmpty(title))
-                    {
+                        
                         await _notificationService.SendNotificationAsync(
                             po.Retailer.UserId,
                             title,
@@ -336,6 +322,31 @@ namespace SCM_System.Services
                             type,
                             $"/Order/Details/{po.OrderId}"
                         );
+                    }
+                    else if (status == POStatus.Delivered || status == POStatus.Completed)
+                    {
+                        // ✅ Update Audience: Notify Supplier & Admin for Delivery (User Request)
+                        var supplierUserId = po.Supplier?.UserId ?? 0;
+                        if (supplierUserId != 0)
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                supplierUserId,
+                                "Shipment Delivered ✅",
+                                $"Purchase Order #{po.PONumber} for order #{po.Order?.OrderNumber} has been delivered.",
+                                "Success",
+                                $"/Order/Details/{po.OrderId}"
+                            );
+                        }
+
+                        // Admin Notification
+                        await _notificationService.CreateAdminNotificationAsync(new AdminNotification
+                        {
+                            Title = "PO Delivered",
+                            Message = $"PO #{po.PONumber} (Order #{po.Order?.OrderNumber}) delivered.",
+                            NotificationType = "Order",
+                            ActionUrl = $"/Admin/OrderDetails/{po.OrderId}",
+                            CreatedAt = DateTime.Now
+                        });
                     }
                 }
                 // Handle Inventory Deduction on Delivery

@@ -175,6 +175,9 @@ namespace SCM_System.Models.Entities
         [Display(Name = "Enable Voice Picking")]
         public bool EnableVoicePicking { get; set; } = false;
 
+        [Column(TypeName = "decimal(3,2)")]
+        public decimal AverageRating { get; set; } = 5.00m;
+
         // Navigation properties
         public ICollection<Delivery> Deliveries { get; set; } = [];
     }

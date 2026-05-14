@@ -648,3 +648,172 @@
     background: rgba(59, 174, 134, 0.05) !important;
     border-color: rgba(59, 174, 134, 0.1) !important;
 }
+
+/* --- Refined Notification Styles (Compact & Visible) --- */
+
+/* Notification Container */
+.notifications-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Page Header */
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #0B3B2F;
+    margin-bottom: 4px;
+}
+
+.dark-mode .page-header h1 {
+    color: #4BC0A0;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: #6F7E78;
+}
+
+.dark-mode .page-header p {
+    color: #9EABA5;
+}
+
+/* Signal Card - COMPACT */
+.signal-card {
+    background: var(--bg-card, #FFFFFF);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border, #E2E8F0);
+    transition: all 0.2s;
+}
+
+.dark-mode .signal-card {
+    background: #1A1F1D;
+    border-color: #2A3530;
+}
+
+.signal-card:hover {
+    transform: translateX(4px);
+    border-left: 3px solid #2E9C7A;
+}
+
+/* Signal Title - VISIBLE IN WHITE MODE */
+.signal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1A2C26 !important;  /* Dark green - visible in white mode */
+    margin-bottom: 6px;
+}
+
+.dark-mode .signal-title {
+    color: #4BC0A0 !important;  /* Mint green - visible in dark mode */
+}
+
+/* Signal Message */
+.signal-message {
+    font-size: 13px;
+    color: #4B5E55 !important;  /* Darker for white mode */
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.dark-mode .signal-message {
+    color: #C5CDC8 !important;  /* Light gray for dark mode */
+}
+
+/* Signal Meta (Date & Time) */
+.signal-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: #7C8F86 !important;
+    margin-top: 8px;
+}
+
+.dark-mode .signal-meta {
+    color: #9EABA5 !important;
+}
+
+.signal-meta i {
+    margin-right: 4px;
+    font-size: 11px;
+}
+
+/* Time ago badge */
+.time-ago {
+    background: #F1F5F9;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #2E9C7A;
+}
+
+.dark-mode .time-ago {
+    background: #2A3530;
+    color: #4BC0A0;
+}
+
+/* Action Button */
+.btn-review {
+    background: #2E9C7A;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+
+.btn-review:hover {
+    background: #247A5E;
+    transform: translateY(-1px);
+}
+
+.dark-mode .btn-review {
+    background: #3BAE86;
+}
+
+/* Compact Layout */
+.signal-card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.signal-info {
+    flex: 1;
+}
+
+.signal-actions {
+    flex-shrink: 0;
+}
+
+/* Remove extra whitespace */
+.signal-card:last-child {
+    margin-bottom: 0;
+}
+
+/* Result count */
+.results-count {
+    font-size: 13px;
+    color: #6F7E78;
+    margin-bottom: 16px;
+    text-align: right;
+}
+
+.dark-mode .results-count {
+    color: #9EABA5;
+}
+

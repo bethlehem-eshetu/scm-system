@@ -504,7 +504,7 @@ namespace SCM_System.Controllers
                         "Rate Your Delivery Experience",
                         $"Your order #{po.PONumber} has been delivered. Please rate your delivery experience.",
                         "DeliveryRating",
-                        $"/Retailer/RateDelivery/{po.Id}"
+                        $"/Rating/RateDelivery?purchaseOrderId={po.Id}"
                     );
                 }
             }

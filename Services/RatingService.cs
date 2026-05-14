@@ -71,7 +71,7 @@ namespace SCM_System.Services
                 .Include(r => r.Retailer)
                     .ThenInclude(r => r.User)
                 .Include(r => r.Order)
-                .Where(r => r.SupplierId == supplierId)
+                .Where(r => r.SupplierId == supplierId && r.RatingType == "Supplier")
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
@@ -79,7 +79,7 @@ namespace SCM_System.Services
         public async Task<SupplierRatingSummary> GetSupplierRatingSummaryAsync(int supplierId)
         {
             var ratings = await _context.Ratings
-                .Where(r => r.SupplierId == supplierId)
+                .Where(r => r.SupplierId == supplierId && r.RatingType == "Supplier")
                 .ToListAsync();
 
             var supplier = await _context.Suppliers

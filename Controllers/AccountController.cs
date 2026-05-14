@@ -596,7 +596,7 @@ namespace SCM_System.Controllers
             TempData["LogoutMessage"] = $"Goodbye, {userName}!";
             TempData["LogoutMessageType"] = "info";
 
-            return RedirectToAction("Login");
+            return RedirectToAction("Index", "Home");
         }
 
         // POST: /Account/SetTheme

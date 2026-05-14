@@ -240,6 +240,62 @@ namespace SCM_System.Services
             _context.OrderStatusHistories.Add(history);
             await _context.SaveChangesAsync();
 
+            // ================================
+            // 🔥 ACTIONABLE NOTIFICATIONS
+            // ================================
+            var importantStatuses = new[] { "Accepted", "Rejected", "Shipped", "Delivered", "Cancelled", "Completed" };
+            if (importantStatuses.Contains(status) && status != previousStatus)
+            {
+                // Load parent with relationships for notifications
+                var orderFull = await _context.Orders
+                    .Include(o => o.Retailer)
+                    .Include(o => o.Supplier)
+                    .FirstOrDefaultAsync(o => o.Id == order.Id);
+
+                if (orderFull != null)
+                {
+                    if (status == "Delivered" || status == "Completed")
+                    {
+                        // Notify Supplier & Admin (As per User Specification)
+                        if (orderFull.Supplier != null)
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                orderFull.Supplier.UserId,
+                                "Order Delivered ✅",
+                                $"Order #{orderFull.OrderNumber} has been delivered successfully.",
+                                "Success",
+                                $"/Order/Details/{orderFull.Id}"
+                            );
+                        }
+
+                        // Admin Notification
+                        await _notificationService.CreateAdminNotificationAsync(new AdminNotification
+                        {
+                            Title = "Order Delivered",
+                            Message = $"Order #{orderFull.OrderNumber} delivered to {orderFull.Retailer?.BusinessName}.",
+                            NotificationType = "Order",
+                            ActionUrl = $"/Admin/OrderDetails/{orderFull.Id}",
+                            CreatedAt = DateTime.Now
+                        });
+                    }
+                    else if (orderFull.Retailer != null) 
+                    {
+                        // Notify Retailer for Shipped, Accepted, Rejected, Cancelled
+                        string title = $"Order {status}";
+                        string msg = $"Your order #{orderFull.OrderNumber} has been {status.ToLower()}.";
+                        string type = status == "Rejected" || status == "Cancelled" ? "Error" : "Info";
+
+                        await _notificationService.SendNotificationAsync(
+                            orderFull.Retailer.UserId,
+                            title,
+                            msg,
+                            type,
+                            $"/Order/Details/{orderFull.Id}"
+                        );
+                    }
+                }
+            }
+
             return order;
         }
 
