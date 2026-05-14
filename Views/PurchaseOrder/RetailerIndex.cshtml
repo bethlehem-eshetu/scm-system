@@ -31,7 +31,7 @@
         var pendingFulfillment = activePOs.Count(p => p.Status != "Delivered");
         var healthRate = Model.Any() ? (Model.Count(p => p.Status == "Delivered" || p.Status == "Completed") * 100 / Model.Count()) : 0;
     }
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-5 procurement-card">
         <div class="col-md-3">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-bottom border-4 border-success">
                 <label class="smaller text-muted text-uppercase fw-bold d-block mb-1">Committed Capital</label>
@@ -246,4 +246,24 @@
     .page-search-input {
         padding-left: 35px !important;
     }
+
+    /* Force card text to be dark in light mode, white in dark mode */
+    .procurement-card .card label,
+    .procurement-card .card h3,
+    .procurement-card .card span {
+        color: #212529 !important;
+    }
+    
+    body.dark-mode .procurement-card .card label,
+    body.dark-mode .procurement-card .card h3,
+    body.dark-mode .procurement-card .card span {
+        color: #ffffff !important;
+    }
+
+    /* Specific overrides for color-coded text */
+    .procurement-card .card h3.text-success { color: #198754 !important; }
+    body.dark-mode .procurement-card .card h3.text-success { color: #4ade80 !important; }
+    
+    .procurement-card .card .text-warning { color: #ffc107 !important; }
+    body.dark-mode .procurement-card .card .text-warning { color: #fbbf24 !important; }
 </style>

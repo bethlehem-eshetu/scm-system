@@ -270,7 +270,7 @@ namespace SCM_System.Controllers
             return RedirectToAction("MyPayments", "Payment");
         }
 
-        public async Task<IActionResult> MyPayments(string dateRange = "all", string status = "all", string search = "")
+        public async Task<IActionResult> MyPayments()
         {
             int currentUserId = GetCurrentUserId();
             if (currentUserId == 0)
@@ -305,25 +305,7 @@ namespace SCM_System.Controllers
                 }
             }
 
-            // Apply Filters
-            if (status != "all")
-            {
-                query = query.Where(c => c.Status == status);
-            }
 
-            if (!string.IsNullOrEmpty(search))
-            {
-                query = query.Where(c => (c.Order != null && c.Order.OrderNumber.Contains(search)) ||
-                                       (c.PurchaseOrder != null && c.PurchaseOrder.PONumber.Contains(search)));
-            }
-
-            if (dateRange != "all")
-            {
-                var now = DateTime.Now;
-                if (dateRange == "7days") query = query.Where(c => c.CreatedAt >= now.AddDays(-7));
-                else if (dateRange == "30days") query = query.Where(c => c.CreatedAt >= now.AddDays(-30));
-                else if (dateRange == "month") query = query.Where(c => c.CreatedAt.Month == now.Month && c.CreatedAt.Year == now.Year);
-            }
 
             var payments = await query.OrderByDescending(c => c.CreatedAt).ToListAsync();
 

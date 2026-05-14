@@ -15,12 +15,7 @@
             <p class="text-muted small mb-0 dark-mode-text">Manage fulfillment cycles and track transaction statuses in real-time</p>
         </div>
         <div class="d-flex gap-3 align-items-center">
-            <div class="btn-group shadow-premium rounded-pill overflow-hidden bg-white p-1 dark-mode-filter-group">
-                <button class="btn btn-white nexus-filter-btn active px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="all">All</button>
-                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="Pending">Pending</button>
-                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="Active">Active</button>
-                <button class="btn btn-white nexus-filter-btn px-4 py-2 small fw-bold dark-mode-filter-btn" data-filter="Completed">Completed</button>
-            </div>
+
             @if (!isSupplier)
             {
                 <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold shadow-premium dark-mode-btn">
@@ -30,13 +25,49 @@
         </div>
     </div>
 
+    <!-- Filter Bar -->
+    <div class="filter-bar card p-3 mb-4 shadow-sm border-0 rounded-3 theme-card">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-uppercase dark-mode-text">Status</label>
+                <select id="statusFilter" class="form-select dark-mode-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-uppercase dark-mode-text">Date Range</label>
+                <select id="dateRangeFilter" class="form-select dark-mode-select">
+                    <option value="all">All Time</option>
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="this_month">This month</option>
+                    <option value="custom">Custom range</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-none" id="customDateRange">
+                <label class="form-label small fw-bold text-uppercase dark-mode-text">From</label>
+                <input type="date" id="fromDate" class="form-control dark-mode-input" />
+                <label class="form-label small fw-bold text-uppercase mt-2 dark-mode-text">To</label>
+                <input type="date" id="toDate" class="form-control dark-mode-input" />
+            </div>
+
+            <div class="col-md-2">
+                <button id="resetFilterBtn" class="btn btn-outline-secondary w-100 rounded-pill dark-mode-btn">Reset</button>
+            </div>
+        </div>
+    </div>
+
 
     <div class="row g-4" id="ordersContainer">
         @if (Model != null && Model.Any())
         {
             foreach (var order in Model)
             {
-                <div class="col-xl-4 col-md-6 order-card-item" data-status="@GetAggregateStatus(order.OrderStatus)">
+                <div class="col-xl-4 col-md-6 order-card-item order-card" data-status="@GetAggregateStatus(order.OrderStatus)" data-order-date="@order.CreatedAt.ToString("yyyy-MM-dd")">
                     <div class="card h-100 border-0 shadow-premium rounded-5 overflow-hidden hover-lift bg-white dark-mode-card">
                         <div class="card-header border-0 bg-faint-green p-4 d-flex justify-content-between align-items-center dark-mode-card-header">
                             <span class="badge bg-dark-green text-white rounded-pill px-3 py-2 fw-bold ls-1 dark-mode-badge">#@order.OrderNumber</span>
@@ -74,7 +105,7 @@
                             <div class="mb-4 px-1">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="extra-small fw-bold text-muted text-uppercase ls-1 dark-mode-text">Fulfillment Status</span>
-                                    <span class="status-badge @GetStatusClass(order.OrderStatus) dark-mode-status">@order.OrderStatus</span>
+                                    <span class="status-badge @GetStatusClass(order.OrderStatus) dark-mode-status fulfillment-status">@order.OrderStatus</span>
                                 </div>
                                 <div class="progress rounded-pill shadow-sm dark-mode-progress" style="height: 8px; background-color: rgba(0,0,0,0.05);">
                                     <div class="progress-bar @GetProgressColor(order.OrderStatus) rounded-pill" style="width: @GetProgressWidth(order.OrderStatus)%"></div>
@@ -88,9 +119,6 @@
                                         Cancel
                                     </button>
                                 }
-                                <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-dark-green rounded-pill px-4 fw-bold shadow-sm flex-grow-1 dark-mode-manage-btn">
-                                    Manage <i class="fas fa-arrow-right ms-2 text-accent-green"></i>
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -372,30 +400,110 @@
             background-color: #334155 !important;
             color: #e2e8f0 !important;
         }
+        body.dark-mode .filter-bar {
+            background-color: #1e2a3a !important;
+            color: #fff;
+            border: 1px solid #334155 !important;
+        }
+        body.dark-mode .filter-bar .form-select,
+        body.dark-mode .filter-bar .form-control {
+            background-color: #334155;
+            color: #fff;
+            border-color: #475569;
+        }
+        body.dark-mode .filter-bar .form-select option {
+            background-color: #1e2a3a;
+            color: #fff;
+        }
     </style>
 }
 
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const filterBtns = document.querySelectorAll('.nexus-filter-btn');
-            const orderCards = document.querySelectorAll('.order-card-item');
+            const statusFilter = document.getElementById('statusFilter');
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            const customDateRange = document.getElementById('customDateRange');
+            const fromDateInput = document.getElementById('fromDate');
+            const toDateInput = document.getElementById('toDate');
 
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
+            function applyFilters() {
+                const status = statusFilter.value;
+                const dateRange = dateRangeFilter.value;
+                let fromDate = null, toDate = null;
 
-                    const filter = this.dataset.filter;
-                    orderCards.forEach(card => {
-                        if (filter === 'all' || card.dataset.status === filter) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
+                if (dateRange === 'custom') {
+                    const fromStr = fromDateInput.value;
+                    const toStr = toDateInput.value;
+                    if (!fromStr || !toStr) {
+                        // If custom is selected but dates aren't filled, show all for now or keep current view
+                        return;
+                    }
+                    fromDate = new Date(fromStr);
+                    fromDate.setHours(0,0,0,0);
+                    toDate = new Date(toStr);
+                    toDate.setHours(23,59,59,999);
+                } else if (dateRange === 'this_month') {
+                    const now = new Date();
+                    fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                    toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+                } else if (dateRange !== 'all') {
+                    const days = parseInt(dateRange);
+                    toDate = new Date();
+                    toDate.setHours(23, 59, 59, 999);
+                    fromDate = new Date();
+                    fromDate.setDate(fromDate.getDate() - days);
+                    fromDate.setHours(0, 0, 0, 0);
+                }
+
+                document.querySelectorAll('.order-card').forEach(card => {
+                    let show = true;
+                    if (status !== 'all') {
+                        const cardStatus = card.dataset.status;
+                        if (cardStatus !== status) show = false;
+                    }
+                    if (show && fromDate && toDate) {
+                        const orderDateStr = card.dataset.orderDate;
+                        if (orderDateStr) {
+                            const orderDate = new Date(orderDateStr);
+                            if (orderDate < fromDate || orderDate > toDate) show = false;
                         }
-                    });
+                    }
+                    card.style.display = show ? 'block' : 'none';
                 });
-            });
+            }
+
+            // Automatic triggers
+            if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+            
+            if (dateRangeFilter) {
+                dateRangeFilter.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customDateRange.classList.remove('d-none');
+                    } else {
+                        customDateRange.classList.add('d-none');
+                        applyFilters(); // Trigger filter for presets
+                    }
+                });
+            }
+
+            if (fromDateInput) fromDateInput.addEventListener('input', applyFilters);
+            if (toDateInput) toDateInput.addEventListener('input', applyFilters);
+
+            const resetBtn = document.getElementById('resetFilterBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    statusFilter.value = 'all';
+                    dateRangeFilter.value = 'all';
+                    customDateRange.classList.add('d-none');
+                    fromDateInput.value = '';
+                    toDateInput.value = '';
+                    applyFilters();
+                });
+            }
+
+            // Initial call to ensure filters are applied if page reloads with values
+            applyFilters();
 
             document.querySelectorAll('.cancel-order-btn').forEach(btn => {
                 btn.addEventListener('click', function() {

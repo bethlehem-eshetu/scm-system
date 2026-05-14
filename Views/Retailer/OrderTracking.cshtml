@@ -11,10 +11,14 @@
             <h2 class="fw-bold mb-0">Live Order <span class="text-primary">Tracking</span></h2>
             <p class="text-muted mb-0">Real-time status updates and delivery tracking</p>
         </div>
-        <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-4 shadow-sm">
-            <i class="fas fa-plus me-2"></i>New Order
-        </a>
+        <div class="d-flex gap-2">
+            <a asp-controller="Retailer" asp-action="BrowseCatalog" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="fas fa-plus me-2"></i>New Order
+            </a>
+        </div>
     </div>
+
+
 
     <!-- Order Cards -->
     <div class="row g-4">
@@ -304,10 +308,4 @@
         .timeline-step:not(:last-child)::after { top: 15px; }
     }
 </style>
-
-<script>
-    // Auto-refresh every 30 seconds for live updates
-    setInterval(function() {
-        location.reload();
-    }, 30000);
-</script>
+

@@ -223,7 +223,7 @@ namespace SCM_System.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             var retailer = await _context.Retailers.FirstOrDefaultAsync(r => r.UserId == userId);
 
-            var orders = await _context.Orders
+            var query = _context.Orders
                 .AsNoTracking()
                 .AsSplitQuery()
                 .Include(o => o.Supplier)
@@ -232,9 +232,11 @@ namespace SCM_System.Controllers
                 .Include(o => o.PurchaseOrders)
                     .ThenInclude(po => po.DeliveryAgent)
                         .ThenInclude(da => da.User)
-                .Where(o => o.RetailerId == retailer.Id)
-                .OrderByDescending(o => o.CreatedAt)
-                .ToListAsync();
+                .Where(o => o.RetailerId == retailer.Id);
+
+
+
+            var orders = await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
 
             return View(orders);
         }

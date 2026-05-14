@@ -21,6 +21,7 @@
   --table-text: #2c3e50;
   --table-border: #dee2e6;
   --deep-green: #0B3B2F;
+  --dark-green: #0B3B2F; /* Define for light mode consistency */
   --accent-green: #20C997;
   --faint-green: #f2f6f6;
 }
@@ -69,8 +70,15 @@ body {
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: var(--card-bg) !important;
-    color: var(--table-text) !important;
+    color: var(--table-text);
     overflow: hidden;
+}
+
+body.dark-mode .card, 
+body.dark-mode .modal-content,
+body.dark-mode .card-title,
+body.dark-mode .card-text {
+    color: var(--table-text) !important;
 }
 
 .card:hover {
@@ -197,3 +205,68 @@ body.dark-mode .bg-faint-green { background-color: var(--table-header-bg) !impor
 .ls-1 { letter-spacing: 0.5px; }
 .uppercase { text-transform: uppercase; }
 .extra-small { font-size: 0.7rem; }
+
+/* ============================================================
+   UNIVERSAL WAREHOUSE DARK MODE ENFORCEMENT
+   Ensures #1e2a2a background and white text for all components
+   Only applies inside .warehouse-container to allow specific exclusions
+   ============================================================ */
+body.dark-mode .warehouse-container,
+body.dark-mode .warehouse-container .card,
+body.dark-mode .warehouse-container .card-body,
+body.dark-mode .warehouse-container .table,
+body.dark-mode .warehouse-container .table-responsive,
+body.dark-mode .warehouse-container thead,
+body.dark-mode .warehouse-container tbody,
+body.dark-mode .warehouse-container tr,
+body.dark-mode .warehouse-container th,
+body.dark-mode .warehouse-container td,
+body.dark-mode .warehouse-container .modal-content,
+body.dark-mode .warehouse-container .modal-body,
+body.dark-mode .warehouse-container .modal-header,
+body.dark-mode .warehouse-container .modal-footer,
+body.dark-mode .warehouse-container .list-group-item,
+body.dark-mode .warehouse-container .dropdown-menu,
+body.dark-mode .warehouse-container .alert,
+body.dark-mode .warehouse-container .btn-light,
+body.dark-mode .warehouse-container .btn-outline-secondary {
+    background-color: #1e2a2a !important;
+    color: #ffffff !important;
+    border-color: #3a4a4a !important;
+}
+
+/* Force white text on all text elements inside these containers */
+body.dark-mode .warehouse-container .card *,
+body.dark-mode .warehouse-container .table *,
+body.dark-mode .warehouse-container .modal *,
+body.dark-mode .warehouse-container .list-group-item *,
+body.dark-mode .warehouse-container .alert * {
+    color: #ffffff !important;
+}
+
+/* Keep input fields readable */
+body.dark-mode .warehouse-container .form-control,
+body.dark-mode .warehouse-container .form-select,
+body.dark-mode .warehouse-container input,
+body.dark-mode .warehouse-container textarea {
+    background-color: #2a3b3b !important;
+    color: #e0e0e0 !important;
+    border-color: #3a4a4a !important;
+}
+
+/* Remove any white background from table hover states */
+body.dark-mode .warehouse-container .table-hover tbody tr:hover {
+    background-color: #2a3b3b !important;
+    color: #ffffff !important;
+}
+
+/* Ensure operational hub cards are also deep green */
+body.dark-mode .warehouse-container .operational-hub-card,
+body.dark-mode .warehouse-container .kpi-card,
+body.dark-mode .warehouse-container .stat-card,
+body.dark-mode .warehouse-container .glass-card {
+    background-color: #1e2a2a !important;
+    color: #ffffff !important;
+}
+
+

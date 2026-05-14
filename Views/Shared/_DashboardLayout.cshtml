@@ -162,7 +162,7 @@
         .card, .stat-card, .summary-card, .alert-card, .dashboard-card {
             background-color: var(--card-bg) !important;
             border-color: var(--border-color) !important;
-            color: var(--text-color) !important;
+            color: var(--text-color);
         }
 
         .bg-white { background-color: var(--card-bg) !important; }
@@ -915,9 +915,6 @@
     <a asp-controller="Support" asp-action="Index"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
 </li>
                     <li class="menu-label">Settings</li>
-                    <li>
-                        <a asp-controller="Notification" asp-action="Index"><i class="fas fa-bell"></i> Notifications</a>
-                    </li>
                     <li>
                         <a asp-controller="Retailer" asp-action="Settings"><i class="fas fa-user-cog"></i> Account Settings</a>
                     </li>
