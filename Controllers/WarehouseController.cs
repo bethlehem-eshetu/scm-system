@@ -753,9 +753,11 @@ namespace SCM_System.Controllers
             var manager = await GetCurrentManagerAsync();
             if (manager == null) return Unauthorized();
 
-            // Load PO first to determine which hub we are dealing with
+            // Load PO with items for accurate weight calculation
             var po = await _context.PurchaseOrders
                 .Include(p => p.Order)
+                .Include(p => p.PurchaseOrderItems)
+                    .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (po == null) return NotFound();
@@ -1371,6 +1373,9 @@ namespace SCM_System.Controllers
                 return await _context.SupplierEmployees
                     .Include(e => e.Warehouse)
                     .Include(e => e.User)
+                    .Include(e => e.HubAccesses)
+                        .ThenInclude(a => a.Warehouse)
+                    .Include(e => e.WarehouseAssignments)
                     .FirstOrDefaultAsync(e => e.Id == employeeId);
             }
             

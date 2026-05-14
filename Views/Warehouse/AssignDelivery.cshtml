@@ -158,8 +158,8 @@
                                         
                                         <div class="override-container" style="display: none;">
                                             <div class="form-check mt-2">
-                                                <input type="checkbox" class="form-check-input" id="overrideCheckbox" name="isOverride" value="true">
-                                                <label class="form-check-label small text-warning" for="overrideCheckbox">
+                                                <input type="checkbox" class="form-check-input override-checkbox" id="override-@po.Id" name="isOverride" value="true">
+                                                <label class="form-check-label small text-warning" for="override-@po.Id" style="cursor: pointer;">
                                                     <i class="fas fa-exclamation-triangle"></i> Override overload restriction
                                                 </label>
                                             </div>
@@ -245,69 +245,41 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            $('.agent-select').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                const form = $(this).closest('form');
+            function updateWeightStatus(form) {
                 const vehicleSelect = form.find('.vehicle-select');
+                const selectedVehicle = vehicleSelect.find('option:selected');
                 const infoContainer = form.find('.vehicle-info-container');
                 const confirmBtn = form.find('.confirm-dispatch-btn');
                 const overrideContainer = form.find('.override-container');
+                const agentSelect = form.find('.agent-select');
+                const selectedAgent = agentSelect.find('option:selected');
+                const overrideCheckbox = form.find('.override-checkbox');
+                
                 const orderWeight = parseFloat(form.data('order-weight')) || 0;
                 
-                const vehicleId = selectedOption.data('vehicle-id');
-                const vehiclePlate = selectedOption.data('vehicle-plate');
-                const vehicleType = selectedOption.data('vehicle-type');
-                const maxLoad = parseFloat(selectedOption.data('max-load')) || 0;
-                const currentLoad = parseFloat(selectedOption.data('current-load')) || 0;
-                const isVehicleAvailable = selectedOption.data('is-available') === 'true';
-                const isVehicleUnderMaintenance = selectedOption.data('is-maintenance') === 'true';
-                
-                if (isVehicleUnderMaintenance) {
-                    infoContainer.html(`
-                        <div class="alert alert-danger border-0 shadow-sm rounded-4 mt-3 mb-0">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-tools me-2 fa-lg"></i>
-                                <div>
-                                    <div class="small fw-bold">VEHICLE UNDER MAINTENANCE</div>
-                                    <div class="smaller">This agent's vehicle (${vehiclePlate}) is currently in maintenance. Please select another agent or assign a different vehicle.</div>
-                                </div>
-                            </div>
-                        </div>
-                    `).fadeIn();
-                    vehicleSelect.val("");
+                if (!selectedAgent.val()) {
                     confirmBtn.prop('disabled', true);
-                    confirmBtn.html('<i class="fas fa-ban me-2"></i> Vehicle Unavailable');
-                    overrideContainer.hide();
+                    confirmBtn.html('<i class="fas fa-user-clock me-2"></i> Select Agent');
                     return;
                 }
-                
-                if (vehicleId && vehicleId !== 0) {
-                    // Try to finding the vehicle in the list, if not there, add it
-                    if (vehicleSelect.find(`option[value="${vehicleId}"]`).length === 0) {
-                        vehicleSelect.append(`<option value="${vehicleId}" data-max-load="${maxLoad}">${vehiclePlate} (${vehicleType}) - Max ${maxLoad} KG</option>`);
-                    }
-                    vehicleSelect.val(vehicleId);
-                } else {
-                    vehicleSelect.val("");
-                    infoContainer.html(`
-                        <div class="alert alert-warning border-0 shadow-sm rounded-4 mt-3 mb-0">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <div>
-                                    <div class="small fw-bold">No Vehicle Assigned</div>
-                                    <div class="smaller">This agent does not have a primary vehicle. Please select an available vehicle from the list.</div>
-                                </div>
-                            </div>
-                        </div>
-                    `).fadeIn();
+
+                if (!selectedVehicle.val()) {
                     confirmBtn.prop('disabled', true);
                     confirmBtn.html('<i class="fas fa-truck-loading me-2"></i> Select a Vehicle');
-                    overrideContainer.hide();
                     return;
                 }
+
+                const maxLoad = parseFloat(selectedVehicle.data('max-load')) || 0;
+                const vehiclePlate = selectedVehicle.text().split('(')[0].trim();
                 
+                // Get current load from agent data if it matches the vehicle
+                let currentLoad = 0;
+                if (selectedAgent.data('vehicle-id') == selectedVehicle.val()) {
+                    currentLoad = parseFloat(selectedAgent.data('current-load')) || 0;
+                }
+
                 const totalProjectedLoad = currentLoad + orderWeight;
-                const loadPercent = (totalProjectedLoad / maxLoad) * 100;
+                const loadPercent = maxLoad > 0 ? (totalProjectedLoad / maxLoad) * 100 : 0;
                 let statusColor = 'success';
                 let statusText = 'Safe';
                 let isOverloaded = false;
@@ -326,13 +298,13 @@
                         <div class="d-flex align-items-center mb-2">
                             <i class="fas fa-truck me-2 text-${statusColor}"></i>
                             <div>
-                                <div class="small fw-bold text-theme">${vehiclePlate} (${vehicleType})</div>
+                                <div class="small fw-bold text-theme">${vehiclePlate}</div>
                                 <div class="smaller text-muted">Max Payload: ${maxLoad} KG</div>
                             </div>
                         </div>
                         <div class="p-2 rounded-3 bg-soft-secondary border border-theme">
                             <div class="d-flex justify-content-between smaller mb-1 text-theme">
-                                <span>Agent's Current Load:</span>
+                                <span>Agent's Load on this Truck:</span>
                                 <strong>${Math.round(currentLoad)} KG</strong>
                             </div>
                             <div class="d-flex justify-content-between smaller mb-1 text-theme">
@@ -353,56 +325,107 @@
                 
                 if (isOverloaded) {
                     overrideContainer.show();
-                    confirmBtn.prop('disabled', true);
-                    confirmBtn.html('<i class="fas fa-ban me-2"></i> Overloaded - Cannot Dispatch');
+                    if (overrideCheckbox.is(':checked')) {
+                        confirmBtn.prop('disabled', false);
+                        confirmBtn.html('<i class="fas fa-exclamation-triangle me-2"></i> Confirm Override Dispatch');
+                        confirmBtn.removeClass('btn-primary').addClass('btn-warning');
+                    } else {
+                        confirmBtn.prop('disabled', true);
+                        confirmBtn.html('<i class="fas fa-ban me-2"></i> Overloaded - Cannot Dispatch');
+                        confirmBtn.removeClass('btn-warning').addClass('btn-primary');
+                    }
                 } else {
                     overrideContainer.hide();
                     confirmBtn.prop('disabled', false);
                     confirmBtn.html('<i class="fas fa-truck-loading me-2"></i> Confirm Dispatch');
+                    confirmBtn.removeClass('btn-warning').addClass('btn-primary');
                 }
+            }
+
+            $('.agent-select').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                const form = $(this).closest('form');
+                const vehicleSelect = form.find('.vehicle-select');
+                const infoContainer = form.find('.vehicle-info-container');
+                
+                const vehicleId = selectedOption.data('vehicle-id');
+                const vehiclePlate = selectedOption.data('vehicle-plate');
+                const vehicleType = selectedOption.data('vehicle-type');
+                const maxLoad = parseFloat(selectedOption.data('max-load')) || 0;
+                const isVehicleUnderMaintenance = selectedOption.data('is-maintenance') === 'true';
+                
+                if (isVehicleUnderMaintenance) {
+                    infoContainer.html(`
+                        <div class="alert alert-danger border-0 shadow-sm rounded-4 mt-3 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-tools me-2 fa-lg"></i>
+                                <div>
+                                    <div class="small fw-bold">VEHICLE UNDER MAINTENANCE</div>
+                                    <div class="smaller">This agent's vehicle (${vehiclePlate}) is currently in maintenance. Please select another agent or assign a different vehicle.</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).fadeIn();
+                    vehicleSelect.val("");
+                    form.find('.confirm-dispatch-btn').prop('disabled', true).html('<i class="fas fa-ban me-2"></i> Vehicle Unavailable');
+                    form.find('.override-container').hide();
+                    return;
+                }
+                
+                if (vehicleId && vehicleId !== 0) {
+                    if (vehicleSelect.find(`option[value="${vehicleId}"]`).length === 0) {
+                        vehicleSelect.append(`<option value="${vehicleId}" data-max-load="${maxLoad}">${vehiclePlate} (${vehicleType}) - Max ${maxLoad} KG</option>`);
+                    }
+                    vehicleSelect.val(vehicleId);
+                } else {
+                    vehicleSelect.val("");
+                    infoContainer.html(`
+                        <div class="alert alert-warning border-0 shadow-sm rounded-4 mt-3 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <div>
+                                    <div class="small fw-bold">No Vehicle Assigned</div>
+                                    <div class="smaller">This agent does not have a primary vehicle. Please select an available vehicle from the list.</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).fadeIn();
+                }
+                
+                updateWeightStatus(form);
             });
 
-            // Handle manual vehicle selection changes
             $('.vehicle-select').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                if (!selectedOption.val()) return;
-                
                 const form = $(this).closest('form');
-                const confirmBtn = form.find('.confirm-dispatch-btn');
-                const maxLoad = parseFloat(selectedOption.data('max-load')) || 0;
-                
-                // If weight check passed, enable button
-                confirmBtn.prop('disabled', false);
-                confirmBtn.html('<i class="fas fa-truck-loading me-2"></i> Confirm Dispatch');
+                updateWeightStatus(form);
             });
             
-            $(document).on('change', '#overrideCheckbox', function() {
+            $(document).on('change', '.override-checkbox', function() {
                 const form = $(this).closest('form');
                 const reasonContainer = form.find('.override-reason-container');
-                const confirmBtn = form.find('.confirm-dispatch-btn');
                 
                 if ($(this).is(':checked')) {
                     reasonContainer.show();
-                    confirmBtn.prop('disabled', false);
-                    confirmBtn.html('<i class="fas fa-exclamation-triangle me-2"></i> Confirm Override Dispatch');
-                    confirmBtn.removeClass('btn-primary').addClass('btn-warning');
                 } else {
                     reasonContainer.hide();
-                    confirmBtn.prop('disabled', true);
-                    confirmBtn.html('<i class="fas fa-ban me-2"></i> Overloaded - Cannot Dispatch');
-                    confirmBtn.removeClass('btn-warning').addClass('btn-primary');
                 }
+                updateWeightStatus(form);
             });
             
             $(document).on('submit', '.assign-delivery-form', function(e) {
-                const isOverrideChecked = $(this).find('#overrideCheckbox').is(':checked');
-                const overrideReason = $(this).find('input[name="overrideReason"]').val();
+                const form = $(this);
+                const isOverrideChecked = form.find('.override-checkbox').is(':checked');
+                const overrideReason = form.find('input[name="overrideReason"]').val();
+                const confirmBtn = form.find('.confirm-dispatch-btn');
                 
                 if (isOverrideChecked && (!overrideReason || overrideReason.trim() === '')) {
                     e.preventDefault();
                     alert('Please enter a reason for the override.');
                     return false;
                 }
+                
+                // Visual feedback
+                confirmBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Dispatching...');
                 return true;
             });
             
