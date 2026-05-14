@@ -463,7 +463,7 @@ namespace SCM_System.Controllers
                     last_name = "Retailer",
                     tx_ref = tx_ref,
                     callback_url = $"{Request.Scheme}://{Request.Host}/Payment/VerifyDeposit?tx_ref={tx_ref}",
-                    return_url = $"{Request.Scheme}://{Request.Host}/Order/Details/{order.Id}",
+                    return_url = $"{Request.Scheme}://{Request.Host}/Payment/VerifyDeposit?tx_ref={tx_ref}",
                     customization = new
                     {
                         title = "Order Deposit",

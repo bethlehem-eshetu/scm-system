@@ -817,7 +817,6 @@ namespace SCM_System.Controllers
             return RedirectToAction("OrderTracking");
         }
 
-
         // GET: /Retailer/RateDelivery/5
         [HttpGet]
         public async Task<IActionResult> RateDelivery(int id)
@@ -964,6 +963,7 @@ namespace SCM_System.Controllers
         private string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+
         }
 
     }
