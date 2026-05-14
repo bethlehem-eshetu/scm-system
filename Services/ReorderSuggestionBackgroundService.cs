@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SCM_System.Models.Enums;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SCM_System.Data;

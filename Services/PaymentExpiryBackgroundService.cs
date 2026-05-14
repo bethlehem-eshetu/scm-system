@@ -3,6 +3,7 @@ using SCM_System.Data;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
@@ -68,7 +69,7 @@ namespace SCM_System.Services
                                 retailer.User.Id,
                                 "Order Cancelled - Payment Timeout",
                                 $"Order #{order.OrderNumber} has been cancelled due to payment expiry.",
-                                "Danger",
+                                "Warning",
                                 "/Payment/MyPayments"
                             );
 

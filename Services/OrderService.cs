@@ -263,7 +263,7 @@ namespace SCM_System.Services
                                 orderFull.Supplier.UserId,
                                 "Order Delivered ✅",
                                 $"Order #{orderFull.OrderNumber} has been delivered successfully.",
-                                "Success",
+                                "Approval",
                                 $"/Order/Details/{orderFull.Id}"
                             );
                         }
@@ -283,7 +283,7 @@ namespace SCM_System.Services
                         // Notify Retailer for Shipped, Accepted, Rejected, Cancelled
                         string title = $"Order {status}";
                         string msg = $"Your order #{orderFull.OrderNumber} has been {status.ToLower()}.";
-                        string type = status == "Rejected" || status == "Cancelled" ? "Error" : "Info";
+                        string type = (status == "Rejected" || status == "Cancelled") ? "Warning" : "Order";
 
                         await _notificationService.SendNotificationAsync(
                             orderFull.Retailer.UserId,
@@ -312,7 +312,8 @@ namespace SCM_System.Services
 
         public async Task<bool> AcceptOrderAsync(int orderId, int? explicitWarehouseId = null)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            var existingTransaction = _context.Database.CurrentTransaction;
+            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable) : null;
             try
             {
                 var order = await _context.Orders
@@ -532,7 +533,7 @@ namespace SCM_System.Services
                 _context.OrderStatusHistories.Add(history);
 
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                if (transaction != null) await transaction.CommitAsync();
 
                 // Notify Retailer
                 var retailerUserId = await _context.Retailers
@@ -546,7 +547,7 @@ namespace SCM_System.Services
                         retailerUserId,
                         "Order Accepted ✅ - Payment Required",
                         $"Your order #{order.OrderNumber} has been accepted. Please pay the 50% advanced deposit to proceed with fulfillment.",
-                        "Success",
+                        "Approval",
                         $"/Order/Details/{order.Id}"
                     );
                 }
@@ -555,6 +556,7 @@ namespace SCM_System.Services
             }
             catch (Exception ex)
             {
+                if (transaction != null) await transaction.RollbackAsync();
                 // Rollback implicitly by disposing uncommitted transaction
                 if (ex is InvalidOperationException) throw; 
                 throw new InvalidOperationException("Failed to allocate order: " + ex.Message, ex);
@@ -594,7 +596,7 @@ namespace SCM_System.Services
                     retailerUserId,
                     "Order Rejected ❌",
                     $"Your order #{order.OrderNumber} was rejected by {order.Supplier?.CompanyName}. Reason: {reason}",
-                    "Error",
+                    "Warning",
                     $"/Order/Details/{order.Id}"
                 );
             }
@@ -630,7 +632,8 @@ namespace SCM_System.Services
             }
 
             // Transactional update
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var existingTransaction = _context.Database.CurrentTransaction;
+            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
             try
             {
                 order.OrderStatus = POStatus.Cancelled;
@@ -657,7 +660,7 @@ namespace SCM_System.Services
                 _context.OrderStatusHistories.Add(history);
 
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                if (transaction != null) await transaction.CommitAsync();
 
                 // Notify Retailer
                 var retailerUserId = await _context.Retailers
@@ -697,7 +700,7 @@ namespace SCM_System.Services
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                if (transaction != null) await transaction.RollbackAsync();
                 // Log error for diagnostics
                 Console.WriteLine($"[CancelOrder Error] Order {orderId}: {ex.Message}");
                 throw new InvalidOperationException("Failed to cancel order due to a system error. Please try again later.");

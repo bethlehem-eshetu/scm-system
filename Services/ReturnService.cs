@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
@@ -168,7 +169,7 @@ namespace SCM_System.Services
                                 order.Retailer.User.Id,
                                 "Refund Initiated",
                                 $"A refund of {returnRequest.RefundAmount:C} for Order #{order.OrderNumber} has been initiated.",
-                                "Info",
+                                "Finance",
                                 "/Payment/MyPayments"
                             );
                             
@@ -194,7 +195,7 @@ namespace SCM_System.Services
                 returnRequest.Retailer.UserId,
                 "✅ Return Request Approved",
                 $"Your return request #{returnRequest.ReturnNumber} has been approved. Please ship the items back.",
-                "Success",
+                "Approval",
                 $"/Return/MyReturns"
             );
 
@@ -217,7 +218,7 @@ namespace SCM_System.Services
                 returnRequest.Retailer.UserId,
                 "❌ Return Request Rejected",
                 $"Your return request #{returnRequest.ReturnNumber} has been rejected. Reason: {rejectionReason}",
-                "Error",
+                "Warning",
                 $"/Return/MyReturns"
             );
 
@@ -241,7 +242,7 @@ namespace SCM_System.Services
                 returnRequest.Supplier.UserId,
                 "📦 Return Items Shipped",
                 $"Items for return #{returnRequest.ReturnNumber} have been shipped. Tracking: {trackingNumber}",
-                "Info",
+                "Delivery",
                 $"/Return/SupplierReturns"
             );
 
@@ -281,7 +282,7 @@ namespace SCM_System.Services
                 returnRequest.Retailer.UserId,
                 "💰 Refund Processed",
                 $"Your refund of {returnRequest.RefundAmount:C} for return #{returnRequest.ReturnNumber} has been processed.",
-                "Success",
+                "Finance",
                 $"/Return/MyReturns"
             );
 

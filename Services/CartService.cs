@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {

@@ -503,7 +503,7 @@ namespace SCM_System.Controllers
                         po.Order.Retailer.UserId,
                         "Rate Your Delivery Experience",
                         $"Your order #{po.PONumber} has been delivered. Please rate your delivery experience.",
-                        "DeliveryRating",
+                        "Delivery",
                         $"/Rating/RateDelivery?purchaseOrderId={po.Id}"
                     );
                 }
@@ -677,7 +677,7 @@ namespace SCM_System.Controllers
                         po.Warehouse.PrimaryManager.UserId,
                         "Delivery Failure Reported",
                         $"Delivery for Order #{po.PONumber} failed. Reason: {reason}. Manager action required to reschedule or cancel.",
-                        "DeliveryFailure",
+                        "Warning",
                         $"/WarehouseManager/FailedDeliveries"
                     );
                 }
@@ -755,7 +755,7 @@ namespace SCM_System.Controllers
                 po.Warehouse.PrimaryManager.UserId,
                 "Immediate Support Requested",
                 messageBody,
-                "Support",
+                "Alert",
                 $"/WarehouseManager/Dashboard/{po.WarehouseId}"
             );
 

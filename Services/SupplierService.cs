@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Enums;
 using SCM_System.Models.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -324,7 +325,7 @@ namespace SCM_System.Services
                     order.Retailer.UserId,
                     "Order Cancelled",
                     $"Your Order #{order.OrderNumber} has been cancelled. Reason: {reason}",
-                    "Error",
+                    "Warning",
                     "/Order/MyOrders"
                 );
             }

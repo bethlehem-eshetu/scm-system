@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
@@ -98,7 +99,7 @@ namespace SCM_System.Services
                     receiverId,
                     "New Message Received",
                     $"You have a new message from {sender.FullName}",
-                    "Info",
+                    "Message",
                     $"/Message/Conversation/{senderId}"
                 );
             }
@@ -139,7 +140,7 @@ namespace SCM_System.Services
                     userId,
                     "✅ Appeal Approved",
                     $"Your appeal for penalty #{penaltyId} has been approved. The penalty has been removed. Response: {response}",
-                    "Info",
+                    "Approval",
                     "/Penalty"
                 );
             }
@@ -180,7 +181,7 @@ namespace SCM_System.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task SendEscalatedNotificationAsync(int userId, string title, string message, string type = "Critical", string? actionUrl = null)
+        public async Task SendEscalatedNotificationAsync(int userId, string title, string message, string type = "Warning", string? actionUrl = null)
         {
             await CreateNotificationAsync(userId, title, message, type, actionUrl);
         }
@@ -219,7 +220,7 @@ namespace SCM_System.Services
                     retailerUserId.Value,
                     "Order Cancelled ❌",
                     $"Purchase Order {poNumber} has been automatically cancelled due to reservation expiry (24 hours).",
-                    "Error",
+                    "Warning",
                     "/Retailer/OrderTracking"
                 );
             }
@@ -270,7 +271,7 @@ namespace SCM_System.Services
         public async Task MarkVerificationNotificationsAsReadAsync()
         {
             var notifications = await _context.AdminNotifications
-                .Where(n => !n.IsRead && (n.NotificationType == "Registration" || n.NotificationType == "Verification"))
+                .Where(n => !n.IsRead && (n.NotificationType == "Verification" || n.NotificationType == "Info"))
                 .ToListAsync();
 
             foreach (var n in notifications)
@@ -307,13 +308,14 @@ namespace SCM_System.Services
             {
                 "Order" => "🛒",
                 "Delivery" => "🚚",
-                "Warehouse" => "📦",
-                "Payment" => "💰",
-                "Approval" => "✅",
-                "Rejection" => "❌",
+                "Finance" => "💰",
+                "Approval" or "Success" => "✅",
+                "Verification" => "🛠️",
                 "Warning" => "⚠️",
-                "Info" => "ℹ️",
-                _ => "🔔"
+                "Message" => "💬",
+                "System" => "⚙️",
+                "Alert" or "Error" => "📢",
+                _ => "ℹ️"
             };
         }
 

@@ -1,43 +1,37 @@
 @model SCM_System.Models.ViewModels.NotificationBellViewModel
 
 <div class="nav-item dropdown notification-bell-wrapper">
-    <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="fas fa-bell"></i>
+    <a class="nav-link dropdown-toggle position-relative p-2" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell fs-5"></i>
         @if (Model.UnreadCount > 0)
         {
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style="font-size: 0.6rem; padding: 0.35em 0.65em;">
                 @(Model.UnreadCount > 99 ? "99+" : Model.UnreadCount)
             </span>
         }
-        else
-        {
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">0</span>
-        }
     </a>
-    <div class="dropdown-menu dropdown-menu-end shadow-lg py-0" aria-labelledby="notificationDropdown" style="min-width: 350px; border: none; border-radius: 12px; overflow: hidden;">
-        <div class="dropdown-header d-flex justify-content-between align-items-center py-3 bg-light border-bottom">
-            <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
+    <div class="dropdown-menu dropdown-menu-end notification-dropdown animate-slide-up" aria-labelledby="notificationDropdown">
+        <div class="notification-header">
+            <h6>Notifications</h6>
             @if (Model.UnreadCount > 0)
             {
-                <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="markAllNotificationsAsRead(event)">Mark all as read</button>
+                <button class="btn btn-link btn-sm p-0 text-decoration-none extra-small fw-bold text-primary" onclick="markAllNotificationsAsRead()">Mark all as read</button>
             }
         </div>
-        <div id="notificationList" class="notification-list" style="max-height: 400px; overflow-y: auto;">
+        <div class="notification-list custom-scrollbar">
             @if (Model.RecentNotifications != null && Model.RecentNotifications.Any())
             {
                 @foreach (var note in Model.RecentNotifications)
                 {
-                    <div class="notification-item @(note.IsRead ? "" : "unread") p-3 border-bottom position-relative" onclick="handleNotificationClick(event, @note.Id, '@note.ActionUrl')">
-                        <div class="d-flex align-items-start">
-                            <div class="notification-icon me-3">
-                                <span class="fs-4">@note.Icon</span>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="notification-title mb-1 small">@note.Title</h6>
-                                    <span class="notification-time text-muted small">@note.TimeAgo</span>
-                                </div>
-                                <p class="notification-message mb-0 text-muted small">@note.Message</p>
+                    <div class="notification-item @(note.IsRead ? "" : "unread")" onclick="handleNotificationClick(@note.Id, '@note.ActionUrl')">
+                        <div class="notification-icon bg-info text-white">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">@note.Title</div>
+                            <div class="notification-message">@note.Message</div>
+                            <div class="notification-time">
+                                <i class="far fa-clock me-1"></i>@note.TimeAgo
                             </div>
                         </div>
                     </div>
@@ -46,12 +40,13 @@
             else
             {
                 <div class="p-4 text-center text-muted">
-                    <p class="mb-0">No new notifications</p>
+                    <i class="fas fa-bell-slash fa-2x mb-3 opacity-20"></i>
+                    <p class="mb-0 extra-small fw-bold">All caught up!</p>
                 </div>
             }
         </div>
-        <div class="dropdown-footer p-2 text-center bg-light border-top">
-            <a href="/Notification" class="text-decoration-none small text-primary fw-bold">View All Notifications</a>
+        <div class="notification-footer">
+            <a href="/Notification" class="uppercase">View Intelligence Center</a>
         </div>
     </div>
 </div>

@@ -591,14 +591,7 @@ namespace SCM_System.Controllers
                 user.AccountStatus = "Suspended";
                 user.RejectionReason = request.Reason; // Reuse field for suspension reason
                 
-                _context.Notifications.Add(new Notification
-                {
-                    UserId = user.Id,
-                    Title = "🔒 Account Suspended",
-                    Message = $"Your account has been suspended. Reason: {request.Reason}",
-                    Type = "Warning",
-                    CreatedAt = DateTime.Now
-                });
+                await _notificationService.SendNotificationAsync(user.Id, "🔒 Account Suspended", $"Your account has been suspended. Reason: {request.Reason}", "Warning");
 
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });
@@ -624,15 +617,7 @@ namespace SCM_System.Controllers
                 user.IsFaydaVerified = true;
                 user.FaydaStatus = "Verified";
 
-                _context.Notifications.Add(new Notification
-                {
-                    UserId = user.Id,
-                    Title = "✅ Account Verified",
-                    Message = "Your account has been verified by an administrator.",
-                    Type = "Success",
-                    CreatedAt = DateTime.Now,
-                    ActionUrl = "/Dashboard"
-                });
+                await _notificationService.SendNotificationAsync(user.Id, "✅ Account Verified", "Your account has been verified by an administrator.", "Approval", "/Dashboard");
 
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });

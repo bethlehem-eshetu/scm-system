@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Enums;
 using System;
 using System.Linq;
 using System.Threading;
@@ -55,7 +56,7 @@ namespace SCM_System.Services
                                 order.Supplier.UserId,
                                 "Delivery Delay Alert ⏳",
                                 $"Order {order.OrderNumber} is past its expected delivery date: {order.ExpectedDeliveryDate?.ToString("f")}. Please update the status.",
-                                "Danger",
+                                "Warning",
                                 $"/Order/Details/{order.Id}"
                             );
 

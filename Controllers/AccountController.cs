@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using System.Net;
 using System.Net.Mail;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Controllers
 {
@@ -304,7 +305,7 @@ namespace SCM_System.Controllers
                         {
                             Title = "New Supplier Registration",
                             Message = $"New supplier '{model.CompanyName}' has registered and is waiting for approval.",
-                            NotificationType = "Registration",
+                            NotificationType = "Info",
                             RelatedUserId = user.Id,
                             ActionUrl = "/Admin/PendingUsers",
                             CreatedAt = DateTime.UtcNow
@@ -334,7 +335,7 @@ namespace SCM_System.Controllers
                         {
                             Title = "New Retailer Registration",
                             Message = $"New retailer '{model.BusinessName}' has registered and is waiting for approval.",
-                            NotificationType = "Registration",
+                            NotificationType = "Info",
                             RelatedUserId = user.Id,
                             ActionUrl = "/Admin/PendingUsers",
                             CreatedAt = DateTime.UtcNow

@@ -168,7 +168,8 @@ namespace SCM_System.Services
 
         public async Task<PurchaseOrder> UpdatePurchaseOrderStatusAsync(int id, string status, int userId)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var existingTransaction = _context.Database.CurrentTransaction;
+            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
             try
             {
                 var po = await _context.PurchaseOrders
@@ -319,7 +320,7 @@ namespace SCM_System.Services
                             po.Retailer.UserId,
                             title,
                             msg,
-                            type,
+                            "Delivery",
                             $"/Order/Details/{po.OrderId}"
                         );
                     }
@@ -333,7 +334,7 @@ namespace SCM_System.Services
                                 supplierUserId,
                                 "Shipment Delivered ✅",
                                 $"Purchase Order #{po.PONumber} for order #{po.Order?.OrderNumber} has been delivered.",
-                                "Success",
+                                "Approval",
                                 $"/Order/Details/{po.OrderId}"
                             );
                         }
@@ -385,16 +386,13 @@ namespace SCM_System.Services
 
                         if (manager != null && manager.NotifyLowStock && itemInv.QuantityOnHand <= manager.LowStockThreshold)
                         {
-                            _context.Notifications.Add(new Notification
-                            {
-                                UserId = manager.UserId,
-                                Title = "Low Stock Alert ⚠️",
-                                Message = $"Product {item.Product?.ProductName ?? "Unknown"} is below threshold ({itemInv.QuantityOnHand} remaining in {po.Warehouse?.Name}).",
-                                Type = "Warning",
-                                ActionUrl = "/Warehouse/Alerts",
-                                CreatedAt = DateTime.Now,
-                                IsRead = false
-                            });
+                            await _notificationService.SendNotificationAsync(
+                                manager.UserId,
+                                "Low Stock Alert ⚠️",
+                                $"Product {item.Product?.ProductName ?? "Unknown"} is below threshold ({itemInv.QuantityOnHand} remaining in {po.Warehouse?.Name}).",
+                                "Warning",
+                                "/Warehouse/Alerts"
+                            );
                         }
                     }
                 }
@@ -402,17 +400,18 @@ namespace SCM_System.Services
                 await _context.SaveChangesAsync();
 
 
-                await transaction.CommitAsync();
+                if (transaction != null) await transaction.CommitAsync();
 
                 return po;
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                if (transaction != null) await transaction.RollbackAsync();
                 _logger.LogError(ex, "Failed to update Purchase Order {Id} to status {Status}", id, status);
                 throw; 
             }
         }
+
 
         public async Task<bool> CancelPurchaseOrderAsync(int poId, int userId, string reason)
         {

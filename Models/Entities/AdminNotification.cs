@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+using SCM_System.Models.Enums;
+
 namespace SCM_System.Models.Entities
 {
     public class AdminNotification
@@ -15,9 +17,7 @@ namespace SCM_System.Models.Entities
         [StringLength(500)]
         public string Message { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(50)]
-        public string NotificationType { get; set; } = "Registration"; // Registration, Verification, Alert
+        public string NotificationType { get; set; } = "Info";
 
         public int? RelatedUserId { get; set; }
 

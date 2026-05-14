@@ -3,6 +3,8 @@ using SCM_System.Data;
 using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
 
+using SCM_System.Models.Enums;
+
 namespace SCM_System.Services
 {
     public class VerificationService : IVerificationService
@@ -146,7 +148,7 @@ namespace SCM_System.Services
                 user.Id,
                 "✅ Account Approved",
                 $"Congratulations! Your {user.Role} account has been approved. You can now access all features.",
-                "Success",
+                "Approval",
                 "/Dashboard"
             );
 
@@ -207,7 +209,7 @@ namespace SCM_System.Services
                 user.Id,
                 "❌ Account Rejected",
                 $"Your {user.Role} account application has been rejected. Reason: {reason}",
-                "Error"
+                "Alert"
             );
 
             // Send Email

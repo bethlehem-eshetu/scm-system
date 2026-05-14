@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Services;
 using System.Security.Claims;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Controllers
 {
@@ -168,7 +169,7 @@ namespace SCM_System.Controllers
                 "WarehouseManager",
                 "New Order for Processing",
                 $"Order #{po.PONumber} has been assigned to your warehouse for processing.",
-                "Warehouse",
+                "Info",
                 $"/Warehouse/OrdersToPick",
                 warehouseId
             );

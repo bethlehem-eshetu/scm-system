@@ -7,6 +7,7 @@ using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
 using SCM_System.Services;
 using System.Security.Claims;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Controllers
 {
@@ -221,7 +222,7 @@ namespace SCM_System.Controllers
                         suppUserId, 
                         "New Tender Published", 
                         $"A new tender '{tender.Title}' has been published in your preferred category.", 
-                        "Info", 
+                        "Alert", 
                         $"/Tender/Details/{tender.Id}"
                     );
                 }
@@ -292,7 +293,7 @@ namespace SCM_System.Controllers
                         winningBid.Supplier.User.Id, 
                         "Bid Accepted! 🎉", 
                         $"Your bid for {tenderAssociations.ReferenceNumber} was accepted! Create PO from Awarded Contracts.", 
-                        "Success", 
+                        "Approval", 
                         "/Tender/AwardedContracts"
                     );
 
@@ -301,7 +302,7 @@ namespace SCM_System.Controllers
                         winningBid.Supplier.User.Id, 
                         "PO Generated", 
                         $"New PO created from won tender {tenderAssociations.ReferenceNumber}.", 
-                        "Info", 
+                        "System", 
                         "/Tender/AwardedContracts"
                     );
                 }
@@ -382,7 +383,7 @@ namespace SCM_System.Controllers
                             bid.Supplier.User.Id, 
                             "Tender Cancelled", 
                             $"Tender {tender.ReferenceNumber} was cancelled by the Retailer.", 
-                            "Danger", 
+                            "Warning", 
                             "/Tender/MyBids"
                         );
                     }
@@ -462,7 +463,7 @@ namespace SCM_System.Controllers
                     bid.Supplier.User.Id,
                     "Proposal Rejected",
                     $"Your proposal for tender {bid.Tender?.ReferenceNumber} has been rejected.",
-                    "Danger",
+                    "Warning",
                     "/Tender/MyBids"
                 );
             }

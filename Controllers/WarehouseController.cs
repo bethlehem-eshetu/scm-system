@@ -614,7 +614,7 @@ namespace SCM_System.Controllers
                         po.Retailer.UserId,
                         "Delivery Rescheduled",
                         $"Your delivery for Order #{po.PONumber} has been rescheduled to {newDate:f}.",
-                        "DeliveryUpdate",
+                        "Delivery",
                         $"/Retailer/OrderDetails/{po.OrderId}"
                     );
                 }
@@ -663,7 +663,7 @@ namespace SCM_System.Controllers
                         failure.PurchaseOrder.Supplier.UserId,
                         "Cancellation Approval Required",
                         $"Warehouse Manager requested cancellation for Order #{failure.PurchaseOrder.PONumber}. Reason: {reason}",
-                        "CancellationRequest",
+                        "Warning",
                         $"/Supplier/CancellationRequests"
                     );
                 }

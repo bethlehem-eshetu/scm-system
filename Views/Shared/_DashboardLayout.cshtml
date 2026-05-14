@@ -20,43 +20,21 @@
             --text-color: #1A2C26;
             --text-muted: #4B5E55;
             --card-bg: #FFFFFF;
-            --border-color: #E2E8F0;
-            --top-nav-bg: #FFFFFF;
-            --primary-color: #2E9C7A;
-            --sidebar-width: 260px;
-            --sidebar-bg: #0B3B2F;
-            --sidebar-hover: #1E5A48;
-            --sidebar-color: #F0F6F2;
-            --sidebar-active: #1A4D3A;
-            --input-bg: #FFFFFF;
-            --hover-state: #F0F4F2;
-            --progress-track: #E2E8F0;
-        }
-
-        /* Dark Theme Variables */
-        html.dark-mode:root, body.dark-mode {
-            --bg-color: #0A0F0D;
-            --text-color: #EDEDED;
-            --text-muted: #B8C5BE;
-            --card-bg: #1E2A2A;
-            --border-color: #2A3530;
-            --top-nav-bg: #1A1F1D;
-            --primary-color: #3BAE86;
-            --sidebar-bg: #06261E;
-            --input-bg: #252A28;
-            --hover-state: #2A3530;
-            --progress-track: #2A3530;
+            --sidebar-width: 280px;
+            --sidebar-width-collapsed: 80px;
+            --top-nav-height: 70px;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             margin: 0;
             overflow-x: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        /* Essential Overrides */
         .text-primary { color: var(--primary-color) !important; }
         .text-success { color: #2E9C7A !important; }
         .text-warning { color: #E67E22 !important; }
@@ -83,112 +61,7 @@
             color: white !important; 
         }
 
-        .dark-mode .card, .dark-mode .bg-white {
-            background-color: var(--card-bg) !important;
-            color: var(--text-color) !important;
-            border-color: var(--border-color) !important;
-        }
-        
-        .dark-mode .text-dark {
-            color: var(--text-color) !important;
-        }
-        
-        .dark-mode .text-muted {
-            color: var(--text-muted) !important;
-        }
-        
-        .dark-mode .table {
-            color: var(--text-color);
-            background-color: transparent;
-        }
-        
-        .dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
-            background-color: rgba(255, 255, 255, 0.03) !important;
-            color: var(--text-color);
-        }
-        
-        .dark-mode .table-hover tbody tr:hover > * {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            color: var(--text-color);
-        }
-        
-        .dark-mode th, .dark-mode td {
-            border-color: var(--border-color);
-        }
-        
-        .dark-mode .border-bottom, .dark-mode .border {
-            border-color: var(--border-color) !important;
-        }
-        
-        .dark-mode .bg-light {
-            background-color: var(--hover-state) !important;
-            color: var(--text-color) !important;
-        }
-        
-        .dark-mode .form-control, .dark-mode .form-select {
-            background-color: var(--input-bg) !important;
-            border-color: var(--border-color) !important;
-            color: var(--text-color) !important;
-        }
-        
-        .dark-mode .form-control::placeholder {
-            color: var(--text-muted) !important;
-            opacity: 1;
-        }
-        
-        .dark-mode .dropdown-menu {
-            background-color: var(--card-bg) !important;
-            border-color: var(--border-color) !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
-        }
-        
-        .dark-mode .dropdown-item {
-            color: var(--text-color) !important;
-        }
-        
-        .dark-mode .dropdown-item:hover {
-            background-color: var(--hover-state) !important;
-        }
-        
-        .dark-mode .dropdown-header {
-            color: var(--text-muted) !important;
-        }
-        
-        .dark-mode .dropdown-divider {
-            border-top-color: var(--border-color) !important;
-        }
-
-        /* Global Theme Components */
-        .card, .stat-card, .summary-card, .alert-card, .dashboard-card {
-            background-color: var(--card-bg) !important;
-            border-color: var(--border-color) !important;
-            color: var(--text-color) !important;
-        }
-
-        .bg-white { background-color: var(--card-bg) !important; }
-        .bg-light { background-color: var(--hover-state) !important; }
-
-        .table th { 
-            background-color: var(--hover-state) !important; 
-            color: var(--text-color) !important;
-            border-bottom: 2px solid var(--border-color) !important;
-        }
-        .table td { 
-            color: var(--text-color) !important; 
-            border-bottom: 1px solid var(--border-color) !important;
-        }
-
-        .form-control, .form-select, textarea {
-            background-color: var(--input-bg) !important;
-            border-color: var(--border-color) !important;
-            color: var(--text-color) !important;
-        }
-
-        .progress-track, .progress-bg, .progress {
-            background-color: var(--progress-track) !important;
-        }
-
-        /* Premium Sidebar Styling */
+        /* Sidebar Styling */
         .wrapper {
             display: flex;
             width: 100%;
@@ -198,8 +71,8 @@
 
         #sidebar {
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, #0B3B2F 0%, #06261E 100%);
-            color: var(--sidebar-color);
+            background: var(--sidebar-bg);
+            color: white;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
             position: fixed;
@@ -209,7 +82,7 @@
             box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid var(--border-color);
         }
 
         #sidebar.active {
@@ -1121,6 +994,36 @@
             @if (TempData["WarningMessage"] != null)
             {
                 <text>showToast('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(TempData["WarningMessage"].ToString()))', 'warning');</text>
+            }
+
+            async function handleNotificationClick(id, url) {
+                try {
+                    await fetch(`/Notification/MarkAsRead?id=${id}`, { method: 'POST' });
+                    if (url) window.location.href = url;
+                    else window.location.reload();
+                } catch (err) {
+                    console.error('Failed to mark notification as read:', err);
+                }
+            }
+
+            async function markAllNotificationsAsRead() {
+                try {
+                    const response = await fetch('/Notification/MarkAllAsRead', { method: 'POST' });
+                    if (response.ok) {
+                        const badge = document.querySelector('.notification-badge');
+                        if (badge) badge.remove();
+                        
+                        const dropdown = document.querySelector('.notification-list');
+                        if (dropdown) {
+                            dropdown.querySelectorAll('.notification-item').forEach(item => {
+                                item.classList.remove('unread');
+                            });
+                        }
+                        toastr.success('All notifications marked as read');
+                    }
+                } catch (err) {
+                    console.error('Failed to mark all as read:', err);
+                }
             }
 
             $('#sidebarCollapse').on('click', function () {

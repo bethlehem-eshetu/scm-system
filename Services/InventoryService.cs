@@ -4,6 +4,7 @@ using SCM_System.Models.Entities;
 using SCM_System.Models.Constants;
 using System.Transactions;
 using System.Linq;
+using SCM_System.Models.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace SCM_System.Services
@@ -538,7 +539,8 @@ namespace SCM_System.Services
 
         public async Task<bool> ReceiveStockTransferAsync(int transferId)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var existingTransaction = _context.Database.CurrentTransaction;
+            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
             try
             {
                 var transfer = await _context.StockTransfers
@@ -582,20 +584,22 @@ namespace SCM_System.Services
                     product.LastStockUpdate = DateTime.Now;
                 }
 
-                await transaction.CommitAsync();
+                if (transaction != null) await transaction.CommitAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                if (transaction != null) await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error receiving stock transfer {TransferId}", transferId);
                 return false;
             }
         }
 
+
         public async Task AdjustInventoryAsync(InventoryAdjustment adjustment)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var existingTransaction = _context.Database.CurrentTransaction;
+            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
             try
             {
                 var inventory = await _context.Inventories
@@ -668,7 +672,7 @@ namespace SCM_System.Services
                 });
 
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                if (transaction != null) await transaction.CommitAsync();
                 
                 if (adjustment.WarehouseId.HasValue && adjustment.QuantityChange < 0)
                 {
@@ -677,11 +681,12 @@ namespace SCM_System.Services
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                if (transaction != null) await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error adjusting inventory for product {ProductId}", adjustment.ProductId);
                 throw;
             }
         }
+
 
         public async Task CreateDailySnapshotAsync()
         {

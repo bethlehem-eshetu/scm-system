@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+using SCM_System.Models.Enums;
+
 namespace SCM_System.Models.Entities
 {
     public class Notification
@@ -18,8 +20,7 @@ namespace SCM_System.Models.Entities
         [StringLength(500)]
         public string Message { get; set; } = string.Empty;
 
-        [StringLength(20)]
-        public string Type { get; set; } = "Info"; // Critical, Warning, Info
+        public string Type { get; set; } = "Info";
 
         public int? TargetWarehouseId { get; set; } // Targeted to a specific hub
         

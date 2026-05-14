@@ -6,6 +6,7 @@ using SCM_System.Models.Entities;
 using SCM_System.Models.ViewModels;
 using SCM_System.Services;
 using System.Security.Claims;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Controllers
 {
@@ -117,7 +118,7 @@ namespace SCM_System.Controllers
                             tenderDetails.Retailer.User.Id, 
                             "New Bid Received", 
                             $"{supplier.CompanyName} submitted a bid for {tenderDetails.ReferenceNumber}", 
-                            "Info", 
+                            "Order", 
                             $"/Tender/Details/{model.TenderId}"
                         );
                     }

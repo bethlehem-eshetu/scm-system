@@ -841,7 +841,7 @@ namespace SCM_System.Controllers
                         managerUserId,
                         "Address Updated by Retailer",
                         $"Retailer has updated the delivery address for Order #{order.OrderNumber}.",
-                        "AddressUpdate",
+                        "Alert",
                         $"/WarehouseManager/FailedDeliveries"
                     );
                 }

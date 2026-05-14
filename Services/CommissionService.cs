@@ -177,7 +177,8 @@ namespace SCM_System.Services
 
         public async Task<bool> FinalizePaymentAsync(int commissionId, string transactionId, string verificationData)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var existingTransaction = _context.Database.CurrentTransaction;
+            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
             try
             {
                 var mainCommission = await _context.Commissions
@@ -335,7 +336,7 @@ namespace SCM_System.Services
                 // 5. Trigger Supplier Tier Recalculation
                 await _supplierService.UpdateSupplierTierAsync(mainCommission.SupplierId);
 
-                await transaction.CommitAsync();
+                if (transaction != null) await transaction.CommitAsync();
 
                 if (mainCommission.Retailer?.UserId != null)
                 {
@@ -343,7 +344,7 @@ namespace SCM_System.Services
                         mainCommission.Retailer.UserId,
                         "Payment Confirmed ✅",
                         $"Your payment for Order #{mainCommission.Order?.OrderNumber} was successful. Status: Settled.",
-                        "Success",
+                        "Approval",
                         "/Order/Details/" + mainCommission.OrderId
                     );
                 }
@@ -352,10 +353,11 @@ namespace SCM_System.Services
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync();
+                if (transaction != null) await transaction.RollbackAsync();
                 return false;
             }
         }
+
 
         public async Task<Commission> InitiateOrderPaymentAsync(int orderId)
         {

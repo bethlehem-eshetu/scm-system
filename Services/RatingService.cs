@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SCM_System.Data;
 using SCM_System.Models.Entities;
+using SCM_System.Models.Enums;
 
 namespace SCM_System.Services
 {
@@ -51,7 +52,7 @@ namespace SCM_System.Services
                     supplier.UserId,
                     "⭐ New Rating Received",
                     $"You received a {ratingValue}-star rating for order #{purchaseOrder.PONumber}",
-                    "Success",
+                    "Approval",
                     "/Rating/SupplierRatings"
                 );
             }
